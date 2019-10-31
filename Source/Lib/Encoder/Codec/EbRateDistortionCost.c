@@ -2042,6 +2042,11 @@ EbErrorType av1_full_cost(PictureControlSet *pcs_ptr, ModeDecisionContext *conte
     }
     // Assign full cost
     *(candidate_buffer_ptr->full_cost_ptr) = RDCOST(lambda, rate, total_distortion);
+#if STAT_UPDATE
+    candidate_buffer_ptr->total_rate = rate;
+    candidate_buffer_ptr->total_dist[0] = y_distortion[0] + cb_distortion[0] + cr_distortion[0];
+    candidate_buffer_ptr->total_dist[1] = y_distortion[1] + cb_distortion[1] + cr_distortion[1];
+#endif
     return return_error;
 }
 
@@ -2217,6 +2222,11 @@ EbErrorType av1_merge_skip_full_cost(PictureControlSet *pcs_ptr, ModeDecisionCon
     candidate_buffer_ptr->candidate_ptr->skip_flag = (skip_cost <= merge_cost) ? EB_TRUE : EB_FALSE;
 
     //CHKN:  skip_flag context is not accurate as MD does not keep skip info in sync with EncDec.
+#if STAT_UPDATE
+    candidate_buffer_ptr->total_rate = (skip_cost <= merge_cost) ? skip_mode_rate : merge_rate;
+    candidate_buffer_ptr->total_dist[0] = (skip_cost <= merge_cost) ? skip_distortion : merge_distortion;
+    candidate_buffer_ptr->total_dist[1] = skip_distortion;
+#endif
 
     return return_error;
 }

@@ -14,6 +14,7 @@ extern "C" {
 #include "EbSvtAv1.h"
 #include <stdlib.h>
 #include <stdio.h>
+#define STAT_UPDATE_SW 0
 //***HME***
 #define EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT 2
 #define EB_HME_SEARCH_AREA_ROW_MAX_COUNT 2
@@ -206,6 +207,18 @@ typedef struct EbSvtAv1EncConfiguration {
     FILE *input_stat_file;
     /* output stats file */
     FILE *output_stat_file;
+#if 1 //STAT_UPDATE_SW
+    /* Slide window length for 2pass */
+    uint32_t slide_win_length;
+    /* Number of frames of sequence to be encoded. If number of frames is greater
+     * than the number of frames in file, the encoder will loop to the beginning
+     * and continue the encode.
+     *
+     * 0 = encodes the full clip.
+     *
+     * Default is 0. */
+    uint64_t                 frames_to_be_encoded;
+#endif
     /* Enable picture QP scaling between hierarchical levels
     *
     * Default is null.*/

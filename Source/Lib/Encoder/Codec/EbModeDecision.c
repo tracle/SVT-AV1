@@ -5827,7 +5827,62 @@ uint32_t product_full_mode_decision(
             lowest_cost = *(buffer_ptr_array[cand_index]->full_cost_ptr);
         }
     }
+#if STAT_UPDATE // what happens if there is no inter or no intra
+    uint64_t                  lowest_intra_total_rate;
+    uint64_t                  lowest_intra_total_dist[2];
+    uint64_t                  lowest_inter_cost = 0xFFFFFFFFFFFFFFFFull;
+    uint64_t                  lowest_inter_total_rate;
+    uint64_t                  lowest_inter_total_dist[2];
 
+    lowest_intra_cost  = 0xFFFFFFFFFFFFFFFFull;
+    // Find the candidate with the lowest cost
+    for (i = 0; i < candidate_total_count; ++i) {
+        cand_index = best_candidate_index_array[i];
+
+        if ((*(buffer_ptr_array[cand_index]->full_cost_ptr) < lowest_intra_cost) && buffer_ptr_array[cand_index]->candidate_ptr->type == INTRA_MODE) {
+            lowest_intra_cost = *(buffer_ptr_array[cand_index]->full_cost_ptr);
+            lowest_intra_total_rate = buffer_ptr_array[cand_index]->total_rate;
+            lowest_intra_total_dist[0] = buffer_ptr_array[cand_index]->total_dist[0];
+            lowest_intra_total_dist[1] = buffer_ptr_array[cand_index]->total_dist[1];
+        }
+
+        if ((*(buffer_ptr_array[cand_index]->full_cost_ptr) < lowest_inter_cost) && buffer_ptr_array[cand_index]->candidate_ptr->type == INTER_MODE) {
+            lowest_inter_cost  = *(buffer_ptr_array[cand_index]->full_cost_ptr);
+            lowest_inter_total_rate = buffer_ptr_array[cand_index]->total_rate;
+            lowest_inter_total_dist[0] = buffer_ptr_array[cand_index]->total_dist[0];
+            lowest_inter_total_dist[1] = buffer_ptr_array[cand_index]->total_dist[1];
+        }
+    }
+    if (lowest_inter_cost == 0xFFFFFFFFFFFFFFFFull) {
+        lowest_inter_cost           = lowest_intra_cost;
+        lowest_inter_cost           = lowest_intra_cost;
+        lowest_inter_total_rate     = lowest_intra_total_rate;
+        lowest_inter_total_dist[0]  = lowest_intra_total_dist[0];
+        lowest_inter_total_dist[1]  = lowest_intra_total_dist[1];
+    }
+    if (lowest_intra_cost == 0xFFFFFFFFFFFFFFFFull) {
+        lowest_intra_cost = lowest_inter_cost;
+        lowest_intra_cost = lowest_inter_cost;
+        lowest_intra_total_rate = lowest_inter_total_rate;
+        lowest_intra_total_dist[0] = lowest_inter_total_dist[0];
+        lowest_intra_total_dist[1] = lowest_inter_total_dist[1];
+    }
+    if (lowest_intra_cost < lowest_inter_cost) {
+        lowest_inter_cost = lowest_intra_cost;
+        lowest_inter_cost          = lowest_intra_cost;
+        lowest_inter_total_rate    = lowest_intra_total_rate;
+        lowest_inter_total_dist[0] = lowest_intra_total_dist[0];
+        lowest_inter_total_dist[1] = lowest_intra_total_dist[1];
+    }
+    blk_ptr->lowest_intra_cost           = lowest_intra_cost;
+    blk_ptr->lowest_intra_total_rate     = lowest_intra_total_rate;
+    blk_ptr->lowest_intra_total_dist[0]  = lowest_intra_total_dist[0];
+    blk_ptr->lowest_intra_total_dist[1]  = lowest_intra_total_dist[1];
+    blk_ptr->lowest_inter_cost           = lowest_inter_cost;
+    blk_ptr->lowest_inter_total_rate     = lowest_inter_total_rate;
+    blk_ptr->lowest_inter_total_dist[0]  = lowest_inter_total_dist[0];
+    blk_ptr->lowest_inter_total_dist[1]  = lowest_inter_total_dist[1];
+#endif
     candidate_ptr = buffer_ptr_array[lowest_cost_index]->candidate_ptr;
 
     context_ptr->md_local_blk_unit[blk_ptr->mds_idx].cost = *(buffer_ptr_array[lowest_cost_index]->full_cost_ptr);

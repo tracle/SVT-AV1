@@ -2251,6 +2251,44 @@ void av1_copy_frame_mvs(PictureControlSet *pcs_ptr, const Av1Common *const cm, M
         frame_mvs += frame_mvs_stride;
     }
 }
+#if STAT_UPDATE
+#define TPL_DEP_COST_SCALE_LOG2 0
+static int64_t delta_rate_cost(int64_t delta_rate, int64_t recrf_dist,
+    int64_t srcrf_dist, int pix_num) {
+    double beta = (double)srcrf_dist / recrf_dist;
+    int64_t rate_cost = delta_rate;
+
+    if (srcrf_dist <= 128) return rate_cost;
+
+    double dr =
+        (double)(delta_rate >> (TPL_DEP_COST_SCALE_LOG2 + AV1_PROB_COST_SHIFT)) /
+        pix_num;
+
+    double log_den = log(beta) / log(2.0) + 2.0 * dr;
+
+    if (log_den > log(10.0) / log(2.0)) {
+        rate_cost = (int64_t)((log(1.0 / beta) * pix_num) / log(2.0) / 2.0);
+        rate_cost <<= (TPL_DEP_COST_SCALE_LOG2 + AV1_PROB_COST_SHIFT);
+        return rate_cost;
+    }
+
+    double num = pow(2.0, log_den);
+    double den = num * beta + (1 - beta) * beta;
+
+    rate_cost = (int64_t)((pix_num * log(num / den)) / log(2.0) / 2.0);
+
+    rate_cost <<= (TPL_DEP_COST_SCALE_LOG2 + AV1_PROB_COST_SHIFT);
+
+    return rate_cost;
+}
+
+static double iiratio_nonlinear(double iiratio) {
+    double z = 8 * (iiratio - 0.5);
+    double sigmoid = 1.0 / (1.0 + exp(-z));
+    return sigmoid;
+    //return iiratio * iiratio;
+}
+#endif
 #if NO_ENCDEC
 EB_EXTERN void no_enc_dec_pass(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
                                SuperBlock *sb_ptr, uint32_t sb_addr, uint32_t sb_origin_x,
@@ -2819,7 +2857,76 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                     blk_ptr->delta_qp = sb_ptr->delta_qp;
 #endif
                 }
+#if STAT_UPDATE
+                // Collect the referenced area per 64x64
+                if (scs_ptr->use_output_stat_file) {
+                    dept_stat_t *cur_stats = &blk_ptr->cur_stat;
+#if SU_NEW_WEIGHTS
+                    int64_t weights_intra[5] = { 16, 33,46,53,68 };//{14, 32,45,50,60  };
+#else
+                    int64_t weights_intra[5] = { 10, 10,10,10,10 };
+#endif
+                    int64_t weight_intra = weights_intra[pcs_ptr->parent_pcs_ptr->temporal_layer_index];
+#if STAT_UPDATE_SW
+                    if(context_ptr->blk_origin_x==0 && context_ptr->blk_origin_y==0) {
+                        eb_block_on_mutex(scs_ptr->stat_info_mutex);
+                        //printf("kelvin ---> codingloop decode_order=%d, scs_ptr->stat_queue[decode_order]=%d, poc=%d, weight=%d\n", pcs_ptr->parent_pcs_ptr->decode_order, scs_ptr->stat_queue[pcs_ptr->parent_pcs_ptr->decode_order], pcs_ptr->parent_pcs_ptr->picture_number, 1 << (4 - pcs_ptr->parent_pcs_ptr->temporal_layer_index));
+                        scs_ptr->progagate_poc[pcs_ptr->parent_pcs_ptr->decode_order % STAT_LA_LENGTH] = pcs_ptr->parent_pcs_ptr->picture_number % STAT_LA_LENGTH;
+                        int64_t weights[5] = { 1,1,1,1,1 };//{ 4,3,2,1,1 }; to be updated
+                        int64_t weight = weights[pcs_ptr->parent_pcs_ptr->temporal_layer_index];
+                        scs_ptr->temporal_weight[pcs_ptr->parent_pcs_ptr->decode_order % STAT_LA_LENGTH] = weight;
+                        eb_release_mutex(scs_ptr->stat_info_mutex);
+                    }
+#endif
+                    if (pcs_ptr->parent_pcs_ptr->slice_type == 2)
+                        weight_intra = 10;
+                    cur_stats->inter_cost = (blk_ptr->lowest_inter_cost* 10/ weight_intra) << TPL_DEP_COST_SCALE_LOG2; //((blk_ptr->lowest_inter_total_dist[0] * weight) << RDDIV_BITS); //
+                    cur_stats->intra_cost = (blk_ptr->lowest_intra_cost* 10/ weight_intra) << TPL_DEP_COST_SCALE_LOG2; //((blk_ptr->lowest_intra_total_dist[0]* weight) << RDDIV_BITS);//
+                    cur_stats->srcrf_dist = blk_ptr->lowest_inter_total_dist[0] << TPL_DEP_COST_SCALE_LOG2;
+                    cur_stats->recrf_dist = blk_ptr->lowest_intra_total_dist[0] << TPL_DEP_COST_SCALE_LOG2;
+                    cur_stats->srcrf_rate = blk_ptr->lowest_inter_total_rate << TPL_DEP_COST_SCALE_LOG2;
+                    cur_stats->recrf_rate = blk_ptr->lowest_intra_total_rate << TPL_DEP_COST_SCALE_LOG2;
 
+                    cur_stats->recrf_dist = AOMMAX(cur_stats->srcrf_dist, cur_stats->recrf_dist);
+                    cur_stats->recrf_rate = AOMMAX(cur_stats->srcrf_rate, cur_stats->recrf_rate);
+                  //  cur_stats->rec_rdcost = AOMMAX(cur_stats->rec_rdcost, cur_stats->src_rdcost);
+
+                    cur_stats->intra_cost = AOMMAX(1, cur_stats->intra_cost);
+                    cur_stats->inter_cost = AOMMAX(1, cur_stats->inter_cost);
+                    cur_stats->srcrf_dist = AOMMAX(1, cur_stats->srcrf_dist);
+                    cur_stats->recrf_dist = AOMMAX(1, cur_stats->recrf_dist);
+                    cur_stats->srcrf_rate = AOMMAX(1, cur_stats->srcrf_rate);
+                    cur_stats->recrf_rate = AOMMAX(1, cur_stats->recrf_rate);
+
+                    cur_stats->quant_ratio = (double)AOMMAX(1,blk_ptr->lowest_inter_total_dist[0]) / (double)AOMMAX(1,blk_ptr->lowest_inter_total_dist[1]);
+                    cur_stats->mc_flow = 0;// For now, only 1 level of propagation is considered
+                    cur_stats->mc_dep_cost = blk_ptr->cur_stat.intra_cost + cur_stats->mc_flow; // to update at the time of writing to file
+
+                    cur_stats->mc_dep_rate = 0;
+                    cur_stats->mc_dep_dist = 0;
+                    cur_stats->mc_count = 0;
+                    cur_stats->mc_saved = 0;
+
+                    dept_stat_t *des_stats = &pcs_ptr->parent_pcs_ptr->stat_struct_first_pass_ptr->cur_stat[sb_addr];
+                    des_stats->inter_cost += cur_stats->inter_cost;
+                    des_stats->intra_cost += cur_stats->intra_cost;
+                    des_stats->srcrf_dist += cur_stats->srcrf_dist;
+                    des_stats->recrf_dist += cur_stats->recrf_dist;
+                    des_stats->srcrf_rate += cur_stats->srcrf_rate;
+                    des_stats->recrf_rate += cur_stats->recrf_rate;
+#if STAT_UPDATE_SW
+                    eb_block_on_mutex(scs_ptr->stat_info_mutex);
+                    stat_static_t *des_stats_static = scs_ptr->stat_static[pcs_ptr->parent_pcs_ptr->decode_order % STAT_LA_LENGTH];
+                    des_stats_static[sb_addr].inter_cost += cur_stats->inter_cost;
+                    des_stats_static[sb_addr].intra_cost += cur_stats->intra_cost;
+                    des_stats_static[sb_addr].srcrf_dist += cur_stats->srcrf_dist;
+                    des_stats_static[sb_addr].recrf_dist += cur_stats->recrf_dist;
+                    des_stats_static[sb_addr].srcrf_rate += cur_stats->srcrf_rate;
+                    des_stats_static[sb_addr].recrf_rate += cur_stats->recrf_rate;
+                    eb_release_mutex(scs_ptr->stat_info_mutex);
+#endif
+                }
+#endif
                 if (blk_ptr->prediction_mode_flag == INTRA_MODE) {
                     context_ptr->is_inter = blk_ptr->av1xd->use_intrabc;
                     context_ptr->tot_intra_coded_area += blk_geom->bwidth * blk_geom->bheight;
@@ -4465,6 +4572,71 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                         }
                         // Collect the referenced area per 64x64
                         if (scs_ptr->use_output_stat_file) {
+#if STAT_UPDATE
+                            dept_stat_t *cur_stats = &blk_ptr->cur_stat;
+                            const int pix_num = blk_geom->bwidth * blk_geom->bheight;
+                            const double iiratio_nl = iiratio_nonlinear(
+                                (double)cur_stats->inter_cost / cur_stats->intra_cost);
+                            int64_t mc_flow =
+                                (int64_t)(cur_stats->quant_ratio * cur_stats->mc_dep_cost *
+                                (1.0 - iiratio_nl));
+                            //if (pcs_ptr->parent_pcs_ptr->picture_number  == 16 && sb_addr == 10)
+                            //    printf("%d\t%.1f\t%.2f\t%.1f\t%.2f\t%.2f\t%dx%d\n",
+                            //        sb_addr,
+                            //        (double)mc_flow,
+                            //        (double)cur_stats->quant_ratio,
+                            //        (double)cur_stats->mc_dep_cost,
+                            //        (double)cur_stats->inter_cost / cur_stats->intra_cost,
+                            //        (double)(1.0 - iiratio_nl),
+                            //        context_ptr->blk_geom->bwidth,
+                            //        context_ptr->blk_geom->bheight);
+
+                            int64_t cur_dep_dist =
+                                cur_stats->recrf_dist - cur_stats->srcrf_dist;
+
+                            int64_t mc_dep_dist = (int64_t)(
+                                cur_stats->mc_dep_dist *
+                                ((double)(cur_stats->recrf_dist - cur_stats->srcrf_dist) /
+                                    cur_stats->recrf_dist));
+
+
+
+                            int64_t delta_rate =
+                                cur_stats->recrf_rate - cur_stats->srcrf_rate;
+
+                            int64_t mc_dep_rate =
+                                delta_rate_cost(cur_stats->mc_dep_rate, cur_stats->recrf_dist,
+                                    cur_stats->srcrf_dist, pix_num);
+
+                            int64_t mc_saved = cur_stats->intra_cost - cur_stats->inter_cost;
+                            int64_t weights[5] = { 1,1,1,1,1 };//{ 4,3,2,1,1 }; to be updated
+                            int64_t weight = weights[pcs_ptr->parent_pcs_ptr->temporal_layer_index];
+                            //int64_t weight =  1 << (4 - pcs_ptr->parent_pcs_ptr->temporal_layer_index);
+                            //if (pcs_ptr->parent_pcs_ptr->temporal_layer_index >= 2)
+                            //    //weight = 1 << (4 - pcs_ptr->parent_pcs_ptr->temporal_layer_index);
+                            //    weight = 1 << (4 - pcs_ptr->parent_pcs_ptr->temporal_layer_index);
+                            //else if (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 1)
+                            //    weight = 4;
+                            //else if (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0)
+                            //    weight = 8;
+                            ////else if (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0)
+                            ////    weight = 36;
+                            if (context_ptr->mv_unit.pred_direction == BI_PRED) {
+                                mc_flow = mc_flow * weight/2;
+                                cur_dep_dist = cur_dep_dist * weight/2;
+                                mc_dep_dist = mc_dep_dist * weight/2;
+                                delta_rate = delta_rate * weight/2;
+                                mc_dep_rate = mc_dep_rate * weight/2;
+                            }
+                            else {
+                                mc_flow = mc_flow * weight;
+                                cur_dep_dist = cur_dep_dist * weight;
+                                mc_dep_dist = mc_dep_dist * weight;
+                                delta_rate = delta_rate * weight;
+                                mc_dep_rate = mc_dep_rate * weight;
+                            }
+                            int overlap_area;
+#endif
 #if CLEAN_UP_SB_DATA_10
                             if (context_ptr->md_context->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].ref_frame_index_l0 >= 0) {
 #else
@@ -4513,6 +4685,43 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                             origin_y;
                                         ref_obj_0->stat_struct.referenced_area[sb_index] +=
                                             width * height * weight;
+#if STAT_UPDATE
+                                        dept_stat_t *des_stats = &ref_obj_0->stat_struct.cur_stat[sb_index];
+
+                                        overlap_area = width * height;
+                                        des_stats->mc_flow += mc_flow * overlap_area / pix_num;
+                                        des_stats->mc_count += overlap_area << TPL_DEP_COST_SCALE_LOG2;
+                                        des_stats->mc_saved += (mc_saved * overlap_area) / pix_num;
+                                        des_stats->mc_dep_dist +=
+                                            ((cur_dep_dist + mc_dep_dist) * overlap_area) / pix_num;
+                                        des_stats->mc_dep_rate +=
+                                            ((delta_rate + mc_dep_rate) * overlap_area) / pix_num;
+#if STAT_UPDATE_SW
+                                        eb_block_on_mutex(scs_ptr->stat_info_mutex);
+                                        stat_ref_info_t *stat_ref_info = scs_ptr->stat_ref_info[pcs_ptr->parent_pcs_ptr->decode_order % STAT_LA_LENGTH];
+                                        uint16_t curr_sb_origin_x = context_ptr->blk_origin_x / context_ptr->sb_sz * context_ptr->sb_sz;
+                                        uint16_t curr_sb_origin_y = context_ptr->blk_origin_y / context_ptr->sb_sz * context_ptr->sb_sz;
+                                        uint16_t curr_sb_index = curr_sb_origin_x / context_ptr->sb_sz + pic_width_in_sb * (curr_sb_origin_y / context_ptr->sb_sz);
+                                        uint16_t sb_cnt = stat_ref_info[curr_sb_index].ref_sb_cnt;
+
+                                        stat_ref_info[curr_sb_index].ref_sb_index[sb_cnt]        = sb_index;
+                                        stat_ref_info[curr_sb_index].ref_sb_decode_order[sb_cnt] = ref_obj_0->decode_order;
+                                        stat_ref_info[curr_sb_index].referenced_area[sb_cnt]     = width * height * weight;
+                                        stat_ref_info[curr_sb_index].overlap_area[sb_cnt]        = overlap_area;
+                                        stat_ref_info[curr_sb_index].pix_num[sb_cnt]             = pix_num;
+                                        stat_ref_info[curr_sb_index].quant_ratio[sb_cnt]         = cur_stats->quant_ratio;
+                                        stat_ref_info[curr_sb_index].intra_cost[sb_cnt]          = cur_stats->intra_cost;
+                                        stat_ref_info[curr_sb_index].iiratio_nl[sb_cnt]          = iiratio_nl;
+                                        stat_ref_info[curr_sb_index].is_bipred[sb_cnt]           = context_ptr->mv_unit.pred_direction == BI_PRED;
+                                        stat_ref_info[curr_sb_index].mc_saved[sb_cnt]            = mc_saved;
+                                        stat_ref_info[curr_sb_index].cur_dep_dist[sb_cnt]        = cur_dep_dist;
+                                        stat_ref_info[curr_sb_index].mc_dep_dist[sb_cnt]         = mc_dep_dist;
+                                        stat_ref_info[curr_sb_index].delta_rate[sb_cnt]          = delta_rate;
+                                        stat_ref_info[curr_sb_index].mc_dep_rate[sb_cnt]         = mc_dep_rate;
+                                        stat_ref_info[curr_sb_index].ref_sb_cnt                  = ++sb_cnt;
+                                        eb_release_mutex(scs_ptr->stat_info_mutex);
+#endif
+#endif
 
                                         if (origin_x + blk_geom->bwidth >
                                             sb_origin_x + context_ptr->sb_sz) {
@@ -4530,6 +4739,42 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                                 origin_y;
                                             ref_obj_0->stat_struct.referenced_area[sb_index] +=
                                                 width * height * weight;
+#if STAT_UPDATE
+                                            des_stats = &ref_obj_0->stat_struct.cur_stat[sb_index];
+                                            overlap_area = width * height;
+                                            des_stats->mc_flow += mc_flow * overlap_area / pix_num;
+                                            des_stats->mc_count += overlap_area << TPL_DEP_COST_SCALE_LOG2;
+                                            des_stats->mc_saved += (mc_saved * overlap_area) / pix_num;
+                                            des_stats->mc_dep_dist +=
+                                                ((cur_dep_dist + mc_dep_dist) * overlap_area) / pix_num;
+                                            des_stats->mc_dep_rate +=
+                                                ((delta_rate + mc_dep_rate) * overlap_area) / pix_num;
+#if STAT_UPDATE_SW
+                                            eb_block_on_mutex(scs_ptr->stat_info_mutex);
+                                            stat_ref_info_t *stat_ref_info = scs_ptr->stat_ref_info[pcs_ptr->parent_pcs_ptr->decode_order % STAT_LA_LENGTH];
+                                            uint16_t curr_sb_origin_x = context_ptr->blk_origin_x / context_ptr->sb_sz * context_ptr->sb_sz;
+                                            uint16_t curr_sb_origin_y = context_ptr->blk_origin_y / context_ptr->sb_sz * context_ptr->sb_sz;
+                                            uint16_t curr_sb_index = curr_sb_origin_x / context_ptr->sb_sz + pic_width_in_sb * (curr_sb_origin_y / context_ptr->sb_sz);
+                                            uint16_t sb_cnt = stat_ref_info[curr_sb_index].ref_sb_cnt;
+
+                                            stat_ref_info[curr_sb_index].ref_sb_index[sb_cnt]        = sb_index;
+                                            stat_ref_info[curr_sb_index].ref_sb_decode_order[sb_cnt] = ref_obj_0->decode_order;
+                                            stat_ref_info[curr_sb_index].referenced_area[sb_cnt]     = width * height * weight;
+                                            stat_ref_info[curr_sb_index].overlap_area[sb_cnt]        = overlap_area;
+                                            stat_ref_info[curr_sb_index].pix_num[sb_cnt]             = pix_num;
+                                            stat_ref_info[curr_sb_index].quant_ratio[sb_cnt]         = cur_stats->quant_ratio;
+                                            stat_ref_info[curr_sb_index].intra_cost[sb_cnt]          = cur_stats->intra_cost;
+                                            stat_ref_info[curr_sb_index].iiratio_nl[sb_cnt]          = iiratio_nl;
+                                            stat_ref_info[curr_sb_index].is_bipred[sb_cnt]           = context_ptr->mv_unit.pred_direction == BI_PRED;
+                                            stat_ref_info[curr_sb_index].mc_saved[sb_cnt]            = mc_saved;
+                                            stat_ref_info[curr_sb_index].cur_dep_dist[sb_cnt]        = cur_dep_dist;
+                                            stat_ref_info[curr_sb_index].mc_dep_dist[sb_cnt]         = mc_dep_dist;
+                                            stat_ref_info[curr_sb_index].delta_rate[sb_cnt]          = delta_rate;
+                                            stat_ref_info[curr_sb_index].mc_dep_rate[sb_cnt]         = mc_dep_rate;
+                                            stat_ref_info[curr_sb_index].ref_sb_cnt                  = ++sb_cnt;
+                                            eb_release_mutex(scs_ptr->stat_info_mutex);
+#endif
+#endif
                                         }
                                         if (origin_y + blk_geom->bheight >
                                             sb_origin_y + context_ptr->sb_sz) {
@@ -4547,6 +4792,42 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                                 MAX(sb_origin_y, origin_y);
                                             ref_obj_0->stat_struct.referenced_area[sb_index] +=
                                                 width * height * weight;
+#if STAT_UPDATE
+                                            des_stats = &ref_obj_0->stat_struct.cur_stat[sb_index];
+                                            overlap_area = width * height;
+                                            des_stats->mc_flow += mc_flow * overlap_area / pix_num;
+                                            des_stats->mc_count += overlap_area << TPL_DEP_COST_SCALE_LOG2;
+                                            des_stats->mc_saved += (mc_saved * overlap_area) / pix_num;
+                                            des_stats->mc_dep_dist +=
+                                                ((cur_dep_dist + mc_dep_dist) * overlap_area) / pix_num;
+                                            des_stats->mc_dep_rate +=
+                                                ((delta_rate + mc_dep_rate) * overlap_area) / pix_num;
+#if STAT_UPDATE_SW
+                                            eb_block_on_mutex(scs_ptr->stat_info_mutex);
+                                            stat_ref_info_t *stat_ref_info = scs_ptr->stat_ref_info[pcs_ptr->parent_pcs_ptr->decode_order % STAT_LA_LENGTH];
+                                            uint16_t curr_sb_origin_x = context_ptr->blk_origin_x / context_ptr->sb_sz * context_ptr->sb_sz;
+                                            uint16_t curr_sb_origin_y = context_ptr->blk_origin_y / context_ptr->sb_sz * context_ptr->sb_sz;
+                                            uint16_t curr_sb_index = curr_sb_origin_x / context_ptr->sb_sz + pic_width_in_sb * (curr_sb_origin_y / context_ptr->sb_sz);
+                                            uint16_t sb_cnt = stat_ref_info[curr_sb_index].ref_sb_cnt;
+
+                                            stat_ref_info[curr_sb_index].ref_sb_index[sb_cnt]        = sb_index;
+                                            stat_ref_info[curr_sb_index].ref_sb_decode_order[sb_cnt] = ref_obj_0->decode_order;
+                                            stat_ref_info[curr_sb_index].referenced_area[sb_cnt]     = width * height * weight;
+                                            stat_ref_info[curr_sb_index].overlap_area[sb_cnt]        = overlap_area;
+                                            stat_ref_info[curr_sb_index].pix_num[sb_cnt]             = pix_num;
+                                            stat_ref_info[curr_sb_index].quant_ratio[sb_cnt]         = cur_stats->quant_ratio;
+                                            stat_ref_info[curr_sb_index].intra_cost[sb_cnt]          = cur_stats->intra_cost;
+                                            stat_ref_info[curr_sb_index].iiratio_nl[sb_cnt]          = iiratio_nl;
+                                            stat_ref_info[curr_sb_index].is_bipred[sb_cnt]           = context_ptr->mv_unit.pred_direction == BI_PRED;
+                                            stat_ref_info[curr_sb_index].mc_saved[sb_cnt]            = mc_saved;
+                                            stat_ref_info[curr_sb_index].cur_dep_dist[sb_cnt]        = cur_dep_dist;
+                                            stat_ref_info[curr_sb_index].mc_dep_dist[sb_cnt]         = mc_dep_dist;
+                                            stat_ref_info[curr_sb_index].delta_rate[sb_cnt]          = delta_rate;
+                                            stat_ref_info[curr_sb_index].mc_dep_rate[sb_cnt]         = mc_dep_rate;
+                                            stat_ref_info[curr_sb_index].ref_sb_cnt                  = ++sb_cnt;
+                                            eb_release_mutex(scs_ptr->stat_info_mutex);
+#endif
+#endif
                                         }
                                         if (origin_x + blk_geom->bwidth >
                                             sb_origin_x + context_ptr->sb_sz &&
@@ -4565,6 +4846,42 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                                 MAX(sb_origin_y, origin_y);
                                             ref_obj_0->stat_struct.referenced_area[sb_index] +=
                                                 width * height * weight;
+#if STAT_UPDATE
+                                            des_stats = &ref_obj_0->stat_struct.cur_stat[sb_index];
+                                            overlap_area = width * height;
+                                            des_stats->mc_flow += mc_flow * overlap_area / pix_num;
+                                            des_stats->mc_count += overlap_area << TPL_DEP_COST_SCALE_LOG2;
+                                            des_stats->mc_saved += (mc_saved * overlap_area) / pix_num;
+                                            des_stats->mc_dep_dist +=
+                                                ((cur_dep_dist + mc_dep_dist) * overlap_area) / pix_num;
+                                            des_stats->mc_dep_rate +=
+                                                ((delta_rate + mc_dep_rate) * overlap_area) / pix_num;
+#if STAT_UPDATE_SW
+                                            eb_block_on_mutex(scs_ptr->stat_info_mutex);
+                                            stat_ref_info_t *stat_ref_info = scs_ptr->stat_ref_info[pcs_ptr->parent_pcs_ptr->decode_order % STAT_LA_LENGTH];
+                                            uint16_t curr_sb_origin_x = context_ptr->blk_origin_x / context_ptr->sb_sz * context_ptr->sb_sz;
+                                            uint16_t curr_sb_origin_y = context_ptr->blk_origin_y / context_ptr->sb_sz * context_ptr->sb_sz;
+                                            uint16_t curr_sb_index = curr_sb_origin_x / context_ptr->sb_sz + pic_width_in_sb * (curr_sb_origin_y / context_ptr->sb_sz);
+                                            uint16_t sb_cnt = stat_ref_info[curr_sb_index].ref_sb_cnt;
+
+                                            stat_ref_info[curr_sb_index].ref_sb_index[sb_cnt]        = sb_index;
+                                            stat_ref_info[curr_sb_index].ref_sb_decode_order[sb_cnt] = ref_obj_0->decode_order;
+                                            stat_ref_info[curr_sb_index].referenced_area[sb_cnt]     = width * height * weight;
+                                            stat_ref_info[curr_sb_index].overlap_area[sb_cnt]        = overlap_area;
+                                            stat_ref_info[curr_sb_index].pix_num[sb_cnt]             = pix_num;
+                                            stat_ref_info[curr_sb_index].quant_ratio[sb_cnt]         = cur_stats->quant_ratio;
+                                            stat_ref_info[curr_sb_index].intra_cost[sb_cnt]          = cur_stats->intra_cost;
+                                            stat_ref_info[curr_sb_index].iiratio_nl[sb_cnt]          = iiratio_nl;
+                                            stat_ref_info[curr_sb_index].is_bipred[sb_cnt]           = context_ptr->mv_unit.pred_direction == BI_PRED;
+                                            stat_ref_info[curr_sb_index].mc_saved[sb_cnt]            = mc_saved;
+                                            stat_ref_info[curr_sb_index].cur_dep_dist[sb_cnt]        = cur_dep_dist;
+                                            stat_ref_info[curr_sb_index].mc_dep_dist[sb_cnt]         = mc_dep_dist;
+                                            stat_ref_info[curr_sb_index].delta_rate[sb_cnt]          = delta_rate;
+                                            stat_ref_info[curr_sb_index].mc_dep_rate[sb_cnt]         = mc_dep_rate;
+                                            stat_ref_info[curr_sb_index].ref_sb_cnt                  = ++sb_cnt;
+                                            eb_release_mutex(scs_ptr->stat_info_mutex);
+#endif
+#endif
                                         }
                                     }
                                 }
@@ -4616,6 +4933,42 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                         origin_y;
                                     ref_obj_1->stat_struct.referenced_area[sb_index] +=
                                         width * height * weight;
+#if STAT_UPDATE
+                                    dept_stat_t *des_stats = &ref_obj_1->stat_struct.cur_stat[sb_index];
+                                    overlap_area = width * height;
+                                    des_stats->mc_flow += mc_flow * overlap_area / pix_num;
+                                    des_stats->mc_count += overlap_area << TPL_DEP_COST_SCALE_LOG2;
+                                    des_stats->mc_saved += (mc_saved * overlap_area) / pix_num;
+                                    des_stats->mc_dep_dist +=
+                                        ((cur_dep_dist + mc_dep_dist) * overlap_area) / pix_num;
+                                    des_stats->mc_dep_rate +=
+                                        ((delta_rate + mc_dep_rate) * overlap_area) / pix_num;
+#if STAT_UPDATE_SW
+                                    eb_block_on_mutex(scs_ptr->stat_info_mutex);
+                                    stat_ref_info_t *stat_ref_info = scs_ptr->stat_ref_info[pcs_ptr->parent_pcs_ptr->decode_order % STAT_LA_LENGTH];
+                                    uint16_t curr_sb_origin_x = context_ptr->blk_origin_x / context_ptr->sb_sz * context_ptr->sb_sz;
+                                    uint16_t curr_sb_origin_y = context_ptr->blk_origin_y / context_ptr->sb_sz * context_ptr->sb_sz;
+                                    uint16_t curr_sb_index = curr_sb_origin_x / context_ptr->sb_sz + pic_width_in_sb * (curr_sb_origin_y / context_ptr->sb_sz);
+                                    uint16_t sb_cnt = stat_ref_info[curr_sb_index].ref_sb_cnt;
+
+                                    stat_ref_info[curr_sb_index].ref_sb_index[sb_cnt]        = sb_index;
+                                    stat_ref_info[curr_sb_index].ref_sb_decode_order[sb_cnt] = ref_obj_1->decode_order;
+                                    stat_ref_info[curr_sb_index].referenced_area[sb_cnt]     = width * height * weight;
+                                    stat_ref_info[curr_sb_index].overlap_area[sb_cnt]        = overlap_area;
+                                    stat_ref_info[curr_sb_index].pix_num[sb_cnt]             = pix_num;
+                                    stat_ref_info[curr_sb_index].quant_ratio[sb_cnt]         = cur_stats->quant_ratio;
+                                    stat_ref_info[curr_sb_index].intra_cost[sb_cnt]          = cur_stats->intra_cost;
+                                    stat_ref_info[curr_sb_index].iiratio_nl[sb_cnt]          = iiratio_nl;
+                                    stat_ref_info[curr_sb_index].is_bipred[sb_cnt]           = context_ptr->mv_unit.pred_direction == BI_PRED;
+                                    stat_ref_info[curr_sb_index].mc_saved[sb_cnt]            = mc_saved;
+                                    stat_ref_info[curr_sb_index].cur_dep_dist[sb_cnt]        = cur_dep_dist;
+                                    stat_ref_info[curr_sb_index].mc_dep_dist[sb_cnt]         = mc_dep_dist;
+                                    stat_ref_info[curr_sb_index].delta_rate[sb_cnt]          = delta_rate;
+                                    stat_ref_info[curr_sb_index].mc_dep_rate[sb_cnt]         = mc_dep_rate;
+                                    stat_ref_info[curr_sb_index].ref_sb_cnt                  = ++sb_cnt;
+                                    eb_release_mutex(scs_ptr->stat_info_mutex);
+#endif
+#endif
                                     if (origin_x + blk_geom->bwidth >
                                         sb_origin_x + context_ptr->sb_sz) {
                                         sb_origin_x = (origin_x / context_ptr->sb_sz + 1) *
@@ -4632,6 +4985,42 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                             origin_y;
                                         ref_obj_1->stat_struct.referenced_area[sb_index] +=
                                             width * height * weight;
+#if STAT_UPDATE
+                                        des_stats = &ref_obj_1->stat_struct.cur_stat[sb_index];
+                                        overlap_area = width * height;
+                                        des_stats->mc_flow += mc_flow * overlap_area / pix_num;
+                                        des_stats->mc_count += overlap_area << TPL_DEP_COST_SCALE_LOG2;
+                                        des_stats->mc_saved += (mc_saved * overlap_area) / pix_num;
+                                        des_stats->mc_dep_dist +=
+                                            ((cur_dep_dist + mc_dep_dist) * overlap_area) / pix_num;
+                                        des_stats->mc_dep_rate +=
+                                            ((delta_rate + mc_dep_rate) * overlap_area) / pix_num;
+#if STAT_UPDATE_SW
+                                        eb_block_on_mutex(scs_ptr->stat_info_mutex);
+                                        stat_ref_info_t *stat_ref_info = scs_ptr->stat_ref_info[pcs_ptr->parent_pcs_ptr->decode_order % STAT_LA_LENGTH];
+                                        uint16_t curr_sb_origin_x = context_ptr->blk_origin_x / context_ptr->sb_sz * context_ptr->sb_sz;
+                                        uint16_t curr_sb_origin_y = context_ptr->blk_origin_y / context_ptr->sb_sz * context_ptr->sb_sz;
+                                        uint16_t curr_sb_index = curr_sb_origin_x / context_ptr->sb_sz + pic_width_in_sb * (curr_sb_origin_y / context_ptr->sb_sz);
+                                        uint16_t sb_cnt = stat_ref_info[curr_sb_index].ref_sb_cnt;
+
+                                        stat_ref_info[curr_sb_index].ref_sb_index[sb_cnt]        = sb_index;
+                                        stat_ref_info[curr_sb_index].ref_sb_decode_order[sb_cnt] = ref_obj_1->decode_order;
+                                        stat_ref_info[curr_sb_index].referenced_area[sb_cnt]     = width * height * weight;
+                                        stat_ref_info[curr_sb_index].overlap_area[sb_cnt]        = overlap_area;
+                                        stat_ref_info[curr_sb_index].pix_num[sb_cnt]             = pix_num;
+                                        stat_ref_info[curr_sb_index].quant_ratio[sb_cnt]         = cur_stats->quant_ratio;
+                                        stat_ref_info[curr_sb_index].intra_cost[sb_cnt]          = cur_stats->intra_cost;
+                                        stat_ref_info[curr_sb_index].iiratio_nl[sb_cnt]          = iiratio_nl;
+                                        stat_ref_info[curr_sb_index].is_bipred[sb_cnt]           = context_ptr->mv_unit.pred_direction == BI_PRED;
+                                        stat_ref_info[curr_sb_index].mc_saved[sb_cnt]            = mc_saved;
+                                        stat_ref_info[curr_sb_index].cur_dep_dist[sb_cnt]        = cur_dep_dist;
+                                        stat_ref_info[curr_sb_index].mc_dep_dist[sb_cnt]         = mc_dep_dist;
+                                        stat_ref_info[curr_sb_index].delta_rate[sb_cnt]          = delta_rate;
+                                        stat_ref_info[curr_sb_index].mc_dep_rate[sb_cnt]         = mc_dep_rate;
+                                        stat_ref_info[curr_sb_index].ref_sb_cnt                  = ++sb_cnt;
+                                        eb_release_mutex(scs_ptr->stat_info_mutex);
+#endif
+#endif
                                     }
                                     if (origin_y + blk_geom->bheight >
                                         sb_origin_y + context_ptr->sb_sz) {
@@ -4649,6 +5038,42 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                             MAX(sb_origin_y, origin_y);
                                         ref_obj_1->stat_struct.referenced_area[sb_index] +=
                                             width * height * weight;
+#if STAT_UPDATE
+                                        des_stats = &ref_obj_1->stat_struct.cur_stat[sb_index];
+                                        overlap_area = width * height;
+                                        des_stats->mc_flow += mc_flow * overlap_area / pix_num;
+                                        des_stats->mc_count += overlap_area << TPL_DEP_COST_SCALE_LOG2;
+                                        des_stats->mc_saved += (mc_saved * overlap_area) / pix_num;
+                                        des_stats->mc_dep_dist +=
+                                            ((cur_dep_dist + mc_dep_dist) * overlap_area) / pix_num;
+                                        des_stats->mc_dep_rate +=
+                                            ((delta_rate + mc_dep_rate) * overlap_area) / pix_num;
+#if STAT_UPDATE_SW
+                                        eb_block_on_mutex(scs_ptr->stat_info_mutex);
+                                        stat_ref_info_t *stat_ref_info = scs_ptr->stat_ref_info[pcs_ptr->parent_pcs_ptr->decode_order % STAT_LA_LENGTH];
+                                        uint16_t curr_sb_origin_x = context_ptr->blk_origin_x / context_ptr->sb_sz * context_ptr->sb_sz;
+                                        uint16_t curr_sb_origin_y = context_ptr->blk_origin_y / context_ptr->sb_sz * context_ptr->sb_sz;
+                                        uint16_t curr_sb_index = curr_sb_origin_x / context_ptr->sb_sz + pic_width_in_sb * (curr_sb_origin_y / context_ptr->sb_sz);
+                                        uint16_t sb_cnt = stat_ref_info[curr_sb_index].ref_sb_cnt;
+
+                                        stat_ref_info[curr_sb_index].ref_sb_index[sb_cnt]        = sb_index;
+                                        stat_ref_info[curr_sb_index].ref_sb_decode_order[sb_cnt] = ref_obj_1->decode_order;
+                                        stat_ref_info[curr_sb_index].referenced_area[sb_cnt]     = width * height * weight;
+                                        stat_ref_info[curr_sb_index].overlap_area[sb_cnt]        = overlap_area;
+                                        stat_ref_info[curr_sb_index].pix_num[sb_cnt]             = pix_num;
+                                        stat_ref_info[curr_sb_index].quant_ratio[sb_cnt]         = cur_stats->quant_ratio;
+                                        stat_ref_info[curr_sb_index].intra_cost[sb_cnt]          = cur_stats->intra_cost;
+                                        stat_ref_info[curr_sb_index].iiratio_nl[sb_cnt]          = iiratio_nl;
+                                        stat_ref_info[curr_sb_index].is_bipred[sb_cnt]           = context_ptr->mv_unit.pred_direction == BI_PRED;
+                                        stat_ref_info[curr_sb_index].mc_saved[sb_cnt]            = mc_saved;
+                                        stat_ref_info[curr_sb_index].cur_dep_dist[sb_cnt]        = cur_dep_dist;
+                                        stat_ref_info[curr_sb_index].mc_dep_dist[sb_cnt]         = mc_dep_dist;
+                                        stat_ref_info[curr_sb_index].delta_rate[sb_cnt]          = delta_rate;
+                                        stat_ref_info[curr_sb_index].mc_dep_rate[sb_cnt]         = mc_dep_rate;
+                                        stat_ref_info[curr_sb_index].ref_sb_cnt                  = ++sb_cnt;
+                                        eb_release_mutex(scs_ptr->stat_info_mutex);
+#endif
+#endif
                                     }
                                     if (origin_x + blk_geom->bwidth >
                                         sb_origin_x + context_ptr->sb_sz &&
@@ -4667,6 +5092,42 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                             MAX(sb_origin_y, origin_y);
                                         ref_obj_1->stat_struct.referenced_area[sb_index] +=
                                             width * height * weight;
+#if STAT_UPDATE
+                                        des_stats = &ref_obj_1->stat_struct.cur_stat[sb_index];
+                                        overlap_area = width * height;
+                                        des_stats->mc_flow += mc_flow * overlap_area / pix_num;
+                                        des_stats->mc_count += overlap_area << TPL_DEP_COST_SCALE_LOG2;
+                                        des_stats->mc_saved += (mc_saved * overlap_area) / pix_num;
+                                        des_stats->mc_dep_dist +=
+                                            ((cur_dep_dist + mc_dep_dist) * overlap_area) / pix_num;
+                                        des_stats->mc_dep_rate +=
+                                            ((delta_rate + mc_dep_rate) * overlap_area) / pix_num;
+#if STAT_UPDATE_SW
+                                        eb_block_on_mutex(scs_ptr->stat_info_mutex);
+                                        stat_ref_info_t *stat_ref_info = scs_ptr->stat_ref_info[pcs_ptr->parent_pcs_ptr->decode_order % STAT_LA_LENGTH];
+                                        uint16_t curr_sb_origin_x = context_ptr->blk_origin_x / context_ptr->sb_sz * context_ptr->sb_sz;
+                                        uint16_t curr_sb_origin_y = context_ptr->blk_origin_y / context_ptr->sb_sz * context_ptr->sb_sz;
+                                        uint16_t curr_sb_index = curr_sb_origin_x / context_ptr->sb_sz + pic_width_in_sb * (curr_sb_origin_y / context_ptr->sb_sz);
+                                        uint16_t sb_cnt = stat_ref_info[curr_sb_index].ref_sb_cnt;
+
+                                        stat_ref_info[curr_sb_index].ref_sb_index[sb_cnt]        = sb_index;
+                                        stat_ref_info[curr_sb_index].ref_sb_decode_order[sb_cnt] = ref_obj_1->decode_order;
+                                        stat_ref_info[curr_sb_index].referenced_area[sb_cnt]     = width * height * weight;
+                                        stat_ref_info[curr_sb_index].overlap_area[sb_cnt]        = overlap_area;
+                                        stat_ref_info[curr_sb_index].pix_num[sb_cnt]             = pix_num;
+                                        stat_ref_info[curr_sb_index].quant_ratio[sb_cnt]         = cur_stats->quant_ratio;
+                                        stat_ref_info[curr_sb_index].intra_cost[sb_cnt]          = cur_stats->intra_cost;
+                                        stat_ref_info[curr_sb_index].iiratio_nl[sb_cnt]          = iiratio_nl;
+                                        stat_ref_info[curr_sb_index].is_bipred[sb_cnt]           = context_ptr->mv_unit.pred_direction == BI_PRED;
+                                        stat_ref_info[curr_sb_index].mc_saved[sb_cnt]            = mc_saved;
+                                        stat_ref_info[curr_sb_index].cur_dep_dist[sb_cnt]        = cur_dep_dist;
+                                        stat_ref_info[curr_sb_index].mc_dep_dist[sb_cnt]         = mc_dep_dist;
+                                        stat_ref_info[curr_sb_index].delta_rate[sb_cnt]          = delta_rate;
+                                        stat_ref_info[curr_sb_index].mc_dep_rate[sb_cnt]         = mc_dep_rate;
+                                        stat_ref_info[curr_sb_index].ref_sb_cnt                  = ++sb_cnt;
+                                        eb_release_mutex(scs_ptr->stat_info_mutex);
+#endif
+#endif
                                     }
                                 }
                                 eb_release_mutex(ref_obj_1->referenced_area_mutex);

@@ -756,6 +756,9 @@ typedef struct PictureParentControlSet {
     struct StatStruct stat_struct; // stat_struct used in the second pass
     uint64_t          referenced_area_avg; // average referenced area per frame
     uint8_t           referenced_area_has_non_zero;
+#if STAT_UPDATE
+    double            r0;
+#endif
     uint8_t gm_level;
     uint8_t tx_size_early_exit;
 

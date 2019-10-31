@@ -35,6 +35,9 @@
 #define QP_FILE_TOKEN "-qp-file"
 #define INPUT_STAT_FILE_TOKEN "-input-stat-file"
 #define OUTPUT_STAT_FILE_TOKEN "-output-stat-file"
+#if STAT_UPDATE_SW
+#define SLIDE_WIN_LENGTH_TOKEN "-slide-win-length"
+#endif
 #define STAT_FILE_TOKEN "-stat-file"
 #define INPUT_PREDSTRUCT_FILE_TOKEN "-pred-struct-file"
 #define WIDTH_TOKEN "-w"
@@ -278,6 +281,9 @@ static void set_output_stat_file(const char *value, EbConfig *cfg) {
     if (cfg->output_stat_file) { fclose(cfg->output_stat_file); }
     FOPEN(cfg->output_stat_file, value, "wb");
 };
+#if STAT_UPDATE_SW
+static void set_slide_win_length(const char *value, EbConfig *cfg) { cfg->slide_win_length = (uint32_t)strtol(value, NULL, 0); };
+#endif
 static void set_snd_pass_enc_mode(const char *value, EbConfig *cfg) {
     cfg->snd_pass_enc_mode = (uint8_t)strtoul(value, NULL, 0);
 };
@@ -1189,6 +1195,9 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, STAT_FILE_TOKEN, "StatFile", set_cfg_stat_file},
     {SINGLE_INPUT, INPUT_STAT_FILE_TOKEN, "input_stat_file", set_input_stat_file},
     {SINGLE_INPUT, OUTPUT_STAT_FILE_TOKEN, "output_stat_file", set_output_stat_file},
+#if STAT_UPDATE_SW
+    { SINGLE_INPUT, SLIDE_WIN_LENGTH_TOKEN, "slide_win_length", set_slide_win_length },
+#endif
     {SINGLE_INPUT, INPUT_PREDSTRUCT_FILE_TOKEN, "pred_struct_file", set_pred_struct_file},
     // Picture Dimensions
     {SINGLE_INPUT, WIDTH_TOKEN, "SourceWidth", set_cfg_source_width},
@@ -1494,6 +1503,9 @@ void eb_config_ctor(EbConfig *config_ptr) {
     config_ptr->encoder_16bit_pipeline = 0;
     config_ptr->encoder_color_format = 1; //EB_YUV420
     config_ptr->buffered_input       = -1;
+#if STAT_UPDATE_SW
+    config_ptr->slide_win_length     = 40;
+#endif
 
     config_ptr->qp                  = 50;
     config_ptr->use_qp_file         = EB_FALSE;

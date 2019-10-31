@@ -7023,6 +7023,16 @@ void move_blk_data(PictureControlSet *pcs, EncDecContext *context_ptr, BlkStruct
 #endif
     dst_cu->mds_idx           = src_cu->mds_idx;
     dst_cu->filter_intra_mode = src_cu->filter_intra_mode;
+#if STAT_UPDATE
+    dst_cu->lowest_intra_cost          = src_cu->lowest_intra_cost;
+    dst_cu->lowest_intra_total_rate    = src_cu->lowest_intra_total_rate;
+    dst_cu->lowest_intra_total_dist[0] = src_cu->lowest_intra_total_dist[0];
+    dst_cu->lowest_intra_total_dist[1] = src_cu->lowest_intra_total_dist[1];
+    dst_cu->lowest_inter_cost          = src_cu->lowest_inter_cost;
+    dst_cu->lowest_inter_total_rate    = src_cu->lowest_inter_total_rate;
+    dst_cu->lowest_inter_total_dist[0] = src_cu->lowest_inter_total_dist[0];
+    dst_cu->lowest_inter_total_dist[1] = src_cu->lowest_inter_total_dist[1];
+#endif
 }
 void move_blk_data_redund(PictureControlSet *pcs, ModeDecisionContext *context_ptr,
                           BlkStruct *src_cu, BlkStruct *dst_cu) {

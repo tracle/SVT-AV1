@@ -117,6 +117,10 @@ EbErrorType copy_configuration_parameters(EbConfig *config, EbAppContext *callba
     callback_data->eb_enc_parameters.input_stat_file      = config->input_stat_file;
     callback_data->eb_enc_parameters.output_stat_file     = config->output_stat_file;
     callback_data->eb_enc_parameters.stat_report          = (EbBool)config->stat_report;
+#if STAT_UPDATE_SW
+    callback_data->eb_enc_parameters.slide_win_length     = (EbBool)config->slide_win_length;
+    callback_data->eb_enc_parameters.frames_to_be_encoded = (EbBool)config->frames_to_be_encoded;
+#endif
     callback_data->eb_enc_parameters.disable_dlf_flag     = (EbBool)config->disable_dlf_flag;
     callback_data->eb_enc_parameters.enable_warped_motion = config->enable_warped_motion;
     callback_data->eb_enc_parameters.enable_global_motion = (EbBool)config->enable_global_motion;

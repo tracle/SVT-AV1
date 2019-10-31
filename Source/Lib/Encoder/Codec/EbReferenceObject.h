@@ -16,6 +16,9 @@ typedef struct EbReferenceObject {
     EbPictureBufferDesc *reference_picture;
     EbPictureBufferDesc *reference_picture16bit;
     uint64_t             ref_poc;
+#if STAT_UPDATE_SW
+    uint64_t             decode_order;
+#endif
     uint16_t             qp;
     EB_SLICE             slice_type;
     uint8_t              intra_coded_area; //percentage of intra coded area 0-100%

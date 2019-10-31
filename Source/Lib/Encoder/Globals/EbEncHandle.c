@@ -2098,6 +2098,10 @@ void copy_api_from_app(
     scs_ptr->static_config.output_stat_file = ((EbSvtAv1EncConfiguration*)config_struct)->output_stat_file;
     scs_ptr->use_input_stat_file = scs_ptr->static_config.input_stat_file ? 1 : 0;
     scs_ptr->use_output_stat_file = scs_ptr->static_config.output_stat_file ? 1 : 0;
+#if STAT_UPDATE_SW
+    scs_ptr->static_config.slide_win_length = ((EbSvtAv1EncConfiguration*)config_struct)->slide_win_length;
+    scs_ptr->static_config.frames_to_be_encoded = ((EbSvtAv1EncConfiguration*)config_struct)->frames_to_be_encoded;
+#endif
     // Deblock Filter
 #if SHUT_FILTERING
     scs_ptr->static_config.disable_dlf_flag = 1;
@@ -2964,6 +2968,10 @@ EbErrorType eb_svt_enc_init_parameter(
     config_ptr->stat_report = 0;
     config_ptr->tile_rows = 0;
     config_ptr->tile_columns = 0;
+#if STAT_UPDATE_SW
+    config_ptr->slide_win_length = 40;
+    config_ptr->frames_to_be_encoded = 0;
+#endif
 
     config_ptr->qp = 50;
     config_ptr->use_qp_file = EB_FALSE;

@@ -168,6 +168,9 @@ typedef struct EbConfig {
     unsigned char y4m_buf[9];
     EbBool        use_qp_file;
     uint8_t       stat_report;
+#if STAT_UPDATE_SW
+    uint32_t      slide_win_length;
+#endif
     uint32_t      frame_rate;
     uint32_t      frame_rate_numerator;
     uint32_t      frame_rate_denominator;

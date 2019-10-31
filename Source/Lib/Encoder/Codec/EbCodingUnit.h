@@ -387,6 +387,15 @@ typedef struct BlkStruct {
 #if !CLEAN_UP_SB_DATA_6
     uint8_t        do_not_process_block;
 #endif
+#if STAT_UPDATE
+    uint64_t       lowest_intra_cost;
+    uint64_t       lowest_intra_total_rate;
+    uint64_t       lowest_intra_total_dist[2];
+    uint64_t       lowest_inter_cost;
+    uint64_t       lowest_inter_total_rate;
+    uint64_t       lowest_inter_total_dist[2];
+    dept_stat_t    cur_stat;
+#endif
 } BlkStruct;
 #else
 typedef struct BlkStruct {

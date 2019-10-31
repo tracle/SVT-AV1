@@ -12,6 +12,15 @@ static void eb_sequence_control_set_dctor(EbPtr p) {
     SequenceControlSet *obj = (SequenceControlSet *)p;
     EB_FREE_ARRAY(obj->sb_params_array);
     EB_FREE_ARRAY(obj->sb_geom);
+#if STAT_UPDATE_SW
+    for (uint16_t sw_index = 0; sw_index < STAT_LA_LENGTH; sw_index++)
+    {
+        EB_FREE_ARRAY(obj->stat_ref_info[sw_index]);
+        EB_FREE_ARRAY(obj->stat_static[sw_index]);
+    }
+    EB_DESTROY_MUTEX(obj->stat_info_mutex);
+    EB_DESTROY_MUTEX(obj->stat_queue_mutex);
+#endif
 }
 
 /**************************************************************************************************
@@ -476,6 +485,28 @@ extern EbErrorType sb_params_init(SequenceControlSet *scs_ptr) {
                     : EB_TRUE;
         }
     }
+#if STAT_UPDATE_SW
+    if(scs_ptr->use_output_stat_file)
+        printf("pass0 sqcs input slide_win_length=%d\n", scs_ptr->static_config.slide_win_length);
+    scs_ptr->stat_queue_head_index = 0;
+    for (uint16_t sw_index = 0; sw_index < STAT_LA_LENGTH; sw_index++)
+    {
+        uint16_t   pictureBlockWidth  = picture_sb_width;
+        uint16_t   pictureBlockHeight = picture_sb_height;
+        EB_FREE_ARRAY(scs_ptr->stat_ref_info[sw_index]);
+        EB_MALLOC_ARRAY(scs_ptr->stat_ref_info[sw_index], pictureBlockWidth * pictureBlockHeight + 100);
+        EB_FREE_ARRAY(scs_ptr->stat_static[sw_index]);
+        EB_MALLOC_ARRAY(scs_ptr->stat_static[sw_index], pictureBlockWidth * pictureBlockHeight + 100);
+        for(int i = 0; i < (pictureBlockWidth * pictureBlockHeight + 100); i++) {
+            memset(&(scs_ptr->stat_ref_info[sw_index][i]), 0, sizeof(stat_ref_info_t));
+            memset(&(scs_ptr->stat_static[sw_index][i]), 0, sizeof(stat_static_t));
+        }
+        scs_ptr->temporal_weight[sw_index] = 0;
+        scs_ptr->stat_queue[sw_index] = EB_FALSE;
+    }
+    EB_CREATE_MUTEX(scs_ptr->stat_info_mutex);
+    EB_CREATE_MUTEX(scs_ptr->stat_queue_mutex);
+#endif
 
     scs_ptr->pic_width_in_sb      = picture_sb_width;
     scs_ptr->picture_height_in_sb = picture_sb_height;

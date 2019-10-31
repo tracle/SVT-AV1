@@ -226,6 +226,10 @@ typedef struct ModeDecisionCandidateBuffer {
     uint64_t *full_cost_skip_ptr;
     uint64_t *full_cost_merge_ptr;
 
+#if STAT_UPDATE
+    uint64_t total_rate;
+    uint64_t total_dist[2];
+#endif
 } ModeDecisionCandidateBuffer;
 
 /**************************************

@@ -34,6 +34,44 @@
 extern "C" {
 #endif
 
+#define STAT_UPDATE                  0
+#define STAT_UPDATE_SW               0
+#define STAT_UPDATE_MC_FLOW_NON_ZERO 0
+#define STAT_UPDATE_MC_FLOW_PIC_NUM  0
+#define SU_QPS_I                     0
+#define SU_QPS_B                     0
+#define SU_QPM_I                     0
+#define SU_QPM_B                     0
+#define SU_NEW_WEIGHTS               0
+
+#define FIX_ALTREF                   1 // Address ALTREF mismatch between rtime-m0-test and master: fixed actual_future_pics derivation, shut padding of the central frame, fixed end past frame index prior to window shrinking
+#define FIX_NEAREST_NEW              1 // Address NEAREST_NEW mismatch between rtime-m0-test and master: fixed injection and fixed settings
+#define FIX_ESTIMATE_INTRA           1 // Address ESTIMATE_INTRA mismatch between rtime-m0-test and master: fixed settings
+#define FIX_SKIP_REDUNDANT_BLOCK     1 // Address SKIP_REDUNDANT_BLOCK mismatch between rtime-m0-test and master: fixed the action to bypass MD
+#define FIX_COEF_BASED_ATB_SKIP      1 // Address COEF_BASED_ATB_SKIP mismatch between rtime-m0-test and master: reset coeff_based_skip_atb @ each SB
+#define FIX_WM_SETTINGS              1 // Address WM_SETTINGS mismatch between rtime-m0-test and master: fixed settings
+#define FIX_ENABLE_CDF_UPDATE        1 // Address ENABLE_CDF_UPDATE mismatch between rtime-m0-test and master: removed useless update
+#define FIX_SORTING_METHOD           1 // Address SORTING mismatch between rtime-m0-test and master: used same method
+#define FIX_SETTINGS_RESET           1 // Address SEGMENT_RESET mismatch between rtime-m0-test and master: only @ 1st segment
+#define FIX_COMPOUND                 1 // Address COMPOUND mismatch between rtime-m0-test and master: used block size @ the derivation of compound count
+
+#define OBMC_FLAG            1 // OBMC motion mode flag
+#define OBMC_CONVOLVE        1 // to track convolve kernels changes
+
+#define INJECT_NEW_NEAR_NEAR_NEW   1   // Inject NEW_NEAR / NEAR_NEW inter prediction
+#define FILTER_INTRA_FLAG    1 // Filter intra prediction
+
+
+#define II_COMP_FLAG                 1 // InterIntra compound
+#define PAETH_HBD                    1 // Enbale Intra PAETH for 10bit
+#define INTER_INTER_HBD              1 // Upgrade InterInter compound 10bit
+#define INTER_INTRA_HBD              1 // Upgrade InterIntra compound 10bit
+
+#define PRED_CHANGE                  1 // Change the MRP in 4L Pictures 3, 5 , 7 and 9 use 1 as the reference
+#define PRED_CHANGE_5L               1 // Change the MRP in 5L Pictures 3, 5 , 7 and 9 use 1 as the reference, 11, 13, 15 and 17 use 9 as the reference
+#define PRED_CHANGE_MOD              1 // Reorder the references for MRP
+#define SPEED_OPT                    1 // Speed optimization(s)
+
 #ifndef NON_AVX512_SUPPORT
 #define NON_AVX512_SUPPORT
 #endif
@@ -3196,13 +3234,82 @@ static const uint32_t md_scan_to_ois_32x32_scan[CU_MAX_COUNT] =
     /*84 */3,
 };
 
+typedef struct dep_stat_t {
+    int64_t intra_cost;
+    int64_t inter_cost;
+    int64_t mc_flow;
+    int64_t mc_dep_cost;
+    int64_t srcrf_dist;
+    int64_t recrf_dist;
+    int64_t srcrf_rate;
+    int64_t recrf_rate;
+    //int64_t mc_dep_delta;
+    int64_t mc_dep_rate;
+    int64_t mc_dep_dist;
+   // int64_t src_rdcost; //--> why different than Inter cost
+   // int64_t rec_rdcost; //--> why different than Intra cost
+//    int_mv mv;
+   // int ref_frame_index;
+    double quant_ratio;
+    int64_t mc_count; // not needed
+    int64_t mc_saved; // not needed
+
+} dept_stat_t;
+
+#if STAT_UPDATE_SW
+#define STAT_LA_LENGTH 100
+#define MAX_SB_CNT 256
+typedef struct stat_ref_info_t
+{
+    uint16_t ref_sb_cnt;
+    uint16_t ref_sb_decode_order[MAX_SB_CNT];
+    uint16_t ref_sb_index[MAX_SB_CNT];
+    uint32_t referenced_area[MAX_SB_CNT];
+    int32_t  overlap_area[MAX_SB_CNT];
+    int32_t  pix_num[MAX_SB_CNT];
+    double   quant_ratio[MAX_SB_CNT];
+    int64_t  intra_cost[MAX_SB_CNT];
+    double   iiratio_nl[MAX_SB_CNT];
+    EbBool   is_bipred[MAX_SB_CNT];
+    //int64_t  mc_count[MAX_SB_CNT];
+    int64_t  mc_saved[MAX_SB_CNT];
+    int64_t  cur_dep_dist[MAX_SB_CNT];
+    int64_t  mc_dep_dist[MAX_SB_CNT];
+    int64_t  delta_rate[MAX_SB_CNT];
+    int64_t  mc_dep_rate[MAX_SB_CNT];
+
+} stat_ref_info_t;
+
+typedef struct stat_static_t {
+    int64_t intra_cost;
+    int64_t inter_cost;
+    int64_t srcrf_dist;
+    int64_t recrf_dist;
+    int64_t srcrf_rate;
+    int64_t recrf_rate;
+} stat_static_t;
+
+typedef struct dept_stat_ppg_t {
+    int64_t mc_flow;
+    int64_t mc_dep_cost;
+    int64_t mc_dep_rate;
+    int64_t mc_dep_dist;
+    int64_t mc_count; // not needed
+    int64_t mc_saved; // not needed
+} dept_stat_ppg_t;
+#endif
+
 typedef struct StatStruct
 {
-    uint32_t                        referenced_area[MAX_NUMBER_OF_TREEBLOCKS_PER_PICTURE];
+    uint32_t                        referenced_area[600/*MAX_NUMBER_OF_TREEBLOCKS_PER_PICTURE*/];
+#if STAT_UPDATE
+    dept_stat_t                     cur_stat[600 /*MAX_NUMBER_OF_TREEBLOCKS_PER_PICTURE*/];
+#endif
 } StatStruct;
 #define TWO_PASS_IR_THRSHLD 40  // Intra refresh threshold used to reduce the reference area.
                                 // If the periodic Intra refresh is less than the threshold,
                                 // the referenced area is normalized
+
 #define SC_MAX_LEVEL 2 // 2 sets of HME/ME settings are used depending on the scene content mode
 
 /******************************************************************************

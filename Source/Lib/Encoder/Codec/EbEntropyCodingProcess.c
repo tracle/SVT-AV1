@@ -312,18 +312,243 @@ static EbBool update_entropy_coding_rows(PictureControlSet *pcs_ptr, uint32_t *r
 
     return process_next_row;
 }
+#if STAT_UPDATE
+static int get_kf_boost_from_r0(double r0, int frames_to_key) {
+    double factor = sqrt((double)frames_to_key);
+    factor = AOMMIN(factor, 10.0);
+    factor = AOMMAX(factor, 4.0);
+    const int boost = (int)rint((75.0 + 14.0 * factor) / r0);
+    return boost;
+}
+#endif
+
+#if STAT_UPDATE_SW
+#define TPL_DEP_COST_SCALE_LOG2 0
+/******************************************************
+ * Write Stat Info to File
+ ******************************************************/
+void write_stat_info_to_file(
+    SequenceControlSet    *scs_ptr,
+    uint64_t               stat_queue_head_index,
+    uint32_t               slide_win_length)
+{
+    eb_block_on_mutex(scs_ptr->stat_info_mutex);
+    uint64_t decode_order = stat_queue_head_index + slide_win_length;
+    unsigned int pic_width_in_block  = (uint8_t)((scs_ptr->seq_header.max_frame_width + scs_ptr->sb_sz - 1) / scs_ptr->sb_sz);
+    unsigned int pic_height_in_block = (uint8_t)((scs_ptr->seq_header.max_frame_height + scs_ptr->sb_sz - 1) / scs_ptr->sb_sz);
+    unsigned int block_total_count = pic_width_in_block * pic_height_in_block;
+    dept_stat_ppg_t *dept_stat_propagate[STAT_LA_LENGTH];
+    StatStruct stat_struct;
+
+    memset(&stat_struct, 0, sizeof(stat_struct));
+    // build propagate dept_stat_ppg_t
+    for(int frame = 0; frame < slide_win_length; frame++) {
+        EB_MALLOC_ARRAY(dept_stat_propagate[frame], block_total_count);
+        for(int i = 0; i < (block_total_count); i++)
+            memset(&(dept_stat_propagate[frame][i]), 0, sizeof(dept_stat_ppg_t));
+    }
+
+    for(int frame=0; frame < slide_win_length; frame++) {
+        stat_ref_info_t *fstat_ref_info = scs_ptr->stat_ref_info[(decode_order - frame) % STAT_LA_LENGTH];
+        dept_stat_ppg_t *dept_stat_propagate_ptr = dept_stat_propagate[slide_win_length - frame - 1];
+        uint16_t temporal_weight = scs_ptr->temporal_weight[(decode_order - frame) % STAT_LA_LENGTH];
+        for(int block_index=0; block_index < block_total_count; block_index++) {
+            for(int sb_index=0; sb_index < fstat_ref_info[block_index].ref_sb_cnt; sb_index++) {
+                uint32_t ref_decode_order = fstat_ref_info[block_index].ref_sb_decode_order[sb_index];
+                if(ref_decode_order > stat_queue_head_index && ref_decode_order <= decode_order)
+                {
+                    dept_stat_ppg_t *ref_dept_stat_propagate_ptr = dept_stat_propagate[ref_decode_order - stat_queue_head_index - 1];
+                    //assert(fstat_ref_info[block_index].ref_sb_index[sb_index]<block_total_count);
+                    stat_ref_info_t *stat_ref_info = &(fstat_ref_info[block_index]);
+                    int32_t overlap_area = stat_ref_info->overlap_area[sb_index];
+                    int32_t pix_num      = stat_ref_info->pix_num[sb_index];
+#if STAT_UPDATE_MC_FLOW_NON_ZERO
+#if STAT_UPDATE_MC_FLOW_PIC_NUM
+                    int64_t mc_flow = dept_stat_propagate_ptr[block_index].mc_flow * pix_num / (64*64);
+#else
+                    int64_t mc_flow = dept_stat_propagate_ptr[block_index].mc_flow * overlap_area / (64*64);
+#endif
+#else
+                    int64_t mc_flow = 0;
+#endif
+                    int64_t mc_dep_cost = stat_ref_info->intra_cost[sb_index] + mc_flow;
+                    mc_flow = (int64_t)(stat_ref_info->quant_ratio[sb_index] * mc_dep_cost * (1.0 - stat_ref_info->iiratio_nl[sb_index]));
+                    mc_flow = mc_flow * temporal_weight / (stat_ref_info->is_bipred[sb_index] ? 2 : 1 );
+                    mc_flow = mc_flow * overlap_area / pix_num;
+                    ref_dept_stat_propagate_ptr[stat_ref_info->ref_sb_index[sb_index]].mc_flow += mc_flow;
+                    ref_dept_stat_propagate_ptr[stat_ref_info->ref_sb_index[sb_index]].mc_dep_cost += mc_dep_cost;
+                    ref_dept_stat_propagate_ptr[stat_ref_info->ref_sb_index[sb_index]].mc_count += (overlap_area << TPL_DEP_COST_SCALE_LOG2);
+                    ref_dept_stat_propagate_ptr[stat_ref_info->ref_sb_index[sb_index]].mc_saved += (stat_ref_info->mc_saved[sb_index] * overlap_area) / pix_num;
+                    // to be continued
+                }
+            }
+        }
+    }
+
+    // calculate new referenced_area for frame before slide window
+    int32_t ref_poc = scs_ptr->progagate_poc[stat_queue_head_index] ;
+    //printf("write_stat_info_to_file write poc=%d, decode_order=%d, curr_poc=%d\n", ref_poc, stat_queue_head_index, pcs_ptr->parent_pcs_ptr->picture_number);
+
+    for(int frame=0; frame < slide_win_length; frame++) {
+        dept_stat_ppg_t *dept_stat_propagate_ptr = dept_stat_propagate[slide_win_length - frame - 1];
+        uint16_t temporal_weight = scs_ptr->temporal_weight[(decode_order - frame) % STAT_LA_LENGTH];
+        int32_t curr_decode_order = (decode_order - frame) % STAT_LA_LENGTH;
+        stat_ref_info_t *fstat_ref_info = scs_ptr->stat_ref_info[curr_decode_order];
+        assert((curr_decode_order-stat_queue_head_index-1)>=0 && (curr_decode_order-stat_queue_head_index-1)<slide_win_length);
+        for(int block_index=0; block_index < block_total_count; block_index++) {
+            for(int sb_index=0; sb_index < fstat_ref_info[block_index].ref_sb_cnt; sb_index++) {
+                uint32_t head_decode_order = fstat_ref_info[block_index].ref_sb_decode_order[sb_index];
+                if(head_decode_order == stat_queue_head_index) {
+                    stat_ref_info_t *stat_ref_info = &(fstat_ref_info[block_index]);
+                    int32_t overlap_area = stat_ref_info->overlap_area[sb_index];
+                    int32_t pix_num      = stat_ref_info->pix_num[sb_index];
+#if STAT_UPDATE_MC_FLOW_PIC_NUM
+                    int64_t mc_flow = dept_stat_propagate_ptr[block_index].mc_flow * pix_num / (64*64);
+#else
+                    int64_t mc_flow = dept_stat_propagate_ptr[block_index].mc_flow * overlap_area / (64*64);
+#endif
+                    int64_t mc_dep_cost = stat_ref_info->intra_cost[sb_index] + mc_flow;
+                    int64_t mc_saved = stat_ref_info->mc_saved[sb_index];//dept_stat_propagate_ptr[block_index].mc_saved;
+                    mc_flow = (int64_t)(stat_ref_info->quant_ratio[sb_index] * mc_dep_cost * (1.0 - stat_ref_info->iiratio_nl[sb_index]));
+                    mc_flow = mc_flow * temporal_weight / (stat_ref_info->is_bipred[sb_index] ? 2 : 1 );
+                    mc_flow = mc_flow * overlap_area / pix_num;
+                    stat_struct.referenced_area[stat_ref_info->ref_sb_index[sb_index]] += (uint32_t)(stat_ref_info->referenced_area[sb_index]);
+                    stat_struct.cur_stat[stat_ref_info->ref_sb_index[sb_index]].mc_flow += mc_flow;
+                    stat_struct.cur_stat[stat_ref_info->ref_sb_index[sb_index]].mc_count += (overlap_area << TPL_DEP_COST_SCALE_LOG2);
+                    stat_struct.cur_stat[stat_ref_info->ref_sb_index[sb_index]].mc_saved += (mc_saved * overlap_area) / pix_num;
+                    // to be continued
+                }
+            }
+        }
+    }
+
+    stat_static_t *stat_static = scs_ptr->stat_static[stat_queue_head_index];
+    for(int block_index=0; block_index < block_total_count; block_index++) {
+        stat_struct.cur_stat[block_index].intra_cost = stat_static[block_index].intra_cost;
+        stat_struct.cur_stat[block_index].inter_cost = stat_static[block_index].inter_cost;
+        stat_struct.cur_stat[block_index].srcrf_dist = stat_static[block_index].srcrf_dist;
+        stat_struct.cur_stat[block_index].recrf_dist = stat_static[block_index].recrf_dist;
+        stat_struct.cur_stat[block_index].srcrf_rate = stat_static[block_index].srcrf_rate;
+        stat_struct.cur_stat[block_index].recrf_rate = stat_static[block_index].recrf_rate;
+        stat_struct.cur_stat[block_index].mc_dep_cost = stat_static[block_index].intra_cost + stat_struct.cur_stat[block_index].mc_flow;
+    }
+
+    for(int frame=0; frame < slide_win_length; frame++)
+        EB_FREE_ARRAY(dept_stat_propagate[frame]);
+if(1)
+{
+    int64_t mc_dep_cost_base = 0, intra_cost_base = 0;
+
+    int64_t recrf_dist_base = 0, mc_dep_rate_base = 0, mc_dep_dist_base = 0 ;
+    int64_t weight = 16;// 1 << (4 - pcs_ptr->parent_pcs_ptr->temporal_layer_index);
+    for (int sb_addr = 0; sb_addr < scs_ptr->sb_total_count; ++sb_addr) {
+
+        //stat_struct.cur_stat[sb_addr].intra_cost *= 16;
+        stat_struct.cur_stat[sb_addr].mc_dep_cost = stat_struct.cur_stat[sb_addr].intra_cost + stat_struct.cur_stat[sb_addr].mc_flow;
+        intra_cost_base += stat_struct.cur_stat[sb_addr].intra_cost;
+        mc_dep_cost_base += stat_struct.cur_stat[sb_addr].mc_dep_cost;
+        recrf_dist_base += stat_struct.cur_stat[sb_addr].recrf_dist;
+        mc_dep_rate_base += stat_struct.cur_stat[sb_addr].mc_dep_rate;
+        mc_dep_dist_base += stat_struct.cur_stat[sb_addr].mc_dep_dist;
+        //if (ref_poc == 2) {
+        //    printf("\nindex:%d\t%.0f\t%.0f\t%.0f\t%.0f\t%.0f\t%.0f\t%.2f\n",
+        //        sb_addr,
+        //        (double)stat_struct.cur_stat[sb_addr].intra_cost,
+        //        (double)stat_struct.cur_stat[sb_addr].mc_dep_cost,
+        //        (double)stat_struct.cur_stat[sb_addr].recrf_dist,
+        //        (double)stat_struct.cur_stat[sb_addr].mc_dep_rate,
+        //        (double)stat_struct.cur_stat[sb_addr].mc_dep_dist,
+        //        (double)stat_struct.cur_stat[sb_addr].mc_flow,
+        //        (double)stat_struct.cur_stat[sb_addr].intra_cost / (double)stat_struct.cur_stat[sb_addr].mc_dep_cost
+        //        );
+        //}
+    }
+    double r0 = (double)intra_cost_base / mc_dep_cost_base;
+    const int kf_boost =
+        get_kf_boost_from_r0(r0, 60);
+   // if (ref_poc % 16 == 0) {
+        printf("%d\t%.0f\t%.0f\t%.0f\t%.0f\t%.0f\t%.3f\t %d\n",
+            ref_poc,
+            (double)intra_cost_base,
+            (double)mc_dep_cost_base,
+            (double)recrf_dist_base,
+            (double)mc_dep_rate_base,
+            (double)mc_dep_dist_base,
+            r0,
+            kf_boost);
+    //}
+}
+    eb_release_mutex(scs_ptr->stat_info_mutex);
+
+    eb_block_on_mutex(scs_ptr->encode_context_ptr->stat_file_mutex);
+    int32_t fseek_return_value = fseek(scs_ptr->static_config.output_stat_file, (long)ref_poc * sizeof(StatStruct), SEEK_SET);
+    if (fseek_return_value != 0)
+        printf("Error in fseek  returnVal %i\n", fseek_return_value);
+
+    fwrite(&stat_struct,
+        sizeof(StatStruct),
+        (size_t)1,
+        scs_ptr->static_config.output_stat_file);
+    eb_release_mutex(scs_ptr->encode_context_ptr->stat_file_mutex);
+}
+
+#else
 /******************************************************
  * Write Stat to File
  * write stat_struct per frame in the first pass
  ******************************************************/
 void write_stat_to_file(SequenceControlSet *scs_ptr, StatStruct stat_struct, uint64_t ref_poc) {
     eb_block_on_mutex(scs_ptr->encode_context_ptr->stat_file_mutex);
+#if STAT_UPDATE
+    int64_t mc_dep_cost_base = 0, intra_cost_base = 0;
+
+    int64_t recrf_dist_base = 0, mc_dep_rate_base = 0, mc_dep_dist_base = 0 ;
+    int64_t weight = 16;// 1 << (4 - pcs_ptr->parent_pcs_ptr->temporal_layer_index);
+    for (int sb_addr = 0; sb_addr < scs_ptr->sb_total_count; ++sb_addr) {
+
+        //stat_struct.cur_stat[sb_addr].intra_cost *= 16;
+        stat_struct.cur_stat[sb_addr].mc_dep_cost = stat_struct.cur_stat[sb_addr].intra_cost + stat_struct.cur_stat[sb_addr].mc_flow;
+        intra_cost_base += stat_struct.cur_stat[sb_addr].intra_cost;
+        mc_dep_cost_base += stat_struct.cur_stat[sb_addr].mc_dep_cost;
+        recrf_dist_base += stat_struct.cur_stat[sb_addr].recrf_dist;
+        mc_dep_rate_base += stat_struct.cur_stat[sb_addr].mc_dep_rate;
+        mc_dep_dist_base += stat_struct.cur_stat[sb_addr].mc_dep_dist;
+        //if (ref_poc == 0) {
+        //    printf("\nindex:%d\t%.0f\t%.0f\t%.0f\t%.0f\t%.0f\t%.0f\t%.2f\n",
+        //        sb_addr,
+        //        (double)stat_struct.cur_stat[sb_addr].intra_cost,
+        //        (double)stat_struct.cur_stat[sb_addr].mc_dep_cost,
+        //        (double)stat_struct.cur_stat[sb_addr].recrf_dist,
+        //        (double)stat_struct.cur_stat[sb_addr].mc_dep_rate,
+        //        (double)stat_struct.cur_stat[sb_addr].mc_dep_dist,
+        //        (double)stat_struct.cur_stat[sb_addr].mc_flow,
+        //        (double)stat_struct.cur_stat[sb_addr].intra_cost / (double)stat_struct.cur_stat[sb_addr].mc_dep_cost
+        //        );
+        //}
+    }
+    double r0 = (double)intra_cost_base / mc_dep_cost_base;
+    const int kf_boost =
+        get_kf_boost_from_r0(r0, 60);
+   // if (ref_poc % 16 == 0) {
+        printf("%d\t%.0f\t%.0f\t%.0f\t%.0f\t%.0f\t%.3f\t %d\n",
+            ref_poc,
+            (double)intra_cost_base,
+            (double)mc_dep_cost_base,
+            (double)recrf_dist_base,
+            (double)mc_dep_rate_base,
+            (double)mc_dep_dist_base,
+            r0,
+            kf_boost);
+    //}
+#endif
+
     int32_t fseek_return_value = fseek(
         scs_ptr->static_config.output_stat_file, (long)ref_poc * sizeof(StatStruct), SEEK_SET);
     if (fseek_return_value != 0) SVT_LOG("Error in fseek  returnVal %i\n", fseek_return_value);
     fwrite(&stat_struct, sizeof(StatStruct), (size_t)1, scs_ptr->static_config.output_stat_file);
     eb_release_mutex(scs_ptr->encode_context_ptr->stat_file_mutex);
 }
+#endif
 
 /* Entropy Coding */
 
@@ -509,16 +734,53 @@ void *entropy_coding_kernel(void *input_ptr) {
                         eb_release_mutex(pcs_ptr->entropy_coding_pic_mutex);
 
                         //Jing, two pass doesn't work with multi-tile right now
-                        // for Non Reference frames
+                        // for Non Ref erence frames
+#if STAT_UPDATE_SW
+                        if (scs_ptr->use_output_stat_file && tile_cnt == 1 ) {
+                            EbBool is_ready = EB_TRUE;
+                            uint32_t slide_win_length = scs_ptr->static_config.slide_win_length;
+                            uint32_t stat_queue_head_index = 0;
+
+                            eb_block_on_mutex(scs_ptr->stat_queue_mutex);
+                            stat_queue_head_index = scs_ptr->stat_queue_head_index;
+                            scs_ptr->stat_queue[pcs_ptr->parent_pcs_ptr->decode_order] = EB_TRUE;
+                            if((stat_queue_head_index + slide_win_length + 1) >= scs_ptr->static_config.frames_to_be_encoded)
+                                slide_win_length = scs_ptr->static_config.frames_to_be_encoded - stat_queue_head_index - 1;
+                            for(int frame = stat_queue_head_index; frame <= (stat_queue_head_index + slide_win_length); frame++) {
+                                if(!scs_ptr->stat_queue[frame])
+                                    is_ready = EB_FALSE;
+                            }
+                            while(is_ready) {
+                                //printf("kelvin ---> slide_win_length=%d, stat_queue_head_index=%d\n", slide_win_length, stat_queue_head_index);
+                                write_stat_info_to_file(scs_ptr,
+                                        stat_queue_head_index,
+                                        slide_win_length);
+                                stat_queue_head_index++;
+                                if((stat_queue_head_index + slide_win_length + 1) >= scs_ptr->static_config.frames_to_be_encoded)
+                                    slide_win_length = scs_ptr->static_config.frames_to_be_encoded - stat_queue_head_index - 1;
+                                for(int frame = stat_queue_head_index; frame <= (stat_queue_head_index + slide_win_length); frame++) {
+                                    if(!scs_ptr->stat_queue[frame])
+                                        is_ready = EB_FALSE;
+                                }
+                                if(stat_queue_head_index == scs_ptr->static_config.frames_to_be_encoded)
+                                    is_ready = EB_FALSE;
+                                scs_ptr->stat_queue_head_index = stat_queue_head_index;
+                            }
+                            eb_release_mutex(scs_ptr->stat_queue_mutex);
+                        }
+#else
                         if (scs_ptr->use_output_stat_file && tile_cnt == 1 &&
                             !pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag)
                             write_stat_to_file(scs_ptr,
                                                *pcs_ptr->parent_pcs_ptr->stat_struct_first_pass_ptr,
                                                pcs_ptr->parent_pcs_ptr->picture_number);
+#endif
                         if (pic_ready) {
                             // Release the List 0 Reference Pictures
                             for (ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->ref_list0_count;
                                  ++ref_idx) {
+#if STAT_UPDATE_SW
+#else
                                 if (scs_ptr->use_output_stat_file && tile_cnt == 1 &&
                                     pcs_ptr->ref_pic_ptr_array[0][ref_idx] != EB_NULL &&
                                     pcs_ptr->ref_pic_ptr_array[0][ref_idx]->live_count == 1)
@@ -530,6 +792,7 @@ void *entropy_coding_kernel(void *input_ptr) {
                                         ((EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[0][ref_idx]
                                              ->object_ptr)
                                             ->ref_poc);
+#endif
                                 if (pcs_ptr->ref_pic_ptr_array[0][ref_idx] != EB_NULL) {
                                     eb_release_object(pcs_ptr->ref_pic_ptr_array[0][ref_idx]);
                                 }
@@ -538,6 +801,8 @@ void *entropy_coding_kernel(void *input_ptr) {
                             // Release the List 1 Reference Pictures
                             for (ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->ref_list1_count;
                                  ++ref_idx) {
+#if STAT_UPDATE_SW
+#else
                                 if (scs_ptr->use_output_stat_file && tile_cnt == 1 &&
                                     pcs_ptr->ref_pic_ptr_array[1][ref_idx] != EB_NULL &&
                                     pcs_ptr->ref_pic_ptr_array[1][ref_idx]->live_count == 1)
@@ -549,6 +814,7 @@ void *entropy_coding_kernel(void *input_ptr) {
                                         ((EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[1][ref_idx]
                                              ->object_ptr)
                                             ->ref_poc);
+#endif
                                 if (pcs_ptr->ref_pic_ptr_array[1][ref_idx] != EB_NULL)
                                     eb_release_object(pcs_ptr->ref_pic_ptr_array[1][ref_idx]);
                             }
