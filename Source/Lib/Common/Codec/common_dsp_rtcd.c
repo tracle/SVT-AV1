@@ -1015,6 +1015,12 @@ void setup_common_rtcd_internal(CPU_FLAGS flags) {
 
     eb_cdef_find_dir = eb_cdef_find_dir_c;
     if (flags & HAS_AVX2) eb_cdef_find_dir = eb_cdef_find_dir_avx2;
+#if CUTREE_LA
+    aom_satd = aom_satd_c;
+    if (flags & HAS_AVX2) aom_satd = aom_satd_avx2;
+    av1_block_error = av1_block_error_c;
+    if (flags & HAS_AVX2) av1_block_error = av1_block_error_avx2;
+#endif
 
     eb_cdef_filter_block = eb_cdef_filter_block_c;
     if (flags & HAS_AVX2) eb_cdef_filter_block = eb_cdef_filter_block_avx2;
@@ -1024,6 +1030,101 @@ void setup_common_rtcd_internal(CPU_FLAGS flags) {
 
     eb_cdef_filter_block_8x8_16 =
             eb_cdef_filter_block_8x8_16_avx2; // It has no c version, and is only called in parent avx2 function, so it's safe to initialize to avx2 version.
+    //VARIANCE
+    eb_aom_variance4x4 = eb_aom_variance4x4_c;
+    if (flags & HAS_AVX2) eb_aom_variance4x4 = eb_aom_variance4x4_sse2;
+    eb_aom_variance4x8 = eb_aom_variance4x8_c;
+    if (flags & HAS_AVX2) eb_aom_variance4x8 = eb_aom_variance4x8_sse2;
+    eb_aom_variance4x16 = eb_aom_variance4x16_c;
+    if (flags & HAS_AVX2) eb_aom_variance4x16 = eb_aom_variance4x16_sse2;
+    eb_aom_variance8x4 = eb_aom_variance8x4_c;
+    if (flags & HAS_AVX2) eb_aom_variance8x4 = eb_aom_variance8x4_sse2;
+    eb_aom_variance8x8 = eb_aom_variance8x8_c;
+    if (flags & HAS_AVX2) eb_aom_variance8x8 = eb_aom_variance8x8_sse2;
+    eb_aom_variance8x16 = eb_aom_variance8x16_c;
+    if (flags & HAS_AVX2) eb_aom_variance8x16 = eb_aom_variance8x16_sse2;
+    eb_aom_variance8x32 = eb_aom_variance8x32_c;
+    if (flags & HAS_AVX2) eb_aom_variance8x32 = eb_aom_variance8x32_sse2;
+    eb_aom_variance16x4 = eb_aom_variance16x4_c;
+    if (flags & HAS_AVX2) eb_aom_variance16x4 = eb_aom_variance16x4_avx2;
+    eb_aom_variance16x8 = eb_aom_variance16x8_c;
+    if (flags & HAS_AVX2) eb_aom_variance16x8 = eb_aom_variance16x8_avx2;
+    eb_aom_variance16x16 = eb_aom_variance16x16_c;
+    if (flags & HAS_AVX2) eb_aom_variance16x16 = eb_aom_variance16x16_avx2;
+    eb_aom_variance16x32 = eb_aom_variance16x32_c;
+    if (flags & HAS_AVX2) eb_aom_variance16x32 = eb_aom_variance16x32_avx2;
+    eb_aom_variance16x64 = eb_aom_variance16x64_c;
+    if (flags & HAS_AVX2) eb_aom_variance16x64 = eb_aom_variance16x64_avx2;
+    eb_aom_variance32x8 = eb_aom_variance32x8_c;
+    if (flags & HAS_AVX2) eb_aom_variance32x8 = eb_aom_variance32x8_avx2;
+    eb_aom_variance32x16 = eb_aom_variance32x16_c;
+    if (flags & HAS_AVX2) eb_aom_variance32x16 = eb_aom_variance32x16_avx2;
+    eb_aom_variance32x32 = eb_aom_variance32x32_c;
+    if (flags & HAS_AVX2) eb_aom_variance32x32 = eb_aom_variance32x32_avx2;
+    eb_aom_variance32x64 = eb_aom_variance32x64_c;
+    if (flags & HAS_AVX2) eb_aom_variance32x64 = eb_aom_variance32x64_avx2;
+    eb_aom_variance64x16 = eb_aom_variance64x16_c;
+    if (flags & HAS_AVX2) eb_aom_variance64x16 = eb_aom_variance64x16_avx2;
+    eb_aom_variance64x32 = eb_aom_variance64x32_c;
+    if (flags & HAS_AVX2) eb_aom_variance64x32 = eb_aom_variance64x32_avx2;
+    eb_aom_variance64x64 = eb_aom_variance64x64_c;
+    if (flags & HAS_AVX2) eb_aom_variance64x64 = eb_aom_variance64x64_avx2;
+    eb_aom_variance64x128 = eb_aom_variance64x128_c;
+    if (flags & HAS_AVX2) eb_aom_variance64x128 = eb_aom_variance64x128_avx2;
+    eb_aom_variance128x64 = eb_aom_variance128x64_c;
+    if (flags & HAS_AVX2) eb_aom_variance128x64 = eb_aom_variance128x64_avx2;
+    eb_aom_variance128x128 = eb_aom_variance128x128_c;
+    if (flags & HAS_AVX2) eb_aom_variance128x128 = eb_aom_variance128x128_avx2;
+
+    //QIQ
+    eb_aom_quantize_b_64x64 = eb_aom_quantize_b_64x64_c_II;
+    if (flags & HAS_AVX2) eb_aom_quantize_b_64x64 = eb_aom_quantize_b_64x64_avx2;
+
+    eb_aom_highbd_quantize_b_64x64 = eb_aom_highbd_quantize_b_64x64_c;
+    if (flags & HAS_AVX2) eb_aom_highbd_quantize_b_64x64 = eb_aom_highbd_quantize_b_64x64_avx2;
+    // transform
+    eb_av1_fwd_txfm2d_16x8 = eb_av1_fwd_txfm2d_16x8_c;
+    if (flags & HAS_AVX2) eb_av1_fwd_txfm2d_16x8 = eb_av1_fwd_txfm2d_16x8_avx2;
+    eb_av1_fwd_txfm2d_8x16 = eb_av1_fwd_txfm2d_8x16_c;
+    if (flags & HAS_AVX2) eb_av1_fwd_txfm2d_8x16 = eb_av1_fwd_txfm2d_8x16_avx2;
+
+    eb_av1_fwd_txfm2d_16x4 = eb_av1_fwd_txfm2d_16x4_c;
+    if (flags & HAS_AVX2) eb_av1_fwd_txfm2d_16x4 = eb_av1_fwd_txfm2d_16x4_avx2;
+    eb_av1_fwd_txfm2d_4x16 = eb_av1_fwd_txfm2d_4x16_c;
+    if (flags & HAS_AVX2) eb_av1_fwd_txfm2d_4x16 = eb_av1_fwd_txfm2d_4x16_avx2;
+
+    eb_av1_fwd_txfm2d_8x4 = eb_av1_fwd_txfm2d_8x4_c;
+    if (flags & HAS_AVX2) eb_av1_fwd_txfm2d_8x4 = eb_av1_fwd_txfm2d_8x4_avx2;
+    eb_av1_fwd_txfm2d_4x8 = eb_av1_fwd_txfm2d_4x8_c;
+    if (flags & HAS_AVX2) eb_av1_fwd_txfm2d_4x8 = eb_av1_fwd_txfm2d_4x8_avx2;
+
+    eb_av1_fwd_txfm2d_32x16 = eb_av1_fwd_txfm2d_32x16_c;
+    eb_av1_fwd_txfm2d_32x8 = eb_av1_fwd_txfm2d_32x8_c;
+    if (flags & HAS_AVX2) eb_av1_fwd_txfm2d_32x8 = eb_av1_fwd_txfm2d_32x8_avx2;
+    eb_av1_fwd_txfm2d_8x32 = eb_av1_fwd_txfm2d_8x32_c;
+    if (flags & HAS_AVX2) eb_av1_fwd_txfm2d_8x32 = eb_av1_fwd_txfm2d_8x32_avx2;
+    eb_av1_fwd_txfm2d_16x32 = eb_av1_fwd_txfm2d_16x32_c;
+    eb_av1_fwd_txfm2d_32x64 = eb_av1_fwd_txfm2d_32x64_c;
+    eb_av1_fwd_txfm2d_64x32 = eb_av1_fwd_txfm2d_64x32_c;
+    eb_av1_fwd_txfm2d_16x64 = eb_av1_fwd_txfm2d_16x64_c;
+    eb_av1_fwd_txfm2d_64x16 = eb_av1_fwd_txfm2d_64x16_c;
+    eb_av1_fwd_txfm2d_64x64 = Av1TransformTwoD_64x64_c;
+    eb_av1_fwd_txfm2d_32x32 = Av1TransformTwoD_32x32_c;
+    eb_av1_fwd_txfm2d_16x16 = Av1TransformTwoD_16x16_c;
+    if (flags & HAS_AVX2) eb_av1_fwd_txfm2d_64x64 = eb_av1_fwd_txfm2d_64x64_avx2;
+    if (flags & HAS_AVX2) eb_av1_fwd_txfm2d_32x32 = eb_av1_fwd_txfm2d_32x32_avx2;
+    if (flags & HAS_AVX2) eb_av1_fwd_txfm2d_16x16 = eb_av1_fwd_txfm2d_16x16_avx2;
+    if (flags & HAS_AVX2) eb_av1_fwd_txfm2d_32x64 = eb_av1_fwd_txfm2d_32x64_avx2;
+    if (flags & HAS_AVX2) eb_av1_fwd_txfm2d_64x32 = eb_av1_fwd_txfm2d_64x32_avx2;
+    if (flags & HAS_AVX2) eb_av1_fwd_txfm2d_16x64 = eb_av1_fwd_txfm2d_16x64_avx2;
+    if (flags & HAS_AVX2) eb_av1_fwd_txfm2d_64x16 = eb_av1_fwd_txfm2d_64x16_avx2;
+    if (flags & HAS_AVX2) eb_av1_fwd_txfm2d_32x16 = eb_av1_fwd_txfm2d_32x16_avx2;
+    if (flags & HAS_AVX2) eb_av1_fwd_txfm2d_16x32 = eb_av1_fwd_txfm2d_16x32_avx2;
+#if CUTREE_LA
+    eb_av1_lowbd_fwd_txfm   = av1_lowbd_fwd_txfm_c;
+    if (flags & HAS_AVX2) eb_av1_lowbd_fwd_txfm = av1_lowbd_fwd_txfm_avx2;
+#endif
+>>>>>>> d977c75... add cutree in LA:Source/Lib/Common/Codec/aom_dsp_rtcd.c
 #ifndef NON_AVX512_SUPPORT
     if (flags & HAS_AVX512F) {
         eb_cdef_filter_block_8x8_16 = eb_cdef_filter_block_8x8_16_avx512;

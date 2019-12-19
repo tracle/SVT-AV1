@@ -1227,6 +1227,9 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, STAT_REPORT_TOKEN, "StatReport", set_stat_report},
     {SINGLE_INPUT, RATE_CONTROL_ENABLE_TOKEN, "RateControlMode", set_rate_control_mode},
     {SINGLE_INPUT, LOOK_AHEAD_DIST_TOKEN, "LookAheadDistance", set_look_ahead_distance},
+#if CUTREE_LA
+    { SINGLE_INPUT, ENABLE_CUTREE_LA_TOKEN, "EnableCutreeInLA",                             SetEnableCutreeInLA},
+#endif
     {SINGLE_INPUT, TARGET_BIT_RATE_TOKEN, "TargetBitRate", set_target_bit_rate},
     {SINGLE_INPUT, MAX_QP_TOKEN, "MaxQpAllowed", set_max_qp_allowed},
     {SINGLE_INPUT, MIN_QP_TOKEN, "MinQpAllowed", set_min_qp_allowed},
@@ -1498,6 +1501,9 @@ void eb_config_ctor(EbConfig *config_ptr) {
     config_ptr->qp                  = 50;
     config_ptr->use_qp_file         = EB_FALSE;
     config_ptr->look_ahead_distance = (uint32_t)~0;
+#if CUTREE_LA
+    config_ptr->enable_cutree_in_la                  = 0;
+#endif
     config_ptr->target_bit_rate     = 7000000;
     config_ptr->max_qp_allowed      = 63;
     config_ptr->min_qp_allowed      = 10;
