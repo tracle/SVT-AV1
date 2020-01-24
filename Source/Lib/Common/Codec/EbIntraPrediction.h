@@ -244,7 +244,7 @@ static INLINE int32_t cfl_idx_to_alpha(int32_t alpha_idx, int32_t joint_sign,
         uint32_t                            srcOriginY,
         uint8_t                             bwidth,
         uint8_t                             bheight,
-        PictureParentControlSet            *picture_control_set_ptr);
+        uint8_t                           *src_ptr);
     extern EbErrorType intra_prediction_open_loop(
          int32_t  p_angle ,
         uint8_t                          ois_intra_mode,
