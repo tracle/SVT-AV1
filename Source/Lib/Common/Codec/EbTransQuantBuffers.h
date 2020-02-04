@@ -16,6 +16,9 @@ extern "C" {
     {
         EbDctor                      dctor;
         EbPictureBufferDesc         *tu_trans_coeff2_nx2_n_ptr;
+#if MULTI_STAGE_TXT_OPT
+        EbPictureBufferDesc         *tx_buffer_ptr[16];
+#endif
         EbPictureBufferDesc         *tu_trans_coeff_nxn_ptr;
         EbPictureBufferDesc         *tu_trans_coeff_n2x_n2_ptr;
         EbPictureBufferDesc         *tu_quant_coeff_nxn_ptr;
