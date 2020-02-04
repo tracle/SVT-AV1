@@ -1686,9 +1686,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
     context_ptr->pf_md_mode = PF_OFF;
     // Derive Spatial SSE Flag
     if (context_ptr->pd_pass == PD_PASS_0)
+#if SPATIAL_DOMAIN_ONLY_LAST_STAGE
+        context_ptr->spatial_sse_full_loop = EB_FALSE;
+#else
         context_ptr->spatial_sse_full_loop = EB_TRUE;
+#endif
     else if (context_ptr->pd_pass == PD_PASS_1)
+#if SPATIAL_DOMAIN_ONLY_LAST_STAGE
+        context_ptr->spatial_sse_full_loop = EB_FALSE;
+#else
         context_ptr->spatial_sse_full_loop = EB_TRUE;
+#endif
     else if (scs_ptr->static_config.spatial_sse_fl == DEFAULT)
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
             if (pcs_ptr->enc_mode <= ENC_M6)
