@@ -12830,6 +12830,12 @@ EB_EXTERN EbErrorType mode_decision_sb(
                     1 :
                     skip_next_nsq;
 #endif
+
+#if NSQ_HV
+            uint32_t sqi = context_ptr->blk_geom->sqi_mds;
+            MdCodingUnit *local_cu_unit = context_ptr->md_local_cu_unit;
+#endif
+
 #if ENHANCED_SQ_WEIGHT
             EbBool a_b_shapes_skip_flag = EB_FALSE;
 
@@ -12882,6 +12888,37 @@ EB_EXTERN EbErrorType mode_decision_sb(
                         uint64_t h_cost = context_ptr->md_local_cu_unit[context_ptr->blk_geom->sqi_mds + 1].default_cost + context_ptr->md_local_cu_unit[context_ptr->blk_geom->sqi_mds + 2].default_cost;
 
                         a_b_shapes_skip_flag = (h_cost > ((sq_cost * sq_weight) / 100));
+
+#if NSQ_HV                        
+
+                        if (!a_b_shapes_skip_flag && context_ptr->nsq_hv_level>0) {
+                            if (local_cu_unit[sqi + 3].avail_blk_flag && local_cu_unit[sqi + 4].avail_blk_flag) {
+                                uint64_t v_cost = local_cu_unit[sqi + 3].default_cost +  local_cu_unit[sqi + 4].default_cost;
+                                uint32_t offset = 10;
+//                                if (context_ptr->blk_geom->shape == PART_H4) {
+//                                    if (local_cu_unit[sqi + 1].avail_blk_flag && local_cu_unit[sqi + 5].avail_blk_flag && local_cu_unit[sqi + 6].avail_blk_flag &&
+//                                        local_cu_unit[sqi + 2].avail_blk_flag && local_cu_unit[sqi + 9].avail_blk_flag && local_cu_unit[sqi + 10].avail_blk_flag) {
+//                                        uint64_t cost1  = local_cu_unit[sqi + 1].default_cost;
+//                                        uint64_t cost5p6 = local_cu_unit[sqi + 5].default_cost + local_cu_unit[sqi + 6].default_cost; 
+//                                        uint64_t cost2   = local_cu_unit[sqi + 2].default_cost;
+//                                        uint64_t cost9p10 = local_cu_unit[sqi + 9].default_cost + local_cu_unit[sqi + 10].default_cost; 
+//                                        if (cost5p6 < cost1 && cost9p10 < cost2)
+//                                            offset = 5;                                       
+//                                    }
+//                                }
+
+                                if (context_ptr->nsq_hv_level==2 && context_ptr->blk_geom->shape == PART_H4)
+                                    offset = 5;
+                                if (offset >= 5 && sequence_control_set_ptr->static_config.qp <= 20)
+                                    offset -= 5;
+
+                                uint32_t v_weight = 100 + offset;
+                                a_b_shapes_skip_flag = (h_cost > ((v_cost * v_weight) / 100));
+                            }
+                        }                        
+#endif
+
+
                     }
                 }
                 if (context_ptr->blk_geom->shape == PART_VA || context_ptr->blk_geom->shape == PART_VB || context_ptr->blk_geom->shape == PART_V4) {
@@ -12920,6 +12957,37 @@ EB_EXTERN EbErrorType mode_decision_sb(
                         uint64_t v_cost = context_ptr->md_local_cu_unit[context_ptr->blk_geom->sqi_mds + 3].default_cost + context_ptr->md_local_cu_unit[context_ptr->blk_geom->sqi_mds + 4].default_cost;
 
                         a_b_shapes_skip_flag = (v_cost > ((sq_cost * sq_weight) / 100));
+
+#if NSQ_HV
+                        uint32_t sqi = context_ptr->blk_geom->sqi_mds;
+                        MdCodingUnit *local_cu_unit = context_ptr->md_local_cu_unit;
+
+                        if (!a_b_shapes_skip_flag  && context_ptr->nsq_hv_level > 0) {
+                            if (local_cu_unit[sqi + 1].avail_blk_flag && local_cu_unit[sqi + 2].avail_blk_flag) {
+                                uint64_t h_cost = local_cu_unit[sqi + 1].default_cost + local_cu_unit[sqi + 2].default_cost;                               
+                                uint32_t offset = 10;                                
+//                                if (context_ptr->blk_geom->shape == PART_V4) {
+//                                    if (local_cu_unit[sqi + 3].avail_blk_flag && local_cu_unit[sqi + 11].avail_blk_flag && local_cu_unit[sqi + 12].avail_blk_flag &&
+//                                        local_cu_unit[sqi + 4].avail_blk_flag && local_cu_unit[sqi + 15].avail_blk_flag && local_cu_unit[sqi + 16].avail_blk_flag) {
+//                                        uint64_t cost3 = local_cu_unit[sqi + 3].default_cost;
+//                                        uint64_t cost11p12 = local_cu_unit[sqi + 11].default_cost + local_cu_unit[sqi + 12].default_cost;
+//                                        uint64_t cost4 = local_cu_unit[sqi + 4].default_cost;
+//                                        uint64_t cost15p16 = local_cu_unit[sqi + 15].default_cost + local_cu_unit[sqi + 16].default_cost;
+//                                        if (cost11p12 < cost3 && cost15p16 < cost4)
+//                                            offset = 5;
+//                                    }                                   
+//                                }
+
+                                if (context_ptr->nsq_hv_level == 2 && context_ptr->blk_geom->shape == PART_V4)
+                                   offset = 5;
+                                if ( offset >=5 && sequence_control_set_ptr->static_config.qp <= 20)
+                                    offset -= 5;
+
+                                uint32_t h_weight = 100 + offset;
+                                a_b_shapes_skip_flag = (v_cost > ((h_cost * h_weight) / 100));
+                            }
+                        }
+#endif
 
                     }
                 }

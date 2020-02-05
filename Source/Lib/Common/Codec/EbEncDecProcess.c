@@ -2431,6 +2431,24 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 
 #endif
+
+#if NSQ_HV
+    //nsq_hv_level  needs sq_weight to be ON
+    //0: OFF
+    //1: ON 10% + skip HA/HB/H4  or skip VA/VB/V4
+    //2: ON 10% + skip HA/HB  or skip VA/VB   ,  5% + skip H4  or skip V4
+    if (MR_MODE || picture_control_set_ptr->parent_pcs_ptr->sc_content_detected || context_ptr->pd_pass < PD_PASS_2)
+        context_ptr->nsq_hv_level = 0;
+    else if (picture_control_set_ptr->enc_mode == ENC_M0) {
+        context_ptr->nsq_hv_level = 1;
+        assert(context_ptr->sq_weight != (uint32_t)~0); 
+    }
+    else {
+        context_ptr->nsq_hv_level = 2;
+        assert(context_ptr->sq_weight != (uint32_t)~0);
+    }
+#endif
+
 #if !ENHANCED_M0_SETTINGS // lossless change - enable_auto_max_partition is properly derived using pd_pass @ the bottom: previous merge conflict
 #if AUTO_MAX_PARTITION
     // signal for enabling shortcut to skip search depths

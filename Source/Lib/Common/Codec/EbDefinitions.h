@@ -33,6 +33,8 @@
 extern "C" {
 #endif
 
+
+#define NSQ_HV                          1 // skip NSQ partitions based on H vs V costs
 #define RESTRICT_TXS_FOR_NON_S_V_H      0 // Restrict tx_depth for non-SQ-H-V blocks based on the parent block tx_size
 #define RESTRICT_TXT_FOR_NON_S_V_H      0 // Restrict tx_type for non-SQ-H-V blocks based on the parent block tx_type
 #define DISABLE_COMPOUND_FOR_NON_S_V_H  0 // Disable compound for non-SQ, H and V shapes based on the parent block compound mode
