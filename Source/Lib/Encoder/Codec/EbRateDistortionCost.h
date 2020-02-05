@@ -1,16 +1,14 @@
-/*
-* Copyright(c) 2019 Intel Corporation
-* SPDX - License - Identifier: BSD - 2 - Clause - Patent
-*/
+/*!< Copyright(c) 2019 Intel Corporation
+ * SPDX - License - Identifier: BSD - 2 - Clause - Patent */
 
 #ifndef EbRateDistortionCost_h
 #define EbRateDistortionCost_h
 
-/***************************************
- * Includes
- ***************************************/
+/***************************************/
+/*!< Includes */
+/***************************************/
 #include "EbIntraPrediction.h"
-#include "EbInterPrediction.h"
+#include "EbEncInterPrediction.h"
 #include "EbLambdaRateTables.h"
 #include "EbTransforms.h"
 #include "EbModeDecisionProcess.h"
@@ -37,27 +35,27 @@ extern void coding_loop_context_generation(
     NeighborArrayUnit *leaf_partition_neighbor_array);
 
 extern EbErrorType av1_txb_calc_cost(
-    ModeDecisionCandidate *candidate_ptr, // input parameter, prediction result Ptr
+    ModeDecisionCandidate *candidate_ptr, /*!< input parameter, prediction result Ptr */
     int16_t                txb_skip_ctx,
-    uint32_t               txb_index, // input parameter, TU index inside the CU
+    uint32_t               txb_index, /*!< input parameter, TU index inside the CU */
     uint32_t
-        y_count_non_zero_coeffs, // input parameter, number of non zero Y quantized coefficients
+        y_count_non_zero_coeffs, /*!< input parameter, number of non zero Y quantized coefficients */
     uint32_t
-        cb_count_non_zero_coeffs, // input parameter, number of non zero cb quantized coefficients
+        cb_count_non_zero_coeffs, /*!< input parameter, number of non zero cb quantized coefficients */
     uint32_t
-             cr_count_non_zero_coeffs, // input parameter, number of non zero cr quantized coefficients
+             cr_count_non_zero_coeffs, /*!< input parameter, number of non zero cr quantized coefficients */
     uint64_t y_txb_distortion
-        [DIST_CALC_TOTAL], // input parameter, Y distortion for both Normal and Cbf zero modes
+        [DIST_CALC_TOTAL], /*!< input parameter, Y distortion for both Normal and Cbf zero modes */
     uint64_t cb_txb_distortion
-        [DIST_CALC_TOTAL], // input parameter, Cb distortion for both Normal and Cbf zero modes
+        [DIST_CALC_TOTAL], /*!< input parameter, Cb distortion for both Normal and Cbf zero modes */
     uint64_t cr_txb_distortion
-        [DIST_CALC_TOTAL], // input parameter, Cr distortion for both Normal and Cbf zero modes
+        [DIST_CALC_TOTAL], /*!< input parameter, Cr distortion for both Normal and Cbf zero modes */
     COMPONENT_TYPE component_type,
-    uint64_t *     y_txb_coeff_bits, // input parameter, Y quantized coefficients rate
-    uint64_t *     cb_txb_coeff_bits, // input parameter, Cb quantized coefficients rate
-    uint64_t *     cr_txb_coeff_bits, // input parameter, Cr quantized coefficients rate
+    uint64_t *     y_txb_coeff_bits, /*!< input parameter, Y quantized coefficients rate */
+    uint64_t *     cb_txb_coeff_bits, /*!< input parameter, Cb quantized coefficients rate */
+    uint64_t *     cr_txb_coeff_bits, /*!< input parameter, Cr quantized coefficients rate */
     TxSize         txsize,
-    uint64_t       lambda); // input parameter, lambda for Luma
+    uint64_t       lambda); /*!< input parameter, lambda for Luma */
 
 extern EbErrorType txb_calc_cost(
     uint32_t cu_size, ModeDecisionCandidate *candidate_ptr, uint32_t txb_index,
@@ -69,16 +67,16 @@ extern EbErrorType txb_calc_cost(
     uint32_t qp, uint64_t lambda, uint64_t lambda_chroma);
 extern EbErrorType av1_txb_calc_cost_luma(
     int16_t                txb_skip_ctx,
-    ModeDecisionCandidate *candidate_ptr, // input parameter, prediction result Ptr
-    uint32_t               txb_index, // input parameter, TU index inside the CU
+    ModeDecisionCandidate *candidate_ptr, /*!< input parameter, prediction result Ptr */
+    uint32_t               txb_index, /*!< input parameter, TU index inside the CU */
     TxSize                 tx_size,
     uint32_t
-             y_count_non_zero_coeffs, // input parameter, number of non zero Y quantized coefficients
+             y_count_non_zero_coeffs, /*!< input parameter, number of non zero Y quantized coefficients */
     uint64_t y_txb_distortion
-        [DIST_CALC_TOTAL], // input parameter, Y distortion for both Normal and Cbf zero modes
-    uint64_t *y_txb_coeff_bits, // input parameter, Y quantized coefficients rate
+        [DIST_CALC_TOTAL], /*!< input parameter, Y distortion for both Normal and Cbf zero modes */
+    uint64_t *y_txb_coeff_bits, /*!< input parameter, Y quantized coefficients rate */
     uint64_t *y_full_cost,
-    uint64_t  lambda); // input parameter, lambda for Luma
+    uint64_t  lambda); /*!< input parameter, lambda for Luma */
 
 extern EbErrorType intra_luma_mode_context(BlkStruct *blk_ptr, uint32_t luma_mode,
                                            int32_t *prediction_index);
@@ -102,7 +100,7 @@ extern EbErrorType split_flag_rate(ModeDecisionContext *context_ptr, BlkStruct *
 #define RDCOST(RM, R, D) \
     (ROUND_POWER_OF_TWO(((uint64_t)(R)) * (RM), AV1_PROB_COST_SHIFT) + ((D) * (1 << RDDIV_BITS)))
 
-extern EbErrorType av1_split_flag_rate(SequenceControlSet * scs_ptr,
+extern EbErrorType av1_split_flag_rate(PictureParentControlSet * pcs_ptr,
                                        ModeDecisionContext *context_ptr, BlkStruct *blk_ptr,
                                        uint32_t leaf_index, PartitionType partitionType,
                                        uint64_t *split_rate, uint64_t lambda,

@@ -1,7 +1,5 @@
-/*
-* Copyright(c) 2019 Netflix, Inc.
-* SPDX - License - Identifier: BSD - 2 - Clause - Patent
-*/
+/*!< Copyright(c) 2019 Netflix, Inc.
+ * SPDX - License - Identifier: BSD - 2 - Clause - Patent */
 
 #ifndef EbDecMemInit_h
 #define EbDecMemInit_h
@@ -14,6 +12,9 @@ extern EbMemoryMapEntry *svt_dec_memory_map;
 extern uint32_t         *svt_dec_memory_map_index;
 extern uint64_t         *svt_dec_total_lib_memory;
 extern uint32_t          svt_dec_lib_malloc_count;
+
+extern EbMemoryMapEntry                 *memory_map_start_address;
+extern EbMemoryMapEntry                 *memory_map_end_address;
 
 #ifdef _WIN32
 #define EB_ALLIGN_MALLOC_DEC(type, pointer, n_elements, pointer_class)                  \

@@ -1,7 +1,6 @@
-/*
-* Copyright(c) 2019 Intel Corporation
-* SPDX - License - Identifier: BSD - 2 - Clause - Patent
-*/
+/*!<
+ * Copyright(c) 2019 Intel Corporation
+ * SPDX - License - Identifier: BSD - 2 - Clause - Patent */
 
 #include <stdlib.h>
 
@@ -14,31 +13,31 @@ static void eb_sequence_control_set_dctor(EbPtr p) {
     EB_FREE_ARRAY(obj->sb_geom);
 }
 
-/**************************************************************************************************
-    General notes on how Sequence Control Sets (SCS) are used.
-
-    SequenceControlSetInstance
-        is the master copy that interacts with the API in real-time.  When a
-        change happens, the changeFlag is signaled so that appropriate action can
-        be taken.  There is one scsInstance per stream/encode instance.  The scsInstance
-        owns the encodeContext
-
-    encodeContext
-        has context type variables (i.e. non-config) that keep track of global parameters.
-
-    SequenceControlSets
-        general SCSs are controled by a system resource manager.  They are kept completely
-        separate from the instances.  In general there is one active SCS at a time.  When the
-        changeFlag is signaled, the old active SCS is no longer used for new input pictures.
-        A fresh copy of the scsInstance is made to a new SCS, which becomes the active SCS.  The
-        old SCS will eventually be released back into the SCS pool when its current pictures are
-        finished encoding.
-
-    Motivations
-        The whole reason for this structure is due to the nature of the pipeline.  We have to
-        take great care not to have pipeline mismanagement.  Once an object enters use in the
-        pipeline, it cannot be changed on the fly or you will have pipeline coherency problems.
- ***************************************************************************************************/
+/*!< *************************************************************************************************
+ *   General notes on how Sequence Control Sets (SCS) are used.
+ *
+ *    SequenceControlSetInstance
+ *       is the master copy that interacts with the API in real-time.  When a
+ *       change happens, the changeFlag is signaled so that appropriate action can
+ *       be taken.  There is one scsInstance per stream/encode instance.  The scsInstance
+ *       owns the encodeContext
+ *
+ *    encodeContext
+ *       has context type variables (i.e. non-config) that keep track of global parameters.
+ *
+ *   SequenceControlSets
+ *       general SCSs are controled by a system resource manager.  They are kept completely
+ *       separate from the instances.  In general there is one active SCS at a time.  When the
+ *       changeFlag is signaled, the old active SCS is no longer used for new input pictures.
+ *       A fresh copy of the scsInstance is made to a new SCS, which becomes the active SCS.  The
+ *       old SCS will eventually be released back into the SCS pool when its current pictures are
+ *       finished encoding.
+ *
+ *   Motivations
+ *       The whole reason for this structure is due to the nature of the pipeline.  We have to
+ *       take great care not to have pipeline mismanagement.  Once an object enters use in the
+ *       pipeline, it cannot be changed on the fly or you will have pipeline coherency problems.
+ ************************************************************************************************** */
 EbErrorType eb_sequence_control_set_ctor(SequenceControlSet *scs_ptr, EbPtr object_init_data_ptr) {
     EbSequenceControlSetInitData *scs_init_data =
         (EbSequenceControlSetInitData *)object_init_data_ptr;
@@ -50,7 +49,7 @@ EbErrorType eb_sequence_control_set_ctor(SequenceControlSet *scs_ptr, EbPtr obje
     scs_ptr->static_config.partition_depth = 4;
     scs_ptr->static_config.qp              = 32;
 
-    // Segments
+    /*!< Segments */
     for (segment_index = 0; segment_index < MAX_TEMPORAL_LAYERS; ++segment_index) {
         scs_ptr->me_segment_column_count_array[segment_index]   = 1;
         scs_ptr->me_segment_row_count_array[segment_index]      = 1;
@@ -58,10 +57,10 @@ EbErrorType eb_sequence_control_set_ctor(SequenceControlSet *scs_ptr, EbPtr obje
         scs_ptr->enc_dec_segment_row_count_array[segment_index] = 1;
     }
 
-    // Encode Context
+    /*!< Encode Context */
     if (scs_init_data != EB_NULL) scs_ptr->encode_context_ptr = scs_init_data->encode_context_ptr;
 
-    // Profile & ID
+    /*!< Profile & ID */
     scs_ptr->chroma_format_idc   = EB_YUV420;
     scs_ptr->max_temporal_layers = 1;
 
@@ -71,30 +70,30 @@ EbErrorType eb_sequence_control_set_ctor(SequenceControlSet *scs_ptr, EbPtr obje
 
     scs_ptr->encoder_bit_depth = 8;
 
-    // Bitdepth
+    /*!< Bitdepth */
     //scs_ptr->input_bitdepth = EB_8BIT;
     //scs_ptr->output_bitdepth = EB_8BIT;
 
-    // GOP Structure
+    /*!< GOP Structure */
     scs_ptr->max_ref_count = 1;
 
-    // SB
+    /*!< SB */
     scs_ptr->sb_sz        = 64;
     scs_ptr->max_sb_depth = 3;
 
-    // CU
+    /*!< CU */
     scs_ptr->max_blk_size   = 64;
     scs_ptr->min_blk_size   = 8;
     scs_ptr->max_intra_size = 32;
     scs_ptr->min_intra_size = 8;
     scs_ptr->intra4x4_flag  = EB_TRUE;
-    // Rate Control
+    /*!< Rate Control */
     scs_ptr->target_bitrate      = 0x1000;
     scs_ptr->available_bandwidth = 0x1000;
 
-    // Quantization
+    /*!< Quantization */
     scs_ptr->static_config.qp = 20;
-    // Initialize SB params
+    /*!< Initialize SB params */
     EB_MALLOC_ARRAY(scs_ptr->sb_params_array,
                     ((MAX_PICTURE_WIDTH_SIZE + scs_ptr->sb_sz - 1) / scs_ptr->sb_sz) *
                         ((MAX_PICTURE_HEIGHT_SIZE + scs_ptr->sb_sz - 1) / scs_ptr->sb_sz));
@@ -111,35 +110,35 @@ EbErrorType eb_sequence_control_set_ctor(SequenceControlSet *scs_ptr, EbPtr obje
         scs_ptr->sb_size_pix        = 128;
         scs_ptr->max_block_cnt      = 4421;
 
-        scs_ptr->seq_header.sb_mi_size   = 32; // Size of the superblock in units of MI blocks
+        scs_ptr->seq_header.sb_mi_size   = 32; /*!< Size of the superblock in units of MI blocks */
         scs_ptr->seq_header.sb_size_log2 = 5;
     } else {
         scs_ptr->seq_header.sb_size = BLOCK_64X64;
         scs_ptr->sb_size_pix        = 64;
         scs_ptr->max_block_cnt      = 1101;
 
-        scs_ptr->seq_header.sb_mi_size   = 16; // Size of the superblock in units of MI blocks
+        scs_ptr->seq_header.sb_mi_size   = 16; /*!< Size of the superblock in units of MI blocks */
         scs_ptr->seq_header.sb_size_log2 = 4;
     }
-    // 0 - disable dual interpolation filter
-    // 1 - enable vertical and horiz filter selection
+    /*!< 0 - disable dual interpolation filter
+     *   1 - enable vertical and horiz filter selection */
     scs_ptr->seq_header.enable_dual_filter                = 0;
     scs_ptr->seq_header.order_hint_info.enable_order_hint = 1;
-    // 0 - disable order hint, and related tools:
-    // jnt_comp, ref_frame_mvs, frame_sign_bias
-    // if 0, enable_jnt_comp must be set zs 0.
+    /*!< 0 - disable order hint, and related tools:
+     *   jnt_comp, ref_frame_mvs, frame_sign_bias
+     *   if 0, enable_jnt_comp must be set zs 0. */
     scs_ptr->seq_header.order_hint_info.enable_jnt_comp = 0;
 
     scs_ptr->seq_header.order_hint_info.order_hint_bits =
         scs_ptr->seq_header.order_hint_info.enable_order_hint ? (6 + 1) : (-1 + 1);
 
     scs_ptr->seq_header.seq_force_screen_content_tools = 2;
-    // 0 - force off
-    // 1 - force on
-    // 2 - adaptive
-    scs_ptr->seq_header.seq_force_integer_mv = 2; // 0 - Not to force. MV can be in 1/4 or 1/8
-    // 1 - force to integer
-    // 2 - adaptive
+    /*!< 0 - force off
+     *   1 - force on
+     *   2 - adaptive */
+    scs_ptr->seq_header.seq_force_integer_mv = 2; /*!< 0 - Not to force. MV can be in 1/4 or 1/8 */
+    /*!< 1 - force to integer
+     *   2 - adaptive */
 
     scs_ptr->seq_header.order_hint_info.enable_ref_frame_mvs = 1;
 #if NO_ENCDEC || SHUT_FILTERING
@@ -174,9 +173,9 @@ EbErrorType eb_sequence_control_set_creator(EbPtr *object_dbl_ptr, EbPtr object_
     return EB_ErrorNone;
 }
 
-/************************************************
- * Sequence Control Set Copy
- ************************************************/
+/************************************************/
+/*!< Sequence Control Set Copy */
+/************************************************/
 EbErrorType copy_sequence_control_set(SequenceControlSet *dst, SequenceControlSet *src) {
     uint32_t write_count = 0;
 
@@ -351,6 +350,10 @@ EbErrorType copy_sequence_control_set(SequenceControlSet *dst, SequenceControlSe
         dst->me_segment_row_count_array[i]      = src->me_segment_row_count_array[i];
         dst->enc_dec_segment_col_count_array[i] = src->enc_dec_segment_col_count_array[i];
         dst->enc_dec_segment_row_count_array[i] = src->enc_dec_segment_row_count_array[i];
+#if TILES_PARALLEL
+        dst->tile_group_col_count_array[i] = src->tile_group_col_count_array[i];
+        dst->tile_group_row_count_array[i] = src->tile_group_row_count_array[i];
+#endif
     }
 
     dst->cdef_segment_column_count = src->cdef_segment_column_count;
@@ -372,15 +375,17 @@ EbErrorType copy_sequence_control_set(SequenceControlSet *dst, SequenceControlSe
     return EB_ErrorNone;
 }
 
-extern EbErrorType derive_input_resolution(SequenceControlSet *scs_ptr, uint32_t inputSize) {
+extern EbErrorType derive_input_resolution(EbInputResolution *input_resolution, uint32_t inputSize) {
     EbErrorType return_error = EB_ErrorNone;
 
-    scs_ptr->input_resolution =
-        (inputSize < INPUT_SIZE_1080i_TH)
-            ? INPUT_SIZE_576p_RANGE_OR_LOWER
-            : (inputSize < INPUT_SIZE_1080p_TH)
-                  ? INPUT_SIZE_1080i_RANGE
-                  : (inputSize < INPUT_SIZE_4K_TH) ? INPUT_SIZE_1080p_RANGE : INPUT_SIZE_4K_RANGE;
+    if(inputSize < INPUT_SIZE_1080i_TH)
+        *input_resolution = INPUT_SIZE_576p_RANGE_OR_LOWER;
+    else if(inputSize < INPUT_SIZE_1080p_TH)
+        *input_resolution = INPUT_SIZE_1080i_RANGE;
+    else if(inputSize < INPUT_SIZE_4K_TH)
+        *input_resolution = INPUT_SIZE_1080p_RANGE;
+    else
+        *input_resolution = INPUT_SIZE_4K_RANGE;
 
     return return_error;
 }
@@ -392,18 +397,18 @@ static void eb_sequence_control_set_instance_dctor(EbPtr p) {
     EB_DESTROY_MUTEX(obj->config_mutex);
 }
 
-EbErrorType eb_sequence_control_set_instance_ctor(EbSequenceControlSetInstance *object_dbl_ptr) {
+EbErrorType eb_sequence_control_set_instance_ctor(EbSequenceControlSetInstance *object_ptr) {
     EbSequenceControlSetInitData scs_init_data;
 
-    object_dbl_ptr->dctor = eb_sequence_control_set_instance_dctor;
+    object_ptr->dctor = eb_sequence_control_set_instance_dctor;
 
-    EB_NEW(object_dbl_ptr->encode_context_ptr, encode_context_ctor, EB_NULL);
-    scs_init_data.encode_context_ptr = object_dbl_ptr->encode_context_ptr;
+    EB_NEW(object_ptr->encode_context_ptr, encode_context_ctor, EB_NULL);
+    scs_init_data.encode_context_ptr = object_ptr->encode_context_ptr;
 
     scs_init_data.sb_size = 64;
 
-    EB_NEW(object_dbl_ptr->scs_ptr, eb_sequence_control_set_ctor, (void *)&scs_init_data);
-    EB_CREATE_MUTEX(object_dbl_ptr->config_mutex);
+    EB_NEW(object_ptr->scs_ptr, eb_sequence_control_set_ctor, (void *)&scs_init_data);
+    EB_CREATE_MUTEX(object_ptr->config_mutex);
 
     return EB_ErrorNone;
 }
@@ -416,7 +421,7 @@ extern EbErrorType sb_params_init(SequenceControlSet *scs_ptr) {
         (uint8_t)((scs_ptr->seq_header.max_frame_width + scs_ptr->sb_sz - 1) / scs_ptr->sb_sz);
     uint8_t picture_sb_height =
         (uint8_t)((scs_ptr->seq_header.max_frame_height + scs_ptr->sb_sz - 1) / scs_ptr->sb_sz);
-    //free old one;
+    /*!< free old one; */
     EB_FREE_ARRAY(scs_ptr->sb_params_array);
 
     EB_MALLOC_ARRAY(scs_ptr->sb_params_array, picture_sb_width * picture_sb_height);
@@ -535,7 +540,8 @@ EbErrorType sb_geom_init(SequenceControlSet *scs_ptr) {
                         ? EB_TRUE
                         : EB_FALSE;
 
-                // Temporary if the cropped width is not 4, 8, 16, 32, 64 and 128, the block is not allowed. To be removed after intrinsic functions for NxM spatial_full_distortion_kernel_func_ptr_array are added
+                /*!< Temporary if the cropped width is not 4, 8, 16, 32, 64 and 128, the block is not allowed.
+                 *   To be removed after intrinsic functions for NxM spatial_full_distortion_kernel_func_ptr_array are added */
                 int32_t cropped_width =
                     MIN(blk_geom->bwidth,
                         scs_ptr->seq_header.max_frame_width -

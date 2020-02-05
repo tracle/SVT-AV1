@@ -24,10 +24,10 @@ This section describes how to run the sample encoder application that uses the S
 The SVT-AV1 Encoder supports the following input formats:
 
 _8-bit yuv420p_\
-![8-bit yuv420p](8bit_yuv420p.png "8-bit yuv420p")
+![8-bit yuv420p](img/8bit_yuv420p.png "8-bit yuv420p")
 
 _10-bit yuv420p10le_\
-![10-bit yuv420p10le](10bit_yuv420p.png "10-bit yuv420p10le")
+![10-bit yuv420p10le](img/10bit_yuv420p.png "10-bit yuv420p10le")
 
 ### Compressed 10-bit format
 
@@ -38,24 +38,24 @@ In order to reduce the size of the input original YUV file, the SVT-AV1 Encoder 
 This step consists of separating the 10 bit video samples into 8 bit and 2 bit planes so that each 10-bit picture will be represented as two separate pictures as shown in the figure below. As a result of the operation, the 2 least significant bits of the 10 bits will be written into a full byte.
 
 _10-bit yuv420p10le unpacked_\
-![10-bit yuv420p10le unpacked](10bit_unpacked.png "10-bit yuv420p10le unpacked")
+![10-bit yuv420p10le unpacked](img/10bit_unpacked.png "10-bit yuv420p10le unpacked")
 
 #### Compress the 2 bit Plane
 
 The unpacking steps separates the 10bits into a group of 8 bits and a group of 2 bits, where the 2 bits are stored in a byte. In this step, every group of consecutive 4 bytes, each containing 2bits from the unpacking step, are compressed into one byte. As a result, each 10bit picture will be represented as two separate pictures as shown in the figure below.
 
 _10-bit yuv420p10le compressed_\
-![10-bit yuv420p10le compressed](10bit_packed.png "10-bit yuv420p10le compressed")
+![10-bit yuv420p10le compressed](img/10bit_packed.png "10-bit yuv420p10le compressed")
 
 #### Unroll the 64x64
 
 Now for a faster read of the samples, every 64x64 block of the 2 bit picture should be written into a one dimensional array. Therefore, the top left 64x64 sample block which is now written into a 16 bytes x 64 bytes after the compression of the 2bit samples, will be written into a 1024 bytes x 1 byte array as shown in the picture below.
 
 _64x64 block after 2 bit compression_\
-![64x64 block after 2 bit compression](64x64_after_2bit_compression.png "64x64 block after 2 bit compression")
+![64x64 block after 2 bit compression](img/64x64_after_2bit_compression.png "64x64 block after 2 bit compression")
 
 _64x64 block after unrolling_\
-![64x64 block after unrolling](64x64_after_unrolling.png "64x64 block after unrolling")
+![64x64 block after unrolling](img/64x64_after_unrolling.png "64x64 block after unrolling")
 
 ### Running the encoder
 
@@ -129,6 +129,7 @@ The encoder parameters present in the `Sample.cfg` file are listed in this table
 | **EncoderMode2p** | -enc-mode-2p | [0 - 8] | 8 | Encoder Preset [0,1,2,3,4,5,6,7,8] 0 = highest quality, 8 = highest speed. Passed to encoder's first pass to use the ME settings of the second pass to achieve better bdRate|
 | **InputStatFile** | -input-stat-file | any string | Null | Input stat file for second pass|
 | **OutputStatFile** | -output-stat-file | any string | Null | Output stat file for first pass|
+| **PredStructFile** | -pred-struct-file | any string | Null | Manual prediction structure file path,refer to the comments in the Config/PredStruct_level0~5.cfg for specific details|
 | **EncoderMode** | -enc-mode | [0 - 8] | 8 | Encoder Preset [0,1,2,3,4,5,6,7,8] 0 = highest quality, 8 = highest speed |
 | **EncoderBitDepth** | -bit-depth | [8 , 10] | 8 | specifies the bit depth of the input video |
 | **CompressedTenBitFormat** | -compressed-ten-bit-format | [0 - 1] | 0 | Offline packing of the 2bits: requires two bits packed input (0: OFF, 1: ON) |

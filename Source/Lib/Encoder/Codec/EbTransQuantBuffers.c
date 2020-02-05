@@ -1,11 +1,9 @@
-/*
-* Copyright(c) 2019 Intel Corporation
-* SPDX - License - Identifier: BSD - 2 - Clause - Patent
-*/
+/*!< Copyright(c) 2019 Intel Corporation
+ * SPDX - License - Identifier: BSD - 2 - Clause - Patent */
 
 #include "EbTransQuantBuffers.h"
 
-void eb_trans_quant_buffers_dctor(EbPtr p) {
+static void eb_trans_quant_buffers_dctor(EbPtr p) {
     EbTransQuantBuffers* obj = (EbTransQuantBuffers*)p;
     EB_DELETE(obj->txb_trans_coeff2_nx2_n_ptr);
     EB_DELETE(obj->txb_trans_coeff_nxn_ptr);

@@ -1,7 +1,5 @@
-/*
-* Copyright(c) 2019 Intel Corporation
-* SPDX - License - Identifier: BSD - 2 - Clause - Patent
-*/
+/*!< Copyright(c) 2019 Intel Corporation
+ * SPDX - License - Identifier: BSD - 2 - Clause - Patent */
 
 #ifndef EbSvtAv1ErrorCodes_h
 #define EbSvtAv1ErrorCodes_h
@@ -10,7 +8,7 @@
 extern "C" {
 #endif // __cplusplus
 
-#define CHECK_REPORT_ERROR(cond, app_callback_ptr, errorCode)                          \
+#define CHECK_REPORT_ERROR(cond, app_callback_ptr, errorCode)                        \
     {                                                                                \
         if (!(cond)) {                                                               \
             (app_callback_ptr)->error_handler(((app_callback_ptr)->handle), (errorCode)); \
@@ -184,7 +182,7 @@ typedef enum ENCODER_ERROR_CODES {
     EB_ENC_RC_ERROR6 = 0x1405,
     EB_ENC_RC_ERROR7 = 0x1406,
     EB_ENC_RC_ERROR8 = 0x1407,
-    //EB_ENC_PU_ERRORS                  = 0x1500,
+    //*!< EB_ENC_PU_ERRORS                  = 0x1500,
     EB_ENC_PU_ERROR1             = 0x1500,
     EB_ENC_PU_ERROR2             = 0x1501,
     EB_ENC_INVLD_PART_SIZE_ERROR = 0x1502,
@@ -222,6 +220,7 @@ typedef enum ENCODER_ERROR_CODES {
     EB_ENC_PD_ERROR6 = 0x2105,
     EB_ENC_PD_ERROR7 = 0x2106,
     EB_ENC_PD_ERROR8 = 0x2107,
+    EB_ENC_PD_ERROR9 = 0x2108,
 } ENCODER_ERROR_CODES;
 
 #ifdef __cplusplus

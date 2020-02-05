@@ -1,13 +1,11 @@
-/*
- * Copyright (c) 2016, Alliance for Open Media. All rights reserved
+/*!< Copyright (c) 2016, Alliance for Open Media. All rights reserved
  *
  * This source code is subject to the terms of the BSD 2 Clause License and
  * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
  * was not distributed with this source code in the LICENSE file, you can
  * obtain it at www.aomedia.org/license/software. If the Alliance for Open
  * Media Patent License 1.0 was not distributed with this source code in the
- * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
- */
+ * PATENTS file, you can obtain it at www.aomedia.org/license/patent. */
 
 #include "EbDefinitions.h"
 #include <assert.h>
@@ -24,9 +22,8 @@ double eb_aom_sse_to_psnr(double samples, double peak, double sse) {
         return MAX_PSNR;
 }
 
-/* TODO(yaowu): The block_variance calls the unoptimized versions of variance()
- * and highbd_8_variance(). It should not.
- */
+/*!< TODO(yaowu): The block_variance calls the unoptimized versions
+ *   of variance() and highbd_8_variance(). It should not. */
 static int32_t encoder_variance(const uint8_t *a, int32_t a_stride, const uint8_t *b,
                                 int32_t b_stride, int32_t w, int32_t h) {
     int32_t i, j;
@@ -170,6 +167,76 @@ static int64_t highbd_get_sse(const uint8_t *a, int32_t a_stride, const uint8_t 
     }
     return total_sse;
 }
+
+static void highbd_variance64(const uint8_t *a8, int a_stride,
+                              const uint8_t *b8, int b_stride, int w, int h,
+                              uint64_t *sse, int64_t *sum) {
+  const uint16_t *a = (uint16_t *)a8;
+  const uint16_t *b = (uint16_t *)b8;
+  int64_t tsum = 0;
+  uint64_t tsse = 0;
+  for (int i = 0; i < h; ++i) {
+    int32_t lsum = 0;
+    for (int j = 0; j < w; ++j) {
+      const int diff = a[j] - b[j];
+      lsum += diff;
+      tsse += (uint32_t)(diff * diff);
+    }
+    tsum += lsum;
+    a += a_stride;
+    b += b_stride;
+  }
+  *sum = tsum;
+  *sse = tsse;
+}
+
+static void highbd_10_variance(const uint8_t *a8, int a_stride,
+                               const uint8_t *b8, int b_stride, int w, int h,
+                               uint32_t *sse, int *sum) {
+  uint64_t sse_long = 0;
+  int64_t sum_long = 0;
+  highbd_variance64(a8, a_stride, b8, b_stride, w, h, &sse_long, &sum_long);
+  *sse = (uint32_t)ROUND_POWER_OF_TWO(sse_long, 4);
+  *sum = (int)ROUND_POWER_OF_TWO(sum_long, 2);
+}
+
+#define HIGHBD_VAR(W, H)                                                          \
+  uint32_t eb_aom_highbd_10_variance##W##x##H##_c(const uint8_t *a, int a_stride, \
+                                                  const uint8_t *b, int b_stride, \
+                                                  uint32_t *sse) {                \
+    int sum;                                                                      \
+    int64_t var;                                                                  \
+    highbd_10_variance(a, a_stride, b, b_stride, W, H, sse, &sum);                \
+    var = (int64_t)(*sse) - (((int64_t)sum * sum) / (W * H));                     \
+    return (var >= 0) ? (uint32_t)var : 0;                                        \
+  }                                                                               \
+
+
+HIGHBD_VAR(128, 128)
+HIGHBD_VAR(128, 64)
+HIGHBD_VAR(64, 128)
+HIGHBD_VAR(64, 64)
+HIGHBD_VAR(64, 32)
+HIGHBD_VAR(32, 64)
+HIGHBD_VAR(32, 32)
+HIGHBD_VAR(32, 16)
+HIGHBD_VAR(16, 32)
+HIGHBD_VAR(16, 16)
+HIGHBD_VAR(16, 8)
+HIGHBD_VAR(8, 16)
+HIGHBD_VAR(8, 8)
+HIGHBD_VAR(8, 4)
+HIGHBD_VAR(4, 8)
+HIGHBD_VAR(4, 4)
+HIGHBD_VAR(4, 2)
+HIGHBD_VAR(2, 4)
+HIGHBD_VAR(2, 2)
+HIGHBD_VAR(4, 16)
+HIGHBD_VAR(16, 4)
+HIGHBD_VAR(8, 32)
+HIGHBD_VAR(32, 8)
+HIGHBD_VAR(16, 64)
+HIGHBD_VAR(64, 16)
 
 int64_t eb_aom_get_y_sse_part(const Yv12BufferConfig *a, const Yv12BufferConfig *b, int32_t hstart,
                               int32_t width, int32_t vstart, int32_t height) {

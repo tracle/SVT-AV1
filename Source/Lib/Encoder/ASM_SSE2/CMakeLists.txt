@@ -9,7 +9,9 @@
 include_directories(../../../API
         ../../Encoder/Codec
     ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/C_DEFAULT/
-    ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/ASM_SSE2/)
+    ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/ASM_SSE2/
+    ${PROJECT_SOURCE_DIR}/Source/Lib/Common/ASM_SSE2/
+     )
 
 set(flags_to_test -msse2)
 
@@ -23,5 +25,13 @@ file(GLOB all_files
     "*.h"
     "*.asm"
     "*.c")
+
+file(GLOB asm_includes
+    "x86_abi_support.asm"
+    "x64Macro.asm"
+    "x64inc.asm"
+    "x86inc.asm")
+
+list(REMOVE_ITEM all_files ${asm_includes})
 
 add_library(ENCODER_ASM_SSE2 OBJECT ${all_files})

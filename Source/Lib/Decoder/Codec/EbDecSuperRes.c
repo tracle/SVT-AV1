@@ -1,28 +1,23 @@
-/*
-* Copyright(c) 2019 Netflix, Inc.
-* SPDX - License - Identifier: BSD - 2 - Clause - Patent
-*/
+/*!< Copyright(c) 2019 Netflix, Inc.
+ * SPDX - License - Identifier: BSD - 2 - Clause - Patent */
 
-/*
- * Copyright (c) 2016, Alliance for Open Media. All rights reserved
+/*!< Copyright (c) 2016, Alliance for Open Media. All rights reserved
  *
  * This source code is subject to the terms of the BSD 2 Clause License and
  * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
  * was not distributed with this source code in the LICENSE file, you can
  * obtain it at www.aomedia.org/license/software. If the Alliance for Open
  * Media Patent License 1.0 was not distributed with this source code in the
- * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
- */
+ * PATENTS file, you can obtain it at www.aomedia.org/license/patent. */
 
 #include <assert.h>
 #include <stdint.h>
 #include <string.h>
 
-#include "../../Encoder/Codec/EbCdef.h"
 #include "EbDecRestoration.h"
 #include "EbDecUtils.h"
 #include "EbDecMemInit.h"
-#include "../../Encoder/Codec/EbInterPrediction.h"
+
 
 void av1_upscale_normative_rows(const Av1Common *cm, const uint8_t *src, int src_stride,
                                 uint8_t *dst, int dst_stride, int rows, int sub_x, int bd);
@@ -81,7 +76,7 @@ EbErrorType copy_recon(SeqHeader *seq_hdr, EbPictureBufferDesc *recon_picture_sr
 
     uint32_t bytes_per_pixel = (recon_picture_dst->bit_depth == EB_8BIT) ? 1 : 2;
 
-    // Allocate the Picture Buffers (luma & chroma)
+    /*!< Allocate the Picture Buffers (luma & chroma) */
     if (recon_picture_dst->buffer_enable_mask & PICTURE_BUFFER_DESC_Y_FLAG) {
         EB_ALLIGN_MALLOC_DEC(EbByte,
                              recon_picture_dst->buffer_y,
