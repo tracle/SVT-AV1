@@ -5713,7 +5713,11 @@ void tx_type_search(
     TxSize txSize = context_ptr->blk_geom->txsize[context_ptr->tx_depth][context_ptr->txb_itr];
     int32_t is_inter = (candidate_buffer->candidate_ptr->type == INTER_MODE || candidate_buffer->candidate_ptr->use_intrabc) ? EB_TRUE : EB_FALSE;
 #if MULTI_PASS_PD
+#if TX_SEARCH_REDUCED
+    const TxSetType tx_set_type = get_ext_tx_set_type(txSize, is_inter, picture_control_set_ptr->parent_pcs_ptr->frm_hdr.reduced_tx_set);
+#else
     const TxSetType tx_set_type = get_ext_tx_set_type(txSize, is_inter, context_ptr->tx_search_reduced_set);
+#endif
 #else
     const TxSetType tx_set_type = get_ext_tx_set_type(txSize, is_inter, picture_control_set_ptr->parent_pcs_ptr->tx_search_reduced_set);
 #endif
@@ -5781,6 +5785,26 @@ void tx_type_search(
         }
     }
 #endif
+#if TX_SEARCH_REDUCED
+    int32_t allowed_tx_mask[TX_TYPES] = { 0 }; // 1: allow; 0: skip.
+    int32_t allowed_tx_num = 0;
+    for (tx_type = txk_start; tx_type < txk_end; ++tx_type) {
+        TxType ref_tx_type = DCT_DCT;
+        if (context_ptr->tx_search_reduced_set == 2)
+            tx_type = (tx_type == 1) ? IDTX : tx_type;
+        allowed_tx_mask[tx_type] = 1;
+        ref_tx_type = ((!av1_ext_tx_used[tx_set_type][tx_type]) ||
+                            txsize_sqr_up_map[txSize] > TX_32X32)
+                            ? DCT_DCT
+                            : tx_type;
+        if (tx_type != ref_tx_type) allowed_tx_mask[tx_type] = 0;
+
+        allowed_tx_num += allowed_tx_mask[tx_type];
+}
+    // Need to have at least one transform type allowed.
+    if (allowed_tx_num == 0) allowed_tx_mask[DCT_DCT] = 1;
+
+#endif
     TxType best_tx_type = DCT_DCT;
 #if SKIP_TXT_BSAED_COEFF
     uint32_t best_y_count_non_zero_coeffs = (uint32_t)~0;
@@ -5803,7 +5827,10 @@ void tx_type_search(
             continue;
 #endif
         uint32_t y_count_non_zero_coeffs;
-
+#if TX_SEARCH_REDUCED
+        if (context_ptr->tx_search_reduced_set == 2) tx_type = (tx_type == 1) ? IDTX : tx_type;
+        if (!allowed_tx_mask[tx_type]) continue;
+#endif
 
 #if TX_SIZE_LIGHT_TX_TYPE_MD_STAGE_2
         if (context_ptr->md_stage <= MD_STAGE_2 && tx_type != DCT_DCT && tx_type != V_DCT && tx_type != H_DCT)
@@ -5819,8 +5846,13 @@ void tx_type_search(
             if (is_inter) {
                 TxSize max_tx_size = context_ptr->blk_geom->txsize[0][0];
 #if MULTI_PASS_PD
+#if TX_SEARCH_REDUCED
+                const TxSetType tx_set_type = get_ext_tx_set_type(max_tx_size, is_inter, picture_control_set_ptr->parent_pcs_ptr->frm_hdr.reduced_tx_set);
+                int32_t eset = get_ext_tx_set(max_tx_size, is_inter, picture_control_set_ptr->parent_pcs_ptr->frm_hdr.reduced_tx_set);
+#else
                 const TxSetType tx_set_type = get_ext_tx_set_type(max_tx_size, is_inter, context_ptr->tx_search_reduced_set);
                 int32_t eset = get_ext_tx_set(max_tx_size, is_inter, context_ptr->tx_search_reduced_set);
+#endif
 #else
                 const TxSetType tx_set_type = get_ext_tx_set_type(max_tx_size, is_inter, picture_control_set_ptr->parent_pcs_ptr->tx_search_reduced_set);
                 int32_t eset = get_ext_tx_set(max_tx_size, is_inter, picture_control_set_ptr->parent_pcs_ptr->tx_search_reduced_set);

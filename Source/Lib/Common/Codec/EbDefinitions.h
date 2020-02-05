@@ -185,6 +185,7 @@ extern "C" {
 
 #define LOSSLESS_TX_SIZE_OPT         1
 #define LOSSLESS_TX_TYPE_OPT         1
+#define TX_SEARCH_REDUCED            1
 
 #define ATB_INTRA_2_DEPTH            1 // ATB INTRA Depth 2
 #define SHUT_TX_WEIGHT               0
