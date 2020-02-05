@@ -51,7 +51,7 @@ extern "C" {
 #define REDUCE_INTER_MODES              0 // Reduce the number of candidates with new mv based on the weight computed in mv pred.
 #define PRUNE_SKIP_AND_NON_SKIP         0 // Split the number of md stage 3 to skip and non-skip.
 #if RESTRICT_TXS_FOR_NON_S_V_H || RESTRICT_TXT_FOR_NON_S_V_H || DISABLE_COMPOUND_FOR_NON_S_V_H
-#define ADD_PARENT_IDX                  0 // Add parent index in the geom - lossless
+#define ADD_PARENT_IDX                  1 // Add parent index in the geom - lossless
 #endif
 #define QPS_CHANGE              1 //QPS changes for 4L pictures
 #define QPS_CHANGE_P2           1 //QPS changes for CQP

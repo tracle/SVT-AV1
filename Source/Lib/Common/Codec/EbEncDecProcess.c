@@ -2437,7 +2437,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     //0: OFF
     //1: ON 10% + skip HA/HB/H4  or skip VA/VB/V4
     //2: ON 10% + skip HA/HB  or skip VA/VB   ,  5% + skip H4  or skip V4
-    if (MR_MODE || picture_control_set_ptr->parent_pcs_ptr->sc_content_detected || context_ptr->pd_pass < PD_PASS_2)
+    if (MR_MODE || context_ptr->pd_pass < PD_PASS_2)
         context_ptr->nsq_hv_level = 0;
     else if (picture_control_set_ptr->enc_mode == ENC_M0) {
         context_ptr->nsq_hv_level = 1;
