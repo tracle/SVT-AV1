@@ -1672,7 +1672,7 @@ void generate_r0(PictureParentControlSet         *picture_control_set_ptr)
     }
 
     if (mc_dep_cost_base == 0) {
-      picture_control_set_ptr->r0 = -1.0;//tpl_frame->is_valid = 0;
+      picture_control_set_ptr->r0 = 0;//-1.0;//tpl_frame->is_valid = 0;
     } else {
       //aom_clear_system_state();
       picture_control_set_ptr->r0 = (double)intra_cost_base / mc_dep_cost_base;
