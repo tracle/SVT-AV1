@@ -3629,6 +3629,7 @@ EbErrorType init_svt_av1_encoder_handle(
 
     return return_error;
 }
+
 static EbErrorType allocate_frame_buffer(
     SequenceControlSet       *scs_ptr,
     EbBufferHeaderType        *input_buffer)
@@ -3637,9 +3638,17 @@ static EbErrorType allocate_frame_buffer(
     EbPictureBufferDescInitData input_pic_buf_desc_init_data;
     EbSvtAv1EncConfiguration   * config = &scs_ptr->static_config;
     uint8_t is_16bit = config->encoder_bit_depth > 8 ? 1 : 0;
-    // Init Picture Init data
-    input_pic_buf_desc_init_data.max_width = (uint16_t)scs_ptr->max_input_luma_width;
-    input_pic_buf_desc_init_data.max_height = (uint16_t)scs_ptr->max_input_luma_height;
+
+    input_pic_buf_desc_init_data.max_width =
+        !scs_ptr->max_input_luma_width % 8 ?
+        scs_ptr->max_input_luma_width :
+        scs_ptr->max_input_luma_width + 8 - (scs_ptr->max_input_luma_width % 8);
+
+    input_pic_buf_desc_init_data.max_height =
+        !scs_ptr->max_input_luma_height % 8 ?
+        scs_ptr->max_input_luma_height :
+        scs_ptr->max_input_luma_height + 8 - (scs_ptr->max_input_luma_height % 8);
+
     input_pic_buf_desc_init_data.bit_depth = (EbBitDepthEnum)config->encoder_bit_depth;
     input_pic_buf_desc_init_data.color_format = (EbColorFormat)config->encoder_color_format;
 
@@ -3648,6 +3657,7 @@ static EbErrorType allocate_frame_buffer(
     else
         input_pic_buf_desc_init_data.buffer_enable_mask = is_16bit ?
              PICTURE_BUFFER_DESC_FULL_MASK : 0;
+
     input_pic_buf_desc_init_data.left_padding = scs_ptr->left_padding;
     input_pic_buf_desc_init_data.right_padding = scs_ptr->right_padding;
     input_pic_buf_desc_init_data.top_padding = scs_ptr->top_padding;
@@ -3669,6 +3679,7 @@ static EbErrorType allocate_frame_buffer(
             eb_picture_buffer_desc_ctor,
             (EbPtr)&input_pic_buf_desc_init_data);
         input_buffer->p_buffer = (uint8_t*)buf;
+
         if (is_16bit && config->compressed_ten_bit_format == 1) {
             //pack 4 2bit pixels into 1Byte
             EB_MALLOC_ALIGNED_ARRAY(buf->buffer_bit_inc_y,
