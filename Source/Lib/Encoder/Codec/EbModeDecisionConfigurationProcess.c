@@ -106,6 +106,10 @@ static uint8_t intrabc_max_mesh_pct[MAX_MESH_SPEED + 1] = {100, 100, 100, 25, 25
 #define MAX_LUMINOSITY_BOOST 10
 int32_t budget_per_sb_boost[MAX_SUPPORTED_MODES] = {55, 55, 55, 55, 55, 55, 5, 5, 0, 0, 0, 0, 0};
 
+void scale_rec_references(PictureControlSet *pcs_ptr,
+                          EbPictureBufferDesc *input_picture_ptr,
+                          uint8_t hbd_mode_decision);
+
 static INLINE int32_t aom_get_qmlevel(int32_t qindex, int32_t first, int32_t last) {
     return first + (qindex * (last + 1 - first)) / QINDEX_RANGE;
 }
@@ -973,7 +977,9 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     frm_hdr->allow_warped_motion =
         enable_wm &&
         !(frm_hdr->frame_type == KEY_FRAME || frm_hdr->frame_type == INTRA_ONLY_FRAME) &&
-        !frm_hdr->error_resilient_mode;
+        !frm_hdr->error_resilient_mode &&
+        !pcs_ptr->parent_pcs_ptr->frame_superres_enabled;
+
     frm_hdr->is_motion_mode_switchable = frm_hdr->allow_warped_motion;
     // OBMC Level                                   Settings
     // 0                                            OFF
@@ -1219,6 +1225,11 @@ static int motion_field_projection(Av1Common *cm, PictureControlSet *pcs_ptr,
     if (start_frame_buf->frame_type == KEY_FRAME || start_frame_buf->frame_type == INTRA_ONLY_FRAME)
         return 0;
 
+    if (start_frame_buf->mi_rows != cm->mi_rows ||
+        start_frame_buf->mi_cols != cm->mi_cols){
+        return 0;
+    }
+
     const int                 start_frame_order_hint = start_frame_buf->order_hint;
     const unsigned int *const ref_order_hints        = &start_frame_buf->ref_order_hint[0];
     const int                 cur_order_hint         = pcs_ptr->parent_pcs_ptr->cur_order_hint;
@@ -1394,6 +1405,24 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
             (RateControlResults *)rate_control_results_wrapper_ptr->object_ptr;
         pcs_ptr = (PictureControlSet *)rate_control_results_ptr->pcs_wrapper_ptr->object_ptr;
         scs_ptr = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
+
+        // -------
+        // Scale references if resolution of the reference is different than the input
+        // -------
+        if(pcs_ptr->parent_pcs_ptr->frame_superres_enabled == 1 && pcs_ptr->slice_type != I_SLICE) {
+            if (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag == EB_TRUE &&
+                pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr != EB_NULL){
+                // update mi_rows and mi_cols for the reference pic wrapper (used in mfmv for other pictures)
+                EbReferenceObject *reference_object = pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr;
+                reference_object->mi_rows = pcs_ptr->parent_pcs_ptr->aligned_height >> MI_SIZE_LOG2;
+                reference_object->mi_cols = pcs_ptr->parent_pcs_ptr->aligned_width >> MI_SIZE_LOG2;
+            }
+
+            scale_rec_references(pcs_ptr,
+                                 pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr,
+                                 pcs_ptr->hbd_mode_decision);
+        }
+
         if (pcs_ptr->parent_pcs_ptr->frm_hdr.use_ref_frame_mvs)
             av1_setup_motion_field(pcs_ptr->parent_pcs_ptr->av1_cm, pcs_ptr);
 
