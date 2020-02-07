@@ -1426,7 +1426,7 @@ if(picture_control_set_ptr->picture_number == 16 && mb_origin_y == 0)
             }
         }
     }
-printf("kelvin ---> poc%d intra_cost_base=%lld intra_cost_basesrc=%lld\n", picture_control_set_ptr->picture_number, intra_cost_base, intra_cost_basesrc);
+//printf("kelvin ---> poc%d intra_cost_base=%lld intra_cost_basesrc=%lld\n", picture_control_set_ptr->picture_number, intra_cost_base, intra_cost_basesrc);
 
     // padding current recon picture
     generate_padding(
@@ -1801,7 +1801,7 @@ void update_mc_flow(
 #endif
 
     for(frame_idx = 0; frame_idx < picture_control_set_ptr->frames_in_sw; frame_idx++) {
-        printf("kelvin ---> init_rc cutree_mc_flow_dispenser frame_idx=%d, frames_in_sw=%d, reordered picture_number=%d, decode_order=%d, pcs=0x%x,layer%d\n", frame_idx, picture_control_set_ptr->frames_in_sw, picture_control_set_array[frame_idx]->picture_number, picture_control_set_array[frame_idx]->decode_order, picture_control_set_array[frame_idx], picture_control_set_array[frame_idx]->temporal_layer_index);
+        //printf("kelvin ---> init_rc cutree_mc_flow_dispenser frame_idx=%d, frames_in_sw=%d, reordered picture_number=%d, decode_order=%d, pcs=0x%x,layer%d\n", frame_idx, picture_control_set_ptr->frames_in_sw, picture_control_set_array[frame_idx]->picture_number, picture_control_set_array[frame_idx]->decode_order, picture_control_set_array[frame_idx], picture_control_set_array[frame_idx]->temporal_layer_index);
 	encode_context_ptr->poc_map_idx[frame_idx] = picture_control_set_array[frame_idx]->picture_number;
         //kelvinhack for calling2 P16
         //if(frame_idx == 0 && (picture_control_set_array[frame_idx]->picture_number == 16 || picture_control_set_array[frame_idx]->picture_number == 32 || picture_control_set_array[frame_idx]->picture_number == 48))
@@ -1850,7 +1850,7 @@ void update_mc_flow(
         EB_FREE_ARRAY(encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx]);
 
     for(frame_idx = picture_control_set_ptr->frames_in_sw - 1; frame_idx >= 0; frame_idx--) {
-        printf("kelvin ---> init_rc cutree_mc_flow_synthesizer frame_idx=%d, reordered picture_number=%d, decode_order=%d\n", frame_idx, picture_control_set_array[frame_idx]->picture_number, picture_control_set_array[frame_idx]->decode_order);
+        //printf("kelvin ---> init_rc cutree_mc_flow_synthesizer frame_idx=%d, reordered picture_number=%d, decode_order=%d\n", frame_idx, picture_control_set_array[frame_idx]->picture_number, picture_control_set_array[frame_idx]->decode_order);
         cutree_mc_flow_synthesizer(encode_context_ptr, sequence_control_set_ptr, picture_control_set_array, frame_idx, picture_control_set_ptr->frames_in_sw); // in decode order
     }
 #if 0
@@ -1956,15 +1956,15 @@ void *initial_rate_control_kernel(void *input_ptr) {
             //reset intra_coded_estimation_sb
             me_based_global_motion_detection(pcs_ptr);
 #if CUTREE_LA
-            if(picture_control_set_ptr->picture_number == 0)
-                printf("kelvin ---> input sqc look_ahead_distance=%d, enable_cutree_in_la=%d\n", sequence_control_set_ptr->static_config.look_ahead_distance, sequence_control_set_ptr->static_config.enable_cutree_in_la);
+            //if(picture_control_set_ptr->picture_number == 0)
+            //    printf("kelvin ---> input sqc look_ahead_distance=%d, enable_cutree_in_la=%d\n", sequence_control_set_ptr->static_config.look_ahead_distance, sequence_control_set_ptr->static_config.enable_cutree_in_la);
             if (sequence_control_set_ptr->static_config.look_ahead_distance == 0 || sequence_control_set_ptr->static_config.enable_cutree_in_la == 0) {
                 // Release Pa Ref pictures when not needed
                 ReleasePaReferenceObjects(
                     sequence_control_set_ptr,
                     picture_control_set_ptr);
             }
-            printf("kelvin ---> init_rc picture_number=%d to releasePaReference, look_ahead_distance=%d\n", picture_control_set_ptr->picture_number, sequence_control_set_ptr->static_config.look_ahead_distance);
+            //printf("kelvin ---> init_rc picture_number=%d to releasePaReference, look_ahead_distance=%d\n", picture_control_set_ptr->picture_number, sequence_control_set_ptr->static_config.look_ahead_distance);
 #else
             // Release Pa Ref pictures when not needed
             release_pa_reference_objects(scs_ptr, pcs_ptr);
@@ -2182,7 +2182,7 @@ void *initial_rate_control_kernel(void *input_ptr) {
                             if(picture_control_set_ptr->temporal_layer_index == 0)
 #endif
                             {
-                                printf("kelvin --------> before update_mc_flow picture_number=%d\n", picture_control_set_ptr->picture_number);
+                                //printf("kelvin --------> before update_mc_flow picture_number=%d\n", picture_control_set_ptr->picture_number);
                                 update_mc_flow(encode_context_ptr, sequence_control_set_ptr, picture_control_set_ptr);
                             }
                         }
@@ -2202,7 +2202,7 @@ void *initial_rate_control_kernel(void *input_ptr) {
                             out_results_ptr->pcs_wrapper_ptr =
                                 queue_entry_ptr->parent_pcs_wrapper_ptr;
 #if CUTREE_LA
-printf("kelvin ---> loop_index=%d, output picture_number=%d\n", loop_index, loop_index ? picture_control_set_ptr->picture_number : queueEntryPtr->picture_number );
+//printf("kelvin ---> loop_index=%d, output picture_number=%d\n", loop_index, loop_index ? picture_control_set_ptr->picture_number : queueEntryPtr->picture_number );
                         if (sequence_control_set_ptr->static_config.look_ahead_distance != 0 && sequence_control_set_ptr->static_config.enable_cutree_in_la
                             && ((has_overlay == 0 && loop_index == 0) || (has_overlay == 1 && loop_index == 1))) {
                             // Release Pa Ref pictures when not needed
