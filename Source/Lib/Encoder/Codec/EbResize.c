@@ -176,6 +176,9 @@ static const InterpKernel filteredinterp_filters875[(1 << RS_SUBPEL_BITS)] = {
 
 void calculate_scaled_size_helper(uint16_t *dim, uint8_t denom);
 
+void pad_and_decimate_filtered_pic(
+        PictureParentControlSet *picture_control_set_ptr_central);
+
 static int get_down2_length(int length, int steps) {
     for (int s = 0; s < steps; ++s) length = (length + 1) >> 1;
     return length;
@@ -1209,6 +1212,7 @@ void scale_source_references(SequenceControlSet *scs_ptr,
                     ->object_ptr;
 
             uint64_t ref_picture_number = pcs_ptr->ref_pic_poc_array[list_index][ref_pic_index];
+            UNUSED(ref_picture_number);
 
             EbPictureBufferDesc *ref_pic_ptr = reference_object->input_padded_picture_ptr;
 
@@ -1295,6 +1299,12 @@ void scale_source_references(SequenceControlSet *scs_ptr,
                                    0,
                                    0);
 #endif
+                    // replace reference picture pointers
+//                    reference_object->input_padded_picture_ptr = reference_object->downscaled_input_padded_picture_ptr[denom_idx];
+//                    reference_object->quarter_decimated_picture_ptr = reference_object->downscaled_quarter_decimated_picture_ptr[denom_idx];
+//                    reference_object->quarter_filtered_picture_ptr = reference_object->downscaled_quarter_filtered_picture_ptr[denom_idx];
+//                    reference_object->sixteenth_decimated_picture_ptr = reference_object->downscaled_sixteenth_decimated_picture_ptr[denom_idx];
+//                    reference_object->sixteenth_filtered_picture_ptr = reference_object->downscaled_sixteenth_filtered_picture_ptr[denom_idx];
 
                 }
             }
@@ -1347,5 +1357,8 @@ void init_resize_picture(SequenceControlSet *scs_ptr, PictureParentControlSet *p
 
         scale_pcs_params(
             scs_ptr, pcs_ptr, spr_params, input_picture_ptr->width, input_picture_ptr->height);
+
+        pad_and_decimate_filtered_pic(pcs_ptr);
+
     }
 }
