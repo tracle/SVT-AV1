@@ -52,11 +52,16 @@ typedef struct EbPaReferenceObject {
     EbPictureBufferDesc *sixteenth_decimated_picture_ptr;
     EbPictureBufferDesc *quarter_filtered_picture_ptr;
     EbPictureBufferDesc *sixteenth_filtered_picture_ptr;
+    // downscaled reference pointers
+    EbPictureBufferDesc *downscaled_input_padded_picture_ptr[NUM_SCALES];
+    EbPictureBufferDesc *downscaled_quarter_decimated_picture_ptr[NUM_SCALES];
+    EbPictureBufferDesc *downscaled_sixteenth_decimated_picture_ptr[NUM_SCALES];
+    EbPictureBufferDesc *downscaled_quarter_filtered_picture_ptr[NUM_SCALES];
+    EbPictureBufferDesc *downscaled_sixteenth_filtered_picture_ptr[NUM_SCALES];
     uint16_t             variance[MAX_NUMBER_OF_TREEBLOCKS_PER_PICTURE];
     uint8_t              y_mean[MAX_NUMBER_OF_TREEBLOCKS_PER_PICTURE];
     EB_SLICE             slice_type;
     uint32_t             dependent_pictures_count; //number of pic using this reference frame
-
 } EbPaReferenceObject;
 
 typedef struct EbPaReferenceObjectDescInitData {

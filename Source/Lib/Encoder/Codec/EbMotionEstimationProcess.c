@@ -21,6 +21,8 @@
 #include "EbTemporalFiltering.h"
 #include "EbGlobalMotionEstimation.h"
 
+#include "EbResize.h"
+
 /* --32x32-
 |00||01|
 |02||03|
@@ -662,7 +664,7 @@ void *motion_estimation_kernel(void *input_ptr) {
                 : (EbPictureBufferDesc *)pa_ref_obj_->sixteenth_decimated_picture_ptr;
         input_padded_picture_ptr = (EbPictureBufferDesc *)pa_ref_obj_->input_padded_picture_ptr;
 
-        input_picture_ptr = pcs_ptr->enhanced_unscaled_picture_ptr;
+        input_picture_ptr = pcs_ptr->enhanced_picture_ptr;
 
         context_ptr->me_context_ptr->me_alt_ref =
             in_results_ptr->task_type == 1 ? EB_TRUE : EB_FALSE;
@@ -724,6 +726,12 @@ void *motion_estimation_kernel(void *input_ptr) {
                 y_segment_index, picture_height_in_sb, pcs_ptr->me_segments_row_count);
             // *** MOTION ESTIMATION CODE ***
             if (pcs_ptr->slice_type != I_SLICE) {
+
+                // TODO: references should be ready by this time
+                if(pcs_ptr->frame_superres_enabled){
+                    scale_source_references(scs_ptr, pcs_ptr, input_picture_ptr);
+                }
+
                 // SB Loop
                 for (y_sb_index = y_sb_start_index; y_sb_index < y_sb_end_index; ++y_sb_index) {
                     for (x_sb_index = x_sb_start_index; x_sb_index < x_sb_end_index; ++x_sb_index) {
@@ -1015,6 +1023,16 @@ void *motion_estimation_kernel(void *input_ptr) {
             context_ptr->me_context_ptr->me_alt_ref = EB_TRUE;
             svt_av1_init_temporal_filtering(
                 pcs_ptr->temp_filt_pcs_list, pcs_ptr, context_ptr, in_results_ptr->segment_index);
+
+            //****************************************************
+            // Picture resizing for super-res tool
+            //****************************************************
+
+            // Scale picture if super-res is used
+            if(scs_ptr->static_config.superres_mode > SUPERRES_NONE && pcs_ptr->picture_number == 8){
+                init_resize_picture(pcs_ptr->scs_ptr,
+                                    pcs_ptr);
+            }
 
             // Release the Input Results
             eb_release_object(in_results_wrapper_ptr);

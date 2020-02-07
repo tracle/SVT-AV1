@@ -120,6 +120,31 @@ void save_YUV_to_file(char *filename, EbByte buffer_y, EbByte buffer_u, EbByte b
     }
 }
 
+// save Y to file - auxiliary function for debug
+void save_Y_to_file(char *filename, EbByte buffer_y,
+                      uint16_t width, uint16_t height,
+                      uint16_t stride_y,
+                      uint16_t origin_y, uint16_t origin_x) {
+    FILE * fid = NULL;
+    EbByte pic_point;
+    int    h;
+
+    // save current source picture to a YUV file
+    FOPEN(fid, filename, "wb");
+
+    if (!fid) {
+        SVT_LOG("Unable to open file %s to write.\n", "temp_picture.yuv");
+    } else {
+        // the source picture saved in the enchanced_picture_ptr contains a border in x and y dimensions
+        pic_point = buffer_y + (origin_y * stride_y) + origin_x;
+        for (h = 0; h < height; h++) {
+            fwrite(pic_point, 1, (size_t)width, fid);
+            pic_point = pic_point + stride_y;
+        }
+        fclose(fid);
+    }
+}
+
 // save YUV to file - auxiliary function for debug
 void save_YUV_to_file_highbd(char *filename, uint16_t *buffer_y, uint16_t *buffer_u,
                              uint16_t *buffer_v, uint16_t width, uint16_t height, uint16_t stride_y,
