@@ -242,6 +242,15 @@ EbErrorType eb_pa_reference_object_ctor(EbPaReferenceObject *pa_ref_obj_,
                (EbPtr)(picture_buffer_desc_init_data_ptr + 2));
     }
 
+    // set all supplemental downscaled reference picture pointers to NULL
+    for(uint8_t down_idx = 0; down_idx < NUM_SCALES; down_idx++){
+        pa_ref_obj_->downscaled_input_padded_picture_ptr[down_idx] = NULL;
+        pa_ref_obj_->downscaled_quarter_decimated_picture_ptr[down_idx] = NULL;
+        pa_ref_obj_->downscaled_quarter_filtered_picture_ptr[down_idx] = NULL;
+        pa_ref_obj_->downscaled_sixteenth_decimated_picture_ptr[down_idx] = NULL;
+        pa_ref_obj_->downscaled_sixteenth_filtered_picture_ptr[down_idx] = NULL;
+    }
+
     return EB_ErrorNone;
 }
 

@@ -24,11 +24,25 @@ typedef struct {
     uint8_t  superres_denom;
 } superres_params_type;
 
+void scale_source_references(SequenceControlSet *scs_ptr,
+                             PictureParentControlSet *pcs_ptr,
+                             EbPictureBufferDesc *input_picture_ptr);
+
 EbErrorType av1_resize_and_extend_frame(const EbPictureBufferDesc* src, EbPictureBufferDesc* dst,
                                         int bd, const int num_planes, const uint32_t ss_x,
                                         const uint32_t ss_y);
 
 void init_resize_picture(SequenceControlSet* scs_ptr, PictureParentControlSet* pcs_ptr);
+
+void downsample_decimation_input_picture(PictureParentControlSet *pcs_ptr,
+                                         EbPictureBufferDesc *input_padded_picture_ptr,
+                                         EbPictureBufferDesc *quarter_decimated_picture_ptr,
+                                         EbPictureBufferDesc *sixteenth_decimated_picture_ptr);
+
+void downsample_filtering_input_picture(PictureParentControlSet *pcs_ptr,
+                                        EbPictureBufferDesc *input_padded_picture_ptr,
+                                        EbPictureBufferDesc *quarter_picture_ptr,
+                                        EbPictureBufferDesc *sixteenth_picture_ptr);
 
 #define UPSCALE_NORMATIVE_TAPS 8
 
