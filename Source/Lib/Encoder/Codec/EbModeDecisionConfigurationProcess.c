@@ -106,6 +106,10 @@ static uint8_t intrabc_max_mesh_pct[MAX_MESH_SPEED + 1] = {100, 100, 100, 25, 25
 #define MAX_LUMINOSITY_BOOST 10
 int32_t budget_per_sb_boost[MAX_SUPPORTED_MODES] = {55, 55, 55, 55, 55, 55, 5, 5, 0, 0, 0, 0, 0};
 
+void scale_rec_references(PictureControlSet *pcs_ptr,
+                          EbPictureBufferDesc *input_picture_ptr,
+                          uint8_t hbd_mode_decision);
+                          
 static INLINE int32_t aom_get_qmlevel(int32_t qindex, int32_t first, int32_t last) {
     return first + (qindex * (last + 1 - first)) / QINDEX_RANGE;
 }
@@ -1074,6 +1078,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
                       pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0))
                         ? EB_TRUE
                         : EB_FALSE;
+    //enable_wm = 0;
     frm_hdr->allow_warped_motion =
         enable_wm &&
         !(frm_hdr->frame_type == KEY_FRAME || frm_hdr->frame_type == INTRA_ONLY_FRAME) &&
@@ -1301,6 +1306,7 @@ static int get_block_position(Av1Common *cm, int *mi_r, int *mi_c, int blk_row, 
 // Call Start frame's reference frames as reference frames.
 // Call ref_offset as frame distances between start frame and its reference
 // frames.
+// TODO: understand if this needs to change when super-res is enabled
 static int motion_field_projection(Av1Common *cm, PictureControlSet *pcs_ptr,
                                    MvReferenceFrame start_frame, int dir) {
     TPL_MV_REF *tpl_mvs_base           = pcs_ptr->tpl_mvs;
@@ -1497,6 +1503,16 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
         scs_ptr = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
         if (pcs_ptr->parent_pcs_ptr->frm_hdr.use_ref_frame_mvs)
             av1_setup_motion_field(pcs_ptr->parent_pcs_ptr->av1_cm, pcs_ptr);
+
+        // -------
+        // Scale references if resolution of the reference is different than the input
+        // -------
+        // TODO: this has to be done under a mutex
+        if(pcs_ptr->parent_pcs_ptr->frame_superres_enabled == 1 && pcs_ptr->slice_type != I_SLICE){
+            scale_rec_references(pcs_ptr,
+                                 pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr,
+                                 pcs_ptr->hbd_mode_decision);
+        }
 
         frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
 
