@@ -208,6 +208,7 @@ enum {
 #define ALTREF_MAX_NFRAMES 10
 #define ALTREF_MAX_STRENGTH 6
 #define PAD_VALUE (128 + 32)
+// TODO: do we need this much padding for the scaled references?
 #define PAD_VALUE_SCALED (128+128+32)
 #define NSQ_TAB_SIZE 8
 #define NUMBER_OF_DEPTH 6
@@ -1239,6 +1240,7 @@ typedef enum ATTRIBUTE_PACKED {
 #define SCALE_NUMERATOR 8
 #define SUPERRES_SCALE_BITS 3
 #define SUPERRES_SCALE_DENOMINATOR_MIN (SCALE_NUMERATOR + 1)
+#define NUM_SCALES 9
 
 //*********************************************************************************************************************//
 // assert.h

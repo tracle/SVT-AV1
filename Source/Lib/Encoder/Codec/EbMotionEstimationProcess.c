@@ -21,6 +21,8 @@
 #include "EbTemporalFiltering.h"
 #include "EbGlobalMotionEstimation.h"
 
+#include "EbResize.h"
+
 /* --32x32-
 |00||01|
 |02||03|
@@ -295,7 +297,8 @@ EbErrorType signal_derivation_me_kernel_oq(SequenceControlSet *       scs_ptr,
     else
         context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;
 
-    if (scs_ptr->static_config.enable_global_motion == EB_TRUE) {
+    if (scs_ptr->static_config.enable_global_motion == EB_TRUE &&
+        pcs_ptr->frame_superres_enabled == EB_FALSE) {
         if (enc_mode <= ENC_M1)
             context_ptr->me_context_ptr->compute_global_motion = EB_TRUE;
         else
@@ -718,7 +721,7 @@ void *motion_estimation_kernel(void *input_ptr) {
                 : (EbPictureBufferDesc *)pa_ref_obj_->sixteenth_decimated_picture_ptr;
         input_padded_picture_ptr = (EbPictureBufferDesc *)pa_ref_obj_->input_padded_picture_ptr;
 
-        input_picture_ptr = pcs_ptr->enhanced_unscaled_picture_ptr;
+        input_picture_ptr = pcs_ptr->enhanced_picture_ptr;
 
         context_ptr->me_context_ptr->me_alt_ref =
             in_results_ptr->task_type == 1 ? EB_TRUE : EB_FALSE;
@@ -745,6 +748,21 @@ void *motion_estimation_kernel(void *input_ptr) {
         if (in_results_ptr->task_type == 0) {
             // ME Kernel Signal(s) derivation
             signal_derivation_me_kernel_oq(scs_ptr, pcs_ptr, context_ptr);
+
+            if (input_padded_picture_ptr->width != input_picture_ptr->width){
+                uint8_t denom_idx = (uint8_t)(pcs_ptr->superres_denom - 8);
+
+                assert(pa_ref_obj_->downscaled_input_padded_picture_ptr[denom_idx] != NULL);
+
+                input_padded_picture_ptr = pa_ref_obj_->downscaled_input_padded_picture_ptr[denom_idx];
+                quarter_picture_ptr = (scs_ptr->down_sampling_method_me_search == ME_FILTERED_DOWNSAMPLED) ?
+                                      pa_ref_obj_->downscaled_quarter_filtered_picture_ptr[denom_idx] :
+                                      pa_ref_obj_->downscaled_quarter_decimated_picture_ptr[denom_idx];
+                sixteenth_picture_ptr = (scs_ptr->down_sampling_method_me_search == ME_FILTERED_DOWNSAMPLED) ?
+                                        pa_ref_obj_->downscaled_sixteenth_filtered_picture_ptr[denom_idx] :
+                                        pa_ref_obj_->downscaled_sixteenth_decimated_picture_ptr[denom_idx];
+            }
+            assert(input_padded_picture_ptr->width == input_picture_ptr->width);
 
 #if GLOBAL_WARPED_MOTION
             // Global motion estimation
@@ -780,6 +798,13 @@ void *motion_estimation_kernel(void *input_ptr) {
                 y_segment_index, picture_height_in_sb, pcs_ptr->me_segments_row_count);
             // *** MOTION ESTIMATION CODE ***
             if (pcs_ptr->slice_type != I_SLICE) {
+
+                // TODO: references should be ready by this time
+                // TODO: this has to be done only once for the first segment
+                if(pcs_ptr->frame_superres_enabled){
+                    scale_source_references(scs_ptr, pcs_ptr, input_picture_ptr);
+                }
+
                 // SB Loop
                 for (y_sb_index = y_sb_start_index; y_sb_index < y_sb_end_index; ++y_sb_index) {
                     for (x_sb_index = x_sb_start_index; x_sb_index < x_sb_end_index; ++x_sb_index) {

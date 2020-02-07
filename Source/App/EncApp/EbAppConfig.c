@@ -90,8 +90,7 @@
 #define BIPRED_3x3_TOKEN "-bipred-3x3"
 #define COMPOUND_LEVEL_TOKEN "-compound"
 #define FILTER_INTRA_TOKEN "-filter-intra"
-#define INTRA_EDGE_FILTER_TOKEN "-intra-edge-filter"
-#define PIC_BASED_RATE_EST_TOKEN "-pic-based-rate-est"
+
 #define USE_DEFAULT_ME_HME_TOKEN "-use-default-me-hme"
 #define HME_ENABLE_TOKEN "-hme"
 #define HME_L0_ENABLE_TOKEN "-hme-l0"

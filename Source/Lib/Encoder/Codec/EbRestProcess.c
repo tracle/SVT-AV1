@@ -499,10 +499,10 @@ void *rest_kernel(void *input_ptr) {
                                               pcs_ptr,
                                               scs_ptr);
 
-                uint16_t picture_sb_width = (uint16_t)(
-                        (cm->frm_size.superres_upscaled_width + scs_ptr->sb_sz - 1) / scs_ptr->sb_sz);
-                cm->mi_stride = picture_sb_width * (BLOCK_SIZE_64 / 4);
-                cm->mi_cols = cm->frm_size.superres_upscaled_width >> MI_SIZE_LOG2;
+//                uint16_t picture_sb_width = (uint16_t)(
+//                        (cm->frm_size.superres_upscaled_width + scs_ptr->sb_sz - 1) / scs_ptr->sb_sz);
+//                cm->mi_stride = picture_sb_width * (BLOCK_SIZE_64 / 4);
+//                cm->mi_cols = cm->frm_size.superres_upscaled_width >> MI_SIZE_LOG2;
             }
             // ------- end: Normative upscaling - super-resolution tool
             get_own_recon(scs_ptr, pcs_ptr, context_ptr,
