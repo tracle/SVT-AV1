@@ -3399,7 +3399,22 @@ void construct_best_sorted_arrays_md_stage_3(
         if (context_ptr->chroma_search_opt)
             context_ptr->md_stage_3_total_intra_count += buffer_ptr_array[id]->candidate_ptr->type == INTRA_MODE ? 1 : 0;
 #endif
+
     }
+#if PRUNE_SKIP_AND_NON_SKIP
+    context_ptr->best_skip_cost = MAX_MODE_COST;
+    context_ptr->best_non_skip_cost = MAX_MODE_COST;
+    for (i = 0; i < fullReconCandidateCount; ++i) {
+        id = sorted_candidate_index_array[i];
+        if (!buffer_ptr_array[id]->candidate_ptr->block_has_coeff) 
+            if (*buffer_ptr_array[id]->full_cost_ptr < context_ptr->best_skip_cost)
+                context_ptr->best_skip_cost = *buffer_ptr_array[id]->full_cost_ptr;
+         if (buffer_ptr_array[id]->candidate_ptr->block_has_coeff) 
+            if (*buffer_ptr_array[id]->full_cost_ptr < context_ptr->best_non_skip_cost)
+                context_ptr->best_non_skip_cost = *buffer_ptr_array[id]->full_cost_ptr;        
+    }
+#endif
+    
 
     //sorted best: *(buffer_ptr_array[sorted_candidate_index_array[?]]->fast_cost_ptr)
     sort_array_index_fast_cost_ptr(buffer_ptr_array,
@@ -5684,7 +5699,160 @@ void tx_reset_neighbor_arrays(
             NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
     }
 }
+#if MULTI_STAGE_TXT_OPT_2
+#if 1
+uint8_t txt_first_stage_allowed_txtype[TX_TYPES] = {
+    1 ,//DCT_DCT,    // DCT  in both horizontal and vertical
+    0 ,//ADST_DCT,   // ADST in vertical, DCT in horizontal
+    0 ,//DCT_ADST,   // DCT  in vertical, ADST in horizontal
+    0 ,//ADST_ADST,  // ADST in both directions
+    0 ,//FLIPADST_DCT,
+    0 ,//DCT_FLIPADST,
+    0 ,//FLIPADST_FLIPADST,
+    0 ,//ADST_FLIPADST,
+    0 ,//FLIPADST_ADST,
+    0 ,//IDTX,
+    1 ,//V_DCT,
+    1 ,//H_DCT,
+    0 ,//V_ADST,
+    0 ,//H_ADST,
+    0 ,//V_FLIPADST,
+    0//H_FLIPADST,
+};
 
+uint8_t txt_second_stage_allowed_txtype[3][TX_TYPES] = {
+    {
+        1,//DCT_DCT,    
+        1,//ADST_DCT,   
+        1,//DCT_ADST,  
+        1,//ADST_ADST, 
+        1,//FLIPADST_DCT,
+        1,//DCT_FLIPADST,
+        1,//FLIPADST_FLIPADST,
+        1,//ADST_FLIPADST,
+        1,//FLIPADST_ADST,
+        1,//IDTX,
+        0,//V_DCT,
+        0,//H_DCT,
+        0,//V_ADST,
+        0,//H_ADST,
+        0,//V_FLIPADST,
+        0//H_FLIPADST,
+    },
+    {
+        1,//DCT_DCT,    
+        0,//ADST_DCT,   
+        0,//DCT_ADST,  
+        0,//ADST_ADST, 
+        0,//FLIPADST_DCT,
+        0,//DCT_FLIPADST,
+        0,//FLIPADST_FLIPADST,
+        0,//ADST_FLIPADST,
+        0,//FLIPADST_ADST,
+        1,//IDTX,
+        1,//V_DCT,
+        0,//H_DCT,
+        1,//V_ADST,
+        0,//H_ADST,
+        1,//V_FLIPADST,
+        0//H_FLIPADST,
+    },
+    {
+        1,//DCT_DCT,    
+        0,//ADST_DCT,   
+        0,//DCT_ADST,  
+        0,//ADST_ADST, 
+        0,//FLIPADST_DCT,
+        0,//DCT_FLIPADST,
+        0,//FLIPADST_FLIPADST,
+        0,//ADST_FLIPADST,
+        0,//FLIPADST_ADST,
+        1,//IDTX,
+        0,//V_DCT,
+        1,//H_DCT,
+        0,//V_ADST,
+        1,//H_ADST,
+        0,//V_FLIPADST,
+        1//H_FLIPADST,
+    }
+};
+#else
+uint8_t txt_first_stage_allowed_txtype[TX_TYPES] = {
+    1 ,//DCT_DCT,    // DCT  in both horizontal and vertical
+    0 ,//ADST_DCT,   // ADST in vertical, DCT in horizontal
+    0 ,//DCT_ADST,   // DCT  in vertical, ADST in horizontal
+    1 ,//ADST_ADST,  // ADST in both directions
+    0 ,//FLIPADST_DCT,
+    0 ,//DCT_FLIPADST,
+    1 ,//FLIPADST_FLIPADST,
+    0 ,//ADST_FLIPADST,
+    0 ,//FLIPADST_ADST,
+    0 ,//IDTX,
+    0 ,//V_DCT,
+    0 ,//H_DCT,
+    0 ,//V_ADST,
+    0 ,//H_ADST,
+    0 ,//V_FLIPADST,
+    0//H_FLIPADST,
+};
+uint8_t txt_second_stage_allowed_txtype[3][TX_TYPES] = {
+    {
+        1,//DCT_DCT,    
+        1,//ADST_DCT,   
+        1,//DCT_ADST,  
+        0,//ADST_ADST, 
+        1,//FLIPADST_DCT,
+        1,//DCT_FLIPADST,
+        0,//FLIPADST_FLIPADST,
+        0,//ADST_FLIPADST,
+        0,//FLIPADST_ADST,
+        1,//IDTX,
+        1,//V_DCT,
+        1,//H_DCT,
+        0,//V_ADST,
+        0,//H_ADST,
+        0,//V_FLIPADST,
+        0//H_FLIPADST,
+    },
+    {
+        0,//DCT_DCT,    
+        1,//ADST_DCT,   
+        1,//DCT_ADST,  
+        1,//ADST_ADST, 
+        0,//FLIPADST_DCT,
+        0,//DCT_FLIPADST,
+        0,//FLIPADST_FLIPADST,
+        0,//ADST_FLIPADST,
+        0,//FLIPADST_ADST,
+        1,//IDTX,
+        0,//V_DCT,
+        0,//H_DCT,
+        1,//V_ADST,
+        1,//H_ADST,
+        0,//V_FLIPADST,
+        0//H_FLIPADST,
+    },
+    {
+        0,//DCT_DCT,    
+        0,//ADST_DCT,   
+        0,//DCT_ADST,  
+        0,//ADST_ADST, 
+        1,//FLIPADST_DCT,
+        1,//DCT_FLIPADST,
+        1,//FLIPADST_FLIPADST,
+        1,//ADST_FLIPADST,
+        1,//FLIPADST_ADST,
+        1,//IDTX,
+        0,//V_DCT,
+        0,//H_DCT,
+        0,//V_ADST,
+        0,//H_ADST,
+        1,//V_FLIPADST,
+        1//H_FLIPADST,
+    }
+};
+#endif
+#endif
 void tx_type_search(
     SequenceControlSet           *sequence_control_set_ptr,
     PictureControlSet            *picture_control_set_ptr,
@@ -5815,7 +5983,9 @@ void tx_type_search(
     uint32_t tx_type_eob[TX_TYPES] = { 0 };
 
     uint8_t skip_rdoq = context_ptr->md_staging_skip_rdoq;
+#if !MULTI_STAGE_TXT_OPT_2
     context_ptr->md_staging_skip_rdoq = EB_TRUE;
+#endif
 #endif
     for (tx_type = txk_start; tx_type < txk_end; ++tx_type) {
 
@@ -5900,7 +6070,10 @@ void tx_type_search(
             if (previous_stage_skip && tx_type > txk_start)
                 continue;
 #endif
-
+#if MULTI_STAGE_TXT_OPT_2
+            if (txt_first_stage_allowed_txtype[tx_type] == 0)
+                continue;
+#endif
         // For Inter blocks, transform type of chroma follows luma transfrom type
         if (is_inter)
             candidate_buffer->candidate_ptr->transform_type_uv = (context_ptr->txb_itr == 0) ? candidate_buffer->candidate_ptr->transform_type[context_ptr->txb_itr] : candidate_buffer->candidate_ptr->transform_type_uv;
@@ -6148,15 +6321,35 @@ void tx_type_search(
 #endif
         }
     }
-
+#if MULTI_STAGE_TXT_OPT_2
+    TxType best_tx_type_first_stage = best_tx_type;
+#endif
 #if MULTI_STAGE_TXT
-    if (skip_rdoq == EB_FALSE) {
+#if !MULTI_STAGE_TXT_OPT_2
+    if (skip_rdoq == EB_FALSE)
+#endif
+    {
         context_ptr->md_staging_skip_rdoq = skip_rdoq;
         for (tx_type = txk_start; tx_type < txk_end; ++tx_type) {
             uint64_t txt_stage_th = 50;
             uint64_t cost;
+#if MULTI_STAGE_TXT_OPT_2
+#if 1
+            uint8_t stage_1_txtype_indx = best_tx_type_first_stage == DCT_DCT ? 0 :
+                best_tx_type_first_stage == V_DCT ? 1 :
+                best_tx_type_first_stage == H_DCT ? 2 : printf("invalid txt_stage_1 index %d",best_tx_type_first_stage);
+
+#else
+            uint8_t stage_1_txtype_indx = best_tx_type_first_stage == DCT_DCT ? 0 :
+                best_tx_type_first_stage == ADST_ADST ? 1 :
+                best_tx_type_first_stage == FLIPADST_FLIPADST ? 2 : printf("invalid txt_stage_1 index %d",best_tx_type_first_stage);
+#endif
+            if (txt_second_stage_allowed_txtype[stage_1_txtype_indx][tx_type] == 0)
+                continue;
+#else
             if (((tx_type_cost[tx_type] - best_cost_tx_search) * 100) > (best_cost_tx_search * txt_stage_th))
                 continue;
+#endif
 #if MULTI_STAGE_TXT_OPT
             if (!tx_type_eob[tx_type]) {
                 cost = tx_type_cost[tx_type];
@@ -8954,7 +9147,7 @@ void md_stage_2(
                     cuOriginIndex,
                     cuChromaOriginIndex,
 #if SKIPT_TXS_TXT_RDOQ_IN_STAGE3
-                    candidate_ptr->skip_flag,
+                    candidate_ptr->block_has_coeff == 0 ? 1 : 0,
 #endif
                     ref_fast_cost);
         }
@@ -8962,42 +9155,45 @@ void md_stage_2(
 #endif
 #if REMOVE_MD_STAGE_1
 #if ADD_4TH_MD_STAGE
-void md_stage_3(
+    void md_stage_3(
 #else
-void md_stage_2(
+    void md_stage_2(
 #endif
 #else
-void md_stage_3(
+    void md_stage_3(
 #endif
-    PictureControlSet     *picture_control_set_ptr,
-    SuperBlock            *sb_ptr,
-    CodingUnit            *cu_ptr,
-    ModeDecisionContext   *context_ptr,
-    EbPictureBufferDesc   *input_picture_ptr,
-    uint32_t               inputOriginIndex,
-    uint32_t               inputCbOriginIndex,
-    uint32_t               cuOriginIndex,
-    uint32_t               cuChromaOriginIndex,
-    uint32_t               fullCandidateTotalCount,
-    uint64_t               ref_fast_cost)
-{
-    ModeDecisionCandidateBuffer **candidate_buffer_ptr_array_base = context_ptr->candidate_buffer_ptr_array;
-    ModeDecisionCandidateBuffer **candidate_buffer_ptr_array = &(candidate_buffer_ptr_array_base[0]);
-    ModeDecisionCandidateBuffer  *candidate_buffer;
-    ModeDecisionCandidate        *candidate_ptr;
+        PictureControlSet     *picture_control_set_ptr,
+        SuperBlock            *sb_ptr,
+        CodingUnit            *cu_ptr,
+        ModeDecisionContext   *context_ptr,
+        EbPictureBufferDesc   *input_picture_ptr,
+        uint32_t               inputOriginIndex,
+        uint32_t               inputCbOriginIndex,
+        uint32_t               cuOriginIndex,
+        uint32_t               cuChromaOriginIndex,
+        uint32_t               fullCandidateTotalCount,
+        uint64_t               ref_fast_cost)
+    {
+        ModeDecisionCandidateBuffer **candidate_buffer_ptr_array_base = context_ptr->candidate_buffer_ptr_array;
+        ModeDecisionCandidateBuffer **candidate_buffer_ptr_array = &(candidate_buffer_ptr_array_base[0]);
+        ModeDecisionCandidateBuffer  *candidate_buffer;
+        ModeDecisionCandidate        *candidate_ptr;
 
-    uint32_t best_inter_luma_zero_coeff = 1;
-    uint64_t best_full_cost = 0xFFFFFFFFull;
-    uint32_t fullLoopCandidateIndex;
-    uint32_t candidateIndex;
+        uint32_t best_inter_luma_zero_coeff = 1;
+        uint64_t best_full_cost = 0xFFFFFFFFull;
+        uint32_t fullLoopCandidateIndex;
+        uint32_t candidateIndex;
 #if PRUNE_SKIP_AND_NON_SKIP
-    uint32_t skip_denom = 2;
-    uint32_t non_skip_denom = 2;
-    uint32_t skip_count = 0;
-    uint32_t non_skip_count = 0;
-    uint32_t skip_nfl = MAX(fullCandidateTotalCount/skip_denom,1);
-    uint32_t non_skip_nfl = fullCandidateTotalCount - skip_nfl;
-    non_skip_nfl = MAX(fullCandidateTotalCount/non_skip_denom,1);
+        uint32_t skip_count = 0;
+        uint32_t non_skip_count = 0;
+        uint32_t skip_nfl = fullCandidateTotalCount;
+        uint32_t non_skip_nfl = fullCandidateTotalCount;
+        if (context_ptr->pd_pass == PD_PASS_2) {
+            if (fullCandidateTotalCount > 4) {
+                skip_nfl = fullCandidateTotalCount/2; // 0.7% BDR loss 
+                non_skip_nfl = fullCandidateTotalCount;
+            }
+        }
 #endif
     for (fullLoopCandidateIndex = 0; fullLoopCandidateIndex < fullCandidateTotalCount; ++fullLoopCandidateIndex) {
 
@@ -9006,12 +9202,19 @@ void md_stage_3(
         candidate_ptr = candidate_buffer->candidate_ptr;
 
 #if PRUNE_SKIP_AND_NON_SKIP
-        if (skip_count > skip_nfl)
-            continue;
-        if (non_skip_count > non_skip_nfl)
-            continue;
-
-        if (candidate_ptr->skip_flag)
+        if (!candidate_ptr->block_has_coeff && (skip_count > skip_nfl)) {
+            if ((*candidate_buffer->full_cost_ptr - context_ptr->best_skip_cost) * 100 > (context_ptr->best_skip_cost * 50)) {
+                *candidate_buffer->full_cost_ptr = MAX_MODE_COST;
+                continue;
+            }
+        }
+        else if (candidate_ptr->block_has_coeff && (non_skip_count > non_skip_nfl)) {
+            if ((*candidate_buffer->full_cost_ptr - context_ptr->best_non_skip_cost) * 100 > (context_ptr->best_non_skip_cost * 200)) {
+                *candidate_buffer->full_cost_ptr = MAX_MODE_COST;
+                continue;
+            }
+        }
+        if (!candidate_ptr->block_has_coeff)
             skip_count++;
         else
             non_skip_count++;
@@ -9116,7 +9319,7 @@ void md_stage_3(
             cuOriginIndex,
             cuChromaOriginIndex,
 #if SKIPT_TXS_TXT_RDOQ_IN_STAGE3
-            candidate_ptr->skip_flag,
+            candidate_ptr->block_has_coeff == 0 ? 1 : 0,
 #endif
             ref_fast_cost);
 

@@ -345,7 +345,10 @@ extern "C" {
 #if COMP_OPT
     uint32_t                            md_stage_3_total_intra_count;
 #endif
-
+#if PRUNE_SKIP_AND_NON_SKIP
+    uint64_t best_skip_cost;
+    uint64_t best_non_skip_cost;
+#endif
     uint8_t                             combine_class12; // 1:class1 and 2 are combined.
 #else
     MD_STAGE                            md_stage;
