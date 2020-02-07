@@ -33,6 +33,11 @@
 #define REFERENCE_PIC_LIST_0 0
 #define REFERENCE_PIC_LIST_1 1
 
+void save_Y_to_file(char *filename, EbByte buffer_y,
+                    uint16_t width, uint16_t height,
+                    uint16_t stride_y,
+                    uint16_t origin_y, uint16_t origin_x);
+
 /*******************************************
  * Compute8x4SAD_Default
  *   Unoptimized 8x4 SAD
@@ -11260,6 +11265,8 @@ EbErrorType motion_estimate_sb(
     EbBool enable_quarter_pel    = EB_FALSE;
     EbBool one_quadrant_hme      = EB_FALSE;
 
+    EbPictureBufferDesc *input_picture_ptr = pcs_ptr->enhanced_picture_ptr;
+
     one_quadrant_hme = scs_ptr->input_resolution < INPUT_SIZE_4K_RANGE ? 0 : one_quadrant_hme;
 
     num_of_list_to_search =
@@ -11313,16 +11320,62 @@ EbErrorType motion_estimate_sb(
             }
 
             ref_pic_ptr = (EbPictureBufferDesc *)reference_object->input_padded_picture_ptr;
+
             // Set 1/4 and 1/16 ME reference buffer(s); filtered or decimated
             quarter_ref_pic_ptr =
-                (scs_ptr->down_sampling_method_me_search == ME_FILTERED_DOWNSAMPLED)
+                    (scs_ptr->down_sampling_method_me_search == ME_FILTERED_DOWNSAMPLED)
                     ? (EbPictureBufferDesc *)reference_object->quarter_filtered_picture_ptr
                     : (EbPictureBufferDesc *)reference_object->quarter_decimated_picture_ptr;
 
             sixteenth_ref_pic_ptr =
-                (scs_ptr->down_sampling_method_me_search == ME_FILTERED_DOWNSAMPLED)
+                    (scs_ptr->down_sampling_method_me_search == ME_FILTERED_DOWNSAMPLED)
                     ? (EbPictureBufferDesc *)reference_object->sixteenth_filtered_picture_ptr
                     : (EbPictureBufferDesc *)reference_object->sixteenth_decimated_picture_ptr;
+
+            uint16_t ref_picture_number = (uint16_t)pcs_ptr->ref_pic_poc_array[list_index][ref_pic_index];
+            UNUSED(ref_picture_number);
+
+            if (ref_pic_ptr->width != input_picture_ptr->width){
+                uint8_t denom_idx = (uint8_t)(scs_ptr->static_config.superres_denom - 8);
+
+                assert(reference_object->downscaled_input_padded_picture_ptr[denom_idx] != NULL);
+
+                ref_pic_ptr = reference_object->downscaled_input_padded_picture_ptr[denom_idx];
+                quarter_ref_pic_ptr = (scs_ptr->down_sampling_method_me_search == ME_FILTERED_DOWNSAMPLED) ?
+                                      reference_object->downscaled_quarter_filtered_picture_ptr[denom_idx] :
+                                      reference_object->downscaled_quarter_decimated_picture_ptr[denom_idx];
+                sixteenth_ref_pic_ptr = (scs_ptr->down_sampling_method_me_search == ME_FILTERED_DOWNSAMPLED) ?
+                                        reference_object->downscaled_sixteenth_filtered_picture_ptr[denom_idx] :
+                                        reference_object->downscaled_sixteenth_decimated_picture_ptr[denom_idx];
+            }
+
+            assert(ref_pic_ptr->width == input_picture_ptr->width);
+
+//            if(pcs_ptr->picture_number == 8 && context_ptr->me_alt_ref == EB_FALSE) {
+//
+//                save_Y_to_file("downscaled_reference_pic.yuv",
+//                               ref_pic_ptr->buffer_y,
+//                               ref_pic_ptr->width +
+//                               ref_pic_ptr->origin_x * 2,
+//                               ref_pic_ptr->height +
+//                               ref_pic_ptr->origin_y * 2,
+//                               ref_pic_ptr->stride_y,
+//                               0,
+//                               0);
+//            }
+//
+//            if(pcs_ptr->picture_number != 8 && ref_picture_number == 0 && context_ptr->me_alt_ref == EB_FALSE) {
+//                save_Y_to_file("downscaled_reference_pic_other.yuv",
+//                               ref_pic_ptr->buffer_y,
+//                               ref_pic_ptr->width +
+//                               ref_pic_ptr->origin_x * 2,
+//                               ref_pic_ptr->height +
+//                               ref_pic_ptr->origin_y * 2,
+//                               ref_pic_ptr->stride_y,
+//                               0,
+//                               0);
+//            }
+
             if (pcs_ptr->temporal_layer_index > 0 || list_index == 0) {
                 // A - The MV center for Tier0 search could be either (0,0), or
                 // HME A - Set HME MV Center
