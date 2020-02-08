@@ -2056,7 +2056,11 @@ void SetParamBasedOnInput(SequenceControlSet *sequence_control_set_ptr)
         sequence_control_set_ptr->seq_header.max_frame_width*sequence_control_set_ptr->seq_header.max_frame_height);
 #if TWO_PASS
     // In two pass encoding, the first pass uses sb size=64
+#if SC_FEB4_ADOPTION
+    if (sequence_control_set_ptr->use_output_stat_file)
+#else
     if (sequence_control_set_ptr->static_config.screen_content_mode == 1 || sequence_control_set_ptr->use_output_stat_file)
+#endif
 #else
     if (sequence_control_set_ptr->static_config.screen_content_mode == 1)
 #endif

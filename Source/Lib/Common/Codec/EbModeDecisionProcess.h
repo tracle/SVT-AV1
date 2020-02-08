@@ -37,12 +37,19 @@ extern "C" {
 #if MULTI_PASS_PD
 #define PREDICTIVE_ME_MAX_MVP_CANIDATES  4
 #define PREDICTIVE_ME_DEVIATION_TH      50
+#if M1_FEB4_ADOPTION   || M0_FEB4_ADOPTION || MR_FEB4_ADOPTION
+#define FULL_PEL_REF_WINDOW_WIDTH_15        15
+#define FULL_PEL_REF_WINDOW_HEIGHT_15       15
+#define FULL_PEL_REF_WINDOW_WIDTH_7        7
+#define FULL_PEL_REF_WINDOW_HEIGHT_5       5
+#else
 #if MR_MODE
 #define FULL_PEL_REF_WINDOW_WIDTH        15
 #define FULL_PEL_REF_WINDOW_HEIGHT       15
 #else
 #define FULL_PEL_REF_WINDOW_WIDTH        7
 #define FULL_PEL_REF_WINDOW_HEIGHT       5
+#endif
 #endif
 #define HALF_PEL_REF_WINDOW              3
 #define QUARTER_PEL_REF_WINDOW           3

@@ -32,7 +32,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#define M1_FEB4_ADOPTION                   1
+#define M0_FEB4_ADOPTION                   1
+#define SC_FEB4_ADOPTION                   1
+#define MR_FEB4_ADOPTION                   1
 
 #define NSQ_HV                          1 // skip NSQ partitions based on H vs V costs
 #define RESTRICT_TXS_FOR_NON_S_V_H      0 // Restrict tx_depth for non-SQ-H-V blocks based on the parent block tx_size
@@ -44,6 +47,7 @@ extern "C" {
 #define SKIP_RDOQ_BSAED_COEFF           0 // Early exit RDOQ search when the processed tu returns a number of coeff less than threshold
 #define SKIPT_TXS_TXT_RDOQ_IN_STAGE3    0 // Use previous md_stage skip decision to skip the txs txt and rdoq in MD stage 3.
 #define MULTI_STAGE_TXT                 0 // Perform TXT without RDOQ and then perform RDOQ on the best N Tx types.
+
 #if MULTI_STAGE_TXT
 #define MULTI_STAGE_TXT_OPT             0
 #define MULTI_STAGE_TXT_OPT_2           1
@@ -372,12 +376,18 @@ extern "C" {
 
 #if OPTIMISED_EX_SUBPEL
 #if TUNE_SUBPEL_SEARCH
+#if (M1_FEB4_ADOPTION  || M0_FEB4_ADOPTION ) || MR_FEB4_ADOPTION
+#define H_PEL_SEARCH_WIND_3 3  // 1/2-pel serach window 3 
+#define H_PEL_SEARCH_WIND_2 2  // 1/2-pel serach window 2 
+#define H_PEL_SEARCH_WIND_1 1  // 1/2-pel serach window 1 
+#else
 #if MR_MODE
 #define H_PEL_SEARCH_WIND_1 3  // 1/2-pel serach window 1 makes SR 7x7
 #define H_PEL_SEARCH_WIND_2 3  // 1/2-pel serach window 2 makes SR 7x7
 #else
 #define H_PEL_SEARCH_WIND_1 1  // 1/2-pel serach window 1 makes SR 3x3
 #define H_PEL_SEARCH_WIND_2 2  // 1/2-pel serach window 2 makes SR 5x5
+#endif
 #endif
 #else
 #define H_PEL_SEARCH_WIND 3  // 1/2-pel serach window

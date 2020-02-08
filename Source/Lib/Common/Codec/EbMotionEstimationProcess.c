@@ -215,7 +215,11 @@ EbErrorType signal_derivation_me_kernel_oq(
 
     if (picture_control_set_ptr->sc_content_detected)
 #if PRESETS_TUNE
+#if M1_FEB4_ADOPTION
+        context_ptr->me_context_ptr->fractional_search_method = (enc_mode <= ENC_M1) ? FULL_SAD_SEARCH : SUB_SAD_SEARCH;
+#else
         context_ptr->me_context_ptr->fractional_search_method = (enc_mode == ENC_M0) ? FULL_SAD_SEARCH : SUB_SAD_SEARCH;
+#endif
 #else
         context_ptr->me_context_ptr->fractional_search_method = SUB_SAD_SEARCH;
 #endif
@@ -273,7 +277,11 @@ EbErrorType signal_derivation_me_kernel_oq(
 #endif
 #if M1_ADOPTIONS
         // adopt M2 setting in M1
+#if M1_FEB4_ADOPTION
+        if (enc_mode <= ENC_M1) {
+#else
         if (enc_mode <= ENC_M0) {
+#endif
 #else
         if (enc_mode <= ENC_M1) {
 #endif
@@ -309,8 +317,16 @@ EbErrorType signal_derivation_me_kernel_oq(
 #endif
 #endif
 #if TUNE_SUBPEL_SEARCH
+#if M1_FEB4_ADOPTION  || M0_FEB4_ADOPTION
+    if (enc_mode <= ENC_M1)
+    context_ptr->me_context_ptr->h_pel_search_wind =   H_PEL_SEARCH_WIND_3;
+    else
+    context_ptr->me_context_ptr->h_pel_search_wind =  sequence_control_set_ptr->input_resolution <= INPUT_SIZE_576p_RANGE_OR_LOWER ?
+        H_PEL_SEARCH_WIND_2 : H_PEL_SEARCH_WIND_1;
+#else
     context_ptr->me_context_ptr->h_pel_search_wind =  sequence_control_set_ptr->input_resolution <= INPUT_SIZE_576p_RANGE_OR_LOWER ?
                                                     H_PEL_SEARCH_WIND_2 : H_PEL_SEARCH_WIND_1;
+#endif
 
 #endif
     // Set fractional search model
@@ -631,7 +647,11 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
         if (enc_mode <= ENC_M1)
 #endif
 #if M0_OPT
+#if M1_FEB4_ADOPTION
+            context_ptr->me_context_ptr->fractional_search_method = (enc_mode <= ENC_M1) ? FULL_SAD_SEARCH : FULL_SAD_SEARCH;
+#else
             context_ptr->me_context_ptr->fractional_search_method = (enc_mode == ENC_M0) ? FULL_SAD_SEARCH : FULL_SAD_SEARCH;
+#endif
 #else
             context_ptr->me_context_ptr->fractional_search_method = SSD_SEARCH;
 #endif
@@ -694,7 +714,11 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
 #endif
 #if M1_ADOPTIONS
         // adopt M2 setting in M1
+#if M1_FEB4_ADOPTION
+        if (enc_mode <= ENC_M1) {
+#else
         if (enc_mode <= ENC_M0) {
+#endif
 #else
         if (enc_mode <= ENC_M1) {
 #endif

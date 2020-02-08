@@ -1007,6 +1007,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         }
 #endif
 #endif
+#if !OMARK
         else if (sc_content_detected)
 #if PRESETS_TUNE
 #if M0_OPT
@@ -1059,8 +1060,13 @@ EbErrorType signal_derivation_multi_processes_oq(
         else if (picture_control_set_ptr->mdc_depth_level == (MAX_MDC_LEVEL - 1))
             picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_LEVEL7;
 #endif
+#endif
 #if PRESETS_TUNE
+#if M1_FEB4_ADOPTION
+        else if (picture_control_set_ptr->enc_mode <= ENC_M1)
+#else
         else if (picture_control_set_ptr->enc_mode <= ENC_M0)
+#endif
             picture_control_set_ptr->nsq_search_level = NSQ_SEARCH_LEVEL6;
 #if JAN31_M2
         else if (picture_control_set_ptr->enc_mode <= ENC_M2)
@@ -1446,7 +1452,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     if (sc_content_detected)
 #if M0_OPT
 #if SC_PRESETS_OPT
+#if M1_FEB4_ADOPTION
+        if (picture_control_set_ptr->enc_mode <= ENC_M1)
+#else
         if (picture_control_set_ptr->enc_mode <= ENC_M0)
+#endif
             picture_control_set_ptr->intra_pred_mode = 0;
         else
 #endif
@@ -1496,10 +1506,10 @@ EbErrorType signal_derivation_multi_processes_oq(
         else
             picture_control_set_ptr->intra_pred_mode = 4;
     }
-
+#if !MR_FEB4_ADOPTION
     if (MR_MODE)
         picture_control_set_ptr->intra_pred_mode = 0;
-
+#endif
     // Skip sub blk based on neighbors depth        Settings
     // 0                                            OFF
     // 1                                            ON
@@ -1546,7 +1556,11 @@ EbErrorType signal_derivation_multi_processes_oq(
             else
                 picture_control_set_ptr->atb_mode = (picture_control_set_ptr->is_used_as_reference_flag) ? 1 : 0;
 #else
+#if OMARK
+            picture_control_set_ptr->atb_mode = (picture_control_set_ptr->sc_content_detected ) ? 0 : 1;
+#else
             picture_control_set_ptr->atb_mode = (picture_control_set_ptr->temporal_layer_index == 0 || !picture_control_set_ptr->sc_content_detected ) ? 1 : 0;
+#endif
 #endif
 
 #else
@@ -1593,7 +1607,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if COMPOUND_WEDGE_OPT
 #if M1_OPT
 #if JAN31_M2
-    if (MR_MODE || picture_control_set_ptr->enc_mode <= ENC_M2)
+    if (picture_control_set_ptr->enc_mode <= ENC_M2)
 #else
     if (MR_MODE || picture_control_set_ptr->enc_mode <= ENC_M1)
 #endif
@@ -1633,7 +1647,11 @@ EbErrorType signal_derivation_multi_processes_oq(
                     picture_control_set_ptr->compound_mode = (picture_control_set_ptr->enc_mode <= ENC_M0) ? 2 : 0;
 #endif
                 else
+#if M1_FEB4_ADOPTION
+                    picture_control_set_ptr->compound_mode = picture_control_set_ptr->enc_mode <= ENC_M0 ? 2 : 1;
+#else
                     picture_control_set_ptr->compound_mode = picture_control_set_ptr->enc_mode <= ENC_M1 ? 2 : 1;
+#endif
 #else
                 picture_control_set_ptr->compound_mode = picture_control_set_ptr->sc_content_detected ? 0 :
                 picture_control_set_ptr->enc_mode <= ENC_M1 ? 2 : 1;
@@ -1701,7 +1719,11 @@ EbErrorType signal_derivation_multi_processes_oq(
             picture_control_set_ptr->gm_level = GM_TRAN_ONLY;
         else
 #endif
+#if M1_FEB4_ADOPTION
+        if (picture_control_set_ptr->enc_mode <= ENC_M1)
+#else
         if (picture_control_set_ptr->enc_mode <= ENC_M0)
+#endif
             picture_control_set_ptr->gm_level = GM_FULL;
         else
             picture_control_set_ptr->gm_level = GM_DOWN;
@@ -4459,7 +4481,11 @@ void* picture_decision_kernel(void *input_ptr)
 #else
                                 ( (picture_control_set_ptr->idr_flag && picture_control_set_ptr->sc_content_detected == 0) ||
 #endif
+#if OMARK
+                                  (picture_control_set_ptr->slice_type != I_SLICE && picture_control_set_ptr->temporal_layer_index == 0 && picture_control_set_ptr->sc_content_detected == 0)
+#else
                                   (picture_control_set_ptr->slice_type != I_SLICE && picture_control_set_ptr->temporal_layer_index == 0)
+#endif
 #if TWO_PASS
 #if ALTREF_TL1
                                     || (sequence_control_set_ptr->static_config.hierarchical_levels >= 3 && picture_control_set_ptr->temporal_layer_index == 1 && picture_control_set_ptr->sc_content_detected == 0)
