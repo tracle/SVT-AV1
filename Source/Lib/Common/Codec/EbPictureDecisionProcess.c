@@ -1007,7 +1007,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         }
 #endif
 #endif
-#if !OMARK
+#if !SC_FEB4_ADOPTION
         else if (sc_content_detected)
 #if PRESETS_TUNE
 #if M0_OPT
@@ -1556,7 +1556,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             else
                 picture_control_set_ptr->atb_mode = (picture_control_set_ptr->is_used_as_reference_flag) ? 1 : 0;
 #else
-#if OMARK
+#if SC_FEB4_ADOPTION
             picture_control_set_ptr->atb_mode = (picture_control_set_ptr->sc_content_detected ) ? 0 : 1;
 #else
             picture_control_set_ptr->atb_mode = (picture_control_set_ptr->temporal_layer_index == 0 || !picture_control_set_ptr->sc_content_detected ) ? 1 : 0;
@@ -4481,7 +4481,7 @@ void* picture_decision_kernel(void *input_ptr)
 #else
                                 ( (picture_control_set_ptr->idr_flag && picture_control_set_ptr->sc_content_detected == 0) ||
 #endif
-#if OMARK
+#if SC_FEB4_ADOPTION
                                   (picture_control_set_ptr->slice_type != I_SLICE && picture_control_set_ptr->temporal_layer_index == 0 && picture_control_set_ptr->sc_content_detected == 0)
 #else
                                   (picture_control_set_ptr->slice_type != I_SLICE && picture_control_set_ptr->temporal_layer_index == 0)
