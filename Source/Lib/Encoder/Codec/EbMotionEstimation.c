@@ -11336,7 +11336,7 @@ EbErrorType motion_estimate_sb(
             UNUSED(ref_picture_number);
 
             if (ref_pic_ptr->width != input_picture_ptr->width){
-                uint8_t denom_idx = (uint8_t)(scs_ptr->static_config.superres_denom - 8);
+                uint8_t denom_idx = (uint8_t)(pcs_ptr->superres_denom - 8);
 
                 assert(reference_object->downscaled_input_padded_picture_ptr[denom_idx] != NULL);
 

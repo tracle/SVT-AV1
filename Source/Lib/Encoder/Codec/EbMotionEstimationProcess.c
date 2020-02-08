@@ -692,6 +692,20 @@ void *motion_estimation_kernel(void *input_ptr) {
             // ME Kernel Signal(s) derivation
             signal_derivation_me_kernel_oq(scs_ptr, pcs_ptr, context_ptr);
 
+            if (input_padded_picture_ptr->width != input_picture_ptr->width){
+                uint8_t denom_idx = (uint8_t)(pcs_ptr->superres_denom - 8);
+
+                assert(pa_ref_obj_->downscaled_input_padded_picture_ptr[denom_idx] != NULL);
+
+                input_padded_picture_ptr = pa_ref_obj_->downscaled_input_padded_picture_ptr[denom_idx];
+                quarter_picture_ptr = (scs_ptr->down_sampling_method_me_search == ME_FILTERED_DOWNSAMPLED) ?
+                                      pa_ref_obj_->downscaled_quarter_filtered_picture_ptr[denom_idx] :
+                                      pa_ref_obj_->downscaled_quarter_decimated_picture_ptr[denom_idx];
+                sixteenth_picture_ptr = (scs_ptr->down_sampling_method_me_search == ME_FILTERED_DOWNSAMPLED) ?
+                                        pa_ref_obj_->downscaled_sixteenth_filtered_picture_ptr[denom_idx] :
+                                        pa_ref_obj_->downscaled_sixteenth_decimated_picture_ptr[denom_idx];
+            }
+
 #if GLOBAL_WARPED_MOTION
             // Global motion estimation
             // Compute only for the first fragment.

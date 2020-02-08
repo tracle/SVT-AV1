@@ -1036,17 +1036,13 @@ EbErrorType allocate_downscaled_reference_pics(EbPictureBufferDesc **input_padde
     return EB_ErrorNone;
 }
 
-// TODO: finish this
-// TODO: the next step is to actually used the downscaled picture pointers (they are not being replaced right now)
 void scale_source_references(SequenceControlSet *scs_ptr,
                              PictureParentControlSet *pcs_ptr,
                              EbPictureBufferDesc *input_picture_ptr){
 
     EbPaReferenceObject *reference_object;
 
-    // replace by actual denominator of the picture
-    uint8_t denom = scs_ptr->static_config.superres_denom;
-    uint8_t denom_idx = (uint8_t)(denom - 8);
+    uint8_t denom_idx = (uint8_t)(pcs_ptr->superres_denom - 8);
     const int32_t  num_planes = 0; // Y only
     const uint32_t ss_x       = scs_ptr->subsampling_x;
     const uint32_t ss_y       = scs_ptr->subsampling_y;
@@ -1155,18 +1151,60 @@ void scale_source_references(SequenceControlSet *scs_ptr,
                                    0,
                                    0);
 #endif
-                    // replace reference picture pointers
-//                    reference_object->input_padded_picture_ptr = reference_object->downscaled_input_padded_picture_ptr[denom_idx];
-//                    reference_object->quarter_decimated_picture_ptr = reference_object->downscaled_quarter_decimated_picture_ptr[denom_idx];
-//                    reference_object->quarter_filtered_picture_ptr = reference_object->downscaled_quarter_filtered_picture_ptr[denom_idx];
-//                    reference_object->sixteenth_decimated_picture_ptr = reference_object->downscaled_sixteenth_decimated_picture_ptr[denom_idx];
-//                    reference_object->sixteenth_filtered_picture_ptr = reference_object->downscaled_sixteenth_filtered_picture_ptr[denom_idx];
 
                 }
             }
         }
     }
 
+}
+
+void scale_input_references(PictureParentControlSet *pcs_ptr,
+                            superres_params_type superres_params) {
+
+    uint8_t denom_idx = (uint8_t)(superres_params.superres_denom - 8);
+
+    // reference structures (padded pictures + downsampled versions)
+    EbPaReferenceObject *src_object = (EbPaReferenceObject *)pcs_ptr->pa_reference_picture_wrapper_ptr->object_ptr;
+    EbPictureBufferDesc *padded_pic_ptr = src_object->input_padded_picture_ptr;
+
+    // Allocate downsampled reference picture buffer descriptors
+    allocate_downscaled_reference_pics(&src_object->downscaled_input_padded_picture_ptr[denom_idx],
+                                       &src_object->downscaled_quarter_decimated_picture_ptr[denom_idx],
+                                       &src_object->downscaled_quarter_filtered_picture_ptr[denom_idx],
+                                       &src_object->downscaled_sixteenth_decimated_picture_ptr[denom_idx],
+                                       &src_object->downscaled_sixteenth_filtered_picture_ptr[denom_idx],
+                                       padded_pic_ptr,
+                                       superres_params,
+                                       pcs_ptr->scs_ptr->down_sampling_method_me_search);
+
+    padded_pic_ptr = src_object->downscaled_input_padded_picture_ptr[denom_idx];
+    EbPictureBufferDesc *input_picture_ptr = pcs_ptr->enhanced_picture_ptr;
+
+    generate_padding(input_picture_ptr->buffer_y,
+                     input_picture_ptr->stride_y,
+                     input_picture_ptr->width,
+                     input_picture_ptr->height,
+                     input_picture_ptr->origin_x,
+                     input_picture_ptr->origin_y);
+
+    for (uint32_t row = 0; row < input_picture_ptr->height + 2*input_picture_ptr->origin_y; row++)
+        EB_MEMCPY(padded_pic_ptr->buffer_y + row * padded_pic_ptr->stride_y,
+                  input_picture_ptr->buffer_y + row * input_picture_ptr->stride_y,
+                  sizeof(uint8_t) * input_picture_ptr->stride_y);
+
+    // 1/4 & 1/16 input picture decimation
+    downsample_decimation_input_picture(pcs_ptr,
+                                        padded_pic_ptr,
+                                        src_object->downscaled_quarter_decimated_picture_ptr[denom_idx],
+                                        src_object->downscaled_sixteenth_decimated_picture_ptr[denom_idx]);
+
+    // 1/4 & 1/16 input filtered picture
+    if (pcs_ptr->scs_ptr->down_sampling_method_me_search == ME_FILTERED_DOWNSAMPLED)
+        downsample_filtering_input_picture(pcs_ptr,
+                                           padded_pic_ptr,
+                                           src_object->downscaled_quarter_filtered_picture_ptr[denom_idx],
+                                           src_object->downscaled_sixteenth_filtered_picture_ptr[denom_idx]);
 }
 
 // TODO
@@ -1178,7 +1216,7 @@ void init_resize_picture(SequenceControlSet *scs_ptr, PictureParentControlSet *p
 
     superres_params_type spr_params = {input_picture_ptr->width, // encoding_width
                                        input_picture_ptr->height, // encoding_height
-                                       scs_ptr->static_config.superres_mode};
+                                       scs_ptr->static_config.superres_denom};
 
     // determine super-resolution parameters - encoding resolution
     // given configs and frame type
@@ -1188,6 +1226,8 @@ void init_resize_picture(SequenceControlSet *scs_ptr, PictureParentControlSet *p
 
         scs_ptr->seq_header.enable_superres = 1; // enable sequence level super-res flag
                                                  // if super-res is ON for any frame
+
+        pcs_ptr->superres_denom = spr_params.superres_denom;
 
         // Allocate downsampled picture buffer descriptor
         downscaled_source_buffer_desc_ctor(
@@ -1214,7 +1254,7 @@ void init_resize_picture(SequenceControlSet *scs_ptr, PictureParentControlSet *p
         scale_pcs_params(
             scs_ptr, pcs_ptr, spr_params, input_picture_ptr->width, input_picture_ptr->height);
 
-        pad_and_decimate_filtered_pic(pcs_ptr);
+        scale_input_references(pcs_ptr, spr_params);
 
     }
 }
