@@ -55,6 +55,7 @@ extern "C" {
 #define LOSSY_TX_SIZE_OPT               0 // Early skip txs based on the cost of the of the already prcessed TUs
 #define REDUCE_INTER_MODES              0 // Reduce the number of candidates with new mv based on the weight computed in mv pred.
 #define PRUNE_SKIP_AND_NON_SKIP         0 // Split the number of md stage 3 to skip and non-skip.
+#define MR_NICS                         0 // Set MR NICs
 #if RESTRICT_TXS_FOR_NON_S_V_H || RESTRICT_TXT_FOR_NON_S_V_H || DISABLE_COMPOUND_FOR_NON_S_V_H
 #define ADD_PARENT_IDX                  1 // Add parent index in the geom - lossless
 #endif
