@@ -1292,7 +1292,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         if (context_ptr->tx_search_level == TX_SEARCH_ENC_DEC)
             context_ptr->tx_search_reduced_set = 0;
 #if PRESETS_TUNE
-        else if (picture_control_set_ptr->enc_mode <= ENC_M2)
+        else if (picture_control_set_ptr->enc_mode <= ENC_M3)
             context_ptr->tx_search_reduced_set = 0;
         else
             context_ptr->tx_search_reduced_set = 1;
@@ -1505,7 +1505,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #if PRESETS_OPT
 #if JAN31_M2
-        if (picture_control_set_ptr->enc_mode <= ENC_M2)
+        if (picture_control_set_ptr->enc_mode <= ENC_M3)
 #else
         if (picture_control_set_ptr->enc_mode <= ENC_M1)
 #endif
@@ -2048,12 +2048,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     if (sequence_control_set_ptr->static_config.enable_trellis == DEFAULT)
 #if PRESETS_TUNE
         if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
-            if (picture_control_set_ptr->enc_mode <= ENC_M2)
+            if (picture_control_set_ptr->enc_mode <= ENC_M3)
                 context_ptr->trellis_quant_coeff_optimization = EB_TRUE;
             else
                 context_ptr->trellis_quant_coeff_optimization = EB_FALSE;
         else
-            if (picture_control_set_ptr->enc_mode <= ENC_M2)
+            if (picture_control_set_ptr->enc_mode <= ENC_M3)
                 context_ptr->trellis_quant_coeff_optimization = EB_TRUE;
             else
                 context_ptr->trellis_quant_coeff_optimization = EB_FALSE;
@@ -2462,7 +2462,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         if (picture_control_set_ptr->enc_mode <= ENC_M1)
 #endif
             context_ptr->sq_weight = sequence_control_set_ptr->static_config.sq_weight + 5;
-        else if (picture_control_set_ptr->enc_mode <= ENC_M2)
+        else if (picture_control_set_ptr->enc_mode <= ENC_M3)
             context_ptr->sq_weight = sequence_control_set_ptr->static_config.sq_weight;
         else
             context_ptr->sq_weight = sequence_control_set_ptr->static_config.sq_weight - 5;
@@ -2531,8 +2531,8 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if M2_ADOPTIONS
 #if PME_SEARCH_AREA_TUNE
 #if M1_FEB4_ADOPTION   || M0_FEB4_ADOPTION
-        context_ptr->full_pel_ref_window_width_th  = picture_control_set_ptr->enc_mode <= ENC_M1 ? FULL_PEL_REF_WINDOW_WIDTH_15 : FULL_PEL_REF_WINDOW_WIDTH_7;
-        context_ptr->full_pel_ref_window_height_th = picture_control_set_ptr->enc_mode <= ENC_M1 ? FULL_PEL_REF_WINDOW_HEIGHT_15 : FULL_PEL_REF_WINDOW_HEIGHT_5;
+        context_ptr->full_pel_ref_window_width_th  = picture_control_set_ptr->enc_mode <= ENC_M3 ? FULL_PEL_REF_WINDOW_WIDTH_15 : FULL_PEL_REF_WINDOW_WIDTH_7;
+        context_ptr->full_pel_ref_window_height_th = picture_control_set_ptr->enc_mode <= ENC_M3 ? FULL_PEL_REF_WINDOW_HEIGHT_15 : FULL_PEL_REF_WINDOW_HEIGHT_5;
 #else
         context_ptr->full_pel_ref_window_width_th =  FULL_PEL_REF_WINDOW_WIDTH;
         context_ptr->full_pel_ref_window_height_th =  FULL_PEL_REF_WINDOW_HEIGHT;
@@ -2737,7 +2737,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
 #if MOVE_OPT
 #if M1_FEB4_ADOPTION
-    context_ptr->chroma_search_opt = picture_control_set_ptr->enc_mode <= ENC_M1 ? 0 : 1;
+    context_ptr->chroma_search_opt = picture_control_set_ptr->enc_mode <= ENC_M0 ? 0 : 1;
 #else
     context_ptr->chroma_search_opt = picture_control_set_ptr->enc_mode <= ENC_M0 ? 0 : 1;
 #endif

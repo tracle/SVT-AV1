@@ -1842,7 +1842,7 @@ EbErrorType prediction_structure_group_ctor(
     if (sc_detected == 1)
 #if ENABLE_FULL_MRP_ME_SC
 #if M1_FEB4_ADOPTION
-        ref_count_used = enc_mode <= ENC_M1 ? MAX_REF_IDX : enc_mode <= ENC_M2 ? 2 : 1;
+        ref_count_used = enc_mode <= ENC_M3 ? MAX_REF_IDX : enc_mode <= ENC_M2 ? 2 : 1;
 #else
         ref_count_used = enc_mode <= ENC_M0 ? MAX_REF_IDX : enc_mode <= ENC_M2 ? 2 : 1;
 #endif
@@ -1851,7 +1851,7 @@ EbErrorType prediction_structure_group_ctor(
 #endif
     else
 #if M2_ADOPTIONS
-        ref_count_used = enc_mode <= ENC_M2 ? MAX_REF_IDX : 1;
+        ref_count_used = enc_mode <= ENC_M3 ? MAX_REF_IDX : 1;
 #else
         ref_count_used = enc_mode <= ENC_M1 ? MAX_REF_IDX : enc_mode <= ENC_M2 ? 2 : 1;
 #endif

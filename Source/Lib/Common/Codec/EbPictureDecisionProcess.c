@@ -837,7 +837,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #if M1_OPT
 #if M2_ADOPTIONS
-        else if (picture_control_set_ptr->enc_mode <= ENC_M2)
+        else if (picture_control_set_ptr->enc_mode <= ENC_M3)
 #else
         else if (picture_control_set_ptr->enc_mode <= ENC_M1)
 #endif
@@ -1534,7 +1534,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if ATB_10_BIT
 #if ATB_HBD
 #if PRESETS_OPT
-        if (picture_control_set_ptr->enc_mode <= ENC_M2)
+        if (picture_control_set_ptr->enc_mode <= ENC_M3)
 #else
         if (picture_control_set_ptr->enc_mode <= ENC_M1)
 #endif
@@ -1753,7 +1753,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if M0_ADOPT_PRUNE_REF_BASED_ME
 #if M1_ADOPTIONS
 #if JAN31_M2
-        if (picture_control_set_ptr->sc_content_detected || picture_control_set_ptr->enc_mode <= ENC_M2)
+        if (picture_control_set_ptr->sc_content_detected)
 #else
         if (picture_control_set_ptr->sc_content_detected || picture_control_set_ptr->enc_mode <= ENC_M1)
 #endif
