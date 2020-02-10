@@ -32,6 +32,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define CORE_LIMIT 0
 #define M1_FEB4_ADOPTION                   1
 #define M0_FEB4_ADOPTION                   1
 #define SC_FEB4_ADOPTION                   1
@@ -63,7 +64,7 @@ extern "C" {
 #define QPS_CHANGE_P2           1 //QPS changes for CQP
 #define PRED_DEBUG              0 //WIP
 #define PRED_DEBUG_L5           0
-
+#define PRED_DEBUG_MOD          0 
 #define COMP_SIMILAR     1 //jan6
 #define INTRA_SIMILAR    1 //If previous similar block is intra, do not inject any inter i0
 #define INTER_SIMILAR    0 //p0

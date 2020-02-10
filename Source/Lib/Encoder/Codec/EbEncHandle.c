@@ -393,7 +393,10 @@ EbErrorType load_default_buffer_configuration_settings(
     uint32_t meSegH     = (((sequence_control_set_ptr->max_input_luma_height + 32) / BLOCK_SIZE_64) < 6) ? 1 : 6;
     uint32_t meSegW     = (((sequence_control_set_ptr->max_input_luma_width + 32) / BLOCK_SIZE_64) < 10) ? 1 : 10;
 
-    unsigned int lp_count   = GetNumProcessors();
+    unsigned int lp_count = GetNumProcessors();
+#if CORE_LIMIT
+    lp_count = 20;
+#endif
     unsigned int core_count = lp_count;
 #if defined(_WIN32) || defined(__linux__)
     if (sequence_control_set_ptr->static_config.target_socket != -1)

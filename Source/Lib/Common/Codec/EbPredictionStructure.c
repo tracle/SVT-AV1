@@ -292,12 +292,16 @@ PredictionStructureConfigEntry five_level_hierarchical_pred_struct[] = {
     {
         0,                      // GOP Index 0 - Temporal Layer
         0,                      // GOP Index 0 - Decode Order
-#if PRED_DEBUG
+#if PRED_DEBUG && !PRED_DEBUG_MOD
         {16, 24, 20, 48},         // GOP Index 0 - Ref List 0
 #if PRED_DEBUG_L5
         {16, 32, 17, 0}          // GOP Index 0 - Ref List 1     //we need keep 16 as first entry in List1, this will ensure that for poc=16 there is a valid ref frame in List1.
 #else
+#if PRED_DEBUG_MOD
+        {16, 32, 0, 0}          // GOP Index 0 - Ref List 1     //we need keep 16 as first entry in List1, this will ensure that for poc=16 there is a valid ref frame in List1.
+#else
         {16, 32, 23, 0}          // GOP Index 0 - Ref List 1     //we need keep 16 as first entry in List1, this will ensure that for poc=16 there is a valid ref frame in List1.
+#endif
 #endif
 #else
         {16, 48, 0, 0},         // GOP Index 0 - Ref List 0
@@ -397,7 +401,11 @@ PredictionStructureConfigEntry five_level_hierarchical_pred_struct[] = {
 #if PRED_DEBUG_L5
         {  8, 16, 24, 9},       // GOP Index 8 - Ref List 0
 #else
+#if PRED_DEBUG_MOD
+        {  8, 16, 24, 0},       // GOP Index 8 - Ref List 0
+#else
         {  8, 16, 24, 15},       // GOP Index 8 - Ref List 0
+#endif
 #endif
         { -8, 12, 10, 0}        // GOP Index 8 - Ref List 1
 #else
