@@ -1223,7 +1223,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->tx_weight = FC_SKIP_TX_SR_TH025;
     else
 #if PRESETS_TUNE
+#if SUPER_SETTINGS
+        if (1) // tx weight
+#else
         if (MR_MODE) // tx weight
+#endif
             context_ptr->tx_weight = MAX_MODE_COST;
         else {
             if (context_ptr->tx_search_level == TX_SEARCH_ENC_DEC)
@@ -2420,7 +2424,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_stage_2_class_prune_th = (uint64_t)~0;
 #endif
 #endif
+#if SUPER_SETTINGS
+    context_ptr->md_stage_1_cand_prune_th = (uint64_t)~0;
+    context_ptr->md_stage_1_class_prune_th = (uint64_t)~0;
 
+    context_ptr->md_stage_2_cand_prune_th = (uint64_t)~0;
+    context_ptr->md_stage_2_class_prune_th = (uint64_t)~0;
+#endif
 #if LESS_RECTANGULAR_CHECK_LEVEL
 
     // Weighting (expressed as a percentage) applied to

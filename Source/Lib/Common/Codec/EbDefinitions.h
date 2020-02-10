@@ -184,6 +184,25 @@ extern "C" {
 #define ENABLE_NEW_NN_SC             1 // SC ONLY
 
 /*****************************************/
+#define SUPER_SETTINGS               0
+
+//* Index skip_contexts with top / left, not min / max.
+//
+//If we index the skip_contexts table with min and max, the matrix is
+//actually upper triangular because only the main diagonal and the entries
+//above the main diagonal are used(min <= max).If we index skip_contexts
+//with top and left instead, then the matrix is symmetric and no entries
+//are wasted.Also, we don't need to calculate min and max.
+#define FIXED_SKIP_CONTEXT_INDEXING  1 // --> identical streams 
+#define TX_TYPE_FLAT_WEIGHT          1 // --> identical streams : use a flat matrix (i.e. no weighting) for 1D and Identity transforms
+#define FIXED_EOB_COST_CALC          1
+#define FIXED_BR_CONTEXT_CALC        1
+#define FIXED_TX_64x64_COSTING       1 // Fix incorrect costing for TX_64x64 coefficients
+#define FIXED_TX_TYPE_COSTING        1 // Fix costing of inter transform types
+#define FIXED_CDF_PROPABILITY        1
+
+
+
 #define DIST_BASED_PME_SEARCH_AREA   0
 #define FIXED_PME_LARGE_SEARCH_AREA  1
 #define FP_QUANT_BOTH_INTRA_INTER    1
@@ -509,7 +528,11 @@ enum {
 #if OBMC_FLAG
 #if FILTER_INTRA_FLAG
 #if ADOPT_SETTING_8_NIC_CHANGES || ADOPT_SETTING_9_NIC_CHANGES
+#if SUPER_SETTINGS
+#define MAX_NFL                                 5000 // Maximum number of candidates MD can support
+#else
 #define MAX_NFL                                 250 // Maximum number of candidates MD can support
+#endif
 #else
 #define MAX_NFL                                 125 // Maximum number of candidates MD can support
 #endif

@@ -1927,7 +1927,12 @@ static INLINE void read_coeffs_reverse(SvtReader *r, TxSize tx_size,
         const int nsymbs = 4;
         int level = svt_read_symbol(r, base_cdf[coeff_ctx], nsymbs, ACCT_STR);
         if (level > NUM_BASE_LEVELS) {
+#if FIXED_BR_CONTEXT_CALC
+            const TxClass tx_class = tx_type_to_class[tx_type];
+            const int br_ctx = get_br_ctx(levels, pos, bwl, tx_class);
+#else
             const int br_ctx = get_br_ctx(levels, pos, bwl, tx_type);
+#endif
             AomCdfProb *cdf = br_cdf[br_ctx];
             for (int idx = 0; idx < COEFF_BASE_RANGE; idx += BR_CDF_SIZE - 1) {
                 const int k = svt_read_symbol(r, cdf, BR_CDF_SIZE, ACCT_STR);
@@ -2329,11 +2334,19 @@ static INLINE void dec_get_txb_ctx(ParseCtxt *parse_ctx,
         if (plane_bsize == txsize_to_bsize[tx_size])
             txb_ctx->txb_skip_ctx = 0;
         else {
+#if FIXED_SKIP_CONTEXT_INDEXING
+            static const uint8_t skip_contexts[5][5] = { { 1, 2, 2, 2, 3 },
+                                                         { 2, 4, 4, 4, 5 },
+                                                         { 2, 4, 4, 4, 5 },
+                                                         { 2, 4, 4, 4, 5 },
+                                                         { 3, 5, 5, 5, 6 } };
+#else
             static const uint8_t skip_contexts[5][5] = { { 1, 2, 2, 2, 3 },
                                                          { 1, 4, 4, 4, 5 },
                                                          { 1, 4, 4, 4, 5 },
                                                          { 1, 4, 4, 4, 5 },
                                                          { 1, 4, 4, 4, 6 } };
+#endif
             int top = 0;
             int left = 0;
 
@@ -2342,17 +2355,23 @@ static INLINE void dec_get_txb_ctx(ParseCtxt *parse_ctx,
                 top |= above_ctx[k];
             } while (++k < txb_w_unit);
             top &= COEFF_CONTEXT_MASK;
-
+#if FIXED_SKIP_CONTEXT_INDEXING
+            top = AOMMIN(top, 4);
+#endif
             k = 0;
             do {
                 left |= left_ctx[k];
             } while (++k < txb_h_unit);
             left &= COEFF_CONTEXT_MASK;
-
+#if FIXED_SKIP_CONTEXT_INDEXING
+            left = AOMMIN(left, 4);
+            txb_ctx->txb_skip_ctx = skip_contexts[top][left];
+#else
             const int max = AOMMIN(top | left, 4);
             const int min = AOMMIN(AOMMIN(top, left), 4);
 
             txb_ctx->txb_skip_ctx = skip_contexts[min][max];
+#endif
         }
     }
     else {
