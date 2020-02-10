@@ -2144,7 +2144,7 @@ void SetParamBasedOnInput(SequenceControlSet *sequence_control_set_ptr)
             sequence_control_set_ptr->mfmv_enabled = 0;
         else
 #if M2_ADOPTIONS
-            sequence_control_set_ptr->mfmv_enabled = (uint8_t)(sequence_control_set_ptr->static_config.enc_mode <= ENC_M2) ? 1 : 0;
+            sequence_control_set_ptr->mfmv_enabled = (uint8_t)(sequence_control_set_ptr->static_config.enc_mode <= ENC_M3) ? 1 : 0;
 #else
             sequence_control_set_ptr->mfmv_enabled = (uint8_t)(sequence_control_set_ptr->static_config.enc_mode <= ENC_M1) ? 1 : 0;
 #endif

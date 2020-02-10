@@ -1327,7 +1327,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             cm->sg_filter_mode = 0;
     else
 #if PRESETS_TUNE
-        if (picture_control_set_ptr->enc_mode <= ENC_M2)
+        if (picture_control_set_ptr->enc_mode <= ENC_M3)
 #else
         if (picture_control_set_ptr->enc_mode <= ENC_M4)
 #endif
@@ -1453,7 +1453,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if M0_OPT
 #if SC_PRESETS_OPT
 #if M1_FEB4_ADOPTION
-        if (picture_control_set_ptr->enc_mode <= ENC_M1)
+        if (picture_control_set_ptr->enc_mode <= ENC_M3)
 #else
         if (picture_control_set_ptr->enc_mode <= ENC_M0)
 #endif
@@ -1480,7 +1480,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     else
 #if PRESETS_TUNE
 #if M2_ADOPTIONS
-        if (picture_control_set_ptr->enc_mode <= ENC_M2)
+        if (picture_control_set_ptr->enc_mode <= ENC_M3)
 #else
         if ((picture_control_set_ptr->enc_mode <= ENC_M1) || (picture_control_set_ptr->enc_mode <= ENC_M2 && picture_control_set_ptr->temporal_layer_index == 0))
 #endif

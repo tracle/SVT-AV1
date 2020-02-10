@@ -1357,7 +1357,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if !SC_REDUCE_DIFF // interpolation_search_level
     else
 #endif
-        if (picture_control_set_ptr->enc_mode <= ENC_M2)
+        if (picture_control_set_ptr->enc_mode <= ENC_M3)
 #else
     else if (picture_control_set_ptr->enc_mode <= ENC_M1)
 #endif
@@ -1414,7 +1414,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if ENHANCED_M0_SETTINGS
 #if M1_ADOPTIONS
 #if JAN31_M2
-            if (picture_control_set_ptr->enc_mode <= ENC_M2)
+            if (picture_control_set_ptr->enc_mode <= ENC_M3)
 #else
             if (picture_control_set_ptr->enc_mode <= ENC_M1)
 #endif
@@ -1603,7 +1603,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     if (sequence_control_set_ptr->static_config.nx4_4xn_parent_mv_inject == DEFAULT)
 #if PRESETS_TUNE
         if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
-            if (picture_control_set_ptr->enc_mode <= ENC_M2)
+            if (picture_control_set_ptr->enc_mode <= ENC_M3)
                 context_ptr->nx4_4xn_parent_mv_injection = 1;
             else
                 context_ptr->nx4_4xn_parent_mv_injection = 0;
@@ -1709,7 +1709,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             else
                 context_ptr->bipred3x3_injection = 0;
         else
-            if (picture_control_set_ptr->enc_mode <= ENC_M2)
+            if (picture_control_set_ptr->enc_mode <= ENC_M3)
                 context_ptr->bipred3x3_injection = 1;
             else if (picture_control_set_ptr->enc_mode <= ENC_M4)
                 context_ptr->bipred3x3_injection = 2;
@@ -1751,7 +1751,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if PRESETS_TUNE
             if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
 #if JAN31_M2
-                if (picture_control_set_ptr->enc_mode <= ENC_M2)
+                if (picture_control_set_ptr->enc_mode <= ENC_M3)
 #else
                 if (picture_control_set_ptr->enc_mode <= ENC_M1)
 #endif
@@ -2159,7 +2159,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     if (sequence_control_set_ptr->static_config.prune_ref_rec_part == DEFAULT)
 #if PRESETS_TUNE
 #if M2_ADOPTIONS
-        if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected || picture_control_set_ptr->enc_mode <= ENC_M2)
+        if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected || picture_control_set_ptr->enc_mode <= ENC_M3)
 #else
         if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected || picture_control_set_ptr->enc_mode <= ENC_M1)
 #endif
@@ -2217,7 +2217,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if M1_ADOPT_M0_MD_EXIT_TH
 #if M2_ADOPTIONS
 #if SC_REDUCE_DIFF //md_exit_th
-    if (picture_control_set_ptr->enc_mode <= ENC_M2)
+    if (picture_control_set_ptr->enc_mode <= ENC_M3)
 #else
     if (MR_MODE || (picture_control_set_ptr->enc_mode <= ENC_M2 && picture_control_set_ptr->parent_pcs_ptr->sc_content_detected == 0))
 #endif
@@ -2256,7 +2256,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if M0_OPT
 #if M1_OPT
 #if MD_STAGE_1_CAND_PRUNNING_TH
-    if (picture_control_set_ptr->enc_mode <= ENC_M2 || picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
+    if (picture_control_set_ptr->enc_mode <= ENC_M3 || picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
 #else
     if (MR_MODE || (picture_control_set_ptr->enc_mode <= ENC_M1 && (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected == 0)) || sequence_control_set_ptr->input_resolution == INPUT_SIZE_576p_RANGE_OR_LOWER)
 #endif
@@ -2303,7 +2303,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if SC_PRESETS_OPT
 #if M1_OPT
 #if MD_STAGE_1_CLASS_PRUNNING_TH
-        if (picture_control_set_ptr->enc_mode <= ENC_M2 || picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
+        if (picture_control_set_ptr->enc_mode <= ENC_M3 || picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
 #else
         if (MR_MODE || (picture_control_set_ptr->enc_mode <= ENC_M1) || sequence_control_set_ptr->input_resolution == INPUT_SIZE_576p_RANGE_OR_LOWER)
 #endif
@@ -2367,7 +2367,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_stage_2_cand_prune_th = sequence_control_set_ptr->static_config.md_stage_2_cand_prune_th;
 #endif
 #if MD_STAGE_2_CAND_PRUNNING_TH
-    else if (picture_control_set_ptr->enc_mode <= ENC_M2)
+    else if (picture_control_set_ptr->enc_mode <= ENC_M3)
         context_ptr->md_stage_2_cand_prune_th = 15;
     else
         context_ptr->md_stage_2_cand_prune_th = 5;
@@ -2396,7 +2396,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if SC_PRESETS_OPT
 #if M1_FEB4_ADOPTION
 #if MR_FEB4_ADOPTION
-    if ((picture_control_set_ptr->enc_mode <= ENC_M1 && picture_control_set_ptr->parent_pcs_ptr->sc_content_detected))
+    if ((picture_control_set_ptr->enc_mode <= ENC_M3 && picture_control_set_ptr->parent_pcs_ptr->sc_content_detected))
 #else
     if (MR_MODE || (picture_control_set_ptr->enc_mode <= ENC_M1 && (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)))
 #endif
@@ -2562,7 +2562,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     if (!MR_MODE)
 #endif
 #if M1_ADOPTIONS
-        if (picture_control_set_ptr->enc_mode <= ENC_M2)
+        if (picture_control_set_ptr->enc_mode <= ENC_M3)
 #else
         if( picture_control_set_ptr->enc_mode == ENC_M0)
 #endif
