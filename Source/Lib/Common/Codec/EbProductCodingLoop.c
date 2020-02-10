@@ -2808,7 +2808,17 @@ void set_md_stage_counts(
     context_ptr->md_stage_3_count[CAND_CLASS_8] = context_ptr->bypass_md_stage_2[CAND_CLASS_8] ? context_ptr->md_stage_2_count[CAND_CLASS_8] : context_ptr->md_stage_3_count[CAND_CLASS_8];
 #endif
 
-
+#if SUPER_SETTINGS
+    context_ptr->md_stage_1_count[CAND_CLASS_0] = context_ptr->md_stage_2_count[CAND_CLASS_0] = context_ptr->md_stage_3_count[CAND_CLASS_0] = fastCandidateTotalCount;
+    context_ptr->md_stage_1_count[CAND_CLASS_1] = context_ptr->md_stage_2_count[CAND_CLASS_1] = context_ptr->md_stage_3_count[CAND_CLASS_1] = fastCandidateTotalCount;
+    context_ptr->md_stage_1_count[CAND_CLASS_2] = context_ptr->md_stage_2_count[CAND_CLASS_2] = context_ptr->md_stage_3_count[CAND_CLASS_2] = fastCandidateTotalCount;
+    context_ptr->md_stage_1_count[CAND_CLASS_3] = context_ptr->md_stage_2_count[CAND_CLASS_3] = context_ptr->md_stage_3_count[CAND_CLASS_3] = fastCandidateTotalCount;
+    context_ptr->md_stage_1_count[CAND_CLASS_4] = context_ptr->md_stage_2_count[CAND_CLASS_4] = context_ptr->md_stage_3_count[CAND_CLASS_4] = fastCandidateTotalCount;
+    context_ptr->md_stage_1_count[CAND_CLASS_5] = context_ptr->md_stage_2_count[CAND_CLASS_5] = context_ptr->md_stage_3_count[CAND_CLASS_5] = fastCandidateTotalCount;
+    context_ptr->md_stage_1_count[CAND_CLASS_6] = context_ptr->md_stage_2_count[CAND_CLASS_6] = context_ptr->md_stage_3_count[CAND_CLASS_6] = fastCandidateTotalCount;
+    context_ptr->md_stage_1_count[CAND_CLASS_7] = context_ptr->md_stage_2_count[CAND_CLASS_7] = context_ptr->md_stage_3_count[CAND_CLASS_7] = fastCandidateTotalCount;
+    context_ptr->md_stage_1_count[CAND_CLASS_8] = context_ptr->md_stage_2_count[CAND_CLASS_8] = context_ptr->md_stage_3_count[CAND_CLASS_8] = fastCandidateTotalCount;
+#endif
     // Step 4: zero-out count for CAND_CLASS_3 if CAND_CLASS_1 and CAND_CLASS_2 are merged (i.e. shift to the left)
     if (context_ptr->combine_class12)
         context_ptr->md_stage_1_count[CAND_CLASS_3] = context_ptr->md_stage_2_count[CAND_CLASS_3] = 0;

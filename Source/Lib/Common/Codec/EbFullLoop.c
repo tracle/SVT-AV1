@@ -859,6 +859,26 @@ static INLINE TxSize get_txsize_entropy_ctx(TxSize txsize) {
 static INLINE PlaneType get_plane_type(int plane) {
     return (plane == 0) ? PLANE_TYPE_Y : PLANE_TYPE_UV;
 }
+#if FIXED_EOB_COST_CALC
+static int get_eob_cost(int eob, const LvMapEobCost *txb_eob_costs,
+    const LvMapCoeffCost *txb_costs, TxClass tx_class) {
+    int eob_extra;
+    const int eob_pt = get_eob_pos_token(eob, &eob_extra);
+    int eob_cost = 0;
+    const int eob_multi_ctx = (tx_class == TX_CLASS_2D) ? 0 : 1;
+    eob_cost = txb_eob_costs->eob_cost[eob_multi_ctx][eob_pt - 1];
+
+    if (eb_k_eob_offset_bits[eob_pt] > 0) {
+        const int eob_ctx = eob_pt - 3;
+        const int eob_shift = eb_k_eob_offset_bits[eob_pt] - 1;
+        const int bit = (eob_extra & (1 << eob_shift)) ? 1 : 0;
+        eob_cost += txb_costs->eob_extra_cost[eob_ctx][bit];
+        const int offset_bits = eb_k_eob_offset_bits[eob_pt];
+        if (offset_bits > 1) eob_cost += av1_cost_literal(offset_bits - 1);
+    }
+    return eob_cost;
+}
+#else
 static int32_t get_eob_cost(int32_t eob, const LvMapEobCost *txb_eob_costs,
     const LvMapCoeffCost *txb_costs, TxType tx_type) {
     int32_t eob_extra;
@@ -876,7 +896,7 @@ static int32_t get_eob_cost(int32_t eob, const LvMapEobCost *txb_eob_costs,
     }
     return eob_cost;
 }
-
+#endif
 static INLINE int get_lower_levels_ctx_general(int is_last, int scan_idx,
     int bwl, int height,
     const uint8_t *levels,
@@ -924,7 +944,11 @@ static INLINE int get_coeff_cost_general(int is_last, int ci, TranLow abs_qc,
             if (is_last)
                 br_ctx = get_br_ctx_eob(ci, bwl, tx_class);
             else
+#if FIXED_BR_CONTEXT_CALC
+                br_ctx = get_br_ctx(levels, ci, bwl, tx_class);
+#else
                 br_ctx = get_br_ctx(levels, ci, bwl, (const TxType)tx_class);
+#endif
             cost += get_br_cost(abs_qc, txb_costs->lps_cost[br_ctx]);
         }
     }
@@ -991,7 +1015,11 @@ static AOM_FORCE_INLINE int get_two_coeff_cost_simple(
     if (abs_qc) {
         cost += av1_cost_literal(1);
         if (abs_qc > NUM_BASE_LEVELS) {
+#if FIXED_BR_CONTEXT_CALC
+            const int br_ctx = get_br_ctx(levels, ci, bwl, tx_class);
+#else
             const int br_ctx = get_br_ctx(levels, ci, bwl, (const TxType)tx_class);
+#endif
             int brcost_diff = 0;
             cost += get_br_cost_with_diff(abs_qc, txb_costs->lps_cost[br_ctx],
                 &brcost_diff);
@@ -1021,6 +1049,17 @@ static INLINE int get_coeff_cost_eob(int ci, TranLow abs_qc, int sign,
     }
     return cost;
 }
+#if TX_TYPE_FLAT_WEIGHT
+typedef uint8_t qm_val_t;
+static INLINE int get_dqv(const int16_t *dequant, int coeff_idx,
+    const qm_val_t *iqmatrix) {
+    int dqv = dequant[!!coeff_idx];
+    if (iqmatrix != NULL)
+        dqv =
+        ((iqmatrix[coeff_idx] * dqv) + (1 << (AOM_QM_BITS - 1))) >> AOM_QM_BITS;
+    return dqv;
+}
+#endif
 
 static AOM_FORCE_INLINE void update_coeff_eob(
     int *accu_rate, int64_t *accu_dist, uint16_t *eob, int *nz_num, int *nz_ci,
@@ -1028,8 +1067,13 @@ static AOM_FORCE_INLINE void update_coeff_eob(
     int dc_sign_ctx, int64_t rdmult, int shift, const int16_t *dequant,
     const int16_t *scan, const LvMapEobCost *txb_eob_costs,
     const LvMapCoeffCost *txb_costs, const TranLow *tcoeff,
+#if TX_TYPE_FLAT_WEIGHT
+    TranLow *qcoeff, TranLow *dqcoeff, uint8_t *levels, int sharpness, const qm_val_t *iqmatrix) {
+    const int dqv = get_dqv(dequant, scan[si], iqmatrix);
+#else
     TranLow *qcoeff, TranLow *dqcoeff, uint8_t *levels, int sharpness) {
     const int dqv = dequant[si != 0];
+#endif
     assert(si != *eob - 1);
     const int ci = scan[si];
     const TranLow qc = qcoeff[ci];
@@ -1075,7 +1119,11 @@ static AOM_FORCE_INLINE void update_coeff_eob(
         const int new_eob = si + 1;
         const int coeff_ctx_new_eob = get_lower_levels_ctx_eob(bwl, height, si);
         const int new_eob_cost =
+#if FIXED_EOB_COST_CALC
+            get_eob_cost(new_eob, txb_eob_costs, txb_costs, tx_class);
+#else
             get_eob_cost(new_eob, txb_eob_costs, txb_costs, (TxType)tx_class);
+#endif
         int rate_coeff_eob =
             new_eob_cost + get_coeff_cost_eob(ci, abs_qc, sign, coeff_ctx_new_eob,
                 dc_sign_ctx, txb_costs, bwl,
@@ -1153,8 +1201,14 @@ static INLINE void update_coeff_general(
     const TranLow *tcoeff,
     TranLow *qcoeff,
     TranLow *dqcoeff,
+#if TX_TYPE_FLAT_WEIGHT
+    uint8_t *levels,
+    const qm_val_t *iqmatrix) {
+    const int dqv = get_dqv(dequant, scan[si], iqmatrix);
+#else
     uint8_t *levels) {
     const int dqv = dequant[si != 0];
+#endif
     const int ci = scan[si];
     const TranLow qc = qcoeff[ci];
     const int is_last = si == (eob - 1);
@@ -1222,8 +1276,13 @@ static AOM_FORCE_INLINE void update_coeff_simple(
     const TranLow *tcoeff,
     TranLow *qcoeff,
     TranLow *dqcoeff,
+#if TX_TYPE_FLAT_WEIGHT
+    uint8_t *levels, const qm_val_t *iqmatrix) {
+    const int dqv = get_dqv(dequant, scan[si], iqmatrix);
+#else
     uint8_t *levels) {
     const int dqv = dequant[1];
+#endif
     (void)eob;
     // this simple version assumes the coeff's scan_idx is not DC (scan_idx != 0)
     // and not the last (scan_idx != eob - 1)
@@ -1361,8 +1420,18 @@ void eb_av1_optimize_b(
     (void)stride;
     (void)n_coeffs;
     (void)sc;
+#if !TX_TYPE_FLAT_WEIGHT
     (void)qparam;
+#endif
     (void)bit_increment;
+
+#if TX_TYPE_FLAT_WEIGHT
+    //const TxSize qm_tx_size = av1_get_adjusted_tx_size(txsize);
+    const qm_val_t *iqmatrix = qparam->iqmatrix;
+    //IS_2D_TRANSFORM(tx_type)
+    //? pd->seg_iqmatrix[xd->mi[0]->segment_id][qm_tx_size]
+    //: picture_control_set_ptr->giqmatrix[NUM_QM_LEVELS - 1][0][qm_tx_size];
+#endif
 
     // Hsan (Trellis): hardcoded as not supported:
     int sharpness = 0; // No Sharpness
@@ -1425,7 +1494,11 @@ void eb_av1_optimize_b(
     // TODO(angirbird): check iqmatrix
     const int non_skip_cost = txb_costs->txb_skip_cost[txb_skip_context][0];
     const int skip_cost = txb_costs->txb_skip_cost[txb_skip_context][1];
+#if FIXED_EOB_COST_CALC
+    const int eob_cost = get_eob_cost(*eob, txb_eob_costs, txb_costs, tx_class);
+#else
     const int eob_cost = get_eob_cost(*eob, txb_eob_costs, txb_costs, (TxType)tx_class);
+#endif
     int accu_rate = eob_cost;
 
     int64_t accu_dist = 0;
@@ -1457,7 +1530,12 @@ void eb_av1_optimize_b(
             coeff_ptr,
             qcoeff_ptr,
             dqcoeff_ptr,
+#if TX_TYPE_FLAT_WEIGHT
+            levels, 
+            iqmatrix);
+#else
             levels);
+#endif
         --si;
     }
     else {
@@ -1480,7 +1558,23 @@ void eb_av1_optimize_b(
         accu_dist += dist - dist0;
         --si;
     }
-
+#if TX_TYPE_FLAT_WEIGHT
+#define UPDATE_COEFF_EOB_CASE(tx_class_literal)                                       \
+  case tx_class_literal:                                                              \
+    for (; si >= 0 && nz_num <= max_nz_num && !fast_mode; --si) {                     \
+      update_coeff_eob(&accu_rate, &accu_dist, eob, &nz_num, nz_ci, si,              \
+                       tx_size, tx_class_literal, bwl, height,                        \
+                       dc_sign_context, rdmult, shift, p->dequant_QTX, scan,          \
+                       txb_eob_costs, txb_costs, coeff_ptr, qcoeff_ptr, dqcoeff_ptr,  \
+                       levels, sharpness,iqmatrix);                                   \
+    }                                                                                 \
+    break;
+    switch (tx_class) {
+        UPDATE_COEFF_EOB_CASE(TX_CLASS_2D);
+        UPDATE_COEFF_EOB_CASE(TX_CLASS_HORIZ);
+        UPDATE_COEFF_EOB_CASE(TX_CLASS_VERT);
+#undef UPDATE_COEFF_EOB_CASE
+#else
 #define UPDATE_COEFF_EOB_CASE(tx_class_literal)                                       \
   case tx_class_literal:                                                              \
     for (; si >= 0 && nz_num <= max_nz_num && !fast_mode; --si) {                     \
@@ -1496,6 +1590,7 @@ void eb_av1_optimize_b(
         UPDATE_COEFF_EOB_CASE(TX_CLASS_HORIZ);
         UPDATE_COEFF_EOB_CASE(TX_CLASS_VERT);
 #undef UPDATE_COEFF_EOB_CASE
+#endif
     default: assert(false);
     }
 
@@ -1503,7 +1598,21 @@ void eb_av1_optimize_b(
         update_skip(&accu_rate, accu_dist, eob, nz_num, nz_ci, rdmult, skip_cost,
             non_skip_cost, qcoeff_ptr, dqcoeff_ptr, sharpness);
     }
-
+#if TX_TYPE_FLAT_WEIGHT
+#define UPDATE_COEFF_SIMPLE_CASE(tx_class_literal)                                   \
+  case tx_class_literal:                                                             \
+    for (; si >= 1; --si) {                                                          \
+      update_coeff_simple(&accu_rate, si, *eob, tx_size, tx_class_literal, bwl,       \
+                          rdmult, shift, p->dequant_QTX, scan, txb_costs, coeff_ptr, \
+                          qcoeff_ptr, dqcoeff_ptr, levels,iqmatrix);                          \
+    }                                                                                \
+    break;
+    switch (tx_class) {
+        UPDATE_COEFF_SIMPLE_CASE(TX_CLASS_2D);
+        UPDATE_COEFF_SIMPLE_CASE(TX_CLASS_HORIZ);
+        UPDATE_COEFF_SIMPLE_CASE(TX_CLASS_VERT);
+#undef UPDATE_COEFF_SIMPLE_CASE
+#else
 #define UPDATE_COEFF_SIMPLE_CASE(tx_class_literal)                                   \
   case tx_class_literal:                                                             \
     for (; si >= 1; --si) {                                                          \
@@ -1517,6 +1626,7 @@ void eb_av1_optimize_b(
         UPDATE_COEFF_SIMPLE_CASE(TX_CLASS_HORIZ);
         UPDATE_COEFF_SIMPLE_CASE(TX_CLASS_VERT);
 #undef UPDATE_COEFF_SIMPLE_CASE
+#endif
     default: assert(false);
     }
 
@@ -1527,7 +1637,12 @@ void eb_av1_optimize_b(
         update_coeff_general(&accu_rate, &dummy_dist, si, *eob, tx_size, tx_class,
             bwl, height, rdmult, shift, dc_sign_context,
             p->dequant_QTX, scan, txb_costs, coeff_ptr, qcoeff_ptr, dqcoeff_ptr,
+#if TX_TYPE_FLAT_WEIGHT
+            levels,
+            iqmatrix);
+#else
             levels);
+#endif
     }
 }
 
@@ -1577,7 +1692,22 @@ int32_t av1_quantize_inv_quantize(
     MacroblockPlane      candidate_plane ;
 
     const QmVal *qMatrix = picture_control_set_ptr->parent_pcs_ptr->gqmatrix[NUM_QM_LEVELS - 1][0][txsize];
+
+#if TX_TYPE_FLAT_WEIGHT 
+    const TxSize qm_tx_size = av1_get_adjusted_tx_size(txsize);
+    int using_qm = picture_control_set_ptr->parent_pcs_ptr->frm_hdr.quantization_params.using_qmatrix;
+    int lossless = 0; 
+    int plane = (component_type == COMPONENT_LUMA) ? 0 : (component_type == COMPONENT_CHROMA_CB) ? 1 : 2;
+    int qmlevel = (lossless || using_qm == 0) ? NUM_QM_LEVELS - 1 :
+        picture_control_set_ptr->parent_pcs_ptr->frm_hdr.quantization_params.qm[plane];
+
+    // Use a flat matrix (i.e. no weighting) for 1D and Identity transforms
+    const QmVal *iqMatrix = IS_2D_TRANSFORM(tx_type)
+        ? picture_control_set_ptr->parent_pcs_ptr->giqmatrix[qmlevel][plane][qm_tx_size]
+        : picture_control_set_ptr->parent_pcs_ptr->giqmatrix[NUM_QM_LEVELS - 1][0][qm_tx_size];
+#else
     const QmVal *iqMatrix = picture_control_set_ptr->parent_pcs_ptr->giqmatrix[NUM_QM_LEVELS - 1][0][txsize];
+#endif
 #if ADD_DELTA_QP_SUPPORT
     uint32_t qIndex = picture_control_set_ptr->parent_pcs_ptr->frm_hdr.delta_q_params.delta_q_present ? quantizer_to_qindex[qp] : picture_control_set_ptr->parent_pcs_ptr->frm_hdr.quantization_params.base_q_idx + segmentation_qp_offset;
 #else
