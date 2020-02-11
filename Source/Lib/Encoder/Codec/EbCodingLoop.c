@@ -2179,6 +2179,16 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
         MIN(scs_ptr->sb_size_pix, pcs_ptr->parent_pcs_ptr->aligned_width - sb_origin_x);
     uint32_t sb_height =
         MIN(scs_ptr->sb_size_pix, pcs_ptr->parent_pcs_ptr->aligned_height - sb_origin_y);
+    sb_width =
+        (sb_width < MIN_SB_SIZE)
+            ? MIN(scs_ptr->sb_size_pix,
+                  (pcs_ptr->parent_pcs_ptr->aligned_width + scs_ptr->right_padding) - sb_origin_x)
+            : sb_width;
+    sb_height =
+        (sb_height < MIN_SB_SIZE)
+            ? MIN(scs_ptr->sb_size_pix,
+                  (pcs_ptr->parent_pcs_ptr->aligned_height + scs_ptr->bot_padding) - sb_origin_y)
+            : sb_height;     
     // MV merge mode
     uint32_t              y_has_coeff;
     uint32_t              u_has_coeff;

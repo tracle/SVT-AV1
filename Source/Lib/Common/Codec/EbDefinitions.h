@@ -193,6 +193,7 @@ enum {
 #define SB_STRIDE_UV (MAX_SB_SIZE >> 1)
 
 // Min superblock size
+#define MIN_SB_SIZE 64
 #define MIN_SB_SIZE_LOG2 6
 
 // Pixels per Mode Info (MI) unit
