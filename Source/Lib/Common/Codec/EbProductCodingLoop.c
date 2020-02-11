@@ -7411,8 +7411,7 @@ void tx_partitioning_path(
 #endif
 #if SKIPT_TXS_TXT_RDOQ_IN_STAGE3
      if (disable_txs_txt_rdoq) {
-         start_tx_depth = 0;
-         end_tx_depth = 0;
+         end_tx_depth = start_tx_depth;
      }
 #endif
     // Transform Depth Loop
@@ -9267,51 +9266,8 @@ void md_stage_2(
         candidate_buffer = candidate_buffer_ptr_array[candidateIndex];
         candidate_ptr = candidate_buffer->candidate_ptr;
 #if PRUNE_SKIP_AND_NON_SKIP
-#if 1
-        uint64_t SKIP_S2_TH = 200;
-        uint64_t ABS_S2_TH = (context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight) >> 0;
-        uint64_t REL_S2_TH = 80;
         uint8_t disable_txs_txt_rdoq = 0;
-        if (((context_ptr->best_skip_cost * SKIP_S2_TH) /100) < context_ptr->best_non_skip_cost) {
-            if (candidate_ptr->block_has_coeff) { // bypass non-skip candidates
-                 *candidate_buffer->full_cost_ptr = MAX_MODE_COST;
-                 continue;
-            }
-            else {
-                disable_txs_txt_rdoq = 1; // disable txs, txt and rdoq package for skip candidates
-            }
-        }
-        else {
-            uint64_t best_cand_cost = MIN(context_ptr->best_skip_cost, context_ptr->best_non_skip_cost);
-            if (best_cand_cost < ABS_S2_TH) { //bypass candidate based on absolute threshold.
-                *candidate_buffer->full_cost_ptr = MAX_MODE_COST;
-                    continue;
-            }
-            else  if ((*candidate_buffer->full_cost_ptr - best_cand_cost) * 100 > (best_cand_cost * REL_S2_TH)) {// Pass only the best candidates
-                *candidate_buffer->full_cost_ptr = MAX_MODE_COST;
-                continue;
-            }
-        }   
-#else
-        uint8_t skip_is_better_by_far = (context_ptr->best_skip_cost * 2 < context_ptr->best_non_skip_cost) ? 1 : 0;
-        uint8_t nonskip_is_better_by_far = (context_ptr->best_non_skip_cost * 2 < context_ptr->best_skip_cost) ? 1 : 0;
-        if (nonskip_is_better_by_far) {
-            if (!candidate_ptr->block_has_coeff) {
-                if ((*candidate_buffer->full_cost_ptr - context_ptr->best_non_skip_cost) * 100 > (context_ptr->best_non_skip_cost * 80)) {
-                    *candidate_buffer->full_cost_ptr = MAX_MODE_COST;
-                    continue;
-                }
-            }
-        }
-        if (skip_is_better_by_far) {
-            if (candidate_ptr->block_has_coeff) {
-                if ((*candidate_buffer->full_cost_ptr - context_ptr->best_skip_cost) * 100 > (context_ptr->best_skip_cost * 80)) {
-                    *candidate_buffer->full_cost_ptr = MAX_MODE_COST;
-                    continue;
-                }
-            }
-        }
-#endif
+        candidate_buffer->candidate_ptr->processed_cand_flag = 1;
 #endif
         // Set MD Staging full_loop_core settings
 #if REMOVE_MD_STAGE_1
@@ -9373,6 +9329,57 @@ void md_stage_2(
                 return;
             }
         }
+#if PRUNE_SKIP_AND_NON_SKIP
+        else{
+#if 1
+            uint64_t SKIP_S2_TH = 30;
+            uint64_t ABS_S2_TH = (context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight) >> 0;
+            uint64_t REL_S2_TH = 80;
+            if (((context_ptr->best_skip_cost * SKIP_S2_TH) / 100) < context_ptr->best_non_skip_cost) {
+                if (candidate_ptr->block_has_coeff) { // bypass non-skip candidates
+                    *candidate_buffer->full_cost_ptr = MAX_MODE_COST;
+                    candidate_buffer->candidate_ptr->processed_cand_flag = 0;
+                    continue;
+                }
+                else {
+                    disable_txs_txt_rdoq = 1; // disable txs, txt and rdoq package for skip candidates
+                }
+            }
+            else {
+                uint64_t best_cand_cost = MIN(context_ptr->best_skip_cost, context_ptr->best_non_skip_cost);
+                if (best_cand_cost < ABS_S2_TH) { //bypass candidate based on absolute threshold.
+                    *candidate_buffer->full_cost_ptr = MAX_MODE_COST;
+                     candidate_buffer->candidate_ptr->processed_cand_flag = 0;
+                     continue;
+                }
+                else  if ((*candidate_buffer->full_cost_ptr - best_cand_cost) * 100 > (best_cand_cost * REL_S2_TH)) {// Pass only the best candidates
+                    *candidate_buffer->full_cost_ptr = MAX_MODE_COST;
+                    candidate_buffer->candidate_ptr->processed_cand_flag = 0;
+                    continue;
+                }
+            }         
+#else
+            uint8_t skip_is_better_by_far = (context_ptr->best_skip_cost * 2 < context_ptr->best_non_skip_cost) ? 1 : 0;
+            uint8_t nonskip_is_better_by_far = (context_ptr->best_non_skip_cost * 2 < context_ptr->best_skip_cost) ? 1 : 0;
+            if (nonskip_is_better_by_far) {
+                if (!candidate_ptr->block_has_coeff) {
+                    if ((*candidate_buffer->full_cost_ptr - context_ptr->best_non_skip_cost) * 100 > (context_ptr->best_non_skip_cost * 80)) {
+                        *candidate_buffer->full_cost_ptr = MAX_MODE_COST;
+                        continue;
+                    }
+                }
+            }
+            if (skip_is_better_by_far) {
+                if (candidate_ptr->block_has_coeff) {
+                    if ((*candidate_buffer->full_cost_ptr - context_ptr->best_skip_cost) * 100 > (context_ptr->best_skip_cost * 80)) {
+                        *candidate_buffer->full_cost_ptr = MAX_MODE_COST;
+                        continue;
+                    }
+                }
+            }
+#endif
+        }
+#endif
 #if MOVE_OPT
         if (context_ptr->chroma_level == CHROMA_MODE_0 && context_ptr->chroma_search_opt) {
             if (context_ptr->blk_geom->sq_size < 128) {
@@ -12154,7 +12161,10 @@ void md_encode_block(
 
             context_ptr->parent_sq_pred_mode[sq_index] = candidate_buffer->candidate_ptr->pred_mode;
         }
-
+#if PRUNE_SKIP_AND_NON_SKIP
+        if (!candidate_buffer->candidate_ptr->processed_cand_flag)
+            printf("Error: The best candidate was not processed in the last md stage\n");
+#endif
         AV1PerformInverseTransformRecon(
             picture_control_set_ptr,
             context_ptr,

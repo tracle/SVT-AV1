@@ -146,6 +146,7 @@ extern "C" {
         int32_t                                interintra_wedge_index;//inter_intra wedge index
         int32_t                                ii_wedge_sign;//inter_intra wedge sign=-1
 #endif
+        uint8_t                                processed_cand_flag;
     } ModeDecisionCandidate;
 
     /**************************************
