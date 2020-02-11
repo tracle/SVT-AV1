@@ -14657,10 +14657,12 @@ void hme_sb(
             }
             else {
                 if (numOfListToSearch) {
+#if !LOW_DELAY_TUNE
                     referenceObject =
                         (EbPaReferenceObject *)picture_control_set_ptr
                         ->ref_pa_pic_ptr_array[1][0]
                         ->object_ptr;
+#endif
                     ref1Poc = picture_control_set_ptr->ref_pic_poc_array[1][0];
                 }
 
