@@ -5936,7 +5936,7 @@ void tx_type_search(
     ModeDecisionContext          *context_ptr,
     ModeDecisionCandidateBuffer  *candidate_buffer,
 #if SKIPT_TXS_TXT_RDOQ_IN_STAGE3
-   uint8_t                        previous_stage_skip,
+   uint8_t                        disable_txs_txt_rdoq,
 #endif
     uint32_t                      qp)
 {
@@ -6144,7 +6144,7 @@ void tx_type_search(
             txt_it++;
 #endif
 #if SKIPT_TXS_TXT_RDOQ_IN_STAGE3
-            if (previous_stage_skip && tx_type > txk_start)
+            if (disable_txs_txt_rdoq && tx_type > txk_start)
                 continue;
 #endif
 #if MULTI_STAGE_TXT_OPT_2
@@ -6203,7 +6203,7 @@ void tx_type_search(
 #endif
 #endif
 #if SKIPT_TXS_TXT_RDOQ_IN_STAGE3
-            previous_stage_skip,
+            disable_txs_txt_rdoq,
 #endif
             EB_FALSE);
 
@@ -6256,7 +6256,7 @@ void tx_type_search(
 #endif
 #endif
 #if SKIPT_TXS_TXT_RDOQ_IN_STAGE3
-            previous_stage_skip,
+            disable_txs_txt_rdoq,
 #endif
             EB_FALSE);
 #endif
@@ -6505,7 +6505,7 @@ void tx_type_search(
                 txt_it++;
 #endif
 #if SKIPT_TXS_TXT_RDOQ_IN_STAGE3
-                if (previous_stage_skip && tx_type > txk_start)
+                if (disable_txs_txt_rdoq && tx_type > txk_start)
                     continue;
 #endif
 
@@ -6549,7 +6549,7 @@ void tx_type_search(
 #endif
 #endif
 #if SKIPT_TXS_TXT_RDOQ_IN_STAGE3
-                    previous_stage_skip,
+                    disable_txs_txt_rdoq,
 #endif
                     EB_FALSE);
 
@@ -6602,7 +6602,7 @@ void tx_type_search(
 #endif
 #endif
 #if SKIPT_TXS_TXT_RDOQ_IN_STAGE3
-                    previous_stage_skip,
+                    disable_txs_txt_rdoq,
 #endif
                     EB_FALSE);
 #endif
@@ -7136,7 +7136,7 @@ void tx_partitioning_path(
 #endif
     uint8_t                       end_tx_depth,
 #if SKIPT_TXS_TXT_RDOQ_IN_STAGE3
-     uint8_t                     previous_stage_skip,
+     uint8_t                     disable_txs_txt_rdoq,
 #endif
     uint32_t                      qp,
     uint32_t                     *y_count_non_zero_coeffs,
@@ -7410,7 +7410,7 @@ void tx_partitioning_path(
      uint16_t best_tx_count_non_zero_coeffs = ~0;
 #endif
 #if SKIPT_TXS_TXT_RDOQ_IN_STAGE3
-     if (previous_stage_skip) {
+     if (disable_txs_txt_rdoq) {
          start_tx_depth = 0;
          end_tx_depth = 0;
      }
@@ -7542,7 +7542,7 @@ void tx_partitioning_path(
                         context_ptr,
                         tx_candidate_buffer,
 #if SKIPT_TXS_TXT_RDOQ_IN_STAGE3
-                        previous_stage_skip,
+                        disable_txs_txt_rdoq,
 #endif
                         qp);
 #if FREQUENCY_DOMAIN_TX_TYPE_SEARCH
@@ -7559,7 +7559,7 @@ void tx_partitioning_path(
                 &(tx_y_count_non_zero_coeffs[0]),
                 &tx_y_coeff_bits,
 #if SKIPT_TXS_TXT_RDOQ_IN_STAGE3
-                previous_stage_skip,
+                disable_txs_txt_rdoq,
 #endif
                 &tx_y_full_distortion[0]);
 
@@ -8444,7 +8444,7 @@ void full_loop_core(
     uint32_t                     cuOriginIndex,
     uint32_t                     cuChromaOriginIndex,
 #if SKIPT_TXS_TXT_RDOQ_IN_STAGE3
-     uint8_t                     previous_stage_skip,
+     uint8_t                     disable_txs_txt_rdoq,
 #endif
     uint64_t                     ref_fast_cost)
 {
@@ -8586,7 +8586,7 @@ void full_loop_core(
 #endif
                 end_tx_depth,
 #if SKIPT_TXS_TXT_RDOQ_IN_STAGE3
-                previous_stage_skip,
+                disable_txs_txt_rdoq,
 #endif
                 context_ptr->cu_ptr->qp,
                 &(*count_non_zero_coeffs[0]),
@@ -9224,7 +9224,7 @@ void md_stage_2(
                     cuOriginIndex,
                     cuChromaOriginIndex,
 #if SKIPT_TXS_TXT_RDOQ_IN_STAGE3
-                    candidate_ptr->block_has_coeff == 0 ? 1 : 0,
+                    0,
 #endif
                     ref_fast_cost);
         }
@@ -9260,26 +9260,39 @@ void md_stage_2(
         uint64_t best_full_cost = 0xFFFFFFFFull;
         uint32_t fullLoopCandidateIndex;
         uint32_t candidateIndex;
-#if PRUNE_SKIP_AND_NON_SKIP
-        uint32_t skip_count = 0;
-        uint32_t non_skip_count = 0;
-        uint32_t skip_nfl = fullCandidateTotalCount;
-        uint32_t non_skip_nfl = fullCandidateTotalCount;
-        if (context_ptr->pd_pass == PD_PASS_2) {
-            if (fullCandidateTotalCount > 4) {
-                skip_nfl = fullCandidateTotalCount/2; // 0.7% BDR loss 
-                non_skip_nfl = fullCandidateTotalCount;
-            }
-        }
-#endif
+
     for (fullLoopCandidateIndex = 0; fullLoopCandidateIndex < fullCandidateTotalCount; ++fullLoopCandidateIndex) {
 
         candidateIndex = (context_ptr->full_loop_escape == 2) ? context_ptr->sorted_candidate_index_array[fullLoopCandidateIndex] : context_ptr->best_candidate_index_array[fullLoopCandidateIndex];
         candidate_buffer = candidate_buffer_ptr_array[candidateIndex];
         candidate_ptr = candidate_buffer->candidate_ptr;
-
 #if PRUNE_SKIP_AND_NON_SKIP
 #if 1
+        uint64_t SKIP_S2_TH = 200;
+        uint64_t ABS_S2_TH = (context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight) >> 0;
+        uint64_t REL_S2_TH = 80;
+        uint8_t disable_txs_txt_rdoq = 0;
+        if (((context_ptr->best_skip_cost * SKIP_S2_TH) /100) < context_ptr->best_non_skip_cost) {
+            if (candidate_ptr->block_has_coeff) { // bypass non-skip candidates
+                 *candidate_buffer->full_cost_ptr = MAX_MODE_COST;
+                 continue;
+            }
+            else {
+                disable_txs_txt_rdoq = 1; // disable txs, txt and rdoq package for skip candidates
+            }
+        }
+        else {
+            uint64_t best_cand_cost = MIN(context_ptr->best_skip_cost, context_ptr->best_non_skip_cost);
+            if (best_cand_cost < ABS_S2_TH) { //bypass candidate based on absolute threshold.
+                *candidate_buffer->full_cost_ptr = MAX_MODE_COST;
+                    continue;
+            }
+            else  if ((*candidate_buffer->full_cost_ptr - best_cand_cost) * 100 > (best_cand_cost * REL_S2_TH)) {// Pass only the best candidates
+                *candidate_buffer->full_cost_ptr = MAX_MODE_COST;
+                continue;
+            }
+        }   
+#else
         uint8_t skip_is_better_by_far = (context_ptr->best_skip_cost * 2 < context_ptr->best_non_skip_cost) ? 1 : 0;
         uint8_t nonskip_is_better_by_far = (context_ptr->best_non_skip_cost * 2 < context_ptr->best_skip_cost) ? 1 : 0;
         if (nonskip_is_better_by_far) {
@@ -9298,23 +9311,6 @@ void md_stage_2(
                 }
             }
         }
-#else
-        if (!candidate_ptr->block_has_coeff && (skip_count > skip_nfl)) {
-            if ((*candidate_buffer->full_cost_ptr - context_ptr->best_skip_cost) * 100 > (context_ptr->best_skip_cost * 50)) {
-                *candidate_buffer->full_cost_ptr = MAX_MODE_COST;
-                continue;
-            }
-        }
-        else if (candidate_ptr->block_has_coeff && (non_skip_count > non_skip_nfl)) {
-            if ((*candidate_buffer->full_cost_ptr - context_ptr->best_non_skip_cost) * 100 > (context_ptr->best_non_skip_cost * 200)) {
-                *candidate_buffer->full_cost_ptr = MAX_MODE_COST;
-                continue;
-            }
-        }
-        if (!candidate_ptr->block_has_coeff)
-            skip_count++;
-        else
-            non_skip_count++;
 #endif
 #endif
         // Set MD Staging full_loop_core settings
@@ -9417,7 +9413,7 @@ void md_stage_2(
             cuOriginIndex,
             cuChromaOriginIndex,
 #if SKIPT_TXS_TXT_RDOQ_IN_STAGE3
-            candidate_ptr->block_has_coeff == 0 ? 1 : 0,
+            disable_txs_txt_rdoq,
 #endif
             ref_fast_cost);
 

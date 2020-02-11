@@ -4021,7 +4021,7 @@ extern "C" {
          uint32_t                      lambda,
 #endif
 #if SKIPT_TXS_TXT_RDOQ_IN_STAGE3
-        uint8_t                       previous_stage_skip,
+        uint8_t                       disable_txs_txt_rdoq,
 #endif
         EbBool                         is_encode_pass);
 

@@ -46,17 +46,20 @@ extern "C" {
 #define SKIP_TXS_BSAED_COEFF            0 // Early exit TXS search when the processed tx_depth returns a number of coeff less than threshold
 #define SKIP_TXT_BSAED_COEFF            0 // Early exit TXT search when the processed tx_type returns a number of coeff less than threshold
 #define SKIP_RDOQ_BSAED_COEFF           0 // Early exit RDOQ search when the processed tu returns a number of coeff less than threshold
-#define SKIPT_TXS_TXT_RDOQ_IN_STAGE3    0 // Use previous md_stage skip decision to skip the txs txt and rdoq in MD stage 3.
 #define MULTI_STAGE_TXT                 0 // Perform TXT without RDOQ and then perform RDOQ on the best N Tx types.
-
 #if MULTI_STAGE_TXT
 #define MULTI_STAGE_TXT_OPT             0
 #define MULTI_STAGE_TXT_OPT_2           1
 #endif
 #define LOSSY_TX_SIZE_OPT               0 // Early skip txs based on the cost of the of the already prcessed TUs
 #define REDUCE_INTER_MODES              0 // Reduce the number of candidates with new mv based on the weight computed in mv pred.
-#define PRUNE_SKIP_AND_NON_SKIP         0 // Split the number of md stage 3 to skip and non-skip.
 #define MR_NICS                         0 // Set MR NICs
+#define MR_NIC_PRUNE                    0 // Disable pruning
+#define NICS_TUNING                     0
+#if NICS_TUNING
+#define PRUNE_SKIP_AND_NON_SKIP         1 // Split the number of md stage 3 to skip and non-skip.
+#define SKIPT_TXS_TXT_RDOQ_IN_STAGE3    1 // Use previous md_stage skip decision to skip the txs txt and rdoq in MD stage 3.
+#endif
 #if RESTRICT_TXS_FOR_NON_S_V_H || RESTRICT_TXT_FOR_NON_S_V_H || DISABLE_COMPOUND_FOR_NON_S_V_H
 #define ADD_PARENT_IDX                  1 // Add parent index in the geom - lossless
 #endif

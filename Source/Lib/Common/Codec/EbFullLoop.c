@@ -1679,7 +1679,7 @@ int32_t av1_quantize_inv_quantize(
     uint32_t                     lambda,
 #endif
 #if SKIPT_TXS_TXT_RDOQ_IN_STAGE3
-    uint8_t                      previous_stage_skip,
+    uint8_t                      disable_txs_txt_rdoq,
 #endif
     EbBool                       is_encode_pass)
 {
@@ -1872,7 +1872,7 @@ int32_t av1_quantize_inv_quantize(
     } else
         perform_rdoq = (EbBool)sequence_control_set_ptr->static_config.enable_rdoq;
 #if SKIPT_TXS_TXT_RDOQ_IN_STAGE3
-    if (previous_stage_skip)
+    if (disable_txs_txt_rdoq)
         perform_rdoq = EB_FALSE;
 #endif
 
@@ -2001,7 +2001,7 @@ void product_full_loop(
     uint32_t                     *y_count_non_zero_coeffs,
     uint64_t                     *y_coeff_bits,
 #if SKIPT_TXS_TXT_RDOQ_IN_STAGE3
-    uint8_t                       previous_stage_skip,
+    uint8_t                       disable_txs_txt_rdoq,
 #endif
     uint64_t                     *y_full_distortion)
 {
@@ -2105,7 +2105,7 @@ void product_full_loop(
 #endif
 #endif
 #if SKIPT_TXS_TXT_RDOQ_IN_STAGE3
-            previous_stage_skip,
+            disable_txs_txt_rdoq,
 #endif
             EB_FALSE);
 #if FREQUENCY_SPATIAL_DOMAIN
