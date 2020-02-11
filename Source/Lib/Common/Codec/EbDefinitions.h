@@ -111,6 +111,8 @@ extern "C" {
 
 
 #define LOW_DELAY_TUNE 1 // Tuning the 0B, 1B and 3B settings
+#define LOW_DELAY_TUNE_FIX 1 //fix the 1B single reference case
+
                                       // 0. tunr OFF AVX512
 #define FIXED_QP_M                  1 // 1. core only
 

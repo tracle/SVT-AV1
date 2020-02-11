@@ -541,14 +541,25 @@ EbErrorType generate_picture_window_split(
 *
 ***************************************************************************************************/
 EbErrorType handle_incomplete_picture_window_map(
+#if LOW_DELAY_TUNE_FIX
+    uint32_t                       hierarchical_level,
+#endif
     PictureDecisionContext        *context_ptr,
     EncodeContext                 *encode_context_ptr) {
     EbErrorType return_error = EB_ErrorNone;
     if (context_ptr->total_number_of_mini_gops == 0) {
+#if LOW_DELAY_TUNE_FIX
+        //Jing: the trailing frames of minigop16 will try to use minigop8 first
+        hierarchical_level = hierarchical_level >=3 ? 3 : hierarchical_level;
+#endif
         context_ptr->mini_gop_start_index[context_ptr->total_number_of_mini_gops] = 0;
         context_ptr->mini_gop_end_index[context_ptr->total_number_of_mini_gops] = encode_context_ptr->pre_assignment_buffer_count - 1;
         context_ptr->mini_gop_length[context_ptr->total_number_of_mini_gops] = encode_context_ptr->pre_assignment_buffer_count - context_ptr->mini_gop_start_index[context_ptr->total_number_of_mini_gops];
+#if LOW_DELAY_TUNE_FIX
+        context_ptr->mini_gop_hierarchical_levels[context_ptr->total_number_of_mini_gops] = hierarchical_level;
+#else
         context_ptr->mini_gop_hierarchical_levels[context_ptr->total_number_of_mini_gops] = 3;// MIN_HIERARCHICAL_LEVEL; // AMIR to be updated after other predictions are supported
+#endif
 
         context_ptr->total_number_of_mini_gops++;
     }
@@ -3996,6 +4007,9 @@ void* picture_decision_kernel(void *input_ptr)
                                         encode_context_ptr);
 
                                 handle_incomplete_picture_window_map(
+#if LOW_DELAY_TUNE_FIX
+                                        sequence_control_set_ptr->static_config.hierarchical_levels,
+#endif
                                         context_ptr,
                                         encode_context_ptr);
                             }
@@ -4023,6 +4037,9 @@ void* picture_decision_kernel(void *input_ptr)
 
                         // 1st Loop over Pictures in the Pre-Assignment Buffer
                         for (pictureIndex = context_ptr->mini_gop_start_index[mini_gop_index]; pictureIndex <= context_ptr->mini_gop_end_index[mini_gop_index]; ++pictureIndex) {
+#if LOW_DELAY_TUNE_FIX
+                            EbBool is_trailing_frame = EB_FALSE;
+#endif
                             picture_control_set_ptr = (PictureParentControlSet*)encode_context_ptr->pre_assignment_buffer[pictureIndex]->object_ptr;
                             sequence_control_set_ptr = (SequenceControlSet*)picture_control_set_ptr->sequence_control_set_wrapper_ptr->object_ptr;
                             frm_hdr = &picture_control_set_ptr->frm_hdr;
@@ -4049,6 +4066,13 @@ void* picture_decision_kernel(void *input_ptr)
                                 picture_control_set_ptr->open_gop_cra_flag = EB_FALSE;
 
                                 picture_type = P_SLICE;
+#if LOW_DELAY_TUNE_FIX
+                                if (sequence_control_set_ptr->static_config.hierarchical_levels == 1 && encode_context_ptr->prediction_structure_group_ptr->ref_count_used == 1) {
+                                    // Only works for 1B case
+                                    is_trailing_frame = EB_TRUE;
+                                    encode_context_ptr->pred_struct_position = picture_control_set_ptr->pred_struct_ptr->steady_state_index + pictureIndex - context_ptr->mini_gop_start_index[mini_gop_index];
+                                }
+#endif
                             }
                             // Open GOP CRA - adjust the RPS
                             else if ((context_ptr->mini_gop_length[mini_gop_index] == picture_control_set_ptr->pred_struct_ptr->pred_struct_period) &&
@@ -4077,6 +4101,10 @@ void* picture_decision_kernel(void *input_ptr)
                                     (encode_context_ptr->pre_assignment_buffer_eos_flag) ? P_SLICE :
                                     B_SLICE;
                             }
+
+#if LOW_DELAY_TUNE_FIX
+                            if (!is_trailing_frame) {
+#endif
                             // If mini GOP switch, reset position
                             encode_context_ptr->pred_struct_position = (picture_control_set_ptr->init_pred_struct_position_flag) ?
                                 picture_control_set_ptr->pred_struct_ptr->init_pic_index :
@@ -4104,6 +4132,9 @@ void* picture_decision_kernel(void *input_ptr)
                             // Else, Increment the position normally
                             else
                                 ++encode_context_ptr->pred_struct_position;
+#if LOW_DELAY_TUNE_FIX
+                            }
+#endif
                             // The poc number of the latest IDR picture is stored so that last_idr_picture (present in PCS) for the incoming pictures can be updated.
                             // The last_idr_picture is used in reseting the poc (in entropy coding) whenever IDR is encountered.
                             // Note IMP: This logic only works when display and decode order are the same. Currently for Random Access, IDR is inserted (similar to CRA) by using trailing P pictures (low delay fashion) and breaking prediction structure.
@@ -4112,10 +4143,16 @@ void* picture_decision_kernel(void *input_ptr)
                                 encode_context_ptr->last_idr_picture = picture_control_set_ptr->picture_number;
                             else
                                 picture_control_set_ptr->last_idr_picture = encode_context_ptr->last_idr_picture;
+#if LOW_DELAY_TUNE_FIX
+                            if (!is_trailing_frame) {
+#endif
                             // Cycle the PredStructPosition if its overflowed
                             encode_context_ptr->pred_struct_position = (encode_context_ptr->pred_struct_position == picture_control_set_ptr->pred_struct_ptr->pred_struct_entry_count) ?
                                 encode_context_ptr->pred_struct_position - picture_control_set_ptr->pred_struct_ptr->pred_struct_period :
                                 encode_context_ptr->pred_struct_position;
+#if LOW_DELAY_TUNE_FIX
+                            }
+#endif
 
                             predPositionPtr = picture_control_set_ptr->pred_struct_ptr->pred_struct_entry_ptr_array[encode_context_ptr->pred_struct_position];
                             if (sequence_control_set_ptr->static_config.enable_overlays == EB_TRUE) {

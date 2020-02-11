@@ -1887,6 +1887,9 @@ EbErrorType prediction_structure_group_ctor(
                 three_level_hierarchical_pred_struct[gop_i].ref_list1[i] = 0;
             }
         }
+#if LOW_DELAY_TUNE_FIX
+    predictionStructureGroupPtr->ref_count_used = ref_count_used;
+#endif
 #endif
         for (int gop_i = 1; gop_i < 8; ++gop_i) {
             for (int i = ref_count_used; i < MAX_REF_IDX; ++i) {
@@ -1902,6 +1905,7 @@ EbErrorType prediction_structure_group_ctor(
             }
         }
     }
+
 #else
     if (enc_mode > ENC_M0) {
         for (int gop_i = 1; gop_i < 4; ++gop_i) {
