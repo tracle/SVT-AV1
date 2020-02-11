@@ -2424,7 +2424,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_stage_2_class_prune_th = (uint64_t)~0;
 #endif
 #endif
-#if SUPER_SETTINGS
+#if SUPER_SETTINGS || MR_NIC_PRUNE
     context_ptr->md_stage_1_cand_prune_th = (uint64_t)~0;
     context_ptr->md_stage_1_class_prune_th = (uint64_t)~0;
 
