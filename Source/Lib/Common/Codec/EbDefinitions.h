@@ -48,7 +48,7 @@ extern "C" {
 #define QPS_CHANGE_P2           1 //QPS changes for CQP
 #define PRED_DEBUG              0 //WIP
 #define PRED_DEBUG_L5           0
-
+#define FIX_GM_993              1
 #define COMP_SIMILAR     1 //jan6
 #define INTRA_SIMILAR    1 //If previous similar block is intra, do not inject any inter i0
 #define INTER_SIMILAR    0 //p0

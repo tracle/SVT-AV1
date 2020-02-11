@@ -777,8 +777,21 @@ void* picture_manager_kernel(void *input_ptr)
                                             max_temporal_index = (int8_t)referenceEntryPtr->temporal_layer_index;
                                             ref_index = svt_get_ref_frame_type(REF_LIST_0, refIdx) - LAST_FRAME;
                                             for (int frame = LAST_FRAME; frame <= ALTREF_FRAME; ++frame)
+#if FIX_GM_993
+                                            {
+                                                EbReferenceObject *ref =
+                                                    (EbReferenceObject *)referenceEntryPtr
+                                                    ->reference_object_ptr->object_ptr;
+
+                                                ChildPictureControlSetPtr->ref_global_motion[frame] =
+                                                    ref->slice_type != I_SLICE ?
+                                                    ref->global_motion[frame] :
+                                                    default_warp_params;
+                                            }
+#else
                                                 ChildPictureControlSetPtr->ref_global_motion[frame] =
                                                 ((EbReferenceObject*)referenceEntryPtr->reference_object_ptr->object_ptr)->global_motion[frame];
+#endif
                                         }
                                     }
                                     // Set the Reference Object
@@ -834,8 +847,21 @@ void* picture_manager_kernel(void *input_ptr)
                                             max_temporal_index = (int8_t)referenceEntryPtr->temporal_layer_index;
                                             ref_index = svt_get_ref_frame_type(REF_LIST_1, refIdx) - LAST_FRAME;
                                             for (int frame = LAST_FRAME; frame <= ALTREF_FRAME; ++frame)
+#if FIX_GM_993
+                                                {
+                                                    EbReferenceObject *ref =
+                                                        (EbReferenceObject *)referenceEntryPtr
+                                                        ->reference_object_ptr->object_ptr;
+
+                                                    ChildPictureControlSetPtr->ref_global_motion[frame] =
+                                                        ref->slice_type != I_SLICE ?
+                                                        ref->global_motion[frame] :
+                                                        default_warp_params;
+                                                }
+#else
                                                 ChildPictureControlSetPtr->ref_global_motion[frame] =
                                                 ((EbReferenceObject*)referenceEntryPtr->reference_object_ptr->object_ptr)->global_motion[frame];
+#endif
                                         }
                                     }
                                     // Set the Reference Object
