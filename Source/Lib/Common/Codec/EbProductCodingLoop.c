@@ -9330,14 +9330,15 @@ void md_stage_2(
             }
         }
 #if PRUNE_SKIP_AND_NON_SKIP
-        else{
+        if(fullLoopCandidateIndex > 0){
 #if 1
-            uint64_t SKIP_S2_TH = 30;
+
+            uint64_t SKIP_S2_TH = 50;
             uint64_t ABS_S2_TH = (context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight) >> 0;
             uint64_t REL_S2_TH = 80;
             if (((context_ptr->best_skip_cost * SKIP_S2_TH) / 100) < context_ptr->best_non_skip_cost) {
                 if (candidate_ptr->block_has_coeff) { // bypass non-skip candidates
-                    *candidate_buffer->full_cost_ptr = MAX_MODE_COST;
+                    *candidate_buffer->full_cost_ptr = 0xFFFFFFFFFFFFFFFFull;                                 
                     candidate_buffer->candidate_ptr->processed_cand_flag = 0;
                     continue;
                 }
@@ -9348,12 +9349,12 @@ void md_stage_2(
             else {
                 uint64_t best_cand_cost = MIN(context_ptr->best_skip_cost, context_ptr->best_non_skip_cost);
                 if (best_cand_cost < ABS_S2_TH) { //bypass candidate based on absolute threshold.
-                    *candidate_buffer->full_cost_ptr = MAX_MODE_COST;
+                    *candidate_buffer->full_cost_ptr = 0xFFFFFFFFFFFFFFFFull;
                      candidate_buffer->candidate_ptr->processed_cand_flag = 0;
                      continue;
                 }
                 else  if ((*candidate_buffer->full_cost_ptr - best_cand_cost) * 100 > (best_cand_cost * REL_S2_TH)) {// Pass only the best candidates
-                    *candidate_buffer->full_cost_ptr = MAX_MODE_COST;
+                    *candidate_buffer->full_cost_ptr = 0xFFFFFFFFFFFFFFFFull;
                     candidate_buffer->candidate_ptr->processed_cand_flag = 0;
                     continue;
                 }
@@ -12161,7 +12162,7 @@ void md_encode_block(
 
             context_ptr->parent_sq_pred_mode[sq_index] = candidate_buffer->candidate_ptr->pred_mode;
         }
-#if PRUNE_SKIP_AND_NON_SKIP
+#if 0//PRUNE_SKIP_AND_NON_SKIP
         if (!candidate_buffer->candidate_ptr->processed_cand_flag)
             printf("Error: The best candidate was not processed in the last md stage\n");
 #endif

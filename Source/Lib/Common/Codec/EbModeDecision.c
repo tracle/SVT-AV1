@@ -7186,7 +7186,7 @@ uint32_t product_full_mode_decision(
     uint32_t                     *best_intra_mode)
 {
     uint32_t                  candidateIndex;
-    uint64_t                  lowestCost = 0xFFFFFFFFFFFFFFFFull;
+    uint64_t                  lowestCost =      0xFFFFFFFFFFFFFFFFull;
     uint64_t                  lowestIntraCost = 0xFFFFFFFFFFFFFFFFull;
     uint32_t                  lowestCostIndex = 0;
     if (prune_ref_frame_for_rec_partitions) {
@@ -7244,6 +7244,11 @@ uint32_t product_full_mode_decision(
     }
 
     candidate_ptr = buffer_ptr_array[lowestCostIndex]->candidate_ptr;
+
+#if PRUNE_SKIP_AND_NON_SKIP
+    if (!candidate_ptr->processed_cand_flag)
+        printf("Error: The best candidate was not processed in the last md stage\n");
+#endif
 
     context_ptr->md_local_cu_unit[cu_ptr->mds_idx].cost = *(buffer_ptr_array[lowestCostIndex]->full_cost_ptr);
 #if ENHANCED_SQ_WEIGHT || IMPROVED_MULTI_PASS_PD
