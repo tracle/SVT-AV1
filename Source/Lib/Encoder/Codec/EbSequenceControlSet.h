@@ -1,18 +1,14 @@
-/*
-* Copyright(c) 2019 Intel Corporation
-* SPDX - License - Identifier: BSD - 2 - Clause - Patent
-*/
+/*!< Copyright(c) 2019 Intel Corporation
+ * SPDX - License - Identifier: BSD - 2 - Clause - Patent */
 
-/*
-* Copyright (c) 2016, Alliance for Open Media. All rights reserved
-*
-* This source code is subject to the terms of the BSD 2 Clause License and
-* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
-* was not distributed with this source code in the LICENSE file, you can
-* obtain it at www.aomedia.org/license/software. If the Alliance for Open
-* Media Patent License 1.0 was not distributed with this source code in the
-* PATENTS file, you can obtain it at www.aomedia.org/license/patent.
-*/
+/*!< Copyright (c) 2016, Alliance for Open Media. All rights reserved
+ *
+ * This source code is subject to the terms of the BSD 2 Clause License and
+ * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+ * was not distributed with this source code in the LICENSE file, you can
+ * obtain it at www.aomedia.org/license/software. If the Alliance for Open
+ * Media Patent License 1.0 was not distributed with this source code in the
+ * PATENTS file, you can obtain it at www.aomedia.org/license/patent. */
 
 #ifndef EbSequenceControlSet_h
 #define EbSequenceControlSet_h
@@ -25,9 +21,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-/************************************
-     * Sequence Control Set
-     ************************************/
+/************************************/
+/*!< Sequence Control Set */
+/************************************/
 typedef struct SequenceControlSet {
 
     /*!< Pointer to the dtor of the struct*/
@@ -49,8 +45,8 @@ typedef struct SequenceControlSet {
     SeqHeader                seq_header;
 
     /*!< Sequence coding parameters
-            parameters/features are set to be set for the full stream
-            but encoding decisions may still be taken at a picture / sub picture level
+     *        parameters/features are set to be set for the full stream
+     *        but encoding decisions may still be taken at a picture / sub picture level
     */
 
     /*!< Maximum number of references that a picture can have within the stream needs to be cleaned up*/
@@ -70,7 +66,7 @@ typedef struct SequenceControlSet {
     /*!< Screen change detection mode 0=OFF, 1=use decimated picture, 2=use full picture */
     EbScdMode scd_mode;
     /*!< Number of delay frames needed to implement future window
-         for algorithms such as SceneChange or TemporalFiltering */
+     *   for algorithms such as SceneChange or TemporalFiltering */
     uint32_t scd_delay;
     /*!< Enable the use of altrefs in the stream */
     EbBool    enable_altrefs;
@@ -81,24 +77,24 @@ typedef struct SequenceControlSet {
     /*!< CDF (The signal changes per preset; 0: CDF update, 1: no CDF update) Default is 0.*/
     uint8_t cdf_mode;
     /*!< Non-square present flag to use for memory allocation
-        (The signal changes per preset; 0: NSQ absent, 1: NSQ present) Default is 1. */
+     *  (The signal changes per preset; 0: NSQ absent, 1: NSQ present) Default is 1. */
     uint8_t nsq_present;
     /*!< Down-sampling method @ ME and alt-ref temporal filtering
-        (The signal changes per preset; 0: filtering, 1: decimation) Default is 0. */
+     *  (The signal changes per preset; 0: filtering, 1: decimation) Default is 0. */
     uint8_t down_sampling_method_me_search;
     /*!< Allow the usage of motion field motion vector in the stream
-        (The signal changes per preset; 0: Enabled, 1: Disabled) Default is 1. */
+     *  (The signal changes per preset; 0: Enabled, 1: Disabled) Default is 1. */
     uint8_t mfmv_enabled;
     /*!< Film grain strenght */
     int32_t  film_grain_denoise_strength;
     /*!< Film grain seed */
     uint16_t film_grain_random_seed;
     /*!< over_boundary_block: pad resolution to a multiple of SB for smaller overhead
-        (The signal changes per preset; 0: No over boundary blk allowed, 1: over boundary blk allowed) Default is 1.
-        to enable when md_skip_blk is on */
+     *  (The signal changes per preset; 0: No over boundary blk allowed, 1: over boundary blk allowed) Default is 1.
+     *  to enable when md_skip_blk is on */
     uint8_t over_boundary_block_mode;
     /*!< Enable compound prediction to be used in the stream, decisions will be taken at a picture level subsequently
-    (The signal changes per preset; 0: compound disabled, 1: compound enabled) Default is 1. */
+     *   (The signal changes per preset; 0: compound disabled, 1: compound enabled) Default is 1. */
     uint8_t compound_mode;
 
     /*!< Temporary input / output statistics files for 2-pass encoding */
@@ -107,7 +103,7 @@ typedef struct SequenceControlSet {
 
     /*!< Sequence resolution parameters */
     uint32_t          chroma_format_idc;
-    uint16_t          subsampling_x; // add chroma subsampling parameters
+    uint16_t          subsampling_x; /*!< add chroma subsampling parameters */
     uint16_t          subsampling_y;
     uint16_t          max_input_luma_width;
     uint16_t          max_input_luma_height;
@@ -148,6 +144,7 @@ typedef struct SequenceControlSet {
     uint32_t picture_analysis_number_of_regions_per_height;
 
 #if TILES_PARALLEL
+
     /*!< Tile groups per hierarchical layers */
     uint8_t tile_group_col_count_array[MAX_TEMPORAL_LAYERS];
     uint8_t tile_group_row_count_array[MAX_TEMPORAL_LAYERS];
@@ -232,9 +229,9 @@ typedef struct EbSequenceControlSetInstance {
     EbHandle            config_mutex;
 } EbSequenceControlSetInstance;
 
-/**************************************
-     * Extern Function Declarations
-     **************************************/
+/**************************************/
+/*!< Extern Function Declarations */
+/**************************************/
 extern EbErrorType eb_sequence_control_set_creator(EbPtr *object_dbl_ptr,
                                                    EbPtr  object_init_data_ptr);
 
