@@ -403,7 +403,7 @@ EbErrorType signal_derivation_me_kernel_oq(
     }
     else
         context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
-#if OPT_REC_ME
+#if OPT_REC_ME || OPT_REC_SUBP
     // Me nsq search levels.
     // 0: feature off -> perform nsq_search.
     // 1: perform me nsq_search for the best refrenece picture.
@@ -789,7 +789,7 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
 #endif
         FULL_SAD_SEARCH :
         SUB_SAD_SEARCH;
-#if OPT_REC_ME
+#if OPT_REC_ME || OPT_REC_SUBP
     // Me nsq search levels.
     // 0: feature off -> perform nsq_search.
     // 1: perform me nsq_search for the best refrenece picture.

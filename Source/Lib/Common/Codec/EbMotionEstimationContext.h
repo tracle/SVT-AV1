@@ -450,7 +450,7 @@ extern "C" {
 #endif
         uint8_t                       hme_search_method;
         uint8_t                       me_search_method;
-#if OPT_REC_ME
+#if OPT_REC_ME || OPT_REC_SUBP
         uint8_t                       use_best_sq_mv_level;
 #endif
         EbBool                        enable_hme_flag;
@@ -507,7 +507,7 @@ extern "C" {
 #if TUNE_SUBPEL_SEARCH
         uint8_t                     h_pel_search_wind;
 #endif
-#if OPT_REC_ME
+#if OPT_REC_ME || OPT_REC_SUBP
         uint8_t best_list_idx;
         uint8_t best_ref_idx;
 #endif

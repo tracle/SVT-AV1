@@ -2972,7 +2972,7 @@ void ext_eight_sad_calculation_32x32_64x64_c(
         }
     }
 }
-#if OPT_REC_ME
+#if OPT_REC_ME || OPT_REC_SUBP
 void generate_nsq_mv(MeContext *context_ptr) {
     uint32_t *p_sad8x8 = context_ptr->p_best_sad8x8;
     uint32_t *p_sad16x16 = context_ptr->p_best_sad16x16;
@@ -14597,7 +14597,7 @@ void hme_sb(
     EbBool enableHalfPel8x8 = EB_FALSE;
     EbBool enableQuarterPel = EB_FALSE;
     EbBool oneQuadrantHME = EB_FALSE;
-#if ME_NSQ_LEVEL
+#if OPT_REC_ME || OPT_REC_SUBP
     uint64_t best_cost = (uint64_t)~0;
     context_ptr->best_list_idx = 0;
     context_ptr->best_ref_idx = 0;
@@ -15140,7 +15140,7 @@ void hme_sb(
             context_ptr->hme_results[listIndex][ref_pic_index].hme_sad = hmeMvSad;//this is not valid in all cases. only when HME is done, and when HMELevel2 is done
             //also for base layer some references are redundant!!
             context_ptr->hme_results[listIndex][ref_pic_index].do_ref = 1;
-#if ME_NSQ_LEVEL
+#if OPT_REC_ME || OPT_REC_SUBP
             if (hmeMvSad < best_cost) {
                 best_cost = hmeMvSad;
                 context_ptr->best_list_idx = listIndex;

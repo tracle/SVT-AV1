@@ -32,7 +32,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#define ME_NSQ_LEVEL                       0
+
+#define OPT_REC_ME              0
+#define OPT_REC_SUBP            0
+
 #define CORE_LIMIT 0
 #define M1_FEB4_ADOPTION                   1
 #define M0_FEB4_ADOPTION                   1
@@ -90,13 +93,6 @@ extern "C" {
 #define SKIP_ME_BASED_ON_HME   1 //MUlti-Stage ME - Reduce SR based on HME distortion
 #define REDUCE_ME_FOR_LOW_M_SB   1 //MUlti-Stage ME - Reduce SR based on HME distortion and HME MV
 #define SWITCHED_HALF_PEL_MODE   1 //MUlti-Stage ME - Swich between half_pel mode based on fulpel distortion
-#if ME_NSQ_LEVEL
-#define OPT_REC_ME              1
-#define OPT_REC_SUBP            1
-#else
-#define OPT_REC_ME              0
-#define OPT_REC_SUBP            0
-#endif
 #define SC_HME_PRUNING          1
 #endif
 #define CHROMA_SEARCH_OPT         1
