@@ -524,6 +524,7 @@ void interpolate_search_region_AVC_chroma(
         uint32_t search_area_width,  // input parameter, search area width
 #endif
 #if OPT_REC_SUBP
+        uint8_t list_index,
         uint8_t ref_pic_index,
 #endif
         uint32_t integer_mv);         // input parameter, integer MV

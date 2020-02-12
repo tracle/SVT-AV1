@@ -404,7 +404,12 @@ EbErrorType signal_derivation_me_kernel_oq(
     else
         context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
 #if OPT_REC_ME
-        context_ptr->me_context_ptr->use_best_sq_mv = 1;
+    // Me nsq search levels.
+    // 0: feature off -> perform nsq_search.
+    // 1: perform me nsq_search for the best refrenece picture.
+    // 2: perform me nsq_search for the nearest refrenece pictures.
+    // 3: me nsq_search off.
+    context_ptr->me_context_ptr->use_best_sq_mv_level = 0;
 #endif
     return return_error;
 };
@@ -785,7 +790,12 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
         FULL_SAD_SEARCH :
         SUB_SAD_SEARCH;
 #if OPT_REC_ME
-        context_ptr->me_context_ptr->use_best_sq_mv = 1;
+    // Me nsq search levels.
+    // 0: feature off -> perform nsq_search.
+    // 1: perform me nsq_search for the best refrenece picture.
+    // 2: perform me nsq_search for the nearest refrenece pictures.
+    // 3: me nsq_search off.
+    context_ptr->me_context_ptr->use_best_sq_mv_level = 0;
 #endif
     return return_error;
 };

@@ -3186,7 +3186,11 @@ static void open_loop_me_get_eight_search_point_results_block(
         currMV,
         context_ptr->p_eight_sad32x32);
 #if OPT_REC_ME
-    if(!ref_pic_index || !context_ptr->use_best_sq_mv)
+    uint8_t perform_nsq_flag = 1;
+    perform_nsq_flag = (context_ptr->use_best_sq_mv_level == 1 && (listIndex != context_ptr->best_list_idx || ref_pic_index != context_ptr->best_ref_idx)) ? 0 : perform_nsq_flag;
+    perform_nsq_flag = (context_ptr->use_best_sq_mv_level == 2 && ref_pic_index) ? 0: perform_nsq_flag;
+    perform_nsq_flag = (context_ptr->use_best_sq_mv_level == 3 ) ? 0 : perform_nsq_flag;
+    if(perform_nsq_flag)
 #endif
     ext_eigth_sad_calculation_nsq(
         context_ptr->p_eight_sad8x8,
@@ -5136,6 +5140,7 @@ void half_pel_refinement_sb(
     uint32_t search_area_width,  // input parameter, search area width
 #endif
 #if OPT_REC_SUBP
+    uint8_t list_index,
     uint8_t ref_pic_index,
 #endif
     uint32_t inetger_mv)
@@ -5288,7 +5293,11 @@ void half_pel_refinement_sb(
                                   inetger_mv);
     }
 #if OPT_REC_SUBP
-    if (!ref_pic_index || !context_ptr->use_best_sq_mv) {
+    uint8_t perform_nsq_flag = 1;
+    perform_nsq_flag = (context_ptr->use_best_sq_mv_level == 1 && (list_index != context_ptr->best_list_idx || ref_pic_index != context_ptr->best_ref_idx)) ? 0 : perform_nsq_flag;
+    perform_nsq_flag = (context_ptr->use_best_sq_mv_level == 2 && ref_pic_index) ? 0: perform_nsq_flag;
+    perform_nsq_flag = (context_ptr->use_best_sq_mv_level == 3 ) ? 0 : perform_nsq_flag;
+    if(perform_nsq_flag){
 #endif
         if (picture_control_set_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE) {
             // 64x32
@@ -5736,11 +5745,16 @@ static void open_loop_me_half_pel_search_sblock(
         search_area_height,
         search_area_width,
 #if OPT_REC_SUBP
+        list_index,
         ref_pic_index,
 #endif
         0);
 #if OPT_REC_SUBP
-    if(ref_pic_index && context_ptr->use_best_sq_mv)
+    uint8_t gather_nsq_flag = 0;
+    gather_nsq_flag = (context_ptr->use_best_sq_mv_level == 1 && (list_index != context_ptr->best_list_idx || ref_pic_index != context_ptr->best_ref_idx)) ? 1 : gather_nsq_flag;
+    gather_nsq_flag = (context_ptr->use_best_sq_mv_level == 2 && ref_pic_index) ? 1: gather_nsq_flag;
+    gather_nsq_flag = (context_ptr->use_best_sq_mv_level == 3 ) ? 1 : gather_nsq_flag;
+    if(gather_nsq_flag)
         generate_nsq_mv(context_ptr);
 #endif
 }
@@ -5922,9 +5936,12 @@ static void open_loop_me_fullpel_search_sblock(
         }
     }
 #if OPT_REC_ME
-    if(ref_pic_index && context_ptr->use_best_sq_mv)
-     generate_nsq_mv(
-        context_ptr);
+    uint8_t gather_nsq_flag = 0;
+    gather_nsq_flag = (context_ptr->use_best_sq_mv_level == 1 && (listIndex != context_ptr->best_list_idx || ref_pic_index != context_ptr->best_ref_idx)) ? 1 : gather_nsq_flag;
+    gather_nsq_flag = (context_ptr->use_best_sq_mv_level == 2 && ref_pic_index) ? 1: gather_nsq_flag;
+    gather_nsq_flag = (context_ptr->use_best_sq_mv_level == 3 ) ? 1 : gather_nsq_flag;
+    if(gather_nsq_flag)
+        generate_nsq_mv(context_ptr);
 #endif
 }
 
@@ -14580,6 +14597,11 @@ void hme_sb(
     EbBool enableHalfPel8x8 = EB_FALSE;
     EbBool enableQuarterPel = EB_FALSE;
     EbBool oneQuadrantHME = EB_FALSE;
+#if ME_NSQ_LEVEL
+    uint64_t best_cost = (uint64_t)~0;
+    context_ptr->best_list_idx = 0;
+    context_ptr->best_ref_idx = 0;
+#endif
 
     oneQuadrantHME =
         sequence_control_set_ptr->input_resolution < INPUT_SIZE_4K_RANGE
@@ -15118,8 +15140,13 @@ void hme_sb(
             context_ptr->hme_results[listIndex][ref_pic_index].hme_sad = hmeMvSad;//this is not valid in all cases. only when HME is done, and when HMELevel2 is done
             //also for base layer some references are redundant!!
             context_ptr->hme_results[listIndex][ref_pic_index].do_ref = 1;
-
-
+#if ME_NSQ_LEVEL
+            if (hmeMvSad < best_cost) {
+                best_cost = hmeMvSad;
+                context_ptr->best_list_idx = listIndex;
+                context_ptr->best_ref_idx = ref_pic_index;
+            }
+#endif
         }
     }
 }
