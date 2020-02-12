@@ -1537,8 +1537,9 @@ static AOM_INLINE void tpl_model_update_b(PictureParentControlSet *ref_picture_c
   Av1Common *ref_cm = ref_picture_control_set_ptr->av1_cm;
   OisMbResults *ref_ois_mb_results_ptr;
 
-  const int ref_pos_row = mi_row * MI_SIZE + (ois_mb_results_ptr->mv.row >> 3);
-  const int ref_pos_col = mi_col * MI_SIZE + (ois_mb_results_ptr->mv.col >> 3);
+  const FULLPEL_MV full_mv = get_fullmv_from_mv(&ois_mb_results_ptr->mv);
+  const int ref_pos_row = mi_row * MI_SIZE + full_mv.row;
+  const int ref_pos_col = mi_col * MI_SIZE + full_mv.col;
 
   const int bw = 4 << mi_size_wide_log2[bsize];
   const int bh = 4 << mi_size_high_log2[bsize];
