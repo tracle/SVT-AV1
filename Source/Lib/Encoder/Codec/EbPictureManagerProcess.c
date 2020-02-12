@@ -769,7 +769,7 @@ void* picture_manager_kernel(void *input_ptr)
                                     referenceEntryPtr = encode_context_ptr->reference_picture_queue[referenceQueueIndex];
                                     if (entryPictureControlSetPtr->frame_end_cdf_update_mode) {
                                         ChildPictureControlSetPtr->ref_frame_context[svt_get_ref_frame_type(REF_LIST_0, refIdx) - LAST_FRAME] = ((EbReferenceObject*)referenceEntryPtr->reference_object_ptr->object_ptr)->frame_context;
-#if PRED_DEBUG
+#if PRED_STR_UPDATE
                                         if (max_temporal_index < (int8_t)referenceEntryPtr->temporal_layer_index && (int8_t)referenceEntryPtr->temporal_layer_index <= ChildPictureControlSetPtr->temporal_layer_index) {
 #else
                                         if (max_temporal_index < (int8_t)referenceEntryPtr->temporal_layer_index) {
@@ -824,7 +824,7 @@ void* picture_manager_kernel(void *input_ptr)
                                     referenceEntryPtr = encode_context_ptr->reference_picture_queue[referenceQueueIndex];
                                     if (entryPictureControlSetPtr->frame_end_cdf_update_mode) {
                                         ChildPictureControlSetPtr->ref_frame_context[svt_get_ref_frame_type(REF_LIST_1, refIdx) - LAST_FRAME] = ((EbReferenceObject*)referenceEntryPtr->reference_object_ptr->object_ptr)->frame_context;
-#if PRED_DEBUG
+#if PRED_STR_UPDATE
                                         if (max_temporal_index < (int8_t)referenceEntryPtr->temporal_layer_index && referenceEntryPtr->slice_type != I_SLICE &&
                                              (int8_t)referenceEntryPtr->temporal_layer_index <= ChildPictureControlSetPtr->temporal_layer_index) {
 
