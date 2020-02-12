@@ -14,6 +14,10 @@
 #define fseeko _fseeki64
 #define ftello _ftelli64
 #endif
+
+// Temp Macro
+#define GETOPT 1
+
 // Define Cross-Platform 64-bit fseek() and ftell()
 
 /** The AppExitConditionType type is used to define the App main loop exit
@@ -471,5 +475,10 @@ extern EbErrorType read_command_line(int32_t argc, char *const argv[], EbConfig 
                                      uint32_t num_channels, EbErrorType *return_errors);
 extern uint32_t    get_help(int32_t argc, char *const argv[]);
 extern uint32_t    get_number_of_channels(int32_t argc, char *const argv[]);
+
+extern EbErrorType set_token_getopt(EbConfig *configs, uint32_t num_channels, int32_t token);
+extern EbErrorType read_command_line_getopt(int32_t argc, char *const argv[], EbConfig **configs,
+                                            uint32_t num_channels, EbErrorType *return_errors);
+extern void get_help_getopt();
 
 #endif //EbAppConfig_h
