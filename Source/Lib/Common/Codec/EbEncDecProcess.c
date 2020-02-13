@@ -25,7 +25,7 @@
 #if POST_PD2_INTER_DEPTH
 #include "EbFullLoop.h"
 #endif
-
+#include "EbRateDistortionCost.h"
 #if MULTI_PASS_PD
 #define FC_SKIP_TX_SR_TH025 125 // Fast cost skip tx search threshold.
 #define FC_SKIP_TX_SR_TH010 110 // Fast cost skip tx search threshold.
@@ -3052,8 +3052,47 @@ void derive_start_end_depth(
         *e_depth = 1;
     else
         *e_depth = 0;
-}
 
+#if RESTRICT_DEPTH_TO_BE_TESTED
+    *s_depth = MAX(*s_depth, -1);
+    *e_depth = MIN(*e_depth, 1);
+#endif
+}
+#if TEST5
+static uint64_t generate_best_part_cost(
+    SequenceControlSet  *sequence_control_set_ptr,
+    PictureControlSet   *picture_control_set_ptr,
+    ModeDecisionContext *context_ptr,
+    uint32_t             sb_index) {
+
+    MdcLcuData *resultsPtr = &picture_control_set_ptr->mdc_sb_array[sb_index];
+    uint32_t  blk_index = 0;
+
+    SuperBlock  *sb_ptr = picture_control_set_ptr->sb_ptr_array[sb_index];
+    uint32_t tot_d1_blocks;
+    uint64_t best_part_cost = 0;
+    EbBool split_flag;
+    while (blk_index < sequence_control_set_ptr->max_block_cnt) {
+        const BlockGeom * blk_geom = get_blk_geom_mds(blk_index);
+        tot_d1_blocks =
+            blk_geom->sq_size == 128 ? 17 :
+            blk_geom->sq_size > 8 ? 25 :
+            blk_geom->sq_size == 8 ? 5 : 1;
+        // if the parent square is inside inject this block
+        uint8_t is_blk_allowed = picture_control_set_ptr->slice_type != I_SLICE ? 1 : (blk_geom->sq_size < 128) ? 1 : 0;
+        // derive split_flag
+        split_flag = context_ptr->md_cu_arr_nsq[blk_index].split_flag;
+        if (sequence_control_set_ptr->sb_geom[sb_index].block_is_inside_md_scan[blk_index] && is_blk_allowed) {
+            if (blk_geom->shape == PART_N) {
+                if (context_ptr->md_cu_arr_nsq[blk_index].split_flag == EB_FALSE)
+                    best_part_cost += context_ptr->md_local_cu_unit[blk_index].cost; 
+            }
+        }
+        blk_index += split_flag ? d1_depth_offset[sequence_control_set_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth] : ns_depth_offset[sequence_control_set_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
+    }
+    return best_part_cost;
+}
+#endif
 static void perform_pred_depth_refinement(
     SequenceControlSet  *sequence_control_set_ptr,
     PictureControlSet   *picture_control_set_ptr,
@@ -3164,21 +3203,36 @@ static void perform_pred_depth_refinement(
                             s_depth = 0;
                             e_depth = 0;
                         }
-                        else
-
-                            if (context_ptr->md_cu_arr_nsq[blk_index].best_d1_blk == blk_index) {
-                                s_depth = -1;
+                        else {
+#if TEST5
+                            uint32_t full_lambda =  context_ptr->hbd_mode_decision ? context_ptr->full_lambda_md[EB_10_BIT_MD] : context_ptr->full_lambda_md[EB_8_BIT_MD];
+                            uint64_t dist_sum = (128 * 128 * 1);
+                            uint64_t early_exit_th = RDCOST(full_lambda, 16, dist_sum);
+                            uint64_t best_part_cost = generate_best_part_cost(
+                                sequence_control_set_ptr,
+                                picture_control_set_ptr,
+                                context_ptr,
+                                sb_index);
+                            if (best_part_cost < early_exit_th) {
+                                s_depth = 0;
                                 e_depth = 0;
                             }
-                            else {
-                                s_depth = 0;
-                                e_depth = 1;
-                            }
+                            else
+#endif
+                                if (context_ptr->md_cu_arr_nsq[blk_index].best_d1_blk == blk_index) {
+                                    s_depth = -1;
+                                    e_depth = 0;
+                                }
+                                else {
+                                    s_depth = 0;
+                                    e_depth = 1;
+                                }
 
 #if TEST_PIC_MULTI_PASS_PD_MODE_4
-                        s_depth = 0;
-                        e_depth = 0;
+                            s_depth = 0;
+                            e_depth = 0;
 #endif
+                        }
                     }
 
                     // Add current pred depth block(s)
@@ -3710,6 +3764,8 @@ void* enc_dec_kernel(void *input_ptr)
                             sb_origin_x,
                             sb_origin_y);
 
+#if !DISABLE_PD1
+
                         if (picture_control_set_ptr->parent_pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_1 ||
                             picture_control_set_ptr->parent_pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_2 ||
                             picture_control_set_ptr->parent_pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_3 ){
@@ -3995,6 +4051,7 @@ void* enc_dec_kernel(void *input_ptr)
                                 sb_origin_x,
                                 sb_origin_y);
                         }
+#endif
                     }
 
                     // [PD_PASS_2] Signal(s) derivation

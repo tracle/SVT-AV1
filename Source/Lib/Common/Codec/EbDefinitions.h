@@ -32,6 +32,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define TEST4    0
+#if TEST4
+#define DISABLE_PD1                 1
+#define RESTRICT_DEPTH_TO_BE_TESTED 1
+#endif
+#define TEST5    0
 
 #define OPT_REC_ME              0
 #define OPT_REC_SUBP            0
