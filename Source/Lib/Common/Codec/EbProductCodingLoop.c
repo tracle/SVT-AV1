@@ -9260,125 +9260,126 @@ void md_stage_2(
         uint32_t fullLoopCandidateIndex;
         uint32_t candidateIndex;
 
-    for (fullLoopCandidateIndex = 0; fullLoopCandidateIndex < fullCandidateTotalCount; ++fullLoopCandidateIndex) {
+        for (fullLoopCandidateIndex = 0; fullLoopCandidateIndex < fullCandidateTotalCount; ++fullLoopCandidateIndex) {
 
-        candidateIndex = (context_ptr->full_loop_escape == 2) ? context_ptr->sorted_candidate_index_array[fullLoopCandidateIndex] : context_ptr->best_candidate_index_array[fullLoopCandidateIndex];
-        candidate_buffer = candidate_buffer_ptr_array[candidateIndex];
-        candidate_ptr = candidate_buffer->candidate_ptr;
+            candidateIndex = (context_ptr->full_loop_escape == 2) ? context_ptr->sorted_candidate_index_array[fullLoopCandidateIndex] : context_ptr->best_candidate_index_array[fullLoopCandidateIndex];
+            candidate_buffer = candidate_buffer_ptr_array[candidateIndex];
+            candidate_ptr = candidate_buffer->candidate_ptr;
 #if PRUNE_SKIP_AND_NON_SKIP
-        uint8_t disable_txs_txt_rdoq = 0;
-        candidate_buffer->candidate_ptr->processed_cand_flag = 1;
+            uint8_t disable_txs_txt_rdoq = 0;
+            candidate_buffer->candidate_ptr->processed_cand_flag = 1;
 #endif
-        // Set MD Staging full_loop_core settings
+            // Set MD Staging full_loop_core settings
 #if REMOVE_MD_STAGE_1
 #if MULTI_PASS_PD // Shut pred @ full loop if 1st pass
-        context_ptr->md_staging_skip_full_pred = context_ptr->md_staging_mode == MD_STAGING_MODE_0;
+            context_ptr->md_staging_skip_full_pred = context_ptr->md_staging_mode == MD_STAGING_MODE_0;
 #if ADD_4TH_MD_STAGE
 #if IFS_MD_STAGE_3
-        context_ptr->md_staging_skip_interpolation_search = EB_FALSE;
+            context_ptr->md_staging_skip_interpolation_search = EB_FALSE;
 #else
-        context_ptr->md_staging_skip_interpolation_search = (context_ptr->md_staging_mode == MD_STAGING_MODE_1 || context_ptr->md_staging_mode == MD_STAGING_MODE_2);
+            context_ptr->md_staging_skip_interpolation_search = (context_ptr->md_staging_mode == MD_STAGING_MODE_1 || context_ptr->md_staging_mode == MD_STAGING_MODE_2);
 #endif
 #else
-        context_ptr->md_staging_skip_interpolation_search = context_ptr->md_staging_mode == MD_STAGING_MODE_1;
+            context_ptr->md_staging_skip_interpolation_search = context_ptr->md_staging_mode == MD_STAGING_MODE_1;
 #endif
 #else
-        context_ptr->md_staging_skip_full_pred = (context_ptr->md_staging_mode == MD_STAGING_MODE_0 && picture_control_set_ptr->parent_pcs_ptr->interpolation_search_level != IT_SEARCH_FULL_LOOP);
-        context_ptr->md_staging_skip_interpolation_search = (context_ptr->md_staging_mode == MD_STAGING_MODE_1 || picture_control_set_ptr->parent_pcs_ptr->interpolation_search_level != IT_SEARCH_FULL_LOOP);
+            context_ptr->md_staging_skip_full_pred = (context_ptr->md_staging_mode == MD_STAGING_MODE_0 && picture_control_set_ptr->parent_pcs_ptr->interpolation_search_level != IT_SEARCH_FULL_LOOP);
+            context_ptr->md_staging_skip_interpolation_search = (context_ptr->md_staging_mode == MD_STAGING_MODE_1 || picture_control_set_ptr->parent_pcs_ptr->interpolation_search_level != IT_SEARCH_FULL_LOOP);
 #endif
-        context_ptr->md_staging_skip_inter_chroma_pred = EB_FALSE;
+            context_ptr->md_staging_skip_inter_chroma_pred = EB_FALSE;
 #else
         context_ptr->md_staging_skip_full_pred = (context_ptr->md_staging_mode == MD_STAGING_MODE_3) ? EB_FALSE: EB_TRUE;
 #endif
 #if LOSSLESS_TX_TYPE_OPT || RDOQ_LIGHT_TX_TYPE_MD_STAGE_2
-        context_ptr->md_staging_tx_size_mode = !context_ptr->coeff_based_skip_atb;
+            context_ptr->md_staging_tx_size_mode = !context_ptr->coeff_based_skip_atb;
 #else
-        context_ptr->md_staging_skip_atb = context_ptr->coeff_based_skip_atb;
+            context_ptr->md_staging_skip_atb = context_ptr->coeff_based_skip_atb;
 #endif
 #if FILTER_INTRA_FLAG
 #if PAL_CLASS
-        context_ptr->md_staging_tx_search =
-            (candidate_ptr->cand_class == CAND_CLASS_0 || candidate_ptr->cand_class == CAND_CLASS_6 || candidate_ptr->cand_class == CAND_CLASS_7)
-            ? 2 : 1;
+            context_ptr->md_staging_tx_search =
+                (candidate_ptr->cand_class == CAND_CLASS_0 || candidate_ptr->cand_class == CAND_CLASS_6 || candidate_ptr->cand_class == CAND_CLASS_7)
+                ? 2 : 1;
 #else
         context_ptr->md_staging_tx_search = (candidate_ptr->cand_class == CAND_CLASS_0 || candidate_ptr->cand_class == CAND_CLASS_6)? 2 : 1;
 #endif
 #else
-        context_ptr->md_staging_tx_search = candidate_ptr->cand_class == CAND_CLASS_0 ? 2 : 1;
+            context_ptr->md_staging_tx_search = candidate_ptr->cand_class == CAND_CLASS_0 ? 2 : 1;
 #endif
-        context_ptr->md_staging_skip_full_chroma = EB_FALSE;
+            context_ptr->md_staging_skip_full_chroma = EB_FALSE;
 
-        context_ptr->md_staging_skip_rdoq = EB_FALSE;
+            context_ptr->md_staging_skip_rdoq = EB_FALSE;
 
 #if FREQUENCY_SPATIAL_DOMAIN
-        context_ptr->md_staging_spatial_sse_full_loop = context_ptr->spatial_sse_full_loop;
+            context_ptr->md_staging_spatial_sse_full_loop = context_ptr->spatial_sse_full_loop;
 #endif
 
 
-        if (picture_control_set_ptr->slice_type != I_SLICE) {
-            if ((candidate_ptr->type == INTRA_MODE || context_ptr->full_loop_escape == 2) && best_inter_luma_zero_coeff == 0) {
+            if (picture_control_set_ptr->slice_type != I_SLICE) {
+                if ((candidate_ptr->type == INTRA_MODE || context_ptr->full_loop_escape == 2) && best_inter_luma_zero_coeff == 0) {
 #if REMOVE_MD_STAGE_1
 #if ADD_4TH_MD_STAGE
-                context_ptr->md_stage_3_total_count = fullLoopCandidateIndex;
+                    context_ptr->md_stage_3_total_count = fullLoopCandidateIndex;
 #else
-                context_ptr->md_stage_2_total_count = fullLoopCandidateIndex;
+                    context_ptr->md_stage_2_total_count = fullLoopCandidateIndex;
 #endif
 #else
-                context_ptr->md_stage_3_total_count = fullLoopCandidateIndex;
+                    context_ptr->md_stage_3_total_count = fullLoopCandidateIndex;
 #endif
-                return;
+                    return;
+                }
             }
-        }
 #if PRUNE_SKIP_AND_NON_SKIP
-        if(fullLoopCandidateIndex > 0){
+            if (fullLoopCandidateIndex > 0) {
+                if (context_ptr->pd_pass == 2) {
 #if 1
-
-            uint64_t SKIP_S2_TH = 50;
-            uint64_t ABS_S2_TH = (context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight) >> 0;
-            uint64_t REL_S2_TH = 80;
-            if (((context_ptr->best_skip_cost * SKIP_S2_TH) / 100) < context_ptr->best_non_skip_cost) {
-                if (candidate_ptr->block_has_coeff) { // bypass non-skip candidates
-                    *candidate_buffer->full_cost_ptr = 0xFFFFFFFFFFFFFFFFull;                                 
-                    candidate_buffer->candidate_ptr->processed_cand_flag = 0;
-                    continue;
-                }
-                else {
-                    disable_txs_txt_rdoq = 1; // disable txs, txt and rdoq package for skip candidates
-                }
-            }
-            else {
-                uint64_t best_cand_cost = MIN(context_ptr->best_skip_cost, context_ptr->best_non_skip_cost);
-                if (best_cand_cost < ABS_S2_TH) { //bypass candidate based on absolute threshold.
-                    *candidate_buffer->full_cost_ptr = 0xFFFFFFFFFFFFFFFFull;
-                     candidate_buffer->candidate_ptr->processed_cand_flag = 0;
-                     continue;
-                }
-                else  if ((*candidate_buffer->full_cost_ptr - best_cand_cost) * 100 > (best_cand_cost * REL_S2_TH)) {// Pass only the best candidates
-                    *candidate_buffer->full_cost_ptr = 0xFFFFFFFFFFFFFFFFull;
-                    candidate_buffer->candidate_ptr->processed_cand_flag = 0;
-                    continue;
-                }
-            }         
+                    uint64_t SKIP_S2_TH = 200;
+                    uint64_t ABS_S2_TH = (context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight) >> 0;
+                    uint64_t REL_S2_TH = 200;
+                    if (((context_ptr->best_skip_cost * SKIP_S2_TH) / 100) < context_ptr->best_non_skip_cost) {
+                        if (candidate_ptr->block_has_coeff) { // bypass non-skip candidates
+                            *candidate_buffer->full_cost_ptr = 0xFFFFFFFFFFFFFFFFull;
+                            candidate_buffer->candidate_ptr->processed_cand_flag = 0;
+                            continue;
+                        }
+                        else {
+                            disable_txs_txt_rdoq = 1; // disable txs, txt and rdoq package for skip candidates
+                        }
+                    }
+                    //else {
+                    //    uint64_t best_cand_cost = MIN(context_ptr->best_skip_cost, context_ptr->best_non_skip_cost);
+                    //    if (best_cand_cost < ABS_S2_TH) { //bypass candidate based on absolute threshold.
+                    //        *candidate_buffer->full_cost_ptr = 0xFFFFFFFFFFFFFFFFull;
+                    //         candidate_buffer->candidate_ptr->processed_cand_flag = 0;
+                    //         continue;
+                    //    }
+                    //    else  if ((*candidate_buffer->full_cost_ptr - best_cand_cost) * 100 > (best_cand_cost * REL_S2_TH)) {// Pass only the best candidates
+                    //        *candidate_buffer->full_cost_ptr = 0xFFFFFFFFFFFFFFFFull;
+                    //        candidate_buffer->candidate_ptr->processed_cand_flag = 0;
+                    //        continue;
+                    //    }
+                    //}         
 #else
-            uint8_t skip_is_better_by_far = (context_ptr->best_skip_cost * 2 < context_ptr->best_non_skip_cost) ? 1 : 0;
-            uint8_t nonskip_is_better_by_far = (context_ptr->best_non_skip_cost * 2 < context_ptr->best_skip_cost) ? 1 : 0;
-            if (nonskip_is_better_by_far) {
-                if (!candidate_ptr->block_has_coeff) {
-                    if ((*candidate_buffer->full_cost_ptr - context_ptr->best_non_skip_cost) * 100 > (context_ptr->best_non_skip_cost * 80)) {
-                        *candidate_buffer->full_cost_ptr = MAX_MODE_COST;
-                        continue;
+                    uint8_t skip_is_better_by_far = (context_ptr->best_skip_cost * 2 < context_ptr->best_non_skip_cost) ? 1 : 0;
+                    uint8_t nonskip_is_better_by_far = (context_ptr->best_non_skip_cost * 2 < context_ptr->best_skip_cost) ? 1 : 0;
+                    if (nonskip_is_better_by_far) {
+                        if (!candidate_ptr->block_has_coeff) {
+                            if ((*candidate_buffer->full_cost_ptr - context_ptr->best_non_skip_cost) * 100 > (context_ptr->best_non_skip_cost * 80)) {
+                                *candidate_buffer->full_cost_ptr = MAX_MODE_COST;
+                                continue;
+                            }
+                        }
                     }
+                    if (skip_is_better_by_far) {
+                        if (candidate_ptr->block_has_coeff) {
+                            if ((*candidate_buffer->full_cost_ptr - context_ptr->best_skip_cost) * 100 > (context_ptr->best_skip_cost * 80)) {
+                                *candidate_buffer->full_cost_ptr = MAX_MODE_COST;
+                                continue;
+                            }
+                        }
                 }
-            }
-            if (skip_is_better_by_far) {
-                if (candidate_ptr->block_has_coeff) {
-                    if ((*candidate_buffer->full_cost_ptr - context_ptr->best_skip_cost) * 100 > (context_ptr->best_skip_cost * 80)) {
-                        *candidate_buffer->full_cost_ptr = MAX_MODE_COST;
-                        continue;
-                    }
-                }
-            }
 #endif
+            }
         }
 #endif
 #if MOVE_OPT
