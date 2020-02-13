@@ -38,7 +38,7 @@ extern "C" {
 #define RESTRICT_DEPTH_TO_BE_TESTED 1
 #endif
 #define TEST5    0
-
+#define USE_M1_MD_IN_PD1        0
 #define M0_FEB12_ADOPTION       1
 #if M0_FEB12_ADOPTION
 #define OPT_REC_ME              1

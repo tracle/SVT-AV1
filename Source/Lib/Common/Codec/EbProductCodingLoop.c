@@ -11332,12 +11332,131 @@ void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_
 /******************************************************
 * Derive md  Settings  at he block level
 ******************************************************/
+#if USE_M1_MD_IN_PD1
+EbErrorType signal_derivation_block_pd1(
+    SequenceControlSet    *sequence_control_set_ptr,
+    PictureControlSet     *picture_control_set_ptr,
+    ModeDecisionContext   *context_ptr) {
+     EbErrorType return_error = EB_ErrorNone;
+    // set compound_types_to_try
+#if 0 //Nader
+    if (context_ptr->pd_pass == PD_PASS_0)
+        context_ptr->compound_types_to_try = MD_COMP_AVG;
+    else if (context_ptr->pd_pass == PD_PASS_1)
+        context_ptr->compound_types_to_try = MD_COMP_AVG;
+    else 
+#endif
+    {
+        if (picture_control_set_ptr->parent_pcs_ptr->compound_mode)
+            context_ptr->compound_types_to_try = picture_control_set_ptr->parent_pcs_ptr->compound_mode == 1 ? MD_COMP_DIFF0 : MD_COMP_WEDGE;
+        else
+            context_ptr->compound_types_to_try = MD_COMP_AVG;
+    }
+
+    CodingUnit *similar_cu = &context_ptr->md_cu_arr_nsq[context_ptr->similar_blk_mds];
+    if (context_ptr->compound_types_to_try > MD_COMP_AVG && context_ptr->similar_blk_avail) {
+        int32_t is_src_compound = similar_cu->pred_mode >= NEAREST_NEARESTMV;
+        if (context_ptr->comp_similar_mode == 1) {
+            context_ptr->compound_types_to_try = !is_src_compound ? MD_COMP_AVG : context_ptr->compound_types_to_try;
+        }
+        else if (context_ptr->comp_similar_mode == 2) {
+            context_ptr->compound_types_to_try = !is_src_compound ? MD_COMP_AVG : similar_cu->interinter_comp.type;
+        }
+    }
+ #if DISABLE_COMPOUND_FOR_NON_S_V_H
+    if (context_ptr->blk_geom->shape > PART_V && !context_ptr->similar_blk_avail) {
+        uint16_t parent_blk_mds = context_ptr->blk_geom->pi_mds;
+        CodingUnit *parent_cu = &context_ptr->md_cu_arr_nsq[parent_blk_mds];
+        int32_t is_parent_compound = parent_cu->pred_mode >= NEAREST_NEARESTMV;
+        context_ptr->compound_types_to_try = !is_parent_compound ? MD_COMP_AVG : context_ptr->compound_types_to_try;
+    }
+#endif
+
+#if INTRA_SIMILAR
+    context_ptr->inject_inter_candidates = 1;
+#if 1 //Nader
+    if (context_ptr->pd_pass>PD_PASS_0 && context_ptr->similar_blk_avail) {
+#else
+    if (context_ptr->pd_pass>PD_PASS_1 && context_ptr->similar_blk_avail) {
+#endif
+        int32_t is_src_intra = similar_cu->pred_mode <= PAETH_PRED;
+        if (context_ptr->intra_similar_mode)
+            context_ptr->inject_inter_candidates = is_src_intra ? 0: context_ptr->inject_inter_candidates;
+}
+#endif
+
+#if INTER_SIMILAR
+
+    // Set md_filter_intra_mode @ MD
+    if (context_ptr->pd_pass == PD_PASS_0)
+        context_ptr->md_filter_intra_mode = 0;
+    else if (context_ptr->pd_pass == PD_PASS_1)
+        context_ptr->md_filter_intra_mode = 0;
+    else
+        context_ptr->md_filter_intra_mode = picture_control_set_ptr->pic_filter_intra_mode;
+
+    context_ptr->inject_palette_candidates = picture_control_set_ptr->parent_pcs_ptr->palette_mode;
+
+    context_ptr->inject_intra_candidates = 1;
+    if (context_ptr->pd_pass > PD_PASS_1 && context_ptr->similar_blk_avail) {
+        int32_t is_src_inter = similar_cu->pred_mode >= NEARESTMV;
+        if (is_src_inter) {
+            context_ptr->inject_intra_candidates = 0;
+            context_ptr->md_filter_intra_mode = 0;
+            context_ptr->inject_palette_candidates = 0;
+        }
+    }
+#endif
+
+
+#if  GL_SIMILAR
+    // Set global MV injection
+    // Level                Settings
+    // 0                    Injection off (Hsan: but not derivation as used by MV ref derivation)
+    // 1                    On
+    if (sequence_control_set_ptr->static_config.enable_global_motion == EB_TRUE)
+    {
+
+        if (context_ptr->pd_pass == PD_PASS_0)
+            context_ptr->global_mv_injection = 0;
+        else if (context_ptr->pd_pass == PD_PASS_1)
+            context_ptr->global_mv_injection = 0;
+        else
+            if (picture_control_set_ptr->enc_mode <= ENC_M1)
+
+                context_ptr->global_mv_injection = 1;
+            else
+                context_ptr->global_mv_injection = 0;
+    }
+    else
+        context_ptr->global_mv_injection = 0;
+
+    if (context_ptr->pd_pass > PD_PASS_1 && context_ptr->similar_blk_avail) {
+        int32_t is_src_not_global = similar_cu->pred_mode != GLOBALMV && similar_cu->pred_mode != GLOBAL_GLOBALMV;
+        if (is_src_not_global) {
+            context_ptr->global_mv_injection = 0;
+        }
+    }
+#endif
+
+  return return_error;
+}
+#endif
 EbErrorType signal_derivation_block(
     SequenceControlSet    *sequence_control_set_ptr,
     PictureControlSet     *picture_control_set_ptr,
     ModeDecisionContext   *context_ptr) {
     EbErrorType return_error = EB_ErrorNone;
 
+#if USE_M1_MD_IN_PD1
+    if (context_ptr->pd_pass == PD_PASS_1) {
+        signal_derivation_block_pd1(
+            sequence_control_set_ptr,
+            picture_control_set_ptr,
+            context_ptr);
+        return return_error;
+    }
+#endif
     // set compound_types_to_try
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->compound_types_to_try = MD_COMP_AVG;
