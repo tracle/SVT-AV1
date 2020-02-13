@@ -318,11 +318,16 @@ EbErrorType signal_derivation_me_kernel_oq(
 #endif
 #if TUNE_SUBPEL_SEARCH
 #if M1_FEB4_ADOPTION  || M0_FEB4_ADOPTION
+#if M0_FEB12_ADOPTION
+    context_ptr->me_context_ptr->h_pel_search_wind = sequence_control_set_ptr->input_resolution <= INPUT_SIZE_576p_RANGE_OR_LOWER ?
+        H_PEL_SEARCH_WIND_2 : H_PEL_SEARCH_WIND_1;
+#else
     if (enc_mode <= ENC_M1)
     context_ptr->me_context_ptr->h_pel_search_wind =   H_PEL_SEARCH_WIND_3;
     else
     context_ptr->me_context_ptr->h_pel_search_wind =  sequence_control_set_ptr->input_resolution <= INPUT_SIZE_576p_RANGE_OR_LOWER ?
         H_PEL_SEARCH_WIND_2 : H_PEL_SEARCH_WIND_1;
+#endif
 #else
     context_ptr->me_context_ptr->h_pel_search_wind =  sequence_control_set_ptr->input_resolution <= INPUT_SIZE_576p_RANGE_OR_LOWER ?
                                                     H_PEL_SEARCH_WIND_2 : H_PEL_SEARCH_WIND_1;
@@ -409,7 +414,7 @@ EbErrorType signal_derivation_me_kernel_oq(
     // 1: perform me nsq_search for the best refrenece picture.
     // 2: perform me nsq_search for the nearest refrenece pictures.
     // 3: me nsq_search off.
-    context_ptr->me_context_ptr->use_best_sq_mv_level = 0;
+    context_ptr->me_context_ptr->use_best_sq_mv_level = 2;
 #endif
     return return_error;
 };

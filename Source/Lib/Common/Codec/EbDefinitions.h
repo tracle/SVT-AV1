@@ -39,8 +39,14 @@ extern "C" {
 #endif
 #define TEST5    0
 
+#define M0_FEB12_ADOPTION       1
+#if M0_FEB12_ADOPTION
+#define OPT_REC_ME              1
+#define OPT_REC_SUBP            1
+#else
 #define OPT_REC_ME              0
 #define OPT_REC_SUBP            0
+#endif
 
 #define CORE_LIMIT 0
 #define M1_FEB4_ADOPTION                   1
