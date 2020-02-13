@@ -4303,7 +4303,7 @@ void* picture_decision_kernel(void *input_ptr)
                                         picture_control_set_ptr->av1_cm->ref_frame_sign_bias[BWDREF_FRAME] = 1;
                                     else
                                         picture_control_set_ptr->av1_cm->ref_frame_sign_bias[BWDREF_FRAME] = 0;
-
+#if 0
                                     printf("POC:%d\t %d\t%d\t%d\t %d\t%d\t%d\n",
                                         picture_control_set_ptr->picture_number,
                                         picture_control_set_ptr->av1_ref_signal.ref_poc_array[ALT],
@@ -4313,6 +4313,7 @@ void* picture_decision_kernel(void *input_ptr)
                                         picture_control_set_ptr->av1_cm->ref_frame_sign_bias[ALTREF2_FRAME],
                                         picture_control_set_ptr->av1_cm->ref_frame_sign_bias[BWDREF_FRAME]
                                     );
+#endif
 
                                 }
 
