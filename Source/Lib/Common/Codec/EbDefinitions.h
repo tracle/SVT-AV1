@@ -39,6 +39,8 @@ extern "C" {
 #endif
 #define TEST5    0
 #define USE_M1_MD_IN_PD1        0
+
+#define M1_FEB12_ADOPTION       1
 #define M0_FEB12_ADOPTION       1
 #if M0_FEB12_ADOPTION
 #define OPT_REC_ME              1

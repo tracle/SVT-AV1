@@ -308,7 +308,11 @@ EbErrorType signal_derivation_me_kernel_oq(
 #if SWITCHED_HALF_PEL_MODE
 #if M1_ADOPTIONS
 #if JAN31_M2
+#if M1_FEB12_ADOPTION
+    context_ptr->me_context_ptr->switched_half_pel_mode = enc_mode <= ENC_M0 ? 0 : 1;
+#else
     context_ptr->me_context_ptr->switched_half_pel_mode = enc_mode <= ENC_M2 ? 0 : 1;
+#endif
 #else
     context_ptr->me_context_ptr->switched_half_pel_mode = enc_mode <= ENC_M1 ? 0 : 1;
 #endif
@@ -561,6 +565,10 @@ void* tf_set_me_hme_params_oq(
     uint8_t sc_content_detected = picture_control_set_ptr->sc_content_detected;
 
 #if M2_ADOPTIONS
+#if M1_FEB12_ADOPTION
+    if (picture_control_set_ptr->enc_mode <= ENC_M1)
+        hmeMeLevel = ENC_M0;
+#endif
     if (picture_control_set_ptr->enc_mode == ENC_M2)
         hmeMeLevel = ENC_M1;
 #endif
@@ -753,7 +761,11 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
 
 #if SWITCHED_HALF_PEL_MODE
 #if M1_ADOPTIONS
+#if M1_FEB12_ADOPTION
+    context_ptr->me_context_ptr->switched_half_pel_mode = enc_mode <= ENC_M0 ? 0 : 1;
+#else
     context_ptr->me_context_ptr->switched_half_pel_mode = enc_mode <= ENC_M1 ? 0 : 1;
+#endif
 #else
     context_ptr->me_context_ptr->switched_half_pel_mode = enc_mode <= ENC_M0 ? 0 : 1;
 #endif

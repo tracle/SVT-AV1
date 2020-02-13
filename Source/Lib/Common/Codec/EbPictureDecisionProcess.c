@@ -1659,7 +1659,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
                 else
 #if M1_FEB4_ADOPTION
+#if M1_FEB12_ADOPTION
+                    picture_control_set_ptr->compound_mode = picture_control_set_ptr->enc_mode <= ENC_M1 ? 2 : 1;
+#else
                     picture_control_set_ptr->compound_mode = picture_control_set_ptr->enc_mode <= ENC_M0 ? 2 : 1;
+#endif
 #else
                     picture_control_set_ptr->compound_mode = picture_control_set_ptr->enc_mode <= ENC_M1 ? 2 : 1;
 #endif

@@ -3266,7 +3266,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             else
                 context_ptr->new_nearest_near_comb_injection = 1;
 #else
+#if M1_FEB12_ADOPTION
+            if (picture_control_set_ptr->enc_mode <= ENC_M0)
+#else
             if (picture_control_set_ptr->enc_mode <= ENC_M1)
+#endif
                 context_ptr->new_nearest_near_comb_injection = 1;
             else
                 context_ptr->new_nearest_near_comb_injection = 0;
@@ -4144,7 +4148,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
 #if ENHANCED_SQ_WEIGHT || FASTER_SQ_WEIGHT
 #if M1_FEB4_ADOPTION
+#if M1_FEB12_ADOPTION
+        if (picture_control_set_ptr->enc_mode <= ENC_M1)
+#else
         if (picture_control_set_ptr->enc_mode <= ENC_M0)
+#endif
 #else
         if (picture_control_set_ptr->enc_mode <= ENC_M1)
 #endif
@@ -4167,7 +4175,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     if (MR_MODE || context_ptr->pd_pass < PD_PASS_2)
         context_ptr->nsq_hv_level = 0;
 #if M0_FEB4_ADOPTION
+#if M1_FEB12_ADOPTION
+    else if (picture_control_set_ptr->enc_mode <= ENC_M1) {
+#else
     else if (picture_control_set_ptr->enc_mode <= ENC_M0) {
+#endif
 #else
     else if (picture_control_set_ptr->enc_mode == ENC_M0) {
 #endif
