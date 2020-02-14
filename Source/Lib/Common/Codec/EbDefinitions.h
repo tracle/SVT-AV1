@@ -38,7 +38,9 @@ extern "C" {
 #define RESTRICT_DEPTH_TO_BE_TESTED 1
 #endif
 #define TEST5    0
-#define USE_M1_MD_IN_PD1        0
+#define USE_M1_MD_IN_PD1            0
+#define DISABLE_PD1_SQ_NSQ_DECISION 0
+#define PD1_DEPTH_PRUNING           0
 
 #define M1_FEB12_ADOPTION       1
 #define M0_FEB12_ADOPTION       1

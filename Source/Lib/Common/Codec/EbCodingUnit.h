@@ -581,6 +581,10 @@ extern "C" {
 #if MDC_ADAPTIVE_LEVEL || MULTI_PASS_PD
         uint64_t                      depth_cost[NUMBER_OF_DEPTH];
 #endif
+#if PD1_DEPTH_PRUNING
+        uint8_t                      depth_valid[NUMBER_OF_DEPTH];
+        uint32_t                     depth_num_unit_blocks[NUMBER_OF_DEPTH];
+#endif
         TileInfo tile_info;
     } SuperBlock;
 

@@ -13049,6 +13049,9 @@ EB_EXTERN EbErrorType mode_decision_sb(
         MAX_CU_COST, MAX_CU_COST,MAX_CU_COST,MAX_CU_COST,MAX_CU_COST };
     PART nsq_shape_table[NUMBER_OF_SHAPES] = { PART_N, PART_H, PART_V, PART_HA, PART_HB,
         PART_VA, PART_VB, PART_H4, PART_V4, PART_S };
+#if PD1_DEPTH_PRUNING
+    uint32_t depth_num_unit_blocks[NUMBER_OF_DEPTH] = { 0 };
+#endif
 #endif
 #if SKIP_DEPTH
     uint8_t skip_next_depth = 0;
@@ -13598,6 +13601,10 @@ EB_EXTERN EbErrorType mode_decision_sb(
                     }
                 }
                 depth_cost[sequence_control_set_ptr->static_config.super_block_size == 128 ? context_ptr->blk_geom->depth : context_ptr->blk_geom->depth + 1] += nsq_cost[nsq_shape_table[0]];
+#if PD1_DEPTH_PRUNING
+                const BlockGeom * sq_blk_geom = get_blk_geom_mds(blk_geom->sqi_mds);
+                depth_num_unit_blocks[sequence_control_set_ptr->static_config.super_block_size == 128 ? context_ptr->blk_geom->depth : context_ptr->blk_geom->depth + 1] += (sq_blk_geom->bwidth*sq_blk_geom->bheight) >> 4;
+#endif
 #if SKIP_DEPTH
 #if SC_FEB12_ADOPTION
                 if (context_ptr->skip_depth && sequence_control_set_ptr->sb_geom[lcuAddr].is_complete_sb) {
@@ -13688,6 +13695,10 @@ EB_EXTERN EbErrorType mode_decision_sb(
 
     for (uint8_t depth_idx = 0; depth_idx < NUMBER_OF_DEPTH; depth_idx++) {
         sb_ptr->depth_cost[depth_idx] = depth_cost[depth_idx] < 0 ? MAX_MODE_COST : depth_cost[depth_idx];
+#if PD1_DEPTH_PRUNING
+        sb_ptr->depth_valid[depth_idx] = depth_cost[depth_idx] < 0 ? 0 : 1;
+        sb_ptr->depth_num_unit_blocks[depth_idx] = depth_num_unit_blocks[depth_idx];
+#endif
     }
 #endif
 

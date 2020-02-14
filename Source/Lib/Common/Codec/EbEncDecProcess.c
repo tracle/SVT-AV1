@@ -4831,7 +4831,15 @@ static void perform_pred_depth_refinement(
 
     uint32_t tot_d1_blocks, block_1d_idx;
     EbBool split_flag;
-
+#if PD1_DEPTH_PRUNING
+    uint32_t num_unit_block_per_sb = sequence_control_set_ptr->seq_header.sb_size == BLOCK_128X128 ? 1024 : 256;
+    for (uint8_t d_idx = 0; d_idx < NUMBER_OF_DEPTH; d_idx++) {
+        if (sb_ptr->depth_valid[d_idx])
+            sb_ptr->depth_cost[d_idx] = (sb_ptr->depth_cost[d_idx] / sb_ptr->depth_num_unit_blocks[d_idx]) * num_unit_block_per_sb;
+        else
+            sb_ptr->depth_cost[d_idx] = MAX_CU_COST;
+    }
+#endif
     while (blk_index < sequence_control_set_ptr->max_block_cnt) {
 
         const BlockGeom * blk_geom = get_blk_geom_mds(blk_index);
@@ -4932,6 +4940,19 @@ static void perform_pred_depth_refinement(
                             }
                             else
 #endif
+#if DISABLE_PD1_SQ_NSQ_DECISION
+                                s_depth = -1;
+                                e_depth = 1;
+#if PD1_DEPTH_PRUNING
+                                derive_start_end_depth(
+                                    picture_control_set_ptr,
+                                    sb_ptr,
+                                    sequence_control_set_ptr->seq_header.sb_size,
+                                    &s_depth,
+                                    &e_depth,
+                                    blk_geom);
+#endif
+#else
                                 if (context_ptr->md_cu_arr_nsq[blk_index].best_d1_blk == blk_index) {
                                     s_depth = -1;
                                     e_depth = 0;
@@ -4940,6 +4961,7 @@ static void perform_pred_depth_refinement(
                                     s_depth = 0;
                                     e_depth = 1;
                                 }
+#endif
 
 #if TEST_PIC_MULTI_PASS_PD_MODE_4
                             s_depth = 0;
