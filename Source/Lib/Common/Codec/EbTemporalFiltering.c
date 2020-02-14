@@ -506,7 +506,11 @@ static void create_ME_context_and_picture_control(MotionEstimationContext_t *con
     context_ptr->me_context_ptr->lambda = lambda_mode_decision_ra_sad[picture_control_set_ptr_central->picture_qp];
 #if TUNE_SUBPEL_SEARCH
 #if M1_FEB4_ADOPTION || M0_FEB4_ADOPTION
+#if M2_FEB14_ADOPTION
+    if (picture_control_set_ptr_frame->enc_mode <= ENC_M2)
+#else
     if (picture_control_set_ptr_frame->enc_mode <= ENC_M1)
+#endif
     context_ptr->me_context_ptr->h_pel_search_wind =   H_PEL_SEARCH_WIND_3;
     else
     context_ptr->me_context_ptr->h_pel_search_wind =  sequence_control_set_ptr->input_resolution <= INPUT_SIZE_576p_RANGE_OR_LOWER ?

@@ -566,11 +566,17 @@ void* tf_set_me_hme_params_oq(
 
 #if M2_ADOPTIONS
 #if M1_FEB12_ADOPTION
+#if M2_FEB14_ADOPTION
+    if (picture_control_set_ptr->enc_mode <= ENC_M2)
+#else
     if (picture_control_set_ptr->enc_mode <= ENC_M1)
+#endif
         hmeMeLevel = ENC_M0;
 #endif
+#if !M2_FEB14_ADOPTION
     if (picture_control_set_ptr->enc_mode == ENC_M2)
         hmeMeLevel = ENC_M1;
+#endif
 #endif
 
     // HME Level0

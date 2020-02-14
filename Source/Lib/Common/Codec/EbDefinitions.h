@@ -32,13 +32,20 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define M2_FEB14_ADOPTION       1
 #define TEST4    0
 #if TEST4
 #define DISABLE_PD1                 1
 #define RESTRICT_DEPTH_TO_BE_TESTED 1
 #endif
+#if M2_FEB14_ADOPTION
+#define TEST5    1
+#else
 #define TEST5    0
-#define USE_M1_MD_IN_PD1            0
+#endif
+
+#define USE_M1_MD_IN_PD1        0
 #define DISABLE_PD1_SQ_NSQ_DECISION 0
 #define PD1_DEPTH_PRUNING           0
 

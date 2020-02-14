@@ -3408,7 +3408,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             else
                 context_ptr->bipred3x3_injection = 0;
         else
+#if M2_FEB14_ADOPTION
+            if (picture_control_set_ptr->enc_mode <= ENC_M1)
+#else
             if (picture_control_set_ptr->enc_mode <= ENC_M3)
+#endif
                 context_ptr->bipred3x3_injection = 1;
             else if (picture_control_set_ptr->enc_mode <= ENC_M4)
                 context_ptr->bipred3x3_injection = 2;
@@ -3858,7 +3862,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     if (sequence_control_set_ptr->static_config.prune_ref_rec_part == DEFAULT)
 #if PRESETS_TUNE
 #if M2_ADOPTIONS
+#if M2_FEB14_ADOPTION
+        if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected || picture_control_set_ptr->enc_mode <= ENC_M1)
+#else
         if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected || picture_control_set_ptr->enc_mode <= ENC_M3)
+#endif
 #else
         if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected || picture_control_set_ptr->enc_mode <= ENC_M1)
 #endif
@@ -3916,7 +3924,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if M1_ADOPT_M0_MD_EXIT_TH
 #if M2_ADOPTIONS
 #if SC_REDUCE_DIFF //md_exit_th
+#if M2_FEB14_ADOPTION
+    if (picture_control_set_ptr->enc_mode <= ENC_M1)
+#else
     if (picture_control_set_ptr->enc_mode <= ENC_M3)
+#endif
 #else
     if (MR_MODE || (picture_control_set_ptr->enc_mode <= ENC_M2 && picture_control_set_ptr->parent_pcs_ptr->sc_content_detected == 0))
 #endif
@@ -3955,7 +3967,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if M0_OPT
 #if M1_OPT
 #if MD_STAGE_1_CAND_PRUNNING_TH
+#if M2_FEB14_ADOPTION
+    if (picture_control_set_ptr->enc_mode <= ENC_M1 || picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
+#else
     if (picture_control_set_ptr->enc_mode <= ENC_M3 || picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
+#endif
 #else
     if (MR_MODE || (picture_control_set_ptr->enc_mode <= ENC_M1 && (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected == 0)) || sequence_control_set_ptr->input_resolution == INPUT_SIZE_576p_RANGE_OR_LOWER)
 #endif
@@ -4171,8 +4187,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         if (picture_control_set_ptr->enc_mode <= ENC_M1)
 #endif
             context_ptr->sq_weight = sequence_control_set_ptr->static_config.sq_weight + 5;
+#if !M2_FEB14_ADOPTION
         else if (picture_control_set_ptr->enc_mode <= ENC_M3)
             context_ptr->sq_weight = sequence_control_set_ptr->static_config.sq_weight;
+#endif
         else
             context_ptr->sq_weight = sequence_control_set_ptr->static_config.sq_weight - 5;
 #else
@@ -4190,7 +4208,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->nsq_hv_level = 0;
 #if M0_FEB4_ADOPTION
 #if M1_FEB12_ADOPTION
+#if M2_FEB14_ADOPTION
+    else if (picture_control_set_ptr->enc_mode <= ENC_M2) {
+#else
     else if (picture_control_set_ptr->enc_mode <= ENC_M1) {
+#endif
 #else
     else if (picture_control_set_ptr->enc_mode <= ENC_M0) {
 #endif
@@ -4244,8 +4266,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if M2_ADOPTIONS
 #if PME_SEARCH_AREA_TUNE
 #if M1_FEB4_ADOPTION   || M0_FEB4_ADOPTION
+#if M2_FEB14_ADOPTION
+        context_ptr->full_pel_ref_window_width_th  = picture_control_set_ptr->enc_mode <= ENC_M1 ? FULL_PEL_REF_WINDOW_WIDTH_15 : FULL_PEL_REF_WINDOW_WIDTH_7;
+        context_ptr->full_pel_ref_window_height_th = picture_control_set_ptr->enc_mode <= ENC_M1 ? FULL_PEL_REF_WINDOW_HEIGHT_15 : FULL_PEL_REF_WINDOW_HEIGHT_5;
+#else
         context_ptr->full_pel_ref_window_width_th  = picture_control_set_ptr->enc_mode <= ENC_M3 ? FULL_PEL_REF_WINDOW_WIDTH_15 : FULL_PEL_REF_WINDOW_WIDTH_7;
         context_ptr->full_pel_ref_window_height_th = picture_control_set_ptr->enc_mode <= ENC_M3 ? FULL_PEL_REF_WINDOW_HEIGHT_15 : FULL_PEL_REF_WINDOW_HEIGHT_5;
+#endif
 #else
         context_ptr->full_pel_ref_window_width_th =  FULL_PEL_REF_WINDOW_WIDTH;
         context_ptr->full_pel_ref_window_height_th =  FULL_PEL_REF_WINDOW_HEIGHT;
@@ -4927,14 +4954,22 @@ static void perform_pred_depth_refinement(
                         else {
 #if TEST5
                             uint32_t full_lambda =  context_ptr->hbd_mode_decision ? context_ptr->full_lambda_md[EB_10_BIT_MD] : context_ptr->full_lambda_md[EB_8_BIT_MD];
+#if M2_FEB14_ADOPTION
+                            uint64_t dist_sum = (128 * 128 * 10);
+#else
                             uint64_t dist_sum = (128 * 128 * 100);
+#endif
                             uint64_t early_exit_th = RDCOST(full_lambda, 16, dist_sum);
                             uint64_t best_part_cost = generate_best_part_cost(
                                 sequence_control_set_ptr,
                                 picture_control_set_ptr,
                                 context_ptr,
                                 sb_index);
+#if M2_FEB14_ADOPTION
+                            if (best_part_cost < early_exit_th && picture_control_set_ptr->enc_mode > ENC_M1) {
+#else
                             if (best_part_cost < early_exit_th) {
+#endif
                                 s_depth = 0;
                                 e_depth = 0;
                             }
