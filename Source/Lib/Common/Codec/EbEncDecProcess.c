@@ -2910,7 +2910,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             if (context_ptr->tx_search_level == TX_SEARCH_ENC_DEC)
                 context_ptr->tx_weight = MAX_MODE_COST;
 #if M0_FEB4_ADOPTION
+#if SC_FEB12_ADOPTION
+            else if (picture_control_set_ptr->enc_mode <= ENC_M0 && picture_control_set_ptr->parent_pcs_ptr->sc_content_detected == 0)
+#else            
             else if (picture_control_set_ptr->enc_mode <= ENC_M0)
+#endif
                 context_ptr->tx_weight = MAX_MODE_COST;
 #endif
             else if (picture_control_set_ptr->enc_mode <= ENC_M5)
@@ -3018,6 +3022,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
     }
     else
+#if SC_FEB12_ADOPTION
+        if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
+            context_ptr->interpolation_search_level = IT_SEARCH_OFF;
+        else
+#endif
 #if !MR_MODE_CLEAN_UP
     if (MR_MODE)
         context_ptr->interpolation_search_level = IT_SEARCH_FAST_LOOP;
@@ -3267,6 +3276,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 context_ptr->new_nearest_near_comb_injection = 1;
 #else
 #if M1_FEB12_ADOPTION
+#if SC_FEB12_ADOPTION
+        if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
+                context_ptr->new_nearest_near_comb_injection = 0;
+        else
+#endif
             if (picture_control_set_ptr->enc_mode <= ENC_M0)
 #else
             if (picture_control_set_ptr->enc_mode <= ENC_M1)
@@ -4441,6 +4455,16 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     context_ptr->chroma_search_opt = picture_control_set_ptr->enc_mode <= ENC_M0 ? 0 : 1;
 #endif
 #endif
+
+#if SC_FEB12_ADOPTION
+    if (context_ptr->pd_pass == PD_PASS_0)
+       context_ptr->skip_depth= 0;
+    else if (context_ptr->pd_pass == PD_PASS_1)
+       context_ptr->skip_depth = 0;
+    else
+        context_ptr->skip_depth = picture_control_set_ptr->parent_pcs_ptr->sc_content_detected ? 1 : 0;
+#endif
+
 
     return return_error;
 }

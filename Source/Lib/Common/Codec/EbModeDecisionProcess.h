@@ -300,7 +300,9 @@ extern "C" {
         uint16_t                        similar_blk_mds;
         uint8_t                         comp_similar_mode;
 #endif
-
+#if SC_FEB12_ADOPTION
+        uint8_t                         skip_depth;
+#endif
 #if INTRA_SIMILAR
         uint8_t                         inject_inter_candidates;
         uint8_t                         intra_similar_mode;

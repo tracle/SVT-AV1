@@ -1961,7 +1961,11 @@ void set_md_stage_counts(
 
 #if M1_ADOPTIONS
 #if M1_FEB4_ADOPTION
+#if SC_FEB12_ADOPTION
+        uint8_t nics_level = picture_control_set_ptr->enc_mode <= ENC_M0 && picture_control_set_ptr->parent_pcs_ptr->sc_content_detected == 0 ? NIC_S8 : picture_control_set_ptr->enc_mode <= ENC_M3 ? NIC_S11 : NIC_S_OLD;
+#else
         uint8_t nics_level = picture_control_set_ptr->enc_mode <= ENC_M0 ? NIC_S8 : picture_control_set_ptr->enc_mode <= ENC_M3 ? NIC_S11 : NIC_S_OLD;
+#endif
 #else
         uint8_t nics_level = picture_control_set_ptr->enc_mode <= ENC_M1 ? NIC_S8 : picture_control_set_ptr->enc_mode <= ENC_M3 ? NIC_S11 : NIC_S_OLD;
 #endif
@@ -13595,8 +13599,12 @@ EB_EXTERN EbErrorType mode_decision_sb(
                 }
                 depth_cost[sequence_control_set_ptr->static_config.super_block_size == 128 ? context_ptr->blk_geom->depth : context_ptr->blk_geom->depth + 1] += nsq_cost[nsq_shape_table[0]];
 #if SKIP_DEPTH
+#if SC_FEB12_ADOPTION
+                if (context_ptr->skip_depth && sequence_control_set_ptr->sb_geom[lcuAddr].is_complete_sb) {
+#else
                 if (sequence_control_set_ptr->sb_geom[lcuAddr].is_complete_sb) {
                     if (context_ptr->pd_pass > PD_PASS_1) {
+#endif
                         uint64_t sq_cost = nsq_cost[0]; // sq cost
                         uint64_t best_nsq_cost = MAX_CU_COST;
                         skip_next_depth = 0;
@@ -13615,7 +13623,10 @@ EB_EXTERN EbErrorType mode_decision_sb(
                                     1);
                             }
                         }
+
+#if !SC_FEB12_ADOPTION
                     }
+#endif
                 }
 #endif
             }
