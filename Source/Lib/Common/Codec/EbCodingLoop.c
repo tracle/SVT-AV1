@@ -2934,7 +2934,7 @@ EB_EXTERN void av1_encode_pass(
                                     transform_inner_array_ptr,
                                     count_non_zero_coeffs,
 #if SUPPORT_BC
-                                    blk_geom->has_uv ? PICTURE_BUFFER_DESC_FULL_MASK : PICTURE_BUFFER_DESC_LUMA_MASK, 
+                                    (context_ptr->blk_geom->has_uv && uv_pass) ? PICTURE_BUFFER_DESC_FULL_MASK : PICTURE_BUFFER_DESC_LUMA_MASK,
 #else
                                     blk_geom->has_uv ? PICTURE_BUFFER_DESC_FULL_MASK : PICTURE_BUFFER_DESC_LUMA_MASK,
 #endif

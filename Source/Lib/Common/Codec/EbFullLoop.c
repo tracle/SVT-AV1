@@ -1856,7 +1856,11 @@ int32_t av1_quantize_inv_quantize(
 
     EbBool is_inter = (pred_mode >= NEARESTMV);
 #if RDOQ_CHROMA
+#if ENABLE_RDOQ_BC
+    EbBool perform_rdoq = ((md_context->md_staging_skip_rdoq == EB_FALSE || is_encode_pass) && md_context->trellis_quant_coeff_optimization);
+#else
     EbBool perform_rdoq = ((md_context->md_staging_skip_rdoq == EB_FALSE || is_encode_pass) && md_context->trellis_quant_coeff_optimization && !is_intra_bc);
+#endif
 #else
     EbBool perform_rdoq = ((md_context->md_staging_skip_rdoq == EB_FALSE || is_encode_pass) && md_context->trellis_quant_coeff_optimization && component_type == COMPONENT_LUMA && !is_intra_bc);
 #endif

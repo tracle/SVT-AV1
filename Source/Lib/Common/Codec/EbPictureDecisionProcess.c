@@ -1568,7 +1568,11 @@ EbErrorType signal_derivation_multi_processes_oq(
                 picture_control_set_ptr->atb_mode = (picture_control_set_ptr->is_used_as_reference_flag) ? 1 : 0;
 #else
 #if SC_FEB4_ADOPTION
+#if ENABLE_TX_BC 
+            picture_control_set_ptr->atb_mode = (picture_control_set_ptr->sc_content_detected && picture_control_set_ptr->slice_type != I_SLICE) ? 0 : 1;
+#else
             picture_control_set_ptr->atb_mode = (picture_control_set_ptr->sc_content_detected ) ? 0 : 1;
+#endif
 #else
             picture_control_set_ptr->atb_mode = (picture_control_set_ptr->temporal_layer_index == 0 || !picture_control_set_ptr->sc_content_detected ) ? 1 : 0;
 #endif

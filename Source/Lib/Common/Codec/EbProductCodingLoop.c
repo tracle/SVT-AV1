@@ -8642,7 +8642,7 @@ void full_loop_core(
     uint8_t end_tx_depth = 0;
 
 #if LOSSLESS_TX_TYPE_OPT || RDOQ_LIGHT_TX_TYPE_MD_STAGE_2
-#if ENABLE_BC
+#if ENABLE_TX_BC
     if (context_ptr->md_atb_mode == 0) {
 #else
     if (context_ptr->md_atb_mode == 0 || candidate_buffer->candidate_ptr->use_intrabc) {
