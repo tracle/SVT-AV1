@@ -1128,6 +1128,18 @@ void Unipred3x3CandidatesInjection(
             if (ALLOW_REFINEMENT_FLAG[bipredIndex] == 0)
                 continue;
         }
+#if ME_MV_UPGRADE_LOSSLESS
+        int16_t to_inject_mv_x;
+        int16_t to_inject_mv_y;
+        if (picture_control_set_ptr->parent_pcs_ptr->frm_hdr.allow_high_precision_mv) {
+            to_inject_mv_x = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][list0_ref_index][0] + BIPRED_3x3_X_POS[bipredIndex];
+            to_inject_mv_y = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][list0_ref_index][1] + BIPRED_3x3_Y_POS[bipredIndex];
+        }
+        else {
+            to_inject_mv_x = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][list0_ref_index][0] + (BIPRED_3x3_X_POS[bipredIndex] << 1);
+            to_inject_mv_y = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][list0_ref_index][1] + (BIPRED_3x3_Y_POS[bipredIndex] << 1);
+        }
+#else
 #if  EIGHT_PEL_FIX
         int16_t to_inject_mv_x;
         int16_t to_inject_mv_y;
@@ -1142,6 +1154,7 @@ void Unipred3x3CandidatesInjection(
 #else
         int16_t to_inject_mv_x = (me_results->me_mv_array[context_ptr->me_block_offset][list0_ref_index].x_mv + BIPRED_3x3_X_POS[bipredIndex]) << 1;
         int16_t to_inject_mv_y = (me_results->me_mv_array[context_ptr->me_block_offset][list0_ref_index].y_mv + BIPRED_3x3_Y_POS[bipredIndex]) << 1;
+#endif
 #endif
         uint8_t to_inject_ref_type = svt_get_ref_frame_type(REF_LIST_0, list0_ref_index);
         uint8_t skip_cand = check_ref_beackout(
@@ -1293,6 +1306,18 @@ void Unipred3x3CandidatesInjection(
                 if (ALLOW_REFINEMENT_FLAG[bipredIndex] == 0)
                     continue;
             }
+#if ME_MV_UPGRADE_LOSSLESS
+            int16_t to_inject_mv_x;
+            int16_t to_inject_mv_y;
+            if (picture_control_set_ptr->parent_pcs_ptr->frm_hdr.allow_high_precision_mv) {
+                to_inject_mv_x = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_1][list1_ref_index][0] + BIPRED_3x3_X_POS[bipredIndex];
+                to_inject_mv_y = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_1][list1_ref_index][1] + BIPRED_3x3_Y_POS[bipredIndex];
+            }
+            else {
+                to_inject_mv_x = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_1][list1_ref_index][0] + (BIPRED_3x3_X_POS[bipredIndex] << 1);
+                to_inject_mv_y = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_1][list1_ref_index][1] + (BIPRED_3x3_Y_POS[bipredIndex] << 1);
+            }
+#else
 #if EIGHT_PEL_FIX
             int16_t to_inject_mv_x;
             int16_t to_inject_mv_y;
@@ -1307,6 +1332,7 @@ void Unipred3x3CandidatesInjection(
 #else
             int16_t to_inject_mv_x = (me_results->me_mv_array[context_ptr->me_block_offset][((sequence_control_set_ptr->mrp_mode == 0) ? 4 : 2) + list1_ref_index].x_mv + BIPRED_3x3_X_POS[bipredIndex]) << 1;
             int16_t to_inject_mv_y = (me_results->me_mv_array[context_ptr->me_block_offset][((sequence_control_set_ptr->mrp_mode == 0) ? 4 : 2) + list1_ref_index].y_mv + BIPRED_3x3_Y_POS[bipredIndex]) << 1;
+#endif
 #endif
             uint8_t to_inject_ref_type = svt_get_ref_frame_type(REF_LIST_1, list1_ref_index);
             uint8_t skip_cand = check_ref_beackout(
@@ -1509,6 +1535,21 @@ void Bipred3x3CandidatesInjection(
             if (ALLOW_REFINEMENT_FLAG[bipredIndex] == 0)
                 continue;
         }
+#if ME_MV_UPGRADE_LOSSLESS
+        int16_t to_inject_mv_x_l0 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][me_block_results_ptr->ref0_list][list0_ref_index][0];
+        int16_t to_inject_mv_y_l0 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][me_block_results_ptr->ref0_list][list0_ref_index][1];
+
+        int16_t to_inject_mv_x_l1;
+        int16_t to_inject_mv_y_l1;
+        if (picture_control_set_ptr->parent_pcs_ptr->frm_hdr.allow_high_precision_mv) {
+            to_inject_mv_x_l1 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][me_block_results_ptr->ref1_list][list1_ref_index][0] + BIPRED_3x3_X_POS[bipredIndex];
+            to_inject_mv_y_l1 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][me_block_results_ptr->ref1_list][list1_ref_index][1] + BIPRED_3x3_Y_POS[bipredIndex];
+        }
+        else {
+            to_inject_mv_x_l1 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][me_block_results_ptr->ref1_list][list1_ref_index][0] + (BIPRED_3x3_X_POS[bipredIndex] << 1);
+            to_inject_mv_y_l1 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][me_block_results_ptr->ref1_list][list1_ref_index][1] + (BIPRED_3x3_Y_POS[bipredIndex] << 1);
+        }
+#else
         int16_t to_inject_mv_x_l0 =  me_results->me_mv_array[context_ptr->me_block_offset][list0_ref_index].x_mv << 1;
         int16_t to_inject_mv_y_l0 =  me_results->me_mv_array[context_ptr->me_block_offset][list0_ref_index].y_mv << 1;
 #if EIGHT_PEL_FIX
@@ -1529,6 +1570,7 @@ void Bipred3x3CandidatesInjection(
 #else
         int16_t to_inject_mv_x_l1 = (me_results->me_mv_array[context_ptr->me_block_offset][((sequence_control_set_ptr->mrp_mode == 0) ? (me_block_results_ptr->ref1_list << 2) : (me_block_results_ptr->ref1_list << 1)) + list1_ref_index].x_mv + BIPRED_3x3_X_POS[bipredIndex]) << 1;
         int16_t to_inject_mv_y_l1 = (me_results->me_mv_array[context_ptr->me_block_offset][((sequence_control_set_ptr->mrp_mode == 0) ? (me_block_results_ptr->ref1_list << 2) : (me_block_results_ptr->ref1_list << 1)) + list1_ref_index].y_mv + BIPRED_3x3_Y_POS[bipredIndex]) << 1;
+#endif
 #endif
         MvReferenceFrame rf[2];
         rf[0] = svt_get_ref_frame_type(me_block_results_ptr->ref0_list, list0_ref_index);
@@ -1644,6 +1686,21 @@ void Bipred3x3CandidatesInjection(
                 if (ALLOW_REFINEMENT_FLAG[bipredIndex] == 0)
                     continue;
             }
+
+#if ME_MV_UPGRADE_LOSSLESS
+            int16_t to_inject_mv_x_l0;
+            int16_t to_inject_mv_y_l0;
+            if (picture_control_set_ptr->parent_pcs_ptr->frm_hdr.allow_high_precision_mv) {
+                to_inject_mv_x_l0 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][me_block_results_ptr->ref0_list][list0_ref_index][0] + BIPRED_3x3_X_POS[bipredIndex];
+                to_inject_mv_y_l0 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][me_block_results_ptr->ref0_list][list0_ref_index][1] + BIPRED_3x3_Y_POS[bipredIndex];
+            }
+            else {
+                to_inject_mv_x_l0 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][me_block_results_ptr->ref0_list][list0_ref_index][0] + (BIPRED_3x3_X_POS[bipredIndex] << 1);
+                to_inject_mv_y_l0 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][me_block_results_ptr->ref0_list][list0_ref_index][1] + (BIPRED_3x3_Y_POS[bipredIndex] << 1);
+            }
+            int16_t to_inject_mv_x_l1 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][me_block_results_ptr->ref1_list][list1_ref_index][0];
+            int16_t to_inject_mv_y_l1 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][me_block_results_ptr->ref1_list][list1_ref_index][1];
+#else
 #if EIGHT_PEL_FIX
             int16_t to_inject_mv_x_l0;
             int16_t to_inject_mv_y_l0;
@@ -1661,7 +1718,7 @@ void Bipred3x3CandidatesInjection(
 #endif
             int16_t to_inject_mv_x_l1 =  me_results->me_mv_array[context_ptr->me_block_offset][((sequence_control_set_ptr->mrp_mode == 0) ? (me_block_results_ptr->ref1_list << 2) : (me_block_results_ptr->ref1_list << 1)) + list1_ref_index].x_mv << 1;
             int16_t to_inject_mv_y_l1 =  me_results->me_mv_array[context_ptr->me_block_offset][((sequence_control_set_ptr->mrp_mode == 0) ? (me_block_results_ptr->ref1_list << 2) : (me_block_results_ptr->ref1_list << 1)) + list1_ref_index].y_mv << 1;
-
+#endif
             MvReferenceFrame rf[2];
             rf[0] = svt_get_ref_frame_type(me_block_results_ptr->ref0_list, list0_ref_index);
             rf[1] = svt_get_ref_frame_type(me_block_results_ptr->ref1_list, list1_ref_index);
@@ -2736,9 +2793,14 @@ void inject_new_nearest_new_comb_candidates(
 
                 int16_t to_inject_mv_x_l0 = context_ptr->md_local_cu_unit[context_ptr->blk_geom->blkidx_mds].ed_ref_mv_stack[ref_pair][0].this_mv.as_mv.col;
                 int16_t to_inject_mv_y_l0 = context_ptr->md_local_cu_unit[context_ptr->blk_geom->blkidx_mds].ed_ref_mv_stack[ref_pair][0].this_mv.as_mv.row;
+
+#if ME_MV_UPGRADE_LOSSLESS
+                int16_t to_inject_mv_x_l1 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][get_list_idx(rf[1])][ref_idx_1][0];
+                int16_t to_inject_mv_y_l1 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][get_list_idx(rf[1])][ref_idx_1][1];
+#else
                 int16_t to_inject_mv_x_l1 = me_results->me_mv_array[context_ptr->me_block_offset][((sequence_control_set_ptr->mrp_mode == 0) ? (get_list_idx(rf[1]) << 2) : (get_list_idx(rf[1]) << 1)) + ref_idx_1].x_mv << 1;
                 int16_t to_inject_mv_y_l1 = me_results->me_mv_array[context_ptr->me_block_offset][((sequence_control_set_ptr->mrp_mode == 0) ? (get_list_idx(rf[1]) << 2) : (get_list_idx(rf[1]) << 1)) + ref_idx_1].y_mv << 1;
-
+#endif
                 inj_mv = context_ptr->injected_mv_count_bipred == 0 || mrp_is_already_injected_mv_bipred(context_ptr, to_inject_mv_x_l0, to_inject_mv_y_l0, to_inject_mv_x_l1, to_inject_mv_y_l1, ref_pair) == EB_FALSE;
 
                 if(umv0tile) {
@@ -2843,8 +2905,13 @@ void inject_new_nearest_new_comb_candidates(
                 //NEW_NEARESTMV
                 const MeLcuResults *me_results = picture_control_set_ptr->parent_pcs_ptr->me_results[context_ptr->me_sb_addr];
 
+#if ME_MV_UPGRADE_LOSSLESS
+                int16_t to_inject_mv_x_l0 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][ref_idx_0][0];
+                int16_t to_inject_mv_y_l0 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][ref_idx_0][1];
+#else
                 int16_t to_inject_mv_x_l0 = me_results->me_mv_array[context_ptr->me_block_offset][ref_idx_0].x_mv << 1;
                 int16_t to_inject_mv_y_l0 = me_results->me_mv_array[context_ptr->me_block_offset][ref_idx_0].y_mv << 1;
+#endif
                 int16_t to_inject_mv_x_l1 = context_ptr->md_local_cu_unit[context_ptr->blk_geom->blkidx_mds].ed_ref_mv_stack[ref_pair][0].comp_mv.as_mv.col;
                 int16_t to_inject_mv_y_l1 = context_ptr->md_local_cu_unit[context_ptr->blk_geom->blkidx_mds].ed_ref_mv_stack[ref_pair][0].comp_mv.as_mv.row;
 
@@ -2967,9 +3034,13 @@ void inject_new_nearest_new_comb_candidates(
 
                         //NEW_NEARMV
                         const MeLcuResults *me_results = picture_control_set_ptr->parent_pcs_ptr->me_results[context_ptr->me_sb_addr];
-
+#if ME_MV_UPGRADE_LOSSLESS
+                        int16_t to_inject_mv_x_l0 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][ref_idx_0][0];
+                        int16_t to_inject_mv_y_l0 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][ref_idx_0][1];
+#else
                         int16_t to_inject_mv_x_l0 = me_results->me_mv_array[context_ptr->me_block_offset][ref_idx_0].x_mv << 1;
                         int16_t to_inject_mv_y_l0 = me_results->me_mv_array[context_ptr->me_block_offset][ref_idx_0].y_mv << 1;
+#endif
                         int16_t to_inject_mv_x_l1 = nearmv[1].as_mv.col;
                         int16_t to_inject_mv_y_l1 = nearmv[1].as_mv.row;
 
@@ -3058,9 +3129,13 @@ void inject_new_nearest_new_comb_candidates(
 
                    int16_t to_inject_mv_x_l0 = nearmv[0].as_mv.col;
                    int16_t to_inject_mv_y_l0 = nearmv[0].as_mv.row;
+#if ME_MV_UPGRADE_LOSSLESS
+                   int16_t to_inject_mv_x_l1 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][get_list_idx(rf[1])][ref_idx_1][0];
+                   int16_t to_inject_mv_y_l1 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][get_list_idx(rf[1])][ref_idx_1][1];
+#else
                    int16_t to_inject_mv_x_l1 = me_results->me_mv_array[context_ptr->me_block_offset][((sequence_control_set_ptr->mrp_mode == 0) ? (get_list_idx(rf[1]) << 2) : (get_list_idx(rf[1]) << 1)) + ref_idx_1].x_mv << 1;//context_ptr->md_local_cu_unit[context_ptr->blk_geom->blkidx_mds].ed_ref_mv_stack[ref_pair][0].comp_mv.as_mv.col;
                    int16_t to_inject_mv_y_l1 = me_results->me_mv_array[context_ptr->me_block_offset][((sequence_control_set_ptr->mrp_mode == 0) ? (get_list_idx(rf[1]) << 2) : (get_list_idx(rf[1]) << 1)) + ref_idx_1].y_mv << 1;//context_ptr->md_local_cu_unit[context_ptr->blk_geom->blkidx_mds].ed_ref_mv_stack[ref_pair][0].comp_mv.as_mv.row;
-
+#endif
                    inj_mv = context_ptr->injected_mv_count_bipred == 0 || mrp_is_already_injected_mv_bipred(context_ptr, to_inject_mv_x_l0, to_inject_mv_y_l0, to_inject_mv_x_l1, to_inject_mv_y_l1, ref_pair) == EB_FALSE;
 #if MUS_ME
                    inj_mv = inj_mv && is_me_data_present(context_ptr, me_results, get_list_idx(rf[1]), ref_idx_1);
@@ -3331,8 +3406,13 @@ void inject_warped_motion_candidates(
             if (list0_ref_index > context_ptr->md_max_ref_count - 1)
                 continue;
 #endif
+#if ME_MV_UPGRADE_LOSSLESS
+            int16_t to_inject_mv_x = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][list0_ref_index][0];
+            int16_t to_inject_mv_y = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][list0_ref_index][1];
+#else
             int16_t to_inject_mv_x = me_results->me_mv_array[context_ptr->me_block_offset][list0_ref_index].x_mv << 1;
             int16_t to_inject_mv_y = me_results->me_mv_array[context_ptr->me_block_offset][list0_ref_index].y_mv << 1;
+#endif
             uint8_t to_inject_ref_type = svt_get_ref_frame_type(REF_LIST_0, list0_ref_index);
             uint8_t skip_cand = check_ref_beackout(
                 context_ptr,
@@ -3428,8 +3508,13 @@ void inject_warped_motion_candidates(
             if (list1_ref_index > context_ptr->md_max_ref_count - 1)
                 continue;
 #endif
+#if ME_MV_UPGRADE_LOSSLESS
+            int16_t to_inject_mv_x = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_1][list1_ref_index][0];
+            int16_t to_inject_mv_y = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_1][list1_ref_index][1];
+#else
             int16_t to_inject_mv_x = me_results->me_mv_array[context_ptr->me_block_offset][((sequence_control_set_ptr->mrp_mode == 0) ? 4 : 2) + list1_ref_index].x_mv << 1;
             int16_t to_inject_mv_y = me_results->me_mv_array[context_ptr->me_block_offset][((sequence_control_set_ptr->mrp_mode == 0) ? 4 : 2) + list1_ref_index].y_mv << 1;
+#endif
             uint8_t to_inject_ref_type = svt_get_ref_frame_type(REF_LIST_1, list1_ref_index);
             uint8_t skip_cand = check_ref_beackout(
                 context_ptr,
@@ -4120,8 +4205,18 @@ void inject_new_candidates(
             if (list0_ref_index > context_ptr->md_max_ref_count - 1)
                 continue;
 #endif
+#if ME_MV_UPGRADE_LOSSLESS          
+#if ME_MV_UPGRADE_LOSSY
+            int16_t to_inject_mv_x = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][list0_ref_index][0];
+            int16_t to_inject_mv_y = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][list0_ref_index][1];
+#else
+            int16_t to_inject_mv_x = (me_block_offset == context_ptr->me_block_offset) ? context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][list0_ref_index][0] : me_results->me_mv_array[me_block_offset][list0_ref_index].x_mv << 1;
+            int16_t to_inject_mv_y = (me_block_offset == context_ptr->me_block_offset) ? context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][list0_ref_index][1] : me_results->me_mv_array[me_block_offset][list0_ref_index].y_mv << 1;
+#endif
+#else
             int16_t to_inject_mv_x = me_results->me_mv_array[me_block_offset][list0_ref_index].x_mv << 1;
             int16_t to_inject_mv_y = me_results->me_mv_array[me_block_offset][list0_ref_index].y_mv << 1;
+#endif
             uint8_t to_inject_ref_type = svt_get_ref_frame_type(REF_LIST_0, list0_ref_index);
             uint8_t skip_cand = check_ref_beackout(
                 context_ptr,
@@ -4315,8 +4410,18 @@ void inject_new_candidates(
                 if (list1_ref_index > context_ptr->md_max_ref_count - 1)
                     continue;
 #endif
+#if ME_MV_UPGRADE_LOSSLESS
+#if ME_MV_UPGRADE_LOSSY
+                int16_t to_inject_mv_x = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_1][list1_ref_index][0];
+                int16_t to_inject_mv_y = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_1][list1_ref_index][1];
+#else
+                int16_t to_inject_mv_x = (me_block_offset == context_ptr->me_block_offset) ? context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_1][list1_ref_index][0] : me_results->me_mv_array[me_block_offset][((sequence_control_set_ptr->mrp_mode == 0) ? 4 : 2) + list1_ref_index].x_mv << 1;
+                int16_t to_inject_mv_y = (me_block_offset == context_ptr->me_block_offset) ? context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_1][list1_ref_index][1] : me_results->me_mv_array[me_block_offset][((sequence_control_set_ptr->mrp_mode == 0) ? 4 : 2) + list1_ref_index].y_mv << 1;
+#endif
+#else
                 int16_t to_inject_mv_x =  me_results->me_mv_array[me_block_offset][((sequence_control_set_ptr->mrp_mode == 0) ? 4 : 2) + list1_ref_index].x_mv << 1;
                 int16_t to_inject_mv_y =  me_results->me_mv_array[me_block_offset][((sequence_control_set_ptr->mrp_mode == 0) ? 4 : 2) + list1_ref_index].y_mv << 1;
+#endif
                 uint8_t to_inject_ref_type = svt_get_ref_frame_type(REF_LIST_1, list1_ref_index);
                 uint8_t skip_cand = check_ref_beackout(
                     context_ptr,
@@ -4508,10 +4613,24 @@ void inject_new_candidates(
                     continue;
 #endif
                 if (inter_direction == 2) {
+#if ME_MV_UPGRADE_LOSSLESS
+#if ME_MV_UPGRADE_LOSSY
+                    int16_t to_inject_mv_x_l0 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][me_block_results_ptr->ref0_list][list0_ref_index][0];
+                    int16_t to_inject_mv_y_l0 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][me_block_results_ptr->ref0_list][list0_ref_index][1];
+                    int16_t to_inject_mv_x_l1 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][me_block_results_ptr->ref1_list][list1_ref_index][0];
+                    int16_t to_inject_mv_y_l1 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][me_block_results_ptr->ref1_list][list1_ref_index][1];
+#else
+                    int16_t to_inject_mv_x_l0 = (me_block_offset == context_ptr->me_block_offset) ? context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][me_block_results_ptr->ref0_list][list0_ref_index][0] : me_results->me_mv_array[me_block_offset][list0_ref_index].x_mv << 1;
+                    int16_t to_inject_mv_y_l0 = (me_block_offset == context_ptr->me_block_offset) ? context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][me_block_results_ptr->ref0_list][list0_ref_index][1] : me_results->me_mv_array[me_block_offset][list0_ref_index].y_mv << 1;
+                    int16_t to_inject_mv_x_l1 = (me_block_offset == context_ptr->me_block_offset) ? context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][me_block_results_ptr->ref1_list][list1_ref_index][0] : me_results->me_mv_array[me_block_offset][((sequence_control_set_ptr->mrp_mode == 0) ? (me_block_results_ptr->ref1_list << 2) : (me_block_results_ptr->ref1_list << 1)) + list1_ref_index].x_mv << 1;
+                    int16_t to_inject_mv_y_l1 = (me_block_offset == context_ptr->me_block_offset) ? context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][me_block_results_ptr->ref1_list][list1_ref_index][1] : me_results->me_mv_array[me_block_offset][((sequence_control_set_ptr->mrp_mode == 0) ? (me_block_results_ptr->ref1_list << 2) : (me_block_results_ptr->ref1_list << 1)) + list1_ref_index].y_mv << 1;
+#endif
+#else
                     int16_t to_inject_mv_x_l0 = me_results->me_mv_array[me_block_offset][list0_ref_index].x_mv << 1;
                     int16_t to_inject_mv_y_l0 = me_results->me_mv_array[me_block_offset][list0_ref_index].y_mv << 1;
                     int16_t to_inject_mv_x_l1 = me_results->me_mv_array[me_block_offset][((sequence_control_set_ptr->mrp_mode == 0) ? (me_block_results_ptr->ref1_list << 2) : (me_block_results_ptr->ref1_list << 1)) + list1_ref_index].x_mv << 1;
                     int16_t to_inject_mv_y_l1 = me_results->me_mv_array[me_block_offset][((sequence_control_set_ptr->mrp_mode == 0) ? (me_block_results_ptr->ref1_list << 2) : (me_block_results_ptr->ref1_list << 1)) + list1_ref_index].y_mv << 1;
+#endif
                     MvReferenceFrame rf[2];
                     rf[0] = svt_get_ref_frame_type(me_block_results_ptr->ref0_list, list0_ref_index);
                     rf[1] = svt_get_ref_frame_type(me_block_results_ptr->ref1_list, list1_ref_index);
@@ -5323,7 +5442,7 @@ void  inject_inter_candidates(
             context_ptr->me_sb_addr,
             context_ptr->me_block_offset,
             &canTotalCnt);
-
+#if !ME_MV_UPGRADE_LOSSY
         if (context_ptr->nx4_4xn_parent_mv_injection) {
             // If Nx4 or 4xN the inject the MV of the aprent block
 
@@ -5370,6 +5489,7 @@ void  inject_inter_candidates(
                     &canTotalCnt);
             }
         }
+#endif
 #if !ENHANCED_M0_SETTINGS
     }
 #endif

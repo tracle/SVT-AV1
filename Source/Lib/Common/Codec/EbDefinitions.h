@@ -216,7 +216,13 @@ extern "C" {
 #define ENABLE_WARPED_SC             1 // SC ONLY
 #define ENABLE_NEW_NN_SC             1 // SC ONLY
 
-/*****************************************/
+/*****************************************/      
+#define ME_MV_UPGRADE                0
+#if ME_MV_UPGRADE
+#define ME_MV_UPGRADE_LOSSLESS       1
+#define ME_MV_UPGRADE_LOSSY          1 
+#endif
+
 #define SUPER_SETTINGS               0
 
 //* Index skip_contexts with top / left, not min / max.
@@ -252,7 +258,8 @@ extern "C" {
 #define ATB_INTER_2_DEPTH            1 // ATB INTRA Depth 2
 #define TX_ORG_INTERINTRA            1
 #define SUPPORT_BC                   1   
-#define ENABLE_BC                    0 // ATB for BC
+#define ENABLE_TX_BC                 0 // ATB for BC
+#define ENABLE_RDOQ_BC               0 // RDOQ for BC
 #define FASTER_RDOQ                  1
 #define UPGRAGDE_TX_WEIGHT           0
 #define ADD_4TH_MD_STAGE             1

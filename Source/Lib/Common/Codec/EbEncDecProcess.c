@@ -3307,7 +3307,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
     else
         context_ptr->new_nearest_near_comb_injection = sequence_control_set_ptr->static_config.new_nearest_comb_inject;
-
+#if !ME_MV_UPGRADE_LOSSY
 #if MULTI_PASS_PD // Shut nx4 and 4xn if 1st pass
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->nx4_4xn_parent_mv_injection = 0;
@@ -3339,7 +3339,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
     else
         context_ptr->nx4_4xn_parent_mv_injection = sequence_control_set_ptr->static_config.nx4_4xn_parent_mv_inject;
-
+#endif
     // Set warped motion injection
     // Level                Settings
     // 0                    OFF
@@ -4521,6 +4521,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 
 
+#if ME_MV_UPGRADE_LOSSY
+    // Set perform_me_mv_1_8_pel_ref
+    if (context_ptr->pd_pass == PD_PASS_0)
+        context_ptr->perform_me_mv_1_8_pel_ref = EB_FALSE;
+    else if (context_ptr->pd_pass == PD_PASS_1)
+        context_ptr->perform_me_mv_1_8_pel_ref = EB_FALSE;
+    else
+        context_ptr->perform_me_mv_1_8_pel_ref = (picture_control_set_ptr->parent_pcs_ptr->frm_hdr.allow_high_precision_mv);
+#endif
     return return_error;
 }
 #if! PAL_SUP
