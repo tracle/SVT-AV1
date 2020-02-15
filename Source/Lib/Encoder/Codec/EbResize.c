@@ -1097,14 +1097,57 @@ EbErrorType scale_pcs_params(SequenceControlSet *scs_ptr, PictureParentControlSe
     return EB_ErrorNone;
 }
 
-EbErrorType allocate_downscaled_reference_pics(EbPictureBufferDesc **input_padded_picture_ptr,
-                                               EbPictureBufferDesc **quarter_filtered_picture_ptr,
-                                               EbPictureBufferDesc **quarter_decimated_picture_ptr,
-                                               EbPictureBufferDesc **sixteenth_filtered_picture_ptr,
-                                               EbPictureBufferDesc **sixteenth_decimated_picture_ptr,
+EbErrorType allocate_downscaled_reference_pics(EbPictureBufferDesc **downscaled_reference_picture_ptr,
+                                               EbPictureBufferDesc **downscaled_reference_picture16bit,
                                                EbPictureBufferDesc *picture_ptr_for_reference,
-                                               superres_params_type spr_params,
-                                               uint8_t down_sampling_method_me_search){
+                                               PictureParentControlSet *pcs_ptr) {
+
+    EbPictureBufferDescInitData ref_pic_buf_desc_init_data;
+
+    // Initialize the various Picture types
+    ref_pic_buf_desc_init_data.max_width = pcs_ptr->aligned_width;
+    ref_pic_buf_desc_init_data.max_height = pcs_ptr->aligned_height;
+    ref_pic_buf_desc_init_data.bit_depth = picture_ptr_for_reference->bit_depth;
+    ref_pic_buf_desc_init_data.color_format = picture_ptr_for_reference->color_format;
+    ref_pic_buf_desc_init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_FULL_MASK;
+
+    ref_pic_buf_desc_init_data.left_padding = PAD_VALUE;
+    ref_pic_buf_desc_init_data.right_padding = PAD_VALUE;
+    ref_pic_buf_desc_init_data.top_padding = PAD_VALUE;
+    ref_pic_buf_desc_init_data.bot_padding = PAD_VALUE;
+    ref_pic_buf_desc_init_data.mfmv = pcs_ptr->scs_ptr->mfmv_enabled;
+
+    if (ref_pic_buf_desc_init_data.bit_depth == EB_10BIT) {
+        // Hsan: set split_mode to 0 to construct the packed reference buffer (used @ EP)
+        ref_pic_buf_desc_init_data.split_mode = EB_FALSE;
+        EB_NEW(*downscaled_reference_picture16bit,
+               eb_picture_buffer_desc_ctor,
+               (EbPtr)&ref_pic_buf_desc_init_data);
+
+        // Hsan: set split_mode to 1 to construct the unpacked reference buffer (used @ MD)
+        ref_pic_buf_desc_init_data.split_mode = EB_TRUE;
+        EB_NEW(*downscaled_reference_picture_ptr,
+               eb_picture_buffer_desc_ctor,
+               (EbPtr)&ref_pic_buf_desc_init_data);
+    } else {
+        // Hsan: set split_mode to 0 to as 8BIT input
+        ref_pic_buf_desc_init_data.split_mode = EB_FALSE;
+        EB_NEW(*downscaled_reference_picture_ptr,
+               eb_picture_buffer_desc_ctor,
+               (EbPtr)&ref_pic_buf_desc_init_data);
+    }
+
+    return EB_ErrorNone;
+}
+
+EbErrorType allocate_downscaled_source_reference_pics(EbPictureBufferDesc **input_padded_picture_ptr,
+                                                      EbPictureBufferDesc **quarter_filtered_picture_ptr,
+                                                      EbPictureBufferDesc **quarter_decimated_picture_ptr,
+                                                      EbPictureBufferDesc **sixteenth_filtered_picture_ptr,
+                                                      EbPictureBufferDesc **sixteenth_decimated_picture_ptr,
+                                                      EbPictureBufferDesc *picture_ptr_for_reference,
+                                                      superres_params_type spr_params,
+                                                      uint8_t down_sampling_method_me_search){
 
     EbPictureBufferDescInitData initData;
 
@@ -1232,7 +1275,7 @@ void scale_source_references(SequenceControlSet *scs_ptr,
                                                        scs_ptr->static_config.superres_mode};
 
                     // Allocate downsampled reference picture buffer descriptors
-                    allocate_downscaled_reference_pics(&reference_object->downscaled_input_padded_picture_ptr[denom_idx],
+                    allocate_downscaled_source_reference_pics(&reference_object->downscaled_input_padded_picture_ptr[denom_idx],
                                                        &reference_object->downscaled_quarter_decimated_picture_ptr[denom_idx],
                                                        &reference_object->downscaled_quarter_filtered_picture_ptr[denom_idx],
                                                        &reference_object->downscaled_sixteenth_decimated_picture_ptr[denom_idx],
@@ -1313,7 +1356,7 @@ void scale_input_references(PictureParentControlSet *pcs_ptr,
     EbPictureBufferDesc *padded_pic_ptr = src_object->input_padded_picture_ptr;
 
     // Allocate downsampled reference picture buffer descriptors
-    allocate_downscaled_reference_pics(&src_object->downscaled_input_padded_picture_ptr[denom_idx],
+    allocate_downscaled_source_reference_pics(&src_object->downscaled_input_padded_picture_ptr[denom_idx],
                                        &src_object->downscaled_quarter_decimated_picture_ptr[denom_idx],
                                        &src_object->downscaled_quarter_filtered_picture_ptr[denom_idx],
                                        &src_object->downscaled_sixteenth_decimated_picture_ptr[denom_idx],
@@ -1351,9 +1394,95 @@ void scale_input_references(PictureParentControlSet *pcs_ptr,
                                            src_object->downscaled_sixteenth_filtered_picture_ptr[denom_idx]);
 }
 
-// TODO
-void scale_rec_references(SequenceControlSet *scs_ptr,
-                          PictureParentControlSet *pcs_ptr);
+// TODO: work in progress
+void scale_rec_references(PictureControlSet *pcs_ptr,
+                          EbPictureBufferDesc *input_picture_ptr,
+                          uint8_t hbd_mode_decision){
+
+    EbReferenceObject *reference_object;
+
+    PictureParentControlSet *ppcs_ptr = pcs_ptr->parent_pcs_ptr;
+    SequenceControlSet *scs_ptr = ppcs_ptr->scs_ptr;
+
+    uint8_t denom_idx = (uint8_t)(ppcs_ptr->superres_denom - 8);
+    const int32_t num_planes = av1_num_planes(&scs_ptr->seq_header.color_config);
+    const uint32_t ss_x = scs_ptr->subsampling_x;
+    const uint32_t ss_y = scs_ptr->subsampling_y;
+
+    uint32_t num_of_list_to_search =
+            (ppcs_ptr->slice_type == P_SLICE) ? (uint32_t)REF_LIST_0 : (uint32_t)REF_LIST_1;
+
+    for (uint8_t list_index = REF_LIST_0; list_index <= num_of_list_to_search; ++list_index) {
+        uint8_t ref_pic_index;
+
+        uint8_t num_of_ref_pic_to_search = (ppcs_ptr->slice_type == P_SLICE)
+                                           ? ppcs_ptr->ref_list0_count
+                                           : (list_index == REF_LIST_0) ? ppcs_ptr->ref_list0_count
+                                                                        : ppcs_ptr->ref_list1_count;
+
+        for (ref_pic_index = 0; ref_pic_index < num_of_ref_pic_to_search; ++ref_pic_index) {
+
+            reference_object = (EbReferenceObject *) pcs_ptr->ref_pic_ptr_array[list_index][ref_pic_index]
+                    ->object_ptr;
+
+            uint64_t ref_picture_number = ppcs_ptr->ref_pic_poc_array[list_index][ref_pic_index];
+            UNUSED(ref_picture_number);
+
+            EbPictureBufferDesc *ref_pic_ptr = hbd_mode_decision ? reference_object->reference_picture16bit : reference_object->reference_picture;
+
+            // if the size of the reference pic is different than the size of the input pic, then scale references
+            if (ref_pic_ptr->width != input_picture_ptr->width) {
+
+                EbPictureBufferDesc *down_ref_pic_ptr = hbd_mode_decision
+                                                        ? reference_object->downscaled_reference_picture16bit[denom_idx]
+                                                        : reference_object->downscaled_reference_picture[denom_idx];
+
+                if (down_ref_pic_ptr == NULL) {
+                    // Allocate downsampled reference picture buffer descriptors
+                    allocate_downscaled_reference_pics(&reference_object->downscaled_reference_picture[denom_idx],
+                                                       &reference_object->downscaled_reference_picture16bit[denom_idx],
+                                                       ref_pic_ptr,
+                                                       ppcs_ptr);
+
+                    down_ref_pic_ptr = hbd_mode_decision
+                                       ? reference_object->downscaled_reference_picture16bit[denom_idx]
+                                       : reference_object->downscaled_reference_picture[denom_idx];
+
+                    // downsample input padded picture buffer
+                    // TODO: where is the extend?
+                    av1_resize_and_extend_frame(ref_pic_ptr,
+                                                down_ref_pic_ptr,
+                                                down_ref_pic_ptr->bit_depth,
+                                                num_planes,
+                                                ss_x,
+                                                ss_y);
+
+                    // TODO: is the correct padding?
+                    generate_padding(down_ref_pic_ptr->buffer_y,
+                                     down_ref_pic_ptr->stride_y,
+                                     down_ref_pic_ptr->width,
+                                     down_ref_pic_ptr->height,
+                                     down_ref_pic_ptr->origin_x,
+                                     down_ref_pic_ptr->origin_y);
+
+                    save_Y_to_file("downscaled_reference_pic.yuv",
+                                   down_ref_pic_ptr->buffer_y,
+                                   down_ref_pic_ptr->width +
+                                           down_ref_pic_ptr->origin_x * 2,
+                                   down_ref_pic_ptr->height +
+                                           down_ref_pic_ptr->origin_y * 2,
+                                   down_ref_pic_ptr->stride_y,
+                                   0,
+                                   0);
+
+                    printf("rescaled reference picture\n");
+
+                }
+            }
+        }
+    }
+
+}
 
 void init_resize_picture(SequenceControlSet *scs_ptr, PictureParentControlSet *pcs_ptr) {
     EbPictureBufferDesc *input_picture_ptr = pcs_ptr->enhanced_picture_ptr;

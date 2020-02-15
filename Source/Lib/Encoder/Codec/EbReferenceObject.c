@@ -10,6 +10,7 @@
 #include "EbReferenceObject.h"
 #include "EbPictureBufferDesc.h"
 
+// TODO: is this just padding with zeros? Is this needed?
 void initialize_samples_neighboring_reference_picture16_bit(EbByte   recon_samples_buffer_ptr,
                                                             uint16_t stride, uint16_t recon_width,
                                                             uint16_t recon_height,
@@ -175,6 +176,7 @@ EbErrorType eb_reference_object_ctor(EbReferenceObject *reference_object,
             picture_buffer_desc_init_data_16bit_ptr.bit_depth);
     }
     if (picture_buffer_desc_init_data_ptr->mfmv) {
+        // TODO: mariana, any change needed to mvs when changing size? It's allocated at the max size
         //MFMV map is 8x8 based.
         uint32_t  mi_rows  = reference_object->reference_picture->height >> MI_SIZE_LOG2;
         uint32_t  mi_cols  = reference_object->reference_picture->width >> MI_SIZE_LOG2;
