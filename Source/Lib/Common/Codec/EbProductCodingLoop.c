@@ -3920,6 +3920,9 @@ void predictive_me_sub_pel_search(
     int16_t                  *best_mvx,
     int16_t                  *best_mvy,
     uint32_t                 *best_distortion,
+#if ME_MV_UPGRADE_LOSSLESS
+    uint8_t                   search_central_position,
+#endif
     uint8_t                   search_pattern)
 {
 #if HBD2_PME
@@ -3934,7 +3937,11 @@ void predictive_me_sub_pel_search(
     for (int32_t refinement_pos_x = search_position_start_x; refinement_pos_x <= search_position_end_x; ++refinement_pos_x) {
         for (int32_t refinement_pos_y = search_position_start_y; refinement_pos_y <= search_position_end_y; ++refinement_pos_y) {
 
+#if ME_MV_UPGRADE_LOSSLESS
+            if (refinement_pos_x == 0 && refinement_pos_y == 0 && !search_central_position)
+#else
             if (refinement_pos_x == 0 && refinement_pos_y == 0)
+#endif
                 continue;
 
             if (search_pattern == 1 && refinement_pos_x != 0 && refinement_pos_y != 0)
@@ -4056,6 +4063,97 @@ uint8_t is_me_data_present(
     uint8_t                      list_idx,
     uint8_t                      ref_idx);
 #endif
+
+
+
+
+
+#if ME_MV_UPGRADE_LOSSLESS
+void read_refine_me_mvs(
+    PictureControlSet   *picture_control_set_ptr,
+    ModeDecisionContext *context_ptr,
+    EbPictureBufferDesc *input_picture_ptr,
+    uint32_t             inputOriginIndex,
+    uint32_t             cuOriginIndex) {
+
+    const SequenceControlSet *sequence_control_set_ptr = (SequenceControlSet*)picture_control_set_ptr->sequence_control_set_wrapper_ptr->object_ptr;
+
+    EbBool use_ssd = EB_TRUE;
+
+    uint8_t hbd_mode_decision = context_ptr->hbd_mode_decision == EB_DUAL_BIT_MD ? EB_8_BIT_MD : context_ptr->hbd_mode_decision;
+    input_picture_ptr = hbd_mode_decision ? picture_control_set_ptr->input_frame16bit : picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr;
+    //Update input origin
+    inputOriginIndex = (context_ptr->cu_origin_y + input_picture_ptr->origin_y) * input_picture_ptr->stride_y + (context_ptr->cu_origin_x + input_picture_ptr->origin_x);
+
+    for (uint32_t refIt = 0; refIt < picture_control_set_ptr->parent_pcs_ptr->tot_ref_frame_types; ++refIt) {
+        MvReferenceFrame ref_pair = picture_control_set_ptr->parent_pcs_ptr->ref_frame_type_arr[refIt];
+
+        MvReferenceFrame rf[2];
+        av1_set_ref_frame(rf, ref_pair);
+
+        if (rf[1] == NONE_FRAME)
+        {
+            MvReferenceFrame frame_type = rf[0];
+            uint8_t list_idx = get_list_idx(rf[0]);
+            uint8_t ref_idx = get_ref_frame_idx(rf[0]);
+
+            // Get the ME MV
+            const MeLcuResults *me_results = picture_control_set_ptr->parent_pcs_ptr->me_results[context_ptr->me_sb_addr];
+
+            if (is_me_data_present(context_ptr, me_results, list_idx, ref_idx))
+            {
+
+                int16_t me_mv_x;
+                int16_t me_mv_y;
+                if (list_idx == 0) {
+                    me_mv_x = (me_results->me_mv_array[context_ptr->me_block_offset][ref_idx].x_mv) << 1;
+                    me_mv_y = (me_results->me_mv_array[context_ptr->me_block_offset][ref_idx].y_mv) << 1;
+                }
+                else {
+                    me_mv_x = (me_results->me_mv_array[context_ptr->me_block_offset][((sequence_control_set_ptr->mrp_mode == 0) ? 4 : 2) + ref_idx].x_mv) << 1;
+                    me_mv_y = (me_results->me_mv_array[context_ptr->me_block_offset][((sequence_control_set_ptr->mrp_mode == 0) ? 4 : 2) + ref_idx].y_mv) << 1;
+                }
+
+#if ME_MV_UPGRADE_LOSSY
+                if (context_ptr->perform_me_mv_1_8_pel_ref) {
+                    int16_t  best_search_mvx = (int16_t)~0;
+                    int16_t  best_search_mvy = (int16_t)~0;
+                    uint32_t best_search_distortion = (int32_t)~0;
+                    uint8_t search_pattern = 0;
+                    predictive_me_sub_pel_search(
+                        picture_control_set_ptr,
+                        context_ptr,
+                        input_picture_ptr,
+                        inputOriginIndex,
+                        cuOriginIndex,
+                        use_ssd,
+                        list_idx,
+                        ref_idx,
+                        me_mv_x,
+                        me_mv_y,
+                        -(EIGHT_PEL_REF_WINDOW >> 1),
+                        +(EIGHT_PEL_REF_WINDOW >> 1),
+                        -(EIGHT_PEL_REF_WINDOW >> 1),
+                        +(EIGHT_PEL_REF_WINDOW >> 1),
+                        1,
+                        &best_search_mvx,
+                        &best_search_mvy,
+                        &best_search_distortion,
+                        1,
+                        search_pattern);
+
+                    me_mv_x = best_search_mvx;
+                    me_mv_y = best_search_mvy;
+                }
+#endif
+
+                context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][list_idx][ref_idx][0] = me_mv_x;
+                context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][list_idx][ref_idx][1] = me_mv_y;
+            }
+        }
+    }
+}
+#endif
 void predictive_me_search(
     PictureControlSet            *picture_control_set_ptr,
     ModeDecisionContext          *context_ptr,
@@ -4133,6 +4231,16 @@ void predictive_me_search(
 #endif
             int16_t me_mv_x;
             int16_t me_mv_y;
+#if ME_MV_UPGRADE_LOSSLESS
+            if (list_idx == 0) {
+                me_mv_x = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][ref_idx][0];
+                me_mv_y = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][ref_idx][1];
+            }
+            else {
+                me_mv_x = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_1][ref_idx][0];
+                me_mv_y = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_1][ref_idx][1];
+            }
+#else
             if (list_idx == 0) {
                 me_mv_x = (me_results->me_mv_array[context_ptr->me_block_offset][ref_idx].x_mv) << 1;
                 me_mv_y = (me_results->me_mv_array[context_ptr->me_block_offset][ref_idx].y_mv) << 1;
@@ -4141,6 +4249,7 @@ void predictive_me_search(
                 me_mv_x = (me_results->me_mv_array[context_ptr->me_block_offset][((sequence_control_set_ptr->mrp_mode == 0) ? 4 : 2) + ref_idx].x_mv) << 1;
                 me_mv_y = (me_results->me_mv_array[context_ptr->me_block_offset][((sequence_control_set_ptr->mrp_mode == 0) ? 4 : 2) + ref_idx].y_mv) << 1;
             }
+#endif
             // Round-up to the closest integer the ME MV
             me_mv_x = (me_mv_x + 4)&~0x07;
             me_mv_y = (me_mv_y + 4)&~0x07;
@@ -4364,6 +4473,9 @@ void predictive_me_search(
                             &best_search_mvx,
                             &best_search_mvy,
                             &best_search_distortion,
+#if ME_MV_UPGRADE_LOSSLESS
+                            0,
+#endif
                             search_pattern);
 
                         if (context_ptr->predictive_me_level == 3) {
@@ -4393,6 +4505,9 @@ void predictive_me_search(
                                     &best_search_mvx,
                                     &best_search_mvy,
                                     &best_search_distortion,
+#if ME_MV_UPGRADE_LOSSLESS
+                                    0,
+#endif
                                     search_pattern);
                             }
                         }
@@ -4418,6 +4533,9 @@ void predictive_me_search(
                             &best_search_mvx,
                             &best_search_mvy,
                             &best_search_distortion,
+#if ME_MV_UPGRADE_LOSSLESS
+                            0,
+#endif
                             search_pattern);
 
                         if (context_ptr->predictive_me_level == 3) {
@@ -4447,6 +4565,9 @@ void predictive_me_search(
                                     &best_search_mvx,
                                     &best_search_mvy,
                                     &best_search_distortion,
+#if ME_MV_UPGRADE_LOSSLESS
+                                    0,
+#endif
                                     search_pattern);
                             }
                         }
@@ -4466,7 +4587,7 @@ void predictive_me_search(
                             ref_idx,
                             best_search_mvx,
                             best_search_mvy,
-#if MDC_ADAPTIVE_LEVEL
+#if MDC_ADAPTIVE_LEVEL || ME_MV_UPGRADE_LOSSLESS
                             -(EIGHT_PEL_REF_WINDOW >> 1),
                             +(EIGHT_PEL_REF_WINDOW >> 1),
                             -(EIGHT_PEL_REF_WINDOW >> 1),
@@ -4481,6 +4602,9 @@ void predictive_me_search(
                             &best_search_mvx,
                             &best_search_mvy,
                             &best_search_distortion,
+#if ME_MV_UPGRADE_LOSSLESS
+                            0,
+#endif
                             search_pattern);
                     }
 #endif
@@ -11796,10 +11920,51 @@ void md_encode_block(
         else
             context_ptr->me_sb_addr = lcuAddr;
 
+#if ME_MV_UPGRADE_LOSSY
+       // Derive whether if current block would need to have offsets made
+        uint32_t bwidth_offset_to_8 = (context_ptr->blk_geom->bwidth == 4) << 2;
+        uint32_t bheight_offset_to_8 = (context_ptr->blk_geom->bheight == 4) << 2;
+
+        // if there is an offset needed to set either dimension to 8
+        if (bwidth_offset_to_8 || bheight_offset_to_8) {
+
+            // Align parent block has dimensions inherited by current block, if current block has a dimension of 4
+            // add 4 so the resulting block follows an 8x8 basis
+            uint32_t bwidth_to_search = context_ptr->blk_geom->bwidth + bwidth_offset_to_8;
+            uint32_t bheight_to_search = context_ptr->blk_geom->bheight + bheight_offset_to_8;
+
+            // Align parent block has origin inherited by current block
+            uint32_t x_to_search = context_ptr->blk_geom->origin_x - (context_ptr->geom_offset_x + ((context_ptr->blk_geom->origin_x & 0x7) ? 4 : 0));
+            uint32_t y_to_search = context_ptr->blk_geom->origin_y - (context_ptr->geom_offset_y + ((context_ptr->blk_geom->origin_y & 0x7) ? 4 : 0));
+
+            // Search the me_info_index of the parent block
+            uint32_t me_info_index = 0;
+            for (uint32_t block_index = 0; block_index < picture_control_set_ptr->parent_pcs_ptr->max_number_of_pus_per_sb; block_index++) {
+
+                if (
+                    (bwidth_to_search == partition_width[block_index]) &&
+                    (bheight_to_search == partition_height[block_index]) &&
+                    (x_to_search == pu_search_index_map[block_index][0]) &&
+                    (y_to_search == pu_search_index_map[block_index][1]))
+                {
+                    context_ptr->me_block_offset = block_index;
+                    break;
+                }
+            }
+        }
+        else if (context_ptr->blk_geom->bwidth == 128 || context_ptr->blk_geom->bheight == 128) {
+            context_ptr->me_block_offset = 0;
+        }
+        else {
+            context_ptr->me_block_offset = get_me_info_index(picture_control_set_ptr->parent_pcs_ptr->max_number_of_pus_per_sb, context_ptr->blk_geom, context_ptr->geom_offset_x, context_ptr->geom_offset_y);
+        }
+#else
         context_ptr->me_block_offset =
             (context_ptr->blk_geom->bwidth == 4 || context_ptr->blk_geom->bheight == 4 || context_ptr->blk_geom->bwidth == 128 || context_ptr->blk_geom->bheight == 128) ?
             0 :
             get_me_info_index(picture_control_set_ptr->parent_pcs_ptr->max_number_of_pus_per_sb, context_ptr->blk_geom, context_ptr->geom_offset_x, context_ptr->geom_offset_y);
+
+#endif
 
         // Generate MVP(s)
 #if MULTI_PASS_PD
@@ -11836,6 +12001,15 @@ void md_encode_block(
         }
 #endif
 
+#if ME_MV_UPGRADE_LOSSLESS
+        // Read/refine (if applicable) ME MVs
+        read_refine_me_mvs(
+            picture_control_set_ptr,
+            context_ptr,
+            input_picture_ptr,
+            inputOriginIndex,
+            cuOriginIndex);
+#endif
         // Perform ME search around the best MVP
         if (context_ptr->predictive_me_level)
             predictive_me_search(
@@ -12641,9 +12815,13 @@ void av1_get_max_min_partition_features(
 
                 MvUnit   mv_unit;
                 mv_unit.pred_direction = UNI_PRED_LIST_0;
+#if ME_MV_UPGRADE_LOSSLESS
+                mv_unit.mv->x = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][list0_ref_index][0];
+                mv_unit.mv->y = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][list0_ref_index][1];
+#else
                 mv_unit.mv->x = me_results->me_mv_array[me_block_offset][list0_ref_index].x_mv << 1;
                 mv_unit.mv->y = me_results->me_mv_array[me_block_offset][list0_ref_index].y_mv << 1;
-
+#endif
                 av1_inter_prediction_function_table[is_highbd](
                     NULL,  //picture_control_set_ptr,
                     (uint32_t)interp_filters,

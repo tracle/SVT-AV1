@@ -216,7 +216,13 @@ extern "C" {
 #define ENABLE_WARPED_SC             1 // SC ONLY
 #define ENABLE_NEW_NN_SC             1 // SC ONLY
 
-/*****************************************/
+/*****************************************/      
+#define ME_MV_UPGRADE                0
+#if ME_MV_UPGRADE
+#define ME_MV_UPGRADE_LOSSLESS       1
+#define ME_MV_UPGRADE_LOSSY          1 
+#endif
+
 #define SUPER_SETTINGS               0
 
 //* Index skip_contexts with top / left, not min / max.
