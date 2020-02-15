@@ -32,7 +32,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#define FEB14_ADOPTIONS         1
 #define M2_FEB14_ADOPTION       1
 #define TEST4    0
 #if TEST4

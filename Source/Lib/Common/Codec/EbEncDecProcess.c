@@ -2526,7 +2526,11 @@ EbErrorType signal_derivation_for_md_pass1(
     else
 #if ENHANCED_SQ_WEIGHT || FASTER_SQ_WEIGHT
 #if M1_FEB4_ADOPTION
+#if M1_FEB12_ADOPTION
+        if (enc_mode <= ENC_M1)
+#else
         if (enc_mode <= ENC_M0)
+#endif
 #else
         if (enc_mode <= ENC_M1)
 #endif
@@ -2547,13 +2551,21 @@ EbErrorType signal_derivation_for_md_pass1(
     //1: ON 10% + skip HA/HB/H4  or skip VA/VB/V4
     //2: ON 10% + skip HA/HB  or skip VA/VB   ,  5% + skip H4  or skip V4
 #if 1 // Nader
+#if FEB14_ADOPTIONS
+    if (enc_mode <= ENC_M0 || context_ptr->pd_pass < PD_PASS_1)
+#else
     if (MR_MODE || context_ptr->pd_pass < PD_PASS_1)
+#endif
 #else
     if (MR_MODE || context_ptr->pd_pass < PD_PASS_2)
 #endif
         context_ptr->nsq_hv_level = 0;
 #if M0_FEB4_ADOPTION
+#if FEB14_ADOPTIONS
+    else if (enc_mode <= ENC_M3) {
+#else
     else if (enc_mode <= ENC_M0) {
+#endif
 #else
     else if (enc_mode == ENC_M0) {
 #endif
@@ -3281,7 +3293,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 context_ptr->new_nearest_near_comb_injection = 0;
         else
 #endif
+#if FEB14_ADOPTIONS
+            if (picture_control_set_ptr->enc_mode <= ENC_M1)
+#else
             if (picture_control_set_ptr->enc_mode <= ENC_M0)
+#endif
 #else
             if (picture_control_set_ptr->enc_mode <= ENC_M1)
 #endif
@@ -3479,7 +3495,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                     context_ptr->predictive_me_level = 0;
             else
 #if M0_OPT
+#if FEB14_ADOPTIONS
+                if (picture_control_set_ptr->enc_mode <= ENC_M3)
+#else
                 if (picture_control_set_ptr->enc_mode <= ENC_M2)
+#endif
 #if PRESETS_OPT
                     context_ptr->predictive_me_level = 5;
 #else
@@ -4204,12 +4224,20 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     //0: OFF
     //1: ON 10% + skip HA/HB/H4  or skip VA/VB/V4
     //2: ON 10% + skip HA/HB  or skip VA/VB   ,  5% + skip H4  or skip V4
+#if FEB14_ADOPTIONS
+    if (picture_control_set_ptr->enc_mode <= ENC_M0 || context_ptr->pd_pass < PD_PASS_2)
+#else
     if (MR_MODE || context_ptr->pd_pass < PD_PASS_2)
+#endif
         context_ptr->nsq_hv_level = 0;
 #if M0_FEB4_ADOPTION
 #if M1_FEB12_ADOPTION
 #if M2_FEB14_ADOPTION
+#if FEB14_ADOPTIONS
+    else if (picture_control_set_ptr->enc_mode <= ENC_M3) {
+#else
     else if (picture_control_set_ptr->enc_mode <= ENC_M2) {
+#endif
 #else
     else if (picture_control_set_ptr->enc_mode <= ENC_M1) {
 #endif
@@ -4954,11 +4982,7 @@ static void perform_pred_depth_refinement(
                         else {
 #if TEST5
                             uint32_t full_lambda =  context_ptr->hbd_mode_decision ? context_ptr->full_lambda_md[EB_10_BIT_MD] : context_ptr->full_lambda_md[EB_8_BIT_MD];
-#if M2_FEB14_ADOPTION
-                            uint64_t dist_sum = (128 * 128 * 10);
-#else
                             uint64_t dist_sum = (128 * 128 * 100);
-#endif
                             uint64_t early_exit_th = RDCOST(full_lambda, 16, dist_sum);
                             uint64_t best_part_cost = generate_best_part_cost(
                                 sequence_control_set_ptr,
