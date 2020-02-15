@@ -83,6 +83,8 @@ typedef struct PictureDecisionContext
     uint64_t      key_poc;
 } PictureDecisionContext;
 
+void init_resize_picture(SequenceControlSet* scs_ptr, PictureParentControlSet* pcs_ptr);
+
 uint64_t  get_ref_poc(PictureDecisionContext *context, uint64_t curr_picture_number, int32_t delta_poc)
 {
     uint64_t ref_poc;

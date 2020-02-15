@@ -742,6 +742,7 @@ void *motion_estimation_kernel(void *input_ptr) {
             if (pcs_ptr->slice_type != I_SLICE) {
 
                 // TODO: references should be ready by this time
+                // TODO: this has to be done under a mutex - move to picture decision?
                 if(pcs_ptr->frame_superres_enabled){
                     scale_source_references(scs_ptr, pcs_ptr, input_picture_ptr);
                 }

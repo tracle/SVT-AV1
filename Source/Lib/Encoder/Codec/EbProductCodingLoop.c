@@ -32,6 +32,10 @@
 #include "EbLog.h"
 #include "EbCommonUtils.h"
 
+void scale_rec_references(PictureControlSet *pcs_ptr,
+                          EbPictureBufferDesc *input_picture_ptr,
+                          uint8_t hbd_mode_decision);
+
 EbErrorType generate_md_stage_0_cand(SuperBlock *sb_ptr, ModeDecisionContext *context_ptr,
                                      uint32_t *         fast_candidate_total_count,
                                      PictureControlSet *pcs_ptr);
@@ -2111,6 +2115,23 @@ void predictive_me_full_pel_search(PictureControlSet *pcs_ptr, ModeDecisionConte
     EbReferenceObject *  ref_obj = pcs_ptr->ref_pic_ptr_array[list_idx][ref_idx]->object_ptr;
     EbPictureBufferDesc *ref_pic =
         hbd_mode_decision ? ref_obj->reference_picture16bit : ref_obj->reference_picture;
+
+    // -------
+    // Use scaled references if resolution of the reference is different than the input
+    // -------
+    if(ref_pic->width != input_picture_ptr->width){
+        uint8_t denom_idx = (uint8_t)(pcs_ptr->parent_pcs_ptr->superres_denom - 8);
+
+        if(hbd_mode_decision){
+            assert(ref_obj->downscaled_reference_picture16bit[denom_idx] != NULL);
+            ref_pic = ref_obj->downscaled_reference_picture16bit[denom_idx];
+        }else{
+            assert(ref_obj->downscaled_reference_picture[denom_idx] != NULL);
+            ref_pic = ref_obj->downscaled_reference_picture[denom_idx];
+        }
+    }
+    assert(ref_pic->width == input_picture_ptr->width);
+
     for (int32_t refinement_pos_x = search_position_start_x;
          refinement_pos_x <= search_position_end_x;
          ++refinement_pos_x) {
@@ -2490,6 +2511,17 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                 // Step 2: perform full pel search around the best MVP
                 best_mvp_x = (best_mvp_x + 4) & ~0x07;
                 best_mvp_y = (best_mvp_y + 4) & ~0x07;
+
+                // -------
+                // Scale references if resolution of the reference is different than the input
+                // -------
+                // TODO: this has to be done under a mutex
+                if(ref_pic->width != input_picture_ptr->width){
+                    scale_rec_references(pcs_ptr,
+                                         input_picture_ptr,
+                                         hbd_mode_decision);
+                }
+                // -------
 
                 predictive_me_full_pel_search(pcs_ptr,
                                               context_ptr,

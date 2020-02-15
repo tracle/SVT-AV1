@@ -15,6 +15,8 @@ typedef struct EbReferenceObject {
     EbDctor              dctor;
     EbPictureBufferDesc *reference_picture;
     EbPictureBufferDesc *reference_picture16bit;
+    EbPictureBufferDesc *downscaled_reference_picture[NUM_SCALES];
+    EbPictureBufferDesc *downscaled_reference_picture16bit[NUM_SCALES];
     uint64_t             ref_poc;
     uint16_t             qp;
     EB_SLICE             slice_type;
