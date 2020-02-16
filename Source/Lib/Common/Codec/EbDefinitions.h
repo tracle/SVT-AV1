@@ -264,6 +264,12 @@ extern "C" {
 #define UPGRAGDE_TX_WEIGHT           0
 #define ADD_4TH_MD_STAGE             1
 #if ADD_4TH_MD_STAGE
+
+#define MDS_TEST0   0 //enable 4 MD stages with default config 
+
+#define MDS_NIC_TEST1   0
+
+
 #define TX_SIZE_ONLY_MD_STAGE_2      1
 #if TX_SIZE_ONLY_MD_STAGE_2
 

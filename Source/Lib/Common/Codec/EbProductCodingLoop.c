@@ -2751,6 +2751,15 @@ void set_md_stage_counts(
     context_ptr->md_stage_3_count[CAND_CLASS_7] = (context_ptr->md_stage_2_count[CAND_CLASS_7] + 1) >> 1;
     context_ptr->md_stage_3_count[CAND_CLASS_8] = (context_ptr->md_stage_2_count[CAND_CLASS_8] + 1) >> 1;
 
+#if MDS_NIC_TEST1
+    for (CAND_CLASS cand_class_it = CAND_CLASS_0; cand_class_it < CAND_CLASS_TOTAL; cand_class_it++) 
+        context_ptr->md_stage_3_count[cand_class_it] = MAX(1,context_ptr->md_stage_2_count[cand_class_it] /4); 
+#endif
+
+
+
+
+
 #if NIC_TEST_0
     context_ptr->md_stage_3_count[CAND_CLASS_0] = (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 4 : 1;
     context_ptr->md_stage_3_count[CAND_CLASS_1] = (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 4 : 1;
