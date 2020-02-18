@@ -336,7 +336,7 @@ static INLINE void av1TxbInitLevels(
 
 /************************************************************************************************/
 // blockd.h
-
+#if !FIXED_BR_CONTEXT_CALC // upgrade
 static INLINE int16_t GetBrCtx(
     const uint8_t *const levels,
     const int16_t c,  // raster order
@@ -376,6 +376,7 @@ static INLINE int16_t GetBrCtx(
 
     return mag + 14;
 }
+#endif
 
 void get_txb_ctx(
     SequenceControlSet *sequence_control_set_ptr,
@@ -716,8 +717,12 @@ int32_t  Av1WriteCoeffsTxb1D(
         if (level > NUM_BASE_LEVELS) {
             // level is above 1.
             int32_t base_range = level - 1 - NUM_BASE_LEVELS;
+#if FIXED_BR_CONTEXT_CALC // upgrade
+            const TxClass tx_class = tx_type_to_class[txType];
+            int16_t brCtx = get_br_ctx(levels, pos, bwl, tx_class);
+#else
             int16_t brCtx = GetBrCtx(levels, pos, bwl, txType);
-
+#endif
             for (int32_t idx = 0; idx < COEFF_BASE_RANGE; idx += BR_CDF_SIZE - 1) {
                 const int32_t k = AOMMIN(base_range - idx, BR_CDF_SIZE - 1);
                 aom_write_symbol(

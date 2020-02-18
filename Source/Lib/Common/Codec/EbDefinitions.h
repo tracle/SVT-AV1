@@ -217,7 +217,7 @@ extern "C" {
 #define ENABLE_NEW_NN_SC             1 // SC ONLY
 
 /*****************************************/      
-#define ME_MV_UPGRADE                0
+#define ME_MV_UPGRADE                1
 #if ME_MV_UPGRADE
 #define ME_MV_UPGRADE_LOSSLESS       1
 #define ME_MV_UPGRADE_LOSSY          1 
