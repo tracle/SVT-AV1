@@ -4409,6 +4409,72 @@ static int cqp_qindex_calc(
     return q;
 }
 #endif
+#if QPS_V2
+#define FIXED_QP_OFFSET_COUNT 5
+static double get_modeled_qp_offset(int cq_level, int level, int bit_depth) {
+    // 80% for keyframe was derived empirically.
+    // 40% similar to rc_pick_q_and_bounds_one_pass_vbr() for Q mode ARF.
+    // Rest derived similar to rc_pick_q_and_bounds_two_pass()
+    static const int percents[FIXED_QP_OFFSET_COUNT] = { 80, 60, 30, 15, 8 };
+    const double q_val = eb_av1_convert_qindex_to_q(cq_level, bit_depth);
+    if (level >= FIXED_QP_OFFSET_COUNT)
+        return 0;
+    return q_val * percents[level] / 100;
+}
+
+/******************************************************
+ * cqp_qindex_calc
+ * Assign the q_index per frame.
+ * Used in the one pass encoding with no look ahead
+ ******************************************************/
+static int cqp_qindex_calc_v2(
+    PictureControlSet         *pcs_ptr,
+    RATE_CONTROL                *rc,
+    int                          qindex) {
+    SequenceControlSet        *scs_ptr = pcs_ptr->parent_pcs_ptr->sequence_control_set_ptr;
+    const Av1Common  *const cm = pcs_ptr->parent_pcs_ptr->av1_cm;
+
+    int active_best_quality = 0;
+    int active_worst_quality = qindex;
+    double q_val;
+    int q;
+    const int bit_depth = scs_ptr->static_config.encoder_bit_depth;
+    // Since many frames can be processed at the same time, storing/using arf_q in rc param is not sufficient and will create a run to run.
+    // So, for each frame, arf_q is updated based on the qp of its references.
+    rc->arf_q = 0;
+    if (pcs_ptr->ref_slice_type_array[0][0] != I_SLICE)
+        rc->arf_q = MAX(rc->arf_q, ((pcs_ptr->ref_pic_qp_array[0][0] << 2) + 2));
+    if ((pcs_ptr->slice_type == B_SLICE) && (pcs_ptr->ref_slice_type_array[1][0] != I_SLICE))
+        rc->arf_q = MAX(rc->arf_q, ((pcs_ptr->ref_pic_qp_array[1][0] << 2) + 2));
+
+    q_val = eb_av1_convert_qindex_to_q(qindex, bit_depth);
+    int level = 0;
+    if (frame_is_intra_only(pcs_ptr->parent_pcs_ptr))
+        level = 0;
+    else if (pcs_ptr->parent_pcs_ptr->temporal_layer_index == pcs_ptr->parent_pcs_ptr->hierarchical_levels)
+        level = FIXED_QP_OFFSET_COUNT;
+    else 
+        level = FIXED_QP_OFFSET_COUNT + pcs_ptr->parent_pcs_ptr->temporal_layer_index - pcs_ptr->parent_pcs_ptr->hierarchical_levels;
+        
+    double offset = get_modeled_qp_offset(qindex, level, bit_depth);
+    const double q_val_target =
+        AOMMAX(q_val - offset, 0.0);
+
+    const int32_t delta_qindex = eb_av1_compute_qdelta(
+        q_val,
+        q_val_target,
+        // q_val * delta_rate_new[pcs_ptr->parent_pcs_ptr->hierarchical_levels]
+        // [pcs_ptr->parent_pcs_ptr->temporal_layer_index],
+        bit_depth);
+
+    active_best_quality = MAX((int32_t)(qindex + delta_qindex), (pcs_ptr->ref_pic_qp_array[0][0] << 2) + 2);
+    q = active_best_quality;
+    clamp(q, active_best_quality, active_worst_quality);
+
+    return q;
+}
+#endif
+
 #if TWO_PASS
 /******************************************************
  * sb_qp_derivation_two_pass
@@ -4794,6 +4860,13 @@ void* rate_control_kernel(void *input_ptr)
                                 &rc,
                                 qindex);
                     }
+#if QPS_V2
+                    else
+                        new_qindex = cqp_qindex_calc_v2(
+                            picture_control_set_ptr,
+                            &rc,
+                            qindex);
+#else
                     else if (picture_control_set_ptr->slice_type == I_SLICE) {
 #if QPS_CHANGE_P2
                         new_qindex = cqp_qindex_calc(
@@ -4853,6 +4926,7 @@ void* rate_control_kernel(void *input_ptr)
                         new_qindex = (int32_t)(qindex + delta_qindex);
 #endif
                     }
+#endif
                     frm_hdr->quantization_params.base_q_idx =
                         (uint8_t)CLIP3(
                         (int32_t)quantizer_to_qindex[sequence_control_set_ptr->static_config.min_qp_allowed],
