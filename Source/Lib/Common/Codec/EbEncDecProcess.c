@@ -4360,6 +4360,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
 #if ENHANCED_M0_SETTINGS
+#if FEB18_ADOPTIONS
+    else if (MR_MODE && picture_control_set_ptr->parent_pcs_ptr->sc_content_detected == 0)
+        context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
+#endif
     else
         context_ptr->coeff_based_nsq_cand_reduction = EB_TRUE;
 #else
