@@ -9821,8 +9821,10 @@ EbErrorType motion_estimate_sb(
                 reference_object = (EbPaReferenceObject *)context_ptr->alt_ref_reference_ptr;
             } else {
                 if (num_of_list_to_search) {
+#if !LOW_DELAY_TUNE
                     reference_object =
                         (EbPaReferenceObject *)pcs_ptr->ref_pa_pic_ptr_array[1][0]->object_ptr;
+#endif
                     ref_1_poc = pcs_ptr->ref_pic_poc_array[1][0];
                 }
 
