@@ -45,7 +45,7 @@ extern "C" {
 #define TEST5    0
 #endif
 
-#define USE_M1_MD_IN_PD1        0
+#define USE_M1_MD_IN_PD1            0
 #define DISABLE_PD1_SQ_NSQ_DECISION 0
 #define PD1_DEPTH_PRUNING           0
 

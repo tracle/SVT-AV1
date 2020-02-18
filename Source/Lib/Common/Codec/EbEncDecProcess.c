@@ -4742,9 +4742,40 @@ uint64_t  pd_level_tab[2][9][2][3] =
         {{100,10,10},{100,10,10}},
     }
 };
-
+#if PD1_DEPTH_PRUNING
+uint64_t  pd1_level_tab[2][9][2][3] =
+{
+    {
+        // Thresholds to use if block is screen content or an I-slice
+        {{150,0,0},{150,0,0}},
+        {{150,0,0},{150,0,0}},
+        {{150,0,0},{150,0,0}},
+        {{150,0,0},{150,0,0}},
+        {{150,0,0},{150,0,0}},
+        {{150,0,0},{150,0,0}},
+        {{150,0,0},{150,0,0}},
+        {{150,0,0},{150,0,0}},
+        {{150,0,0},{150,0,0}}
+    } ,
+    {
+        // Thresholds to use if block is not screen content or an I-slice
+        {{150,0,0},{150,0,0}},
+        {{150,0,0},{150,0,0}},
+        {{150,0,0},{150,0,0}},
+        {{150,0,0},{150,0,0}},
+        {{150,0,0},{150,0,0}},
+        {{150,0,0},{150,0,0}},
+        {{150,0,0},{150,0,0}},
+        {{150,0,0},{150,0,0}},
+        {{150,0,0},{150,0,0}}
+    }
+};
+#endif
 void derive_start_end_depth(
     PictureControlSet  *picture_control_set_ptr,
+#if PD1_DEPTH_PRUNING
+    ModeDecisionContext *context_ptr,
+#endif
     SuperBlock         *sb_ptr,
     uint32_t sb_size,
     int8_t *s_depth,
@@ -4773,7 +4804,16 @@ void derive_start_end_depth(
     uint64_t pth01 = pd_level_tab[!picture_control_set_ptr->parent_pcs_ptr->sc_content_detected && picture_control_set_ptr->slice_type != I_SLICE][encode_mode][1][0];
     uint64_t pth02 = pd_level_tab[!picture_control_set_ptr->parent_pcs_ptr->sc_content_detected && picture_control_set_ptr->slice_type != I_SLICE][encode_mode][1][1];
     uint64_t pth03 = pd_level_tab[!picture_control_set_ptr->parent_pcs_ptr->sc_content_detected && picture_control_set_ptr->slice_type != I_SLICE][encode_mode][1][2];
-
+#if PD1_DEPTH_PRUNING
+    if (context_ptr->pd_pass == PD_PASS_1) {
+        mth01 = pd1_level_tab[!picture_control_set_ptr->parent_pcs_ptr->sc_content_detected && picture_control_set_ptr->slice_type != I_SLICE][encode_mode][0][0];
+        mth02 = pd1_level_tab[!picture_control_set_ptr->parent_pcs_ptr->sc_content_detected && picture_control_set_ptr->slice_type != I_SLICE][encode_mode][0][1];
+        mth03 = pd1_level_tab[!picture_control_set_ptr->parent_pcs_ptr->sc_content_detected && picture_control_set_ptr->slice_type != I_SLICE][encode_mode][0][2];
+        pth01 = pd1_level_tab[!picture_control_set_ptr->parent_pcs_ptr->sc_content_detected && picture_control_set_ptr->slice_type != I_SLICE][encode_mode][1][0];
+        pth02 = pd1_level_tab[!picture_control_set_ptr->parent_pcs_ptr->sc_content_detected && picture_control_set_ptr->slice_type != I_SLICE][encode_mode][1][1];
+        pth03 = pd1_level_tab[!picture_control_set_ptr->parent_pcs_ptr->sc_content_detected && picture_control_set_ptr->slice_type != I_SLICE][encode_mode][1][2];
+    }
+#endif
     uint64_t dist_001 =
         sb_ptr->depth_cost[depth] == 0 ?
         max_distance :
@@ -4932,6 +4972,9 @@ static void perform_pred_depth_refinement(
                     if (context_ptr->pd_pass == PD_PASS_0) {
                         derive_start_end_depth(
                             picture_control_set_ptr,
+#if PD1_DEPTH_PRUNING
+                            context_ptr,
+#endif
                             sb_ptr,
                             sequence_control_set_ptr->seq_header.sb_size,
                             &s_depth,
@@ -5015,16 +5058,18 @@ static void perform_pred_depth_refinement(
 #if DISABLE_PD1_SQ_NSQ_DECISION
                                 s_depth = -1;
                                 e_depth = 1;
+#else
 #if PD1_DEPTH_PRUNING
                                 derive_start_end_depth(
                                     picture_control_set_ptr,
+                                    context_ptr,
                                     sb_ptr,
                                     sequence_control_set_ptr->seq_header.sb_size,
                                     &s_depth,
                                     &e_depth,
                                     blk_geom);
 #endif
-#else
+#if !DISABLE_PD1_SQ_NSQ_DECISION
                                 if (context_ptr->md_cu_arr_nsq[blk_index].best_d1_blk == blk_index) {
                                     s_depth = -1;
                                     e_depth = 0;
@@ -5033,6 +5078,7 @@ static void perform_pred_depth_refinement(
                                     s_depth = 0;
                                     e_depth = 1;
                                 }
+#endif
 #endif
 
 #if TEST_PIC_MULTI_PASS_PD_MODE_4
