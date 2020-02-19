@@ -32,7 +32,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#define ADD_SIGNAL_FOR_CFL      1
+#define ADD_SIGNAL_FOR_NSQ      1
 #define FEB18_ADOPTIONS         1
 #define QPS_V2                  0
 #define FEB14_ADOPTIONS         1

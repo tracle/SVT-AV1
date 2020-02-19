@@ -511,6 +511,12 @@ extern "C" {
 #if UPGRAGDE_TX_WEIGHT
     uint64_t md_stage_1_best_cost_array[CAND_CLASS_TOTAL];
 #endif
+#if ADD_SIGNAL_FOR_CFL
+    uint8_t                   cfl_level;
+#endif
+#if ADD_SIGNAL_FOR_NSQ
+    uint8_t                   md_disable_nsq;
+#endif
     } ModeDecisionContext;
 
     typedef void(*EbAv1LambdaAssignFunc)(

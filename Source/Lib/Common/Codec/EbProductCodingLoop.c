@@ -9528,6 +9528,9 @@ void md_stage_2(
                         EbBool disable_cfl_flag = (context_ptr->blk_geom->sq_size > 32 ||
                             context_ptr->blk_geom->bwidth == 4 ||
                             context_ptr->blk_geom->bheight == 4) ? EB_TRUE : EB_FALSE;
+#if ADD_SIGNAL_FOR_CFL
+                        disable_cfl_flag = context_ptr->cfl_level ? disable_cfl_flag : EB_TRUE;
+#endif
 
                         uint32_t intra_chroma_mode = candidate_ptr->intra_chroma_mode != UV_CFL_PRED ?
                             context_ptr->best_uv_mode[candidate_ptr->intra_luma_mode][MAX_ANGLE_DELTA + candidate_ptr->angle_delta[PLANE_TYPE_Y]] :
@@ -9914,6 +9917,11 @@ EbBool allowed_ns_cu(
             }
         }
     }
+#endif
+#if ADD_SIGNAL_FOR_NSQ
+    if (context_ptr->md_disable_nsq) 
+        if (context_ptr->blk_geom->shape != PART_N) 
+            ret = 0;
 #endif
     return ret;
 }

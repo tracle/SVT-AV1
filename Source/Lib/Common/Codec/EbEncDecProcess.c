@@ -2876,7 +2876,18 @@ EbErrorType signal_derivation_for_md_pass1(
     context_ptr->chroma_search_opt = enc_mode <= ENC_M0 ? 0 : 1;
 #endif
 #endif
-
+#if ADD_SIGNAL_FOR_CFL
+    // Cfl level
+    // 0: CFL OFF
+    // 1: CFL is allowed
+    context_ptr->cfl_level = 1;
+#endif
+#if ADD_SIGNAL_FOR_NSQ
+    // NSQ ON/OFF
+    // 0: NSQ OFF
+    // 1: NSQ is allowed
+    context_ptr->md_disable_nsq = 0;
+#endif
     return return_error;
 }
 #endif
@@ -4562,6 +4573,18 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->perform_me_mv_1_8_pel_ref = EB_FALSE;
     else
         context_ptr->perform_me_mv_1_8_pel_ref = (picture_control_set_ptr->parent_pcs_ptr->frm_hdr.allow_high_precision_mv);
+#endif
+#if ADD_SIGNAL_FOR_CFL
+    // Cfl level
+    // 0: CFL OFF
+    // 1: CFL is allowed
+    context_ptr->cfl_level = 1;
+#endif
+#if ADD_SIGNAL_FOR_NSQ
+    // NSQ ON/OFF
+    // 0: NSQ OFF
+    // 1: NSQ is allowed
+    context_ptr->md_disable_nsq = 0;
 #endif
     return return_error;
 }

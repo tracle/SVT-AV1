@@ -6065,7 +6065,9 @@ void  inject_intra_candidates_ois(
     uint32_t                    can_total_cnt = 0;
     ModeDecisionCandidate    *candidate_array = context_ptr->fast_candidate_array;
     EbBool                      disable_cfl_flag = (MAX(context_ptr->blk_geom->bheight, context_ptr->blk_geom->bwidth) > 32) ? EB_TRUE : EB_FALSE;
-
+#if ADD_SIGNAL_FOR_CFL
+    disable_cfl_flag = context_ptr->cfl_level ? disable_cfl_flag : EB_TRUE;
+#endif
     OisSbResults    *ois_sb_results_ptr = picture_control_set_ptr->parent_pcs_ptr->ois_sb_results[sb_ptr->index];
     OisCandidate     *ois_blk_ptr = ois_sb_results_ptr->ois_candidate_array[ep_to_pa_block_index[context_ptr->blk_geom->blkidx_mds]];
     uint8_t              total_intra_luma_mode = ois_sb_results_ptr-> total_ois_intra_candidate[ep_to_pa_block_index[context_ptr->blk_geom->blkidx_mds]];
@@ -6604,7 +6606,9 @@ void  inject_intra_candidates(
     uint8_t                     angleDeltaCandidateCount = use_angle_delta ? 7 : 1;
     ModeDecisionCandidate    *candidateArray = context_ptr->fast_candidate_array;
     EbBool                      disable_cfl_flag = (MAX(context_ptr->blk_geom->bheight, context_ptr->blk_geom->bwidth) > 32) ? EB_TRUE : EB_FALSE;
-
+#if ADD_SIGNAL_FOR_CFL
+    disable_cfl_flag = context_ptr->cfl_level ? disable_cfl_flag : EB_TRUE;
+#endif
     uint8_t                     disable_z2_prediction;
     uint8_t                     disable_angle_refinement;
     uint8_t                     disable_angle_prediction;
@@ -6846,7 +6850,9 @@ void  inject_filter_intra_candidates(
     ModeDecisionCandidate      *candidateArray = context_ptr->fast_candidate_array;
 
     EbBool                      disable_cfl_flag = (MAX(context_ptr->blk_geom->bheight, context_ptr->blk_geom->bwidth) > 32) ? EB_TRUE : EB_FALSE;
-
+#if ADD_SIGNAL_FOR_CFL
+    disable_cfl_flag = context_ptr->cfl_level ? disable_cfl_flag : EB_TRUE;
+#endif
     FrameHeader *frm_hdr = &picture_control_set_ptr->parent_pcs_ptr->frm_hdr;
 
     for (filter_intra_mode = intra_mode_start; filter_intra_mode < intra_mode_end ; ++filter_intra_mode) {
@@ -6947,6 +6953,9 @@ void  inject_palette_candidates(
     uint32_t                  can_total_cnt = *candidate_total_cnt;
     ModeDecisionCandidate    *candidateArray = context_ptr->fast_candidate_array;
     EbBool                    disable_cfl_flag = (MAX(context_ptr->blk_geom->bheight, context_ptr->blk_geom->bwidth) > 32) ? EB_TRUE : EB_FALSE;
+#if ADD_SIGNAL_FOR_CFL
+    disable_cfl_flag = context_ptr->cfl_level ? disable_cfl_flag : EB_TRUE;
+#endif
     uint32_t cand_i;
     uint32_t tot_palette_cands = 0;
     PaletteInfo    *palette_cand_array = context_ptr->palette_cand_array;
