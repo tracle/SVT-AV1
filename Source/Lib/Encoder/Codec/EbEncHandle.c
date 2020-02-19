@@ -392,7 +392,10 @@ EbErrorType load_default_buffer_configuration_settings(
 
     uint32_t meSegH     = (((sequence_control_set_ptr->max_input_luma_height + 32) / BLOCK_SIZE_64) < 6) ? 1 : 6;
     uint32_t meSegW     = (((sequence_control_set_ptr->max_input_luma_width + 32) / BLOCK_SIZE_64) < 10) ? 1 : 10;
-
+#if PLANE_WISE_TF
+    meSegH = 1;
+    meSegW = 1;
+#endif
     unsigned int lp_count = GetNumProcessors();
 #if CORE_LIMIT
     lp_count = 20;

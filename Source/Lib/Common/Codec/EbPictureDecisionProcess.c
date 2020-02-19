@@ -4287,8 +4287,7 @@ void* picture_decision_kernel(void *input_ptr)
 #if PRED_STR_UPDATE
                                 if (frm_hdr->reference_mode == REFERENCE_MODE_SELECT &&
                                     picture_control_set_ptr->temporal_layer_index &&
-                                    sequence_control_set_ptr->static_config.pred_structure == EB_PRED_RANDOM_ACCESS)
-                                {
+                                    sequence_control_set_ptr->static_config.pred_structure == EB_PRED_RANDOM_ACCESS){
                                     if (picture_control_set_ptr->av1_ref_signal.ref_poc_array[ALT] >= picture_control_set_ptr->picture_number)
                                         picture_control_set_ptr->av1_cm->ref_frame_sign_bias[ALTREF_FRAME] = 1;
                                     else
@@ -4303,17 +4302,6 @@ void* picture_decision_kernel(void *input_ptr)
                                         picture_control_set_ptr->av1_cm->ref_frame_sign_bias[BWDREF_FRAME] = 1;
                                     else
                                         picture_control_set_ptr->av1_cm->ref_frame_sign_bias[BWDREF_FRAME] = 0;
-
-                                    printf("POC:%d\t %d\t%d\t%d\t %d\t%d\t%d\n",
-                                        picture_control_set_ptr->picture_number,
-                                        picture_control_set_ptr->av1_ref_signal.ref_poc_array[ALT],
-                                        picture_control_set_ptr->av1_ref_signal.ref_poc_array[ALT2],
-                                        picture_control_set_ptr->av1_ref_signal.ref_poc_array[BWD],
-                                        picture_control_set_ptr->av1_cm->ref_frame_sign_bias[ALTREF_FRAME],
-                                        picture_control_set_ptr->av1_cm->ref_frame_sign_bias[ALTREF2_FRAME],
-                                        picture_control_set_ptr->av1_cm->ref_frame_sign_bias[BWDREF_FRAME]
-                                    );
-
                                 }
 
 #endif
@@ -4530,8 +4518,10 @@ void* picture_decision_kernel(void *input_ptr)
                                         if (ahd < ahd_th)
                                             break;
                                     }
+                                    //AMIR
                                     picture_control_set_ptr->future_altref_nframes = pic_itr - index_center;
-                                    //printf("\nPOC %d\t PAST %d\t FUTURE %d\n", picture_control_set_ptr->picture_number, picture_control_set_ptr->past_altref_nframes, picture_control_set_ptr->future_altref_nframes);
+                                    picture_control_set_ptr->future_altref_nframes = 6;// actual_future_pics;
+                                    printf("\nPOC %d\t PAST %d\t FUTURE %d\n", picture_control_set_ptr->picture_number, picture_control_set_ptr->past_altref_nframes, picture_control_set_ptr->future_altref_nframes);
                                 }
                                 else
                                 {
@@ -4651,7 +4641,11 @@ void* picture_decision_kernel(void *input_ptr)
                                     if (ahd < ahd_th)
                                         break;
                                 }
+                                //AMIR
                                 picture_control_set_ptr->past_altref_nframes = actual_past_pics = index_center - pic_itr;
+                                picture_control_set_ptr->past_altref_nframes = actual_past_pics = 3; // actual_future_pics;
+                                if (picture_control_set_ptr->temporal_layer_index == 1)
+                                    picture_control_set_ptr->past_altref_nframes = actual_past_pics = 1;
 
                                 // Accumulative histogram absolute differences between the central and past frame
                                 for (pic_itr = (index_center + actual_future_pics); pic_itr > index_center; pic_itr--) {
@@ -4659,8 +4653,13 @@ void* picture_decision_kernel(void *input_ptr)
                                     if (ahd < ahd_th)
                                         break;
                                 }
+                                //AMIR
                                 picture_control_set_ptr->future_altref_nframes = pic_itr - index_center;
-                                //printf("\nPOC %d\t PAST %d\t FUTURE %d\n", picture_control_set_ptr->picture_number, picture_control_set_ptr->past_altref_nframes, picture_control_set_ptr->future_altref_nframes);
+                                picture_control_set_ptr->future_altref_nframes = 3;// actual_future_pics;
+                                if (picture_control_set_ptr->temporal_layer_index == 1)
+                                    picture_control_set_ptr->future_altref_nframes = 1;
+
+                                printf("\nPOC %d\t PAST %d\t FUTURE %d\n", picture_control_set_ptr->picture_number, picture_control_set_ptr->past_altref_nframes, picture_control_set_ptr->future_altref_nframes);
 
                                 // adjust the temporal filtering pcs buffer to remove unused past pictures
                                 if(actual_past_pics != num_past_pics) {

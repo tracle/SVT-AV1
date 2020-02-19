@@ -36,6 +36,24 @@
 // Block size used in temporal filtering
 #define BW 64
 #define BH 64
+
+#if PLANE_WISE_TF
+// Window size for temporal filtering on YUV planes.
+// This is particually used for function `av1_apply_temporal_filter_yuv()`.
+#define TF_YUV_FILTER_WINDOW_LENGTH 3
+
+// Window size for temporal filtering on Y planes.
+// This is particually used for function `av1_apply_temporal_filter_yonly()`.
+#define TF_YONLY_FILTER_WINDOW_LENGTH 3
+
+#define TF_ENABLE_PLANEWISE_STRATEGY 1
+// Window size for plane-wise temporal filtering.
+// This is particually used for function `av1_apply_temporal_filter_planewise()`
+#define TF_PLANEWISE_FILTER_WINDOW_LENGTH 5
+// A scale factor used in plane-wise temporal filtering to raise the filter
+// weight from `double` with range [0, 1] to `int` with range [0, 1000].
+#define TF_PLANEWISE_FILTER_WEIGHT_SCALE 1000
+#endif
 #define BLK_PELS 4096  // Pixels in the block
 #define N_16X16_BLOCKS 16
 #define N_32X32_BLOCKS 4
