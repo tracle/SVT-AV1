@@ -42,6 +42,7 @@ extern "C" {
 #ifndef NON_AVX512_SUPPORT
 #define NON_AVX512_SUPPORT
 #endif
+#define PRED_STR_UPDATE 1 // Prediction structure update
 
 #define TILES_PARALLEL 1
 
