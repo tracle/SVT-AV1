@@ -32,6 +32,11 @@
 #include "EbLog.h"
 #include "EbCommonUtils.h"
 
+void save_Y_to_file(char *filename, EbByte buffer_y,
+                    uint16_t width, uint16_t height,
+                    uint16_t stride_y,
+                    uint16_t origin_y, uint16_t origin_x);
+
 void use_scaled_refs_if_needed(PictureControlSet *pcs_ptr,
                                EbPictureBufferDesc *input_picture_ptr,
                                EbReferenceObject *ref_obj,
@@ -50,12 +55,6 @@ void precompute_intra_pred_for_inter_intra(PictureControlSet *  pcs_ptr,
                                            ModeDecisionContext *context_ptr);
 
 int svt_av1_allow_palette(int allow_palette, BlockSize sb_type);
-
-void save_Y_to_file(char *filename, EbByte buffer_y,
-                    uint16_t width, uint16_t height,
-                    uint16_t stride_y,
-                    uint16_t origin_y, uint16_t origin_x);
-
 
 /*******************************************
 * set Penalize Skip Flag
@@ -2395,6 +2394,14 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                 EbSpatialFullDistType spatial_full_dist_type_fun =
                     hbd_mode_decision ? full_distortion_kernel16_bits
                                       : spatial_full_distortion_kernel;
+
+//                if(pcs_ptr->picture_number == 1){
+//                    save_Y_to_file("ref_block.yuv",
+//                                   ref_pic->buffer_y + ref_origin_index, context_ptr->blk_geom->bwidth, context_ptr->blk_geom->bheight, ref_pic->stride_y, 0, 0);
+//
+//                    save_Y_to_file("orig_block.yuv",
+//                                   input_picture_ptr->buffer_y + input_origin_index, context_ptr->blk_geom->bwidth, context_ptr->blk_geom->bheight, input_picture_ptr->stride_y, 0, 0);
+//                }
 
                 pa_me_distortion =
                     (uint32_t)spatial_full_dist_type_fun(input_picture_ptr->buffer_y,
@@ -6822,7 +6829,17 @@ void av1_get_max_min_partition_features(SequenceControlSet *scs_ptr, PictureCont
                 mv_unit.mv->x = me_results->me_mv_array[me_block_offset][list0_ref_index].x_mv << 1;
                 mv_unit.mv->y = me_results->me_mv_array[me_block_offset][list0_ref_index].y_mv << 1;
 
-                // NOTE: references
+                EbPictureBufferDesc *ref_pic = !is_highbd ? ((EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[0][0]->object_ptr)
+                                                             ->reference_picture
+                                                          : ((EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[0][0]->object_ptr)
+                                                             ->reference_picture16bit;
+
+                // Use scaled references if resolution of the reference is different than the input
+                use_scaled_refs_if_needed(pcs_ptr,
+                                          pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr,
+                                          (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[0][0]->object_ptr,
+                                          &ref_pic);
+
                 av1_inter_prediction(
                     NULL, //pcs_ptr,
                     (uint32_t)interp_filters,
@@ -6847,10 +6864,7 @@ void av1_get_max_min_partition_features(SequenceControlSet *scs_ptr, PictureCont
                     blk_origin_y,
                     blk_geom->bwidth,
                     blk_geom->bheight,
-                    !is_highbd ? ((EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[0][0]->object_ptr)
-                                     ->reference_picture
-                               : ((EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[0][0]->object_ptr)
-                                     ->reference_picture16bit, // use last = [List 0][Ref Index 0]
+                    ref_pic, // use last = [List 0][Ref Index 0]
                     NULL, //ref_pic_list1,
                     prediction_ptr,
                     blk_geom->origin_x,

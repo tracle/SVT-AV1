@@ -38,6 +38,11 @@
         SVT_LOG(" ERROR: reaching limit for MODE_DECISION_CANDIDATE_MAX_COUNT %i\n", cnt); \
     MULTI_LINE_MACRO_END
 
+void use_scaled_refs_if_needed(PictureControlSet *pcs_ptr,
+                               EbPictureBufferDesc *input_picture_ptr,
+                               EbReferenceObject *ref_obj,
+                               EbPictureBufferDesc **ref_pic);
+
 int8_t av1_ref_frame_type(const MvReferenceFrame *const rf);
 int    av1_filter_intra_allowed_bsize(uint8_t enable_filter_intra, BlockSize bs);
 #define INT_MAX 2147483647 // maximum (signed) int value
@@ -277,7 +282,6 @@ void inter_intra_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context
     assert(list_idx1 < MAX_NUM_OF_REF_PIC_LIST);
     //
     if (ref_idx_l0 >= 0)
-        // NOTE: references
         ref_pic_list0 =
             context_ptr->hbd_mode_decision
                 ? ((EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[list_idx0][ref_idx_l0]
@@ -290,7 +294,6 @@ void inter_intra_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context
         ref_pic_list0 = (EbPictureBufferDesc *)EB_NULL;
 
     if (ref_idx_l1 >= 0)
-        // NOTE: references
         ref_pic_list1 =
             context_ptr->hbd_mode_decision
                 ? ((EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[list_idx1][ref_idx_l1]
@@ -301,6 +304,18 @@ void inter_intra_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context
                       ->reference_picture;
     else
         ref_pic_list1 = (EbPictureBufferDesc *)EB_NULL;
+
+    // Use scaled references if resolution of the reference is different than the input
+    if(ref_pic_list0 != NULL)
+        use_scaled_refs_if_needed(pcs_ptr,
+                                  pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr,
+                                  (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[list_idx0][list_idx0]->object_ptr,
+                                  &ref_pic_list0);
+    if(ref_pic_list1 != NULL)
+        use_scaled_refs_if_needed(pcs_ptr,
+                                  pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr,
+                                  (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[list_idx1][ref_idx_l1]->object_ptr,
+                                  &ref_pic_list1);
 
     mv_unit.pred_direction = candidate_ptr->prediction_direction[0];
 
@@ -3276,7 +3291,7 @@ void obmc_motion_refinement(PictureControlSet *pcs_ptr, struct ModeDecisionConte
     {
         uint8_t              ref_idx  = get_ref_frame_idx(candidate->ref_frame_type);
         uint8_t              list_idx = get_list_idx(candidate->ref_frame_type);
-        // NOTE: references
+
         EbPictureBufferDesc *reference_picture =
             ((EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[list_idx][ref_idx]->object_ptr)
                 ->reference_picture;

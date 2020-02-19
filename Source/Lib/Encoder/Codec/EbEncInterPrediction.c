@@ -3516,6 +3516,9 @@ EbErrorType av1_inter_prediction(
         }
 
         if (sub8x8_inter) {
+
+            printf("sub8x8_inter\n");
+
             // block size
             const int32_t   b4_w        = block_size_wide[bsize] >> ss_x;
             const int32_t   b4_h        = block_size_high[bsize] >> ss_y;
@@ -4698,7 +4701,6 @@ EbErrorType inter_pu_prediction_av1(uint8_t hbd_mode_decision, ModeDecisionConte
     mv_unit.mv[1] = mv_1;
 
     if (candidate_buffer_ptr->candidate_ptr->use_intrabc) {
-        // NOTE: references
         if (!hbd_mode_decision)
             ref_pic_list0 = ((EbReferenceObject *)picture_control_set_ptr->parent_pcs_ptr
                     ->reference_picture_wrapper_ptr->object_ptr)
