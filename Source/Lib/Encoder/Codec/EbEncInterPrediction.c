@@ -3687,6 +3687,7 @@ EbErrorType av1_inter_prediction(
     av1_set_ref_frame(rf, ref_frame_type);
     if (mv_unit->pred_direction == UNI_PRED_LIST_0 || mv_unit->pred_direction == BI_PRED) {
         //List0-Y
+        // TODO: add scaled prediction support here
         mv.col = mv_unit->mv[REF_LIST_0].x;
         mv.row = mv_unit->mv[REF_LIST_0].y;
         assert(ref_pic_list0 != NULL);
@@ -3901,7 +3902,8 @@ EbErrorType av1_inter_prediction(
     }
 
     if (mv_unit->pred_direction == UNI_PRED_LIST_1 || mv_unit->pred_direction == BI_PRED) {
-        //List0-Y
+        //List1-Y
+        // TODO: add scaled prediction support here
         mv.col = mv_unit->mv[REF_LIST_1].x;
         mv.row = mv_unit->mv[REF_LIST_1].y;
         assert(ref_pic_list1 != NULL);

@@ -174,6 +174,16 @@ static const InterpKernel filteredinterp_filters875[(1 << RS_SUBPEL_BITS)] = {
         {-1, 3, -9, 17, 112, 10, -7, 3},  {-1, 3, -8, 15, 112, 12, -7, 2},
 };
 
+void downsample_decimation_input_picture(PictureParentControlSet *pcs_ptr,
+                                         EbPictureBufferDesc *input_padded_picture_ptr,
+                                         EbPictureBufferDesc *quarter_decimated_picture_ptr,
+                                         EbPictureBufferDesc *sixteenth_decimated_picture_ptr);
+
+void downsample_filtering_input_picture(PictureParentControlSet *pcs_ptr,
+                                        EbPictureBufferDesc *input_padded_picture_ptr,
+                                        EbPictureBufferDesc *quarter_picture_ptr,
+                                        EbPictureBufferDesc *sixteenth_picture_ptr);
+
 void calculate_scaled_size_helper(uint16_t *dim, uint8_t denom);
 
 void pad_and_decimate_filtered_pic(
@@ -306,8 +316,8 @@ static void down2_symodd(const uint8_t *const input, int length, uint8_t *output
 
 static const InterpKernel *choose_interp_filter(int in_length, int out_length) {
     int out_length16 = out_length * 16;
-    // TODO: use original filter in libaom
-    if (out_length16 >= in_length * 16) return filteredinterp_filters1000;
+    if (out_length16 >= in_length * 16)
+        return filteredinterp_filters1000;
     if (out_length16 >= in_length * 16)
         return filteredinterp_filters875; // wrong
     else if (out_length16 >= in_length * 13)
@@ -1223,6 +1233,7 @@ EbErrorType allocate_downscaled_source_reference_pics(EbPictureBufferDesc **inpu
     return EB_ErrorNone;
 }
 
+// Scale source references used in open-loop ME
 void scale_source_references(SequenceControlSet *scs_ptr,
                              PictureParentControlSet *pcs_ptr,
                              EbPictureBufferDesc *input_picture_ptr){
@@ -1346,6 +1357,7 @@ void scale_source_references(SequenceControlSet *scs_ptr,
 
 }
 
+// Scale decimated or filtered input pictures used as a reference - used in open-loop ME
 void scale_input_references(PictureParentControlSet *pcs_ptr,
                             superres_params_type superres_params) {
 
@@ -1357,13 +1369,13 @@ void scale_input_references(PictureParentControlSet *pcs_ptr,
 
     // Allocate downsampled reference picture buffer descriptors
     allocate_downscaled_source_reference_pics(&src_object->downscaled_input_padded_picture_ptr[denom_idx],
-                                       &src_object->downscaled_quarter_decimated_picture_ptr[denom_idx],
-                                       &src_object->downscaled_quarter_filtered_picture_ptr[denom_idx],
-                                       &src_object->downscaled_sixteenth_decimated_picture_ptr[denom_idx],
-                                       &src_object->downscaled_sixteenth_filtered_picture_ptr[denom_idx],
-                                       padded_pic_ptr,
-                                       superres_params,
-                                       pcs_ptr->scs_ptr->down_sampling_method_me_search);
+                                              &src_object->downscaled_quarter_decimated_picture_ptr[denom_idx],
+                                              &src_object->downscaled_quarter_filtered_picture_ptr[denom_idx],
+                                              &src_object->downscaled_sixteenth_decimated_picture_ptr[denom_idx],
+                                              &src_object->downscaled_sixteenth_filtered_picture_ptr[denom_idx],
+                                              padded_pic_ptr,
+                                              superres_params,
+                                              pcs_ptr->scs_ptr->down_sampling_method_me_search);
 
     padded_pic_ptr = src_object->downscaled_input_padded_picture_ptr[denom_idx];
     EbPictureBufferDesc *input_picture_ptr = pcs_ptr->enhanced_picture_ptr;
@@ -1394,7 +1406,7 @@ void scale_input_references(PictureParentControlSet *pcs_ptr,
                                            src_object->downscaled_sixteenth_filtered_picture_ptr[denom_idx]);
 }
 
-// TODO: work in progress
+// Scale reconstructed references - predictive ME
 void scale_rec_references(PictureControlSet *pcs_ptr,
                           EbPictureBufferDesc *input_picture_ptr,
                           uint8_t hbd_mode_decision){

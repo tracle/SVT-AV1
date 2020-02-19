@@ -11348,8 +11348,9 @@ EbErrorType motion_estimate_sb(
                                         reference_object->downscaled_sixteenth_filtered_picture_ptr[denom_idx] :
                                         reference_object->downscaled_sixteenth_decimated_picture_ptr[denom_idx];
             }
-
             assert(ref_pic_ptr->width == input_picture_ptr->width);
+
+            printf("frame #%d, width=%d, ref pic=%d\n", (int)pcs_ptr->picture_number, input_picture_ptr->width, ref_picture_number);
 
 //            if(pcs_ptr->picture_number == 8 && context_ptr->me_alt_ref == EB_FALSE) {
 //

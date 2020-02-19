@@ -705,6 +705,7 @@ void *motion_estimation_kernel(void *input_ptr) {
                                         pa_ref_obj_->downscaled_sixteenth_filtered_picture_ptr[denom_idx] :
                                         pa_ref_obj_->downscaled_sixteenth_decimated_picture_ptr[denom_idx];
             }
+            assert(input_padded_picture_ptr->width == input_picture_ptr->width);
 
 #if GLOBAL_WARPED_MOTION
             // Global motion estimation
@@ -742,7 +743,7 @@ void *motion_estimation_kernel(void *input_ptr) {
             if (pcs_ptr->slice_type != I_SLICE) {
 
                 // TODO: references should be ready by this time
-                // TODO: this has to be done under a mutex - move to picture decision?
+                // TODO: this has to be done only once for the first segment
                 if(pcs_ptr->frame_superres_enabled){
                     scale_source_references(scs_ptr, pcs_ptr, input_picture_ptr);
                 }
@@ -1038,16 +1039,6 @@ void *motion_estimation_kernel(void *input_ptr) {
             context_ptr->me_context_ptr->me_alt_ref = EB_TRUE;
             svt_av1_init_temporal_filtering(
                 pcs_ptr->temp_filt_pcs_list, pcs_ptr, context_ptr, in_results_ptr->segment_index);
-
-            //****************************************************
-            // Picture resizing for super-res tool
-            //****************************************************
-
-            // Scale picture if super-res is used
-            if(scs_ptr->static_config.superres_mode > SUPERRES_NONE && (pcs_ptr->picture_number == 8 || pcs_ptr->picture_number == 16)){
-                init_resize_picture(pcs_ptr->scs_ptr,
-                                    pcs_ptr);
-            }
 
             // Release the Input Results
             eb_release_object(in_results_wrapper_ptr);

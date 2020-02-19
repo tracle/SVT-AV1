@@ -4403,6 +4403,18 @@ void* picture_decision_kernel(void *input_ptr)
                             pcs_ptr->me_segments_total_count = (uint16_t)(pcs_ptr->me_segments_column_count  * pcs_ptr->me_segments_row_count);
                             pcs_ptr->me_segments_completion_mask = 0;
 
+                            //****************************************************
+                            // Picture resizing for super-res tool
+                            //****************************************************
+
+                            // Scale picture if super-res is used
+                            if(scs_ptr->static_config.superres_mode > SUPERRES_NONE && pcs_ptr->picture_number == 1){
+                                init_resize_picture(pcs_ptr->scs_ptr,
+                                                    pcs_ptr);
+                            }
+
+                            //****************************************************
+
                             // Post the results to the ME processes
                             {
                                 uint32_t segment_index;
