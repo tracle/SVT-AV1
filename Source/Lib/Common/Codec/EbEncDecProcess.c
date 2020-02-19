@@ -1616,6 +1616,7 @@ EbErrorType signal_derivation_for_md_pass1(
     else
         context_ptr->new_nearest_near_comb_injection = sequence_control_set_ptr->static_config.new_nearest_comb_inject;
 
+#if !ME_MV_UPGRADE_LOSSY
 #if MULTI_PASS_PD // Shut nx4 and 4xn if 1st pass
 #if 0 // Nader
     if (context_ptr->pd_pass == PD_PASS_0)
@@ -1649,6 +1650,7 @@ EbErrorType signal_derivation_for_md_pass1(
 #endif
     else
         context_ptr->nx4_4xn_parent_mv_injection = sequence_control_set_ptr->static_config.nx4_4xn_parent_mv_inject;
+#endif
 
     // Set warped motion injection
     // Level                Settings
@@ -1740,7 +1742,11 @@ EbErrorType signal_derivation_for_md_pass1(
             else
                 context_ptr->bipred3x3_injection = 0;
         else
+#if M2_FEB14_ADOPTION
+            if (enc_mode <= ENC_M1)
+#else
             if (enc_mode <= ENC_M3)
+#endif
                 context_ptr->bipred3x3_injection = 1;
             else if (enc_mode <= ENC_M4)
                 context_ptr->bipred3x3_injection = 2;
@@ -2210,7 +2216,11 @@ EbErrorType signal_derivation_for_md_pass1(
     if (sequence_control_set_ptr->static_config.prune_ref_rec_part == DEFAULT)
 #if PRESETS_TUNE
 #if M2_ADOPTIONS
+#if M2_FEB14_ADOPTION
+        if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected || enc_mode <= ENC_M1)
+#else
         if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected || enc_mode <= ENC_M3)
+#endif
 #else
         if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected || enc_mode <= ENC_M1)
 #endif
@@ -2270,7 +2280,11 @@ EbErrorType signal_derivation_for_md_pass1(
 #if M1_ADOPT_M0_MD_EXIT_TH
 #if M2_ADOPTIONS
 #if SC_REDUCE_DIFF //md_exit_th
+#if M2_FEB14_ADOPTION
+    if (enc_mode <= ENC_M1)
+#else
     if (enc_mode <= ENC_M3)
+#endif
 #else
     if (MR_MODE || (enc_mode <= ENC_M2 && picture_control_set_ptr->parent_pcs_ptr->sc_content_detected == 0))
 #endif
@@ -2311,7 +2325,11 @@ EbErrorType signal_derivation_for_md_pass1(
 #if M0_OPT
 #if M1_OPT
 #if MD_STAGE_1_CAND_PRUNNING_TH
+#if M2_FEB14_ADOPTION
+    if (enc_mode <= ENC_M1 || picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
+#else
     if (enc_mode <= ENC_M3 || picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
+#endif
 #else
     if (MR_MODE || (enc_mode <= ENC_M1 && (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected == 0)) || sequence_control_set_ptr->input_resolution == INPUT_SIZE_576p_RANGE_OR_LOWER)
 #endif
@@ -2535,8 +2553,10 @@ EbErrorType signal_derivation_for_md_pass1(
         if (enc_mode <= ENC_M1)
 #endif
             context_ptr->sq_weight = sequence_control_set_ptr->static_config.sq_weight + 5;
+#if !M2_FEB14_ADOPTION
         else if (enc_mode <= ENC_M3)
             context_ptr->sq_weight = sequence_control_set_ptr->static_config.sq_weight;
+#endif
         else
             context_ptr->sq_weight = sequence_control_set_ptr->static_config.sq_weight - 5;
 #else
@@ -2620,8 +2640,13 @@ EbErrorType signal_derivation_for_md_pass1(
 #if M2_ADOPTIONS
 #if PME_SEARCH_AREA_TUNE
 #if M1_FEB4_ADOPTION   || M0_FEB4_ADOPTION
+#if M2_FEB14_ADOPTION
+        context_ptr->full_pel_ref_window_width_th = enc_mode <= ENC_M1 ? FULL_PEL_REF_WINDOW_WIDTH_15 : FULL_PEL_REF_WINDOW_WIDTH_7;
+        context_ptr->full_pel_ref_window_height_th = enc_mode <= ENC_M1 ? FULL_PEL_REF_WINDOW_HEIGHT_15 : FULL_PEL_REF_WINDOW_HEIGHT_5;
+#else
         context_ptr->full_pel_ref_window_width_th  = enc_mode <= ENC_M3 ? FULL_PEL_REF_WINDOW_WIDTH_15 : FULL_PEL_REF_WINDOW_WIDTH_7;
         context_ptr->full_pel_ref_window_height_th = enc_mode <= ENC_M3 ? FULL_PEL_REF_WINDOW_HEIGHT_15 : FULL_PEL_REF_WINDOW_HEIGHT_5;
+#endif
 #else
         context_ptr->full_pel_ref_window_width_th =  FULL_PEL_REF_WINDOW_WIDTH;
         context_ptr->full_pel_ref_window_height_th =  FULL_PEL_REF_WINDOW_HEIGHT;
