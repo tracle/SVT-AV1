@@ -248,6 +248,12 @@ static const int16_t ac_qlookup_12_q3[QINDEX_RANGE] = {
     19502, 19886, 20270, 20670, 21070, 21486, 21902, 22334, 22766, 23214, 23662, 24126, 24590,
     25070, 25551, 26047, 26559, 27071, 27599, 28143, 28687, 29247,
 };
+
+void scale_rec_references(PictureControlSet *pcs_ptr,
+                          EbPictureBufferDesc *input_picture_ptr,
+                          uint8_t hbd_mode_decision);
+
+
 int16_t eb_av1_dc_quant_q3(int32_t qindex, int32_t delta, AomBitDepth bit_depth) {
     switch (bit_depth) {
     case AOM_BITS_8: return dc_qlookup_q3[clamp(qindex + delta, 0, MAXQ)];
@@ -1677,6 +1683,16 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
         scs_ptr = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
         if (pcs_ptr->parent_pcs_ptr->frm_hdr.use_ref_frame_mvs)
             av1_setup_motion_field(pcs_ptr->parent_pcs_ptr->av1_cm, pcs_ptr);
+
+        // -------
+        // Scale references if resolution of the reference is different than the input
+        // -------
+        // TODO: this has to be done under a mutex
+        if(pcs_ptr->parent_pcs_ptr->frame_superres_enabled == 1 && pcs_ptr->slice_type != I_SLICE){
+            scale_rec_references(pcs_ptr,
+                                 pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr,
+                                 pcs_ptr->hbd_mode_decision);
+        }
 
         frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
 

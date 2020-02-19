@@ -3544,6 +3544,7 @@ EbErrorType av1_inter_prediction(
                     uint8_t ref_idx = get_ref_frame_idx(this_mbmi->block_mi.ref_frame[0]);
                     assert(ref_idx < REF_LIST_MAX_DEPTH);
 
+                    // NOTE: references
                     EbPictureBufferDesc *ref_pic =
                             this_mbmi->block_mi.ref_frame[0] == LAST_FRAME ||
                             this_mbmi->block_mi.ref_frame[0] == LAST2_FRAME ||
@@ -4504,6 +4505,7 @@ void search_compound_diff_wedge(PictureControlSet *    picture_control_set_ptr,
             list_idx1 = get_list_idx(rf[1]);
         assert(list_idx0 < MAX_NUM_OF_REF_PIC_LIST);
         assert(list_idx1 < MAX_NUM_OF_REF_PIC_LIST);
+        // NOTE: references
         if (ref_idx_l0 >= 0)
             ref_pic_list0 = hbd_mode_decision ? ((EbReferenceObject *)picture_control_set_ptr
                     ->ref_pic_ptr_array[list_idx0][ref_idx_l0]
@@ -4672,6 +4674,7 @@ void search_compound_diff_wedge(PictureControlSet *    picture_control_set_ptr,
                          context_ptr->diff10);
 }
 
+// TODO: this is another function that needs to be modified
 EbErrorType inter_pu_prediction_av1(uint8_t hbd_mode_decision, ModeDecisionContext *md_context_ptr,
                                     PictureControlSet *          picture_control_set_ptr,
                                     ModeDecisionCandidateBuffer *candidate_buffer_ptr) {
@@ -4695,6 +4698,7 @@ EbErrorType inter_pu_prediction_av1(uint8_t hbd_mode_decision, ModeDecisionConte
     mv_unit.mv[1] = mv_1;
 
     if (candidate_buffer_ptr->candidate_ptr->use_intrabc) {
+        // NOTE: references
         if (!hbd_mode_decision)
             ref_pic_list0 = ((EbReferenceObject *)picture_control_set_ptr->parent_pcs_ptr
                     ->reference_picture_wrapper_ptr->object_ptr)
@@ -4755,6 +4759,7 @@ EbErrorType inter_pu_prediction_av1(uint8_t hbd_mode_decision, ModeDecisionConte
     assert(list_idx1 < MAX_NUM_OF_REF_PIC_LIST);
 
     if (ref_idx_l0 >= 0) {
+        // NOTE: references
         ref_pic_list0 = hbd_mode_decision ? ((EbReferenceObject *)picture_control_set_ptr
                 ->ref_pic_ptr_array[list_idx0][ref_idx_l0]
                 ->object_ptr)
@@ -4766,6 +4771,7 @@ EbErrorType inter_pu_prediction_av1(uint8_t hbd_mode_decision, ModeDecisionConte
     }
 
     if (ref_idx_l1 >= 0) {
+        // NOTE: references
         ref_pic_list1 = hbd_mode_decision ? ((EbReferenceObject *)picture_control_set_ptr
                 ->ref_pic_ptr_array[list_idx1][ref_idx_l1]
                 ->object_ptr)
@@ -4832,12 +4838,14 @@ EbErrorType inter_pu_prediction_av1(uint8_t hbd_mode_decision, ModeDecisionConte
                 if (md_context_ptr->hbd_mode_decision == EB_DUAL_BIT_MD &&
                     hbd_mode_decision == EB_DUAL_BIT_MD) {
                     if (ref_idx_l0 >= 0)
+                        // NOTE: references
                         ref_pic_list0 = ((EbReferenceObject *)picture_control_set_ptr
                                 ->ref_pic_ptr_array[list_idx0][ref_idx_l0]
                                 ->object_ptr)
                                 ->reference_picture;
 
                     if (ref_idx_l1 >= 0)
+                        // NOTE: references
                         ref_pic_list1 = ((EbReferenceObject *)picture_control_set_ptr
                                 ->ref_pic_ptr_array[list_idx1][ref_idx_l1]
                                 ->object_ptr)
@@ -4857,12 +4865,14 @@ EbErrorType inter_pu_prediction_av1(uint8_t hbd_mode_decision, ModeDecisionConte
                 if (md_context_ptr->hbd_mode_decision == EB_DUAL_BIT_MD &&
                     hbd_mode_decision == EB_DUAL_BIT_MD) {
                     if (ref_idx_l0 >= 0)
+                        // NOTE: references
                         ref_pic_list0 = ((EbReferenceObject *)picture_control_set_ptr
                                 ->ref_pic_ptr_array[list_idx0][ref_idx_l0]
                                 ->object_ptr)
                                 ->reference_picture16bit;
 
                     if (ref_idx_l1 >= 0)
+                        // NOTE: references
                         ref_pic_list1 = ((EbReferenceObject *)picture_control_set_ptr
                                 ->ref_pic_ptr_array[list_idx1][ref_idx_l1]
                                 ->object_ptr)

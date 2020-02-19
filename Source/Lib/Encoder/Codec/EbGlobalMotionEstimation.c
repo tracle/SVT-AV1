@@ -65,6 +65,7 @@ void global_motion_estimation(PictureParentControlSet *pcs_ptr, MeContext *conte
             if (context_ptr->me_alt_ref == EB_TRUE)
                 reference_object = (EbPaReferenceObject *)context_ptr->alt_ref_reference_ptr;
             else
+                // NOTE: references
                 reference_object =
                     (EbPaReferenceObject *)pcs_ptr->ref_pa_pic_ptr_array[list_index][ref_pic_index]
                         ->object_ptr;

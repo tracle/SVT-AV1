@@ -1487,12 +1487,32 @@ void scale_rec_references(PictureControlSet *pcs_ptr,
                                    0,
                                    0);
 
-                    printf("rescaled reference picture\n");
+                    printf("rescaled reference picture %d\n", (int)ref_picture_number);
 
                 }
             }
         }
     }
+
+}
+
+void use_scaled_refs_if_needed(PictureControlSet *pcs_ptr,
+                               EbPictureBufferDesc *input_picture_ptr,
+                               EbReferenceObject *ref_obj,
+                               EbPictureBufferDesc **ref_pic){
+
+    if((*ref_pic)->width != input_picture_ptr->width){
+        uint8_t denom_idx = (uint8_t)(pcs_ptr->parent_pcs_ptr->superres_denom - 8);
+
+        if(pcs_ptr->hbd_mode_decision){
+            assert(ref_obj->downscaled_reference_picture16bit[denom_idx] != NULL);
+            *ref_pic = ref_obj->downscaled_reference_picture16bit[denom_idx];
+        }else{
+            assert(ref_obj->downscaled_reference_picture[denom_idx] != NULL);
+            *ref_pic = ref_obj->downscaled_reference_picture[denom_idx];
+        }
+    }
+    assert((*ref_pic)->width == input_picture_ptr->width);
 
 }
 

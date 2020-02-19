@@ -2650,6 +2650,7 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                 context_ptr->mv_unit.mv[REF_LIST_1].mv_union =
                                     pu_ptr->mv[REF_LIST_1].mv_union;
 
+                                // NOTE: references
                                 EbPictureBufferDesc *ref_pic_list0 =
                                     ((EbReferenceObject *)pcs_ptr->parent_pcs_ptr
                                          ->reference_picture_wrapper_ptr->object_ptr)
@@ -2894,6 +2895,8 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                         list_idx1 = get_list_idx(rf[0]);
                     else
                         list_idx1 = get_list_idx(rf[1]);
+
+                    // TODO: scale references if needed
                     EbReferenceObject *ref_obj_0 =
                         ref_idx_l0 >= 0
                             ? (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[list_idx0][ref_idx_l0]
@@ -3035,6 +3038,7 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                             EbPictureBufferDesc *ref_pic_list0;
                             EbPictureBufferDesc *ref_pic_list1;
 
+                            // NOTE: references
                             if (!is_16bit) {
                                 ref_pic_list0 =
                                     blk_ptr->prediction_unit_array->ref_frame_index_l0 >= 0

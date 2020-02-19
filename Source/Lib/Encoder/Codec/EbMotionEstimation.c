@@ -11350,7 +11350,7 @@ EbErrorType motion_estimate_sb(
             }
             assert(ref_pic_ptr->width == input_picture_ptr->width);
 
-            printf("frame #%d, width=%d, ref pic=%d\n", (int)pcs_ptr->picture_number, input_picture_ptr->width, ref_picture_number);
+            printf("frame #%d, width=%d, ref pic=%d, ALT-REF %d\n", (int)pcs_ptr->picture_number, input_picture_ptr->width, ref_picture_number, (int)context_ptr->me_alt_ref);
 
 //            if(pcs_ptr->picture_number == 8 && context_ptr->me_alt_ref == EB_FALSE) {
 //
