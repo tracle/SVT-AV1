@@ -5105,12 +5105,21 @@ static void perform_pred_depth_refinement(
                                 s_depth = 0;
                                 e_depth = 0;
                             }
-                            else
+                            else {
 #endif
 #if DISABLE_PD1_SQ_NSQ_DECISION
                                 s_depth = -1;
                                 e_depth = 1;
 #else
+                                if (context_ptr->md_cu_arr_nsq[blk_index].best_d1_blk == blk_index) {
+                                    s_depth = -1;
+                                    e_depth = 0;
+                                }
+                                else {
+                                    s_depth = 0;
+                                    e_depth = 1;
+                                }
+#endif
 #if PD1_DEPTH_PRUNING
                                 derive_start_end_depth(
                                     picture_control_set_ptr,
@@ -5121,18 +5130,7 @@ static void perform_pred_depth_refinement(
                                     &e_depth,
                                     blk_geom);
 #endif
-#if !DISABLE_PD1_SQ_NSQ_DECISION
-                                if (context_ptr->md_cu_arr_nsq[blk_index].best_d1_blk == blk_index) {
-                                    s_depth = -1;
-                                    e_depth = 0;
-                                }
-                                else {
-                                    s_depth = 0;
-                                    e_depth = 1;
-                                }
-#endif
-#endif
-
+                            }
 #if TEST_PIC_MULTI_PASS_PD_MODE_4
                             s_depth = 0;
                             e_depth = 0;
