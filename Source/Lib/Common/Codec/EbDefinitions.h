@@ -36,6 +36,8 @@ extern "C" {
 #define ADD_SIGNAL_FOR_NSQ      1
 #define FEB18_ADOPTIONS         1
 #define QPS_V2                  0
+#define DISABLE_HME             0
+#define MULTI_STAGE_HME         0
 #define FEB14_ADOPTIONS         1
 #define M2_FEB14_ADOPTION       1
 #define TEST4    0
