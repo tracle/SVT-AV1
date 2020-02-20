@@ -129,6 +129,12 @@ static void eb_reference_object_dctor(EbPtr p) {
     EB_DELETE(obj->reference_picture);
     EB_FREE_ALIGNED_ARRAY(obj->mvs);
     EB_DESTROY_MUTEX(obj->referenced_area_mutex);
+
+    for(uint8_t denom_idx = 0; denom_idx < NUM_SCALES; denom_idx++){
+        if(obj->downscaled_reference_picture[denom_idx] != NULL){
+            EB_DELETE(obj->downscaled_reference_picture[denom_idx]);
+        }
+    }
 }
 
 /*****************************************
@@ -205,6 +211,16 @@ static void eb_pa_reference_object_dctor(EbPtr p) {
     EB_DELETE(obj->sixteenth_decimated_picture_ptr);
     EB_DELETE(obj->quarter_filtered_picture_ptr);
     EB_DELETE(obj->sixteenth_filtered_picture_ptr);
+
+    for(uint8_t denom_idx = 0; denom_idx < NUM_SCALES; denom_idx++){
+        if(obj->downscaled_input_padded_picture_ptr[denom_idx] != NULL){
+            EB_DELETE(obj->downscaled_input_padded_picture_ptr[denom_idx]);
+            EB_DELETE(obj->downscaled_quarter_decimated_picture_ptr[denom_idx]);
+            EB_DELETE(obj->downscaled_quarter_filtered_picture_ptr[denom_idx]);
+            EB_DELETE(obj->downscaled_sixteenth_decimated_picture_ptr[denom_idx]);
+            EB_DELETE(obj->downscaled_sixteenth_filtered_picture_ptr[denom_idx]);
+        }
+    }
 }
 
 /*****************************************
