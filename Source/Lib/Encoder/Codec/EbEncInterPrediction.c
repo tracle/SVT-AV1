@@ -21,7 +21,10 @@
 #include "aom_dsp_rtcd.h"
 #include "EbRateDistortionCost.h"
 
-
+void use_scaled_rec_refs_if_needed(PictureControlSet *pcs_ptr,
+                                   EbPictureBufferDesc *input_picture_ptr,
+                                   EbReferenceObject *ref_obj,
+                                   EbPictureBufferDesc **ref_pic);
 
 extern void av1_set_ref_frame(MvReferenceFrame *rf, int8_t ref_frame_type);
 extern AomVarianceFnPtr mefn_ptr[BlockSizeS_ALL];
@@ -4508,7 +4511,7 @@ void search_compound_diff_wedge(PictureControlSet *    picture_control_set_ptr,
             list_idx1 = get_list_idx(rf[1]);
         assert(list_idx0 < MAX_NUM_OF_REF_PIC_LIST);
         assert(list_idx1 < MAX_NUM_OF_REF_PIC_LIST);
-        // NOTE: references
+
         if (ref_idx_l0 >= 0)
             ref_pic_list0 = hbd_mode_decision ? ((EbReferenceObject *)picture_control_set_ptr
                     ->ref_pic_ptr_array[list_idx0][ref_idx_l0]
@@ -4532,6 +4535,18 @@ void search_compound_diff_wedge(PictureControlSet *    picture_control_set_ptr,
                                     ->reference_picture;
         else
             ref_pic_list1 = (EbPictureBufferDesc *)EB_NULL;
+
+        // Use scaled references if resolution of the reference is different than the input
+        if(ref_pic_list0 != EB_NULL)
+            use_scaled_rec_refs_if_needed(picture_control_set_ptr,
+                                          picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr,
+                                          (EbReferenceObject *)picture_control_set_ptr->ref_pic_ptr_array[list_idx0][list_idx0]->object_ptr,
+                                          &ref_pic_list0);
+        if(ref_pic_list1 != EB_NULL)
+            use_scaled_rec_refs_if_needed(picture_control_set_ptr,
+                                          picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr,
+                                          (EbReferenceObject *)picture_control_set_ptr->ref_pic_ptr_array[list_idx1][ref_idx_l1]->object_ptr,
+                                          &ref_pic_list1);
 
         //CHKN get seperate prediction of each ref(Luma only)
         //ref0 prediction
@@ -4761,7 +4776,6 @@ EbErrorType inter_pu_prediction_av1(uint8_t hbd_mode_decision, ModeDecisionConte
     assert(list_idx1 < MAX_NUM_OF_REF_PIC_LIST);
 
     if (ref_idx_l0 >= 0) {
-        // NOTE: references
         ref_pic_list0 = hbd_mode_decision ? ((EbReferenceObject *)picture_control_set_ptr
                 ->ref_pic_ptr_array[list_idx0][ref_idx_l0]
                 ->object_ptr)
@@ -4773,7 +4787,6 @@ EbErrorType inter_pu_prediction_av1(uint8_t hbd_mode_decision, ModeDecisionConte
     }
 
     if (ref_idx_l1 >= 0) {
-        // NOTE: references
         ref_pic_list1 = hbd_mode_decision ? ((EbReferenceObject *)picture_control_set_ptr
                 ->ref_pic_ptr_array[list_idx1][ref_idx_l1]
                 ->object_ptr)
@@ -4783,6 +4796,18 @@ EbErrorType inter_pu_prediction_av1(uint8_t hbd_mode_decision, ModeDecisionConte
                         ->object_ptr)
                                 ->reference_picture;
     }
+
+    // Use scaled references if resolution of the reference is different than the input
+    if(ref_pic_list0 != EB_NULL)
+        use_scaled_rec_refs_if_needed(picture_control_set_ptr,
+                                      picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr,
+                                      (EbReferenceObject *)picture_control_set_ptr->ref_pic_ptr_array[list_idx0][list_idx0]->object_ptr,
+                                      &ref_pic_list0);
+    if(ref_pic_list1 != EB_NULL)
+        use_scaled_rec_refs_if_needed(picture_control_set_ptr,
+                                      picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr,
+                                      (EbReferenceObject *)picture_control_set_ptr->ref_pic_ptr_array[list_idx1][ref_idx_l1]->object_ptr,
+                                      &ref_pic_list1);
 
     if (picture_control_set_ptr->parent_pcs_ptr->frm_hdr.allow_warped_motion &&
         candidate_ptr->motion_mode != WARPED_CAUSAL) {
@@ -4852,6 +4877,7 @@ EbErrorType inter_pu_prediction_av1(uint8_t hbd_mode_decision, ModeDecisionConte
                                 ->ref_pic_ptr_array[list_idx1][ref_idx_l1]
                                 ->object_ptr)
                                 ->reference_picture;
+
                 }
                 interpolation_filter_search(picture_control_set_ptr,
                                             candidate_buffer_ptr->prediction_ptr_temp,

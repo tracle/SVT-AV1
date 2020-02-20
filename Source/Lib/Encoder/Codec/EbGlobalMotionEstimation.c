@@ -25,8 +25,18 @@
 #include "global_motion.h"
 #include "corner_detect.h"
 
+void use_scaled_source_refs_if_needed(PictureParentControlSet *pcs_ptr,
+                                      EbPictureBufferDesc *input_picture_ptr,
+                                      EbPaReferenceObject *ref_obj,
+                                      EbPictureBufferDesc **ref_pic_ptr,
+                                      EbPictureBufferDesc **quarter_ref_pic_ptr,
+                                      EbPictureBufferDesc **sixteenth_ref_pic_ptr);
+
 void global_motion_estimation(PictureParentControlSet *pcs_ptr, MeContext *context_ptr,
                               EbPictureBufferDesc *input_picture_ptr) {
+
+    printf("global motion\n");
+
 #if GLOBAL_WARPED_MOTION
     // Get downsampled pictures with a downsampling factor of 2 in each dimension
     EbPaReferenceObject *pa_reference_object;
@@ -70,22 +80,24 @@ void global_motion_estimation(PictureParentControlSet *pcs_ptr, MeContext *conte
                     (EbPaReferenceObject *)pcs_ptr->ref_pa_pic_ptr_array[list_index][ref_pic_index]
                         ->object_ptr;
 
+            ref_picture_ptr = reference_object->input_padded_picture_ptr;
+
+            // Use scaled references if resolution of the reference is different than the input
+            EbPictureBufferDesc *sixteenth_picture_ptr = reference_object->sixteenth_decimated_picture_ptr;
+            use_scaled_source_refs_if_needed(pcs_ptr,
+                                             input_picture_ptr,
+                                             reference_object,
+                                             &ref_picture_ptr,
+                                             &quarter_ref_pic_ptr,
+                                             &sixteenth_picture_ptr);
+
 #if GLOBAL_WARPED_MOTION
             // Set the source and the reference picture to be used by the global motion search
             // based on the input search mode
             if (pcs_ptr->gm_level == GM_DOWN) {
-                quarter_ref_pic_ptr =
-                    (scs_ptr->down_sampling_method_me_search == ME_FILTERED_DOWNSAMPLED)
-                        ? (EbPictureBufferDesc *)reference_object->quarter_filtered_picture_ptr
-                        : (EbPictureBufferDesc *)reference_object->quarter_decimated_picture_ptr;
                 ref_picture_ptr   = quarter_ref_pic_ptr;
                 input_picture_ptr = quarter_picture_ptr;
-            } else {
-                ref_picture_ptr = (EbPictureBufferDesc *)reference_object->input_padded_picture_ptr;
             }
-#else
-            EbPictureBufferDesc *ref_picture_ptr =
-                (EbPictureBufferDesc *)reference_object->input_padded_picture_ptr;
 #endif
 
             compute_global_motion(input_picture_ptr,

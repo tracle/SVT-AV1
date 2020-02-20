@@ -1513,6 +1513,7 @@ static int get_block_position(Av1Common *cm, int *mi_r, int *mi_c, int blk_row, 
 // Call Start frame's reference frames as reference frames.
 // Call ref_offset as frame distances between start frame and its reference
 // frames.
+// TODO: understand what this is
 static int motion_field_projection(Av1Common *cm, PictureControlSet *pcs_ptr,
                                    MvReferenceFrame start_frame, int dir) {
     TPL_MV_REF *tpl_mvs_base           = pcs_ptr->tpl_mvs;

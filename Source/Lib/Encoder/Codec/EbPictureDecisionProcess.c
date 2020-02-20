@@ -4408,7 +4408,7 @@ void* picture_decision_kernel(void *input_ptr)
                             //****************************************************
 
                             // Scale picture if super-res is used
-                            if(scs_ptr->static_config.superres_mode > SUPERRES_NONE && pcs_ptr->picture_number == 1){
+                            if(scs_ptr->static_config.superres_mode > SUPERRES_NONE && pcs_ptr->picture_number == 16){
                                 init_resize_picture(pcs_ptr->scs_ptr,
                                                     pcs_ptr);
                             }

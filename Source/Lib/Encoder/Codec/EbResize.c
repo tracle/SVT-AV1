@@ -1387,7 +1387,7 @@ void scale_input_references(PictureParentControlSet *pcs_ptr,
                      input_picture_ptr->origin_x,
                      input_picture_ptr->origin_y);
 
-    for (uint32_t row = 0; row < input_picture_ptr->height + 2*input_picture_ptr->origin_y; row++)
+    for (uint32_t row = 0; row < (uint32_t)(input_picture_ptr->height + 2*input_picture_ptr->origin_y); row++)
         EB_MEMCPY(padded_pic_ptr->buffer_y + row * padded_pic_ptr->stride_y,
                   input_picture_ptr->buffer_y + row * input_picture_ptr->stride_y,
                   sizeof(uint8_t) * input_picture_ptr->stride_y);
@@ -1486,10 +1486,10 @@ void scale_rec_references(PictureControlSet *pcs_ptr,
 
 }
 
-void use_scaled_refs_if_needed(PictureControlSet *pcs_ptr,
-                               EbPictureBufferDesc *input_picture_ptr,
-                               EbReferenceObject *ref_obj,
-                               EbPictureBufferDesc **ref_pic){
+void use_scaled_rec_refs_if_needed(PictureControlSet *pcs_ptr,
+                                   EbPictureBufferDesc *input_picture_ptr,
+                                   EbReferenceObject *ref_obj,
+                                   EbPictureBufferDesc **ref_pic){
 
     if((*ref_pic)->width != input_picture_ptr->width){
         uint8_t denom_idx = (uint8_t)(pcs_ptr->parent_pcs_ptr->superres_denom - 8);
@@ -1504,6 +1504,29 @@ void use_scaled_refs_if_needed(PictureControlSet *pcs_ptr,
     }
     assert((*ref_pic)->width == input_picture_ptr->width);
 
+}
+
+void use_scaled_source_refs_if_needed(PictureParentControlSet *pcs_ptr,
+                                      EbPictureBufferDesc *input_picture_ptr,
+                                      EbPaReferenceObject *ref_obj,
+                                      EbPictureBufferDesc **ref_pic_ptr,
+                                      EbPictureBufferDesc **quarter_ref_pic_ptr,
+                                      EbPictureBufferDesc **sixteenth_ref_pic_ptr){
+
+    if ((*ref_pic_ptr)->width != input_picture_ptr->width) {
+        uint8_t denom_idx = (uint8_t) (pcs_ptr->superres_denom - 8);
+
+        assert(ref_obj->downscaled_input_padded_picture_ptr[denom_idx] != NULL);
+
+        *ref_pic_ptr = ref_obj->downscaled_input_padded_picture_ptr[denom_idx];
+        *quarter_ref_pic_ptr = (pcs_ptr->scs_ptr->down_sampling_method_me_search == ME_FILTERED_DOWNSAMPLED) ?
+                               ref_obj->downscaled_quarter_filtered_picture_ptr[denom_idx] :
+                               ref_obj->downscaled_quarter_decimated_picture_ptr[denom_idx];
+        *sixteenth_ref_pic_ptr = (pcs_ptr->scs_ptr->down_sampling_method_me_search == ME_FILTERED_DOWNSAMPLED) ?
+                                 ref_obj->downscaled_sixteenth_filtered_picture_ptr[denom_idx] :
+                                 ref_obj->downscaled_sixteenth_decimated_picture_ptr[denom_idx];
+    }
+    assert((*ref_pic_ptr)->width == input_picture_ptr->width);
 }
 
 void init_resize_picture(SequenceControlSet *scs_ptr, PictureParentControlSet *pcs_ptr) {

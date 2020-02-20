@@ -37,10 +37,10 @@ void save_Y_to_file(char *filename, EbByte buffer_y,
                     uint16_t stride_y,
                     uint16_t origin_y, uint16_t origin_x);
 
-void use_scaled_refs_if_needed(PictureControlSet *pcs_ptr,
-                               EbPictureBufferDesc *input_picture_ptr,
-                               EbReferenceObject *ref_obj,
-                               EbPictureBufferDesc **ref_pic);
+void use_scaled_rec_refs_if_needed(PictureControlSet *pcs_ptr,
+                                   EbPictureBufferDesc *input_picture_ptr,
+                                   EbReferenceObject *ref_obj,
+                                   EbPictureBufferDesc **ref_pic);
 
 EbErrorType generate_md_stage_0_cand(SuperBlock *sb_ptr, ModeDecisionContext *context_ptr,
                                      uint32_t *         fast_candidate_total_count,
@@ -2381,10 +2381,10 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
             // -------
             // Use scaled references if resolution of the reference is different than the input
             // -------
-            use_scaled_refs_if_needed(pcs_ptr,
-                                      input_picture_ptr,
-                                      ref_obj,
-                                      &ref_pic);
+            use_scaled_rec_refs_if_needed(pcs_ptr,
+                                          input_picture_ptr,
+                                          ref_obj,
+                                          &ref_pic);
 
             uint32_t ref_origin_index =
                 ref_pic->origin_x + (context_ptr->blk_origin_x + (me_mv_x >> 3)) +
@@ -6835,10 +6835,10 @@ void av1_get_max_min_partition_features(SequenceControlSet *scs_ptr, PictureCont
                                                              ->reference_picture16bit;
 
                 // Use scaled references if resolution of the reference is different than the input
-                use_scaled_refs_if_needed(pcs_ptr,
-                                          pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr,
-                                          (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[0][0]->object_ptr,
-                                          &ref_pic);
+                use_scaled_rec_refs_if_needed(pcs_ptr,
+                                              pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr,
+                                              (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[0][0]->object_ptr,
+                                              &ref_pic);
 
                 av1_inter_prediction(
                     NULL, //pcs_ptr,

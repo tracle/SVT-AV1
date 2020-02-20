@@ -2896,7 +2896,6 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                     else
                         list_idx1 = get_list_idx(rf[1]);
 
-                    // TODO: scale references if needed
                     EbReferenceObject *ref_obj_0 =
                         ref_idx_l0 >= 0
                             ? (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[list_idx0][ref_idx_l0]
