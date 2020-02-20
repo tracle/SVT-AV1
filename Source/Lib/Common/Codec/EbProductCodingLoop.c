@@ -3719,7 +3719,7 @@ void md_stage_0(
             uint64_t dist_sum = (context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight * FAST_TH);
             uint64_t early_exit_th = RDCOST(fast_lambda, 16, dist_sum);
             if (best_cand_cost < early_exit_th && context_ptr->pd_pass == PD_PASS_2) {
-                *candidate_buffer->fast_cost_ptr = MAX_CU_COST;
+                *candidate_buffer->fast_cost_ptr = 0xFFFFFFFFFFFFFFFFull;
             }
             else {
 
@@ -9265,7 +9265,7 @@ void md_stage_2(
         uint64_t dist_sum = (context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight * FULL_TH);
         uint64_t early_exit_th = RDCOST(full_lambda, 16, dist_sum);
         if (best_cand_cost < early_exit_th && context_ptr->pd_pass == PD_PASS_2)
-            *candidate_buffer->full_cost_ptr = MAX_CU_COST;
+            *candidate_buffer->full_cost_ptr = 0xFFFFFFFFFFFFFFFFull;
         else
 #endif
         full_loop_core(
@@ -9386,7 +9386,7 @@ void md_stage_2(
             uint64_t dist_sum = (context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight * FULL_TH);
             uint64_t early_exit_th = RDCOST(full_lambda, 16, dist_sum);
             if (best_cand_cost < early_exit_th && context_ptr->pd_pass == PD_PASS_2)
-                *candidate_buffer->full_cost_ptr = MAX_CU_COST;
+                *candidate_buffer->full_cost_ptr = 0xFFFFFFFFFFFFFFFFull;
             else
 #endif
                 full_loop_core(
@@ -9602,7 +9602,7 @@ void md_stage_2(
         uint64_t dist_sum = (context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight * FULL_TH);
         uint64_t early_exit_th = RDCOST(full_lambda, 16, dist_sum);
         if (best_cand_cost < early_exit_th && context_ptr->pd_pass == PD_PASS_2)
-            *candidate_buffer->full_cost_ptr = MAX_CU_COST;
+            *candidate_buffer->full_cost_ptr = 0xFFFFFFFFFFFFFFFFull;
         else
 #endif
         full_loop_core(
