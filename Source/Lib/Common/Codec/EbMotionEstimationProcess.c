@@ -690,6 +690,8 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
     context_ptr->me_context_ptr->enable_hme_level0_flag = picture_control_set_ptr->tf_enable_hme_level0_flag;
     context_ptr->me_context_ptr->enable_hme_level1_flag = picture_control_set_ptr->tf_enable_hme_level1_flag;
     context_ptr->me_context_ptr->enable_hme_level2_flag = picture_control_set_ptr->tf_enable_hme_level2_flag;
+
+
     if (sequence_control_set_ptr->static_config.enable_subpel == DEFAULT)
         // Set the default settings of subpel
         if (picture_control_set_ptr->sc_content_detected)
@@ -753,7 +755,12 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
     context_ptr->me_context_ptr->switched_half_pel_mode = enc_mode <= ENC_M0 ? 0 : 1;
 #endif
 #endif
-
+#if TF_HME_ME_CHANGE
+    context_ptr->me_context_ptr->enable_hme_flag = 1;
+    context_ptr->me_context_ptr->use_subpel_flag = 0;
+   // context_ptr->me_context_ptr->search_area_width = 128; 
+   // context_ptr->me_context_ptr->search_area_height = 128;
+#endif
     // Set fractional search model
     // 0: search all blocks
     // 1: selective based on Full-Search SAD & MV.

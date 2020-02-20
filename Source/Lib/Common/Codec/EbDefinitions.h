@@ -32,6 +32,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define REVERT_TF_SEETINGS     1
+#define TF_HME_ME_CHANGE       0
+#define TF_ADD_OLD_WEIGHT       0
 #define PLANE_WISE_TF          1
 #define OPT_REC_ME              0
 #define OPT_REC_SUBP            0

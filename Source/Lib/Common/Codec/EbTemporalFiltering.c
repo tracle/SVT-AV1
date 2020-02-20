@@ -1273,6 +1273,7 @@ static void apply_filtering_central_highbd(uint16_t **pred_16bit,
 // Returns:
 //   Nothing will be returned. But the content to which `accum` and `pred`
 //   point will be modified.
+// AMIR: matching function in aom is av1_apply_temporal_filter_planewise_c
 void svt_av1_apply_temporal_filter_planewise_c(const uint8_t *y_src,
     int y_src_stride,
     const uint8_t *y_pre,
@@ -1327,20 +1328,13 @@ void svt_av1_apply_temporal_filter_planewise_c(const uint8_t *y_src,
 
     // Get window size for pixel-wise filtering.
     assert(TF_PLANEWISE_FILTER_WINDOW_LENGTH % 2 == 1);
-    const int half_window = TF_PLANEWISE_FILTER_WINDOW_LENGTH >> 1;// AMIR
+    const int half_window = TF_PLANEWISE_FILTER_WINDOW_LENGTH >> 1;
 
     // Hyper-parameter for filter weight adjustment.
     //const int frame_height = frame_to_filter->heights[0]
     //    << mbd->plane[0].subsampling_y;
-
-#if 0
-    const int decay_control = 5;
-        //frame_height >= 720 ? 7 : (frame_height >= 480 ? 5 : 3);
-     double decay ;
-#else
-    const int decay_control = 1/*frame_height >= 480*/ ? 4 : 3; //4
-
-#endif
+    // the default decay_control from aom is 4, i found 3 for 720 and above and 2 for below to give the best results
+    const int decay_control = 1/*frame_height >= 480*/ ? 3 : 3; //4
 
     int plane = 0;
     for (i = 0; i < block_height; i++) {
@@ -1354,7 +1348,7 @@ void svt_av1_apply_temporal_filter_planewise_c(const uint8_t *y_src,
             sum_square_diff = 0;
 
 
-#if 1 
+#if TF_ADD_OLD_WEIGHT 
             int filter_weight;
 
             if (block_width == (BW >> 1)) {
@@ -1369,24 +1363,23 @@ void svt_av1_apply_temporal_filter_planewise_c(const uint8_t *y_src,
                 for (idx = -half_window; idx <= half_window; ++idx) {
                     const int row = CLIP((int)i + idy, 0, (int)block_height - 1);
                     const int col = CLIP((int)j + idx, 0, (int)block_width - 1);
-                    //const int y = CLIP(i + wi, 0, h - 1);  // Y-coord on current plane.
-                    //const int x = CLIP(j + wj, 0, w - 1);  // X-coord on current plane.
-                    //if (row >= 0 && row < (int)block_height && col >= 0 &&
-                    //    col < (int)block_width) {
+                    // AMIR: since me is 16x16, making the averaging to be inside 16x16 blocks
+                  //  const int row = (int)i + idy;
+                  //  const int col = (int)j + idx;
+                  //  const int row = CLIP((int)i + idy, (int)i/16*16, (int)(i / 16 * 16)+16 - 1);
+                  //  const int col = CLIP((int)j + idx, (int)j/16*16, (int)(j / 16 * 16)+16 - 1);
+                  //  if (row >= (int)(i/16*16) && row < (int)(i / 16 * 16)+16 && col >= (int)j/16*16 &&
+                  //      col < (int)(j / 16 * 16)+16) 
+                    {
                         sum_square_diff += y_diff_se[row * (int)block_width + col];
                         ++num_ref_pixels;
-                   // }
+                    }
                 }
             }
             // Control factor for non-local mean approach.
             double r =
                 (double)decay_control * (0.7 + log(noise_levels[0] + 1.0));
 
-#if 0
-
-            decay = decay_control * exp(1 - noise_levels[0]);
-            r = AOMMAX(decay * noise_levels[0], 0.1);
-#endif
             // const int idx = plane_offset + pred_idx;  // Index with plane shift.
             //  const int pred_value = is_high_bitdepth ? pred16[idx] : pred[idx];
                 // Scale down the difference for high bit depth input.
@@ -1397,7 +1390,7 @@ void svt_av1_apply_temporal_filter_planewise_c(const uint8_t *y_src,
                 (int)(exp(scaled_diff) * TF_PLANEWISE_FILTER_WEIGHT_SCALE);
 
             k = i * y_pre_stride + j;
-#if 1
+#if TF_ADD_OLD_WEIGHT
             if (filter_weight) {
                 y_count[k] += adjusted_weight;
                 y_accum[k] += adjusted_weight * pixel_value;
@@ -1415,6 +1408,7 @@ void svt_av1_apply_temporal_filter_planewise_c(const uint8_t *y_src,
                 int num_ref_pixels = 0;
                 uint64_t u_sum_square_diff = 0, v_sum_square_diff = 0;
 #if 0
+                // AMIR: This is a new commit added for filtering Chroma and considering luma
                 sum_square_diff = 0;
 
                 for (idy = -1; idy <= 1; ++idy) {
@@ -1436,12 +1430,16 @@ void svt_av1_apply_temporal_filter_planewise_c(const uint8_t *y_src,
 
                 for (idy = -half_window; idy <= half_window; ++idy) {
                     for (idx = -half_window; idx <= half_window; ++idx) {
-                      //  const int row = uv_r + idy;
-                     //   const int col = uv_c + idx;
-                        const int row = CLIP((int)uv_r + idy, 0, (int)uv_block_height - 1);
-                        const int col = CLIP((int)uv_c + idx, 0, (int)uv_block_width - 1);
-                       /* if (row >= 0 && row < (int)uv_block_height && col >= 0 &&
-                            col < (int)uv_block_width) */
+
+                       const int row = CLIP((int)uv_r + idy, 0, (int)uv_block_height - 1);
+                       const int col = CLIP((int)uv_c + idx, 0, (int)uv_block_width - 1);
+                    // AMIR: since me is 16x16, making the averaging to be inside 16x16 blocks
+                       // const int row = uv_r + idy;
+                      //  const int col = uv_c + idx;
+                      //  const int row = CLIP((int)uv_r + idy, (int)uv_r / 8 * 8, (int)(uv_r / 8 * 8) + 8 - 1);
+                      //  const int col = CLIP((int)uv_c + idx, (int)uv_c / 8 * 8, (int)(uv_c / 8 * 8) + 8 - 1);
+                     //   if (row >= ((int)uv_r / 8 * 8) && row < (int)(uv_r / 8 * 8) + 8 && col >= (int)uv_c / 8 * 8 &&
+                     //       col < (int)(uv_c / 8 * 8) + 8)
                         {
                             u_sum_square_diff += u_diff_se[row * uv_block_width + col];
                             v_sum_square_diff += v_diff_se[row * uv_block_width + col];
@@ -1452,17 +1450,12 @@ void svt_av1_apply_temporal_filter_planewise_c(const uint8_t *y_src,
 
                 m = (i >> ss_y) * uv_pre_stride + (j >> ss_x);
                 r = (double)decay_control * (0.7 + log(noise_levels[1] + 1.0));
-#if 0
-
-                decay = decay_control * exp(1 - noise_levels[1]);
-                r = AOMMAX(decay * noise_levels[1], 0.1);
-#endif
                 scaled_diff = AOMMAX(
                     -(double)(u_sum_square_diff / num_ref_pixels) / (2 * r * r), -15.0);
                 adjusted_weight =
                     (int)(exp(scaled_diff) * TF_PLANEWISE_FILTER_WEIGHT_SCALE);
 
-#if 1
+#if TF_ADD_OLD_WEIGHT
                 if (filter_weight) {
                     u_count[m] += adjusted_weight;
                     u_accum[m] += adjusted_weight * u_pixel_value;
@@ -1472,16 +1465,12 @@ void svt_av1_apply_temporal_filter_planewise_c(const uint8_t *y_src,
                 u_accum[m] += adjusted_weight * u_pixel_value;
 #endif
                 r = (double)decay_control * (0.7 + log(noise_levels[2] + 1.0));
-#if 0
 
-                decay = decay_control * exp(1 - noise_levels[2]);
-                r = AOMMAX(decay * noise_levels[2], 0.1);
-#endif
                 scaled_diff = AOMMAX(
                     -(double)(v_sum_square_diff / num_ref_pixels) / (2 * r * r), -15.0);
                 adjusted_weight =
                     (int)(exp(scaled_diff) * TF_PLANEWISE_FILTER_WEIGHT_SCALE);
-#if 1
+#if TF_ADD_OLD_WEIGHT
                 if (filter_weight) {
                     v_count[m] += adjusted_weight;
                     v_accum[m] += adjusted_weight * v_pixel_value;
@@ -1896,10 +1885,13 @@ static void tf_inter_prediction(PictureParentControlSet *picture_control_set_ptr
                 signed short best_mv_y = 0;
                 signed short mv_x = (_MVXT(context_ptr->p_best_mv16x16[mv_index])) << 1;
                 signed short mv_y = (_MVYT(context_ptr->p_best_mv16x16[mv_index])) << 1;
-             //   for (signed short i = 0; i <= 0; i++) { // AMIR
-              //      for (signed short j = 0; j <= 0; j++) {
-                        for (signed short i = -1; i <= 1; i++) {
-                            for (signed short j = -1; j <= 1; j++) {
+#if TF_HME_ME_CHANGE
+                for (signed short i = -7; i <= 7; i++) {
+                    for (signed short j = -7; j <= 7; j++) {
+#else
+                for (signed short i = -1; i <= 1; i++) {
+                    for (signed short j = -1; j <= 1; j++) {
+#endif
                         mv_unit.mv->x = mv_x + i;
                         mv_unit.mv->y = mv_y + j;
 

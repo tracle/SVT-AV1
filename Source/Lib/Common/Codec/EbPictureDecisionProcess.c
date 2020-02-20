@@ -4453,7 +4453,9 @@ void* picture_decision_kernel(void *input_ptr)
                                 EB_MEMSET(picture_control_set_ptr->ref_pic_poc_array[REF_LIST_1], 0, REF_LIST_MAX_DEPTH * sizeof(uint64_t));
                             }
                             picture_control_set_ptr = cur_picture_control_set_ptr;
-
+#if 0 // AMIR to turn on altref only for I
+                            if((picture_control_set_ptr->slice_type == I_SLICE)){
+#else
                             if ((sequence_control_set_ptr->enable_altrefs == EB_TRUE &&
 #if LOW_DELAY_TUNE
                                 sequence_control_set_ptr->static_config.pred_structure == EB_PRED_RANDOM_ACCESS &&
@@ -4480,6 +4482,7 @@ void* picture_decision_kernel(void *input_ptr)
 #endif
 #endif
                                     ) ) {
+#endif
                                 int altref_nframes = picture_control_set_ptr->sequence_control_set_ptr->static_config.altref_nframes;
                                 if (picture_control_set_ptr->idr_flag) {
 
@@ -4518,10 +4521,11 @@ void* picture_decision_kernel(void *input_ptr)
                                         if (ahd < ahd_th)
                                             break;
                                     }
-                                    //AMIR
                                     picture_control_set_ptr->future_altref_nframes = pic_itr - index_center;
+#if REVERT_TF_SEETINGS
                                     picture_control_set_ptr->future_altref_nframes = 6;// actual_future_pics;
                                     printf("\nPOC %d\t PAST %d\t FUTURE %d\n", picture_control_set_ptr->picture_number, picture_control_set_ptr->past_altref_nframes, picture_control_set_ptr->future_altref_nframes);
+#endif                                
                                 }
                                 else
                                 {
@@ -4641,26 +4645,25 @@ void* picture_decision_kernel(void *input_ptr)
                                     if (ahd < ahd_th)
                                         break;
                                 }
-                                //AMIR
                                 picture_control_set_ptr->past_altref_nframes = actual_past_pics = index_center - pic_itr;
+#if REVERT_TF_SEETINGS
                                 picture_control_set_ptr->past_altref_nframes = actual_past_pics = 3; // actual_future_pics;
                                 if (picture_control_set_ptr->temporal_layer_index == 1)
                                     picture_control_set_ptr->past_altref_nframes = actual_past_pics = 1;
-
+#endif
                                 // Accumulative histogram absolute differences between the central and past frame
                                 for (pic_itr = (index_center + actual_future_pics); pic_itr > index_center; pic_itr--) {
                                     ahd = compute_luma_sad_between_center_and_target_frame(index_center, pic_itr, picture_control_set_ptr, sequence_control_set_ptr);
                                     if (ahd < ahd_th)
                                         break;
                                 }
-                                //AMIR
                                 picture_control_set_ptr->future_altref_nframes = pic_itr - index_center;
-                                picture_control_set_ptr->future_altref_nframes = 3;// actual_future_pics;
+#if REVERT_TF_SEETINGS
+                                picture_control_set_ptr->future_altref_nframes = 3;
                                 if (picture_control_set_ptr->temporal_layer_index == 1)
                                     picture_control_set_ptr->future_altref_nframes = 1;
-
                                 printf("\nPOC %d\t PAST %d\t FUTURE %d\n", picture_control_set_ptr->picture_number, picture_control_set_ptr->past_altref_nframes, picture_control_set_ptr->future_altref_nframes);
-
+#endif
                                 // adjust the temporal filtering pcs buffer to remove unused past pictures
                                 if(actual_past_pics != num_past_pics) {
 
