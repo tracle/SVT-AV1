@@ -3607,7 +3607,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     if (picture_control_set_ptr->enc_mode == ENC_M0)
 #endif
 #if TX_SIZE_ONLY_MD_STAGE_2
-        #if MDS_TEST0
+        #if MDS_TEST0 || PROOF_OF_CONCEPT_TEST_1
         context_ptr->md_staging_mode = MD_STAGING_MODE_2;
         #else
         context_ptr->md_staging_mode = MD_STAGING_MODE_1;

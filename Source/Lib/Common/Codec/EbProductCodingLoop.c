@@ -1857,7 +1857,21 @@ void set_md_stage_counts(
 
 #if ADD_4TH_MD_STAGE
     if (context_ptr->md_staging_mode == MD_STAGING_MODE_2)
+#if PROOF_OF_CONCEPT_TEST_1
+    {
+        context_ptr->bypass_md_stage_2[CAND_CLASS_0] = EB_FALSE;
+        context_ptr->bypass_md_stage_2[CAND_CLASS_1] = EB_TRUE;
+        context_ptr->bypass_md_stage_2[CAND_CLASS_2] = EB_TRUE;
+        context_ptr->bypass_md_stage_2[CAND_CLASS_3] = EB_TRUE;
+        context_ptr->bypass_md_stage_2[CAND_CLASS_4] = EB_TRUE;
+        context_ptr->bypass_md_stage_2[CAND_CLASS_5] = EB_TRUE;
+        context_ptr->bypass_md_stage_2[CAND_CLASS_6] = EB_TRUE;
+        context_ptr->bypass_md_stage_2[CAND_CLASS_7] = EB_TRUE;
+        context_ptr->bypass_md_stage_2[CAND_CLASS_8] = EB_TRUE;
+    }
+#else
         memset(context_ptr->bypass_md_stage_2, EB_FALSE, CAND_CLASS_TOTAL);
+#endif
     else
         memset(context_ptr->bypass_md_stage_2, EB_TRUE, CAND_CLASS_TOTAL);
 #endif
@@ -2062,8 +2076,11 @@ void set_md_stage_counts(
                 context_ptr->md_stage_1_count[CAND_CLASS_3] = context_ptr->md_stage_1_count[CAND_CLASS_3] / 2;
             }
 
-
+#if PROOF_OF_CONCEPT_TEST_0
+            context_ptr->md_stage_2_count[CAND_CLASS_0] = (picture_control_set_ptr->slice_type == I_SLICE) ? 64 : 16;
+#else
             context_ptr->md_stage_2_count[CAND_CLASS_0] = (picture_control_set_ptr->slice_type == I_SLICE) ? 10 : (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? ((scs->input_resolution >= INPUT_SIZE_1080i_RANGE) ? 7 : 10) : 4;
+#endif
             context_ptr->md_stage_2_count[CAND_CLASS_1] = (picture_control_set_ptr->slice_type == I_SLICE) ? 0 : (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 6 : 3;
             context_ptr->md_stage_2_count[CAND_CLASS_2] = (picture_control_set_ptr->slice_type == I_SLICE) ? 0 : (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 6 : 3;
             context_ptr->md_stage_2_count[CAND_CLASS_3] = (picture_control_set_ptr->slice_type == I_SLICE) ? 0 : (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 4 : 2;
@@ -2741,7 +2758,11 @@ void set_md_stage_counts(
 
 #if ADD_4TH_MD_STAGE
     // Set md_stage_3 NICs
+#if PROOF_OF_CONCEPT_TEST_1
+    context_ptr->md_stage_3_count[CAND_CLASS_0] = (picture_control_set_ptr->slice_type == I_SLICE) ? 32 : 4;
+#else
     context_ptr->md_stage_3_count[CAND_CLASS_0] = (context_ptr->md_stage_2_count[CAND_CLASS_0] + 1) >> 1;
+#endif
     context_ptr->md_stage_3_count[CAND_CLASS_1] = (context_ptr->md_stage_2_count[CAND_CLASS_1] + 1) >> 1;
     context_ptr->md_stage_3_count[CAND_CLASS_2] = (context_ptr->md_stage_2_count[CAND_CLASS_2] + 1) >> 1;
     context_ptr->md_stage_3_count[CAND_CLASS_3] = (context_ptr->md_stage_2_count[CAND_CLASS_3] + 1) >> 1;
@@ -11472,6 +11493,9 @@ void interintra_class_pruning_2(ModeDecisionContext *context_ptr, uint64_t best_
             context_ptr->md_stage_1_best_cost_array[cand_class_it] = class_best_cost;
 #endif
             // inter class pruning
+#if PROOF_OF_CONCEPT_TEST_0
+            if (cand_class_it != CAND_CLASS_0)
+#endif
 #if ENHANCED_M0_SETTINGS
             if (best_md_stage_cost && class_best_cost && ((((class_best_cost - best_md_stage_cost) * 100) / best_md_stage_cost) > context_ptr->md_stage_2_class_prune_th)) {
 #else
@@ -11508,6 +11532,9 @@ void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_
             context_ptr->md_stage_1_best_cost_array[cand_class_it] = class_best_cost;
 #endif
             // inter class pruning
+#if PROOF_OF_CONCEPT_TEST_0
+            if (cand_class_it != CAND_CLASS_0)
+#endif
 #if ENHANCED_M0_SETTINGS
             if (best_md_stage_cost && class_best_cost && ((((class_best_cost - best_md_stage_cost) * 100) / best_md_stage_cost) > context_ptr->md_stage_2_class_prune_th)) {
 #else

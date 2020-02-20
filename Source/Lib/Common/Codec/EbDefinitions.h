@@ -235,6 +235,11 @@ extern "C" {
 #define ENABLE_NEW_NN_SC             1 // SC ONLY
 
 /*****************************************/      
+
+
+#define PROOF_OF_CONCEPT_TEST_0      0
+#define PROOF_OF_CONCEPT_TEST_1      0
+
 #define ME_MV_UPGRADE                1
 #if ME_MV_UPGRADE
 #define ME_MV_UPGRADE_LOSSLESS       1
@@ -596,7 +601,11 @@ enum {
 #if SUPER_SETTINGS
 #define MAX_NFL                                 5000 // Maximum number of candidates MD can support
 #else
+#if PROOF_OF_CONCEPT_TEST_0
+#define MAX_NFL                                 300 // Maximum number of candidates MD can support
+#else
 #define MAX_NFL                                 250 // Maximum number of candidates MD can support
+#endif
 #endif
 #else
 #define MAX_NFL                                 125 // Maximum number of candidates MD can support
