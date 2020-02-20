@@ -2077,7 +2077,7 @@ void set_md_stage_counts(
             }
 
 #if PROOF_OF_CONCEPT_TEST_0
-            context_ptr->md_stage_2_count[CAND_CLASS_0] = (picture_control_set_ptr->slice_type == I_SLICE) ? 64 : 16;
+            context_ptr->md_stage_2_count[CAND_CLASS_0] = (picture_control_set_ptr->slice_type == I_SLICE) ? 48 : 16;
 #else
 #if NEW_S8
             context_ptr->md_stage_2_count[CAND_CLASS_0] = (picture_control_set_ptr->slice_type == I_SLICE) ? 10 : (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 8 : 4;
@@ -9379,7 +9379,7 @@ void md_stage_2(
 #if MD_ABS_THR_S2 
         uint64_t best_cand_cost = (uint64_t)~0;
 #endif
-        for (fullLoopCandidateIndex = 0; fullLoopCandidateIndex < context_ptr->md_stage_1_count[context_ptr->target_class]; ++fullLoopCandidateIndex) {
+        for (fullLoopCandidateIndex = 0; fullLoopCandidateIndex < context_ptr->md_stage_2_count[context_ptr->target_class]; ++fullLoopCandidateIndex) {
 
             candidateIndex = context_ptr->cand_buff_indices[context_ptr->target_class][fullLoopCandidateIndex];
             candidate_buffer = candidate_buffer_ptr_array[candidateIndex];
