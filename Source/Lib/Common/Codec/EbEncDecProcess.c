@@ -5090,7 +5090,13 @@ static void perform_pred_depth_refinement(
                         else {
 #if TEST5
                             uint32_t full_lambda =  context_ptr->hbd_mode_decision ? context_ptr->full_lambda_md[EB_10_BIT_MD] : context_ptr->full_lambda_md[EB_8_BIT_MD];
+#if NORMALIZED_ABS_TH
+                            uint32_t sb_width = sequence_control_set_ptr->seq_header.sb_size == BLOCK_128X128 ? 128 : 64;
+                            uint32_t sb_height = sequence_control_set_ptr->seq_header.sb_size == BLOCK_128X128 ? 128 : 64;   
+                            uint64_t dist_sum = (sb_width * sb_height * 100);
+#else
                             uint64_t dist_sum = (128 * 128 * 100);
+#endif
                             uint64_t early_exit_th = RDCOST(full_lambda, 16, dist_sum);
                             uint64_t best_part_cost = generate_best_part_cost(
                                 sequence_control_set_ptr,

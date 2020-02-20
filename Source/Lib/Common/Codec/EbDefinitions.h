@@ -32,6 +32,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define NORMALIZED_ABS_TH       1 
+#define MD_ABS_THR_S0           0 // enable ABS_TH for md_stage_0
+#if MD_ABS_THR_S0
+#define FAST_TH                 5 // ABS_TH for md_stage_0
+#endif
+#define MD_ABS_THR_S1           0 // enable ABS_TH for md_stage_1
+#define MD_ABS_THR_S2           0 // enable ABS_TH for md_stage_2
+#define MD_ABS_THR_S3           0 // enable ABS_TH for md_stage_3
+#if MD_ABS_THR_S1 || MD_ABS_THR_S2 || MD_ABS_THR_S3
+#define FULL_TH                 150 // enable ABS_TH for md_stage_1_2_3
+#endif
+
 #define ADD_SIGNAL_FOR_CFL      1
 #define ADD_SIGNAL_FOR_NSQ      1
 #define FEB18_ADOPTIONS         1
@@ -469,6 +481,7 @@ extern "C" {
 #endif
 #define Q_PEL_SEARCH_WIND 2  // 1/4-pel serach window
 #define HP_REF_OPT        1  // Remove redundant positions.
+
 typedef enum ME_HP_MODE {
     EX_HP_MODE = 0,       // Exhaustive  1/2-pel serach mode.
     REFINMENT_HP_MODE = 1 // Refinement 1/2-pel serach mode.

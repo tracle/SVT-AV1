@@ -3703,6 +3703,9 @@ void md_stage_0(
     // 2nd fast loop: src-to-recon
     highestCostIndex = candidate_buffer_start_index;
     fastLoopCandidateIndex = fast_candidate_end_index;
+#if MD_ABS_THR_S0
+    uint64_t best_cand_cost = (uint64_t)~0;
+#endif
     while (fastLoopCandidateIndex >= fast_candidate_start_index)
     {
         if (fast_candidate_array[fastLoopCandidateIndex].cand_class == context_ptr->target_class) {
@@ -3710,24 +3713,39 @@ void md_stage_0(
             ModeDecisionCandidate       *candidate_ptr = candidate_buffer->candidate_ptr = &fast_candidate_array[fastLoopCandidateIndex];
             // Initialize tx_depth
             candidate_buffer->candidate_ptr->tx_depth = 0;
-
-            if (!candidate_ptr->distortion_ready || fastLoopCandidateIndex == bestFirstFastCostSearchCandidateIndex) {
-
-                // Prediction
-                fast_loop_core(
-                    candidate_buffer,
-                    picture_control_set_ptr,
-                    context_ptr,
-                    input_picture_ptr,
-                    inputOriginIndex,
-                    inputCbOriginIndex,
-                    inputCrOriginIndex,
-                    cu_ptr,
-                    cuOriginIndex,
-                    cuChromaOriginIndex,
-                    use_ssd);
-
+#if MD_ABS_THR_S0
+            uint32_t fast_lambda =  context_ptr->hbd_mode_decision ? context_ptr->fast_lambda_md[EB_10_BIT_MD] : context_ptr->fast_lambda_md[EB_8_BIT_MD];
+            //uint32_t full_lambda =  context_ptr->hbd_mode_decision ? context_ptr->full_lambda_md[EB_10_BIT_MD] : context_ptr->full_lambda_md[EB_8_BIT_MD];
+            uint64_t dist_sum = (context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight * FAST_TH);
+            uint64_t early_exit_th = RDCOST(fast_lambda, 16, dist_sum);
+            if (best_cand_cost < early_exit_th && context_ptr->pd_pass == PD_PASS_2) {
+                *candidate_buffer->fast_cost_ptr = MAX_CU_COST;
             }
+            else {
+
+#endif
+                if (!candidate_ptr->distortion_ready || fastLoopCandidateIndex == bestFirstFastCostSearchCandidateIndex) {
+
+                    // Prediction
+                    fast_loop_core(
+                        candidate_buffer,
+                        picture_control_set_ptr,
+                        context_ptr,
+                        input_picture_ptr,
+                        inputOriginIndex,
+                        inputCbOriginIndex,
+                        inputCrOriginIndex,
+                        cu_ptr,
+                        cuOriginIndex,
+                        cuChromaOriginIndex,
+                        use_ssd);
+
+                }
+#if MD_ABS_THR_S0
+            }
+            if (*candidate_buffer->fast_cost_ptr < best_cand_cost)
+                best_cand_cost = *candidate_buffer->fast_cost_ptr;
+#endif
             // Find the buffer with the highest cost
             if (fastLoopCandidateIndex || scratch_buffer_pesent_flag)
             {
@@ -9186,7 +9204,9 @@ void md_stage_2(
 #if REMOVE_MD_STAGE_1
     context_ptr->md_staging_skip_rdoq = EB_TRUE;
 
-
+#if MD_ABS_THR_S1 
+    uint64_t best_cand_cost = (uint64_t)~0;
+#endif
 #if FREQUENCY_SPATIAL_DOMAIN
 #if SPATIAL_DOMAIN_ONLY_LAST_STAGE
     context_ptr->md_staging_spatial_sse_full_loop = EB_FALSE;
@@ -9240,6 +9260,14 @@ void md_stage_2(
             ref_fast_cost);
         if(perform_normal_path)
 #endif
+#if MD_ABS_THR_S1 
+        uint32_t full_lambda =  context_ptr->hbd_mode_decision ? context_ptr->full_lambda_md[EB_10_BIT_MD] : context_ptr->full_lambda_md[EB_8_BIT_MD];
+        uint64_t dist_sum = (context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight * FULL_TH);
+        uint64_t early_exit_th = RDCOST(full_lambda, 16, dist_sum);
+        if (best_cand_cost < early_exit_th && context_ptr->pd_pass == PD_PASS_2)
+            *candidate_buffer->full_cost_ptr = MAX_CU_COST;
+        else
+#endif
         full_loop_core(
             picture_control_set_ptr,
             sb_ptr,
@@ -9256,6 +9284,10 @@ void md_stage_2(
             0,
 #endif
             ref_fast_cost);
+#if MD_ABS_THR_S1    
+        if (*candidate_buffer->full_cost_ptr < best_cand_cost)
+            best_cand_cost = *candidate_buffer->full_cost_ptr;
+#endif
     }
 }
 
@@ -9288,6 +9320,9 @@ void md_stage_2(
         context_ptr->md_staging_skip_full_chroma = EB_TRUE;
 
         context_ptr->md_staging_skip_rdoq = EB_TRUE;
+#endif
+#if MD_ABS_THR_S2 
+        uint64_t best_cand_cost = (uint64_t)~0;
 #endif
         for (fullLoopCandidateIndex = 0; fullLoopCandidateIndex < context_ptr->md_stage_1_count[context_ptr->target_class]; ++fullLoopCandidateIndex) {
 
@@ -9346,7 +9381,14 @@ void md_stage_2(
             context_ptr->md_staging_spatial_sse_full_loop = context_ptr->spatial_sse_full_loop;
 #endif
 #endif
-
+#if MD_ABS_THR_S2 
+            uint32_t full_lambda =  context_ptr->hbd_mode_decision ? context_ptr->full_lambda_md[EB_10_BIT_MD] : context_ptr->full_lambda_md[EB_8_BIT_MD];
+            uint64_t dist_sum = (context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight * FULL_TH);
+            uint64_t early_exit_th = RDCOST(full_lambda, 16, dist_sum);
+            if (best_cand_cost < early_exit_th && context_ptr->pd_pass == PD_PASS_2)
+                *candidate_buffer->full_cost_ptr = MAX_CU_COST;
+            else
+#endif
                 full_loop_core(
                     picture_control_set_ptr,
                     sb_ptr,
@@ -9363,6 +9405,10 @@ void md_stage_2(
                     0,
 #endif
                     ref_fast_cost);
+#if MD_ABS_THR_S2 
+        if (*candidate_buffer->full_cost_ptr < best_cand_cost)
+            best_cand_cost = *candidate_buffer->full_cost_ptr;
+#endif
         }
 }
 #endif
@@ -9396,7 +9442,9 @@ void md_stage_2(
         uint64_t best_full_cost = 0xFFFFFFFFull;
         uint32_t fullLoopCandidateIndex;
         uint32_t candidateIndex;
-
+#if MD_ABS_THR_S2 
+        uint64_t best_cand_cost = (uint64_t)~0;
+#endif
         for (fullLoopCandidateIndex = 0; fullLoopCandidateIndex < fullCandidateTotalCount; ++fullLoopCandidateIndex) {
 
             candidateIndex = (context_ptr->full_loop_escape == 2) ? context_ptr->sorted_candidate_index_array[fullLoopCandidateIndex] : context_ptr->best_candidate_index_array[fullLoopCandidateIndex];
@@ -9549,6 +9597,14 @@ void md_stage_2(
             }
         }
 #endif
+#if MD_ABS_THR_S3 
+        uint32_t full_lambda =  context_ptr->hbd_mode_decision ? context_ptr->full_lambda_md[EB_10_BIT_MD] : context_ptr->full_lambda_md[EB_8_BIT_MD];
+        uint64_t dist_sum = (context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight * FULL_TH);
+        uint64_t early_exit_th = RDCOST(full_lambda, 16, dist_sum);
+        if (best_cand_cost < early_exit_th && context_ptr->pd_pass == PD_PASS_2)
+            *candidate_buffer->full_cost_ptr = MAX_CU_COST;
+        else
+#endif
         full_loop_core(
             picture_control_set_ptr,
             sb_ptr,
@@ -9565,7 +9621,10 @@ void md_stage_2(
             disable_txs_txt_rdoq,
 #endif
             ref_fast_cost);
-
+#if MD_ABS_THR_S3 
+        if (*candidate_buffer->full_cost_ptr < best_cand_cost)
+            best_cand_cost = *candidate_buffer->full_cost_ptr;
+#endif
         if (context_ptr->full_loop_escape)
         {
             if (picture_control_set_ptr->slice_type != I_SLICE) {
