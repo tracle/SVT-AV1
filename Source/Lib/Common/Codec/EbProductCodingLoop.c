@@ -2151,7 +2151,7 @@ void set_md_stage_counts(
             uint8_t mult_factor_num = 4;
             uint8_t mult_factor_denum = 3;
             for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
-                context_ptr->md_stage_1_count[i] = round((mult_factor_num * ((float)context_ptr->md_stage_1_count[i])) / mult_factor_denum);
+                context_ptr->md_stage_2_count[i] = round((mult_factor_num * ((float)context_ptr->md_stage_2_count[i])) / mult_factor_denum);
             }
 #endif
         }
