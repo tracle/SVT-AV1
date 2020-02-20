@@ -4772,6 +4772,35 @@ static void build_cand_block_array(
     }
 }
 
+#if FEB19_PD0_TH
+uint64_t  pd_level_tab[2][9][2][3] =
+{
+    {
+        // Thresholds to use if block is screen content or an I-slice
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}}
+    } ,
+    {
+        // Thresholds to use if block is not screen content or an I-slice
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}}
+    }
+};
+#else
 uint64_t  pd_level_tab[2][9][2][3] =
 {
     {
@@ -4799,6 +4828,7 @@ uint64_t  pd_level_tab[2][9][2][3] =
         {{100,10,10},{100,10,10}},
     }
 };
+#endif
 #if PD1_DEPTH_PRUNING
 uint64_t  pd1_level_tab[2][9][2][3] =
 {
@@ -5027,16 +5057,41 @@ static void perform_pred_depth_refinement(
                     int8_t e_depth = 0;
 
                     if (context_ptr->pd_pass == PD_PASS_0) {
-                        derive_start_end_depth(
-                            picture_control_set_ptr,
-#if PD1_DEPTH_PRUNING
-                            context_ptr,
+#if FEB19_PD0_TH
+                        uint32_t full_lambda = context_ptr->hbd_mode_decision ? context_ptr->full_lambda_md[EB_10_BIT_MD] : context_ptr->full_lambda_md[EB_8_BIT_MD];
+#if NORMALIZED_ABS_TH
+                        uint32_t sb_width = sequence_control_set_ptr->seq_header.sb_size == BLOCK_128X128 ? 128 : 64;
+                        uint32_t sb_height = sequence_control_set_ptr->seq_header.sb_size == BLOCK_128X128 ? 128 : 64;
+                        uint64_t dist_sum = (sb_width * sb_height * 100);
+#else
+                        uint64_t dist_sum = (128 * 128 * 100);
 #endif
-                            sb_ptr,
-                            sequence_control_set_ptr->seq_header.sb_size,
-                            &s_depth,
-                            &e_depth,
-                            blk_geom);
+                        uint64_t early_exit_th = RDCOST(full_lambda, 16, dist_sum);
+                        uint64_t best_part_cost = generate_best_part_cost(
+                            sequence_control_set_ptr,
+                            picture_control_set_ptr,
+                            context_ptr,
+                            sb_index);
+
+                        if (best_part_cost < early_exit_th) {
+                            s_depth = 0;
+                            e_depth = 0;
+                        }
+                        else {
+#endif
+                            derive_start_end_depth(
+                                picture_control_set_ptr,
+#if PD1_DEPTH_PRUNING
+                                context_ptr,
+#endif
+                                sb_ptr,
+                                sequence_control_set_ptr->seq_header.sb_size,
+                                &s_depth,
+                                &e_depth,
+                                blk_geom);
+#if FEB19_PD0_TH
+                        }
+#endif
                     }
                     else if (context_ptr->pd_pass == PD_PASS_1) {
 

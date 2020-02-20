@@ -32,6 +32,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define FEB19_PD0_TH            1
 #define NORMALIZED_ABS_TH       1 
 #define MD_ABS_THR_S0           0 // enable ABS_TH for md_stage_0
 #if MD_ABS_THR_S0
