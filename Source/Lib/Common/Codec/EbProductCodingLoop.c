@@ -3541,8 +3541,14 @@ void construct_best_sorted_arrays_md_stage_3(
             best_candidate_index_array[id_intra--] = id;
         }
 #if COMP_OPT
+#if FIX_CHROMA_BC
+        int32_t is_inter = (buffer_ptr_array[id]->candidate_ptr->type == INTER_MODE || buffer_ptr_array[id]->candidate_ptr->use_intrabc) ? EB_TRUE : EB_FALSE;
+        if (context_ptr->chroma_search_opt)
+            context_ptr->md_stage_3_total_intra_count += !is_inter ? 1 : 0;
+#else
         if (context_ptr->chroma_search_opt)
             context_ptr->md_stage_3_total_intra_count += buffer_ptr_array[id]->candidate_ptr->type == INTRA_MODE ? 1 : 0;
+#endif
 #endif
 
     }
@@ -8927,7 +8933,23 @@ void full_loop_core(
                     context_ptr->blk_geom->bwidth_uv,
                     context_ptr->blk_geom->bheight_uv);
             }
-
+#if FIX_CHROMA_BC
+            if (!is_inter)
+                if (candidate_buffer->candidate_ptr->intra_chroma_mode == UV_CFL_PRED)
+                    // If mode is CFL:
+                    // 1: recon the Luma
+                    // 2: Form the pred_buf_q3
+                    // 3: Loop over alphas and find the best or choose DC
+                    // 4: Recalculate the residual for chroma
+                    CflPrediction(
+                        picture_control_set_ptr,
+                        candidate_buffer,
+                        sb_ptr,
+                        context_ptr,
+                        input_picture_ptr,
+                        inputCbOriginIndex,
+                        cuChromaOriginIndex);
+#else
             if (candidate_ptr->type == INTRA_MODE && candidate_buffer->candidate_ptr->intra_chroma_mode == UV_CFL_PRED) {
                 // If mode is CFL:
                 // 1: recon the Luma
@@ -8943,6 +8965,7 @@ void full_loop_core(
                     inputCbOriginIndex,
                     cuChromaOriginIndex);
             }
+#endif
             if (context_ptr->blk_geom->has_uv && context_ptr->chroma_level <= CHROMA_MODE_1) {
                 full_loop_r(
                     sb_ptr,
@@ -8973,6 +8996,24 @@ void full_loop_core(
             }
 
             // Check independant chroma vs. cfl
+#if FIX_CHROMA_BC
+            if (!is_inter)
+                if (context_ptr->blk_geom->has_uv && context_ptr->chroma_level == CHROMA_MODE_0)
+                    if (candidate_buffer->candidate_ptr->intra_chroma_mode == UV_CFL_PRED || candidate_buffer->candidate_ptr->intra_chroma_mode == UV_DC_PRED)
+                        check_best_indepedant_cfl(
+                            picture_control_set_ptr,
+                            input_picture_ptr,
+                            context_ptr,
+                            inputCbOriginIndex,
+                            cuChromaOriginIndex,
+                            candidate_buffer,
+                            (uint8_t)cb_qp,
+                            (uint8_t)cr_qp,
+                            cbFullDistortion,
+                            crFullDistortion,
+                            &cb_coeff_bits,
+                            &cr_coeff_bits);
+#else
             if (context_ptr->blk_geom->has_uv && context_ptr->chroma_level == CHROMA_MODE_0) {
                 if (candidate_buffer->candidate_ptr->type == INTRA_MODE && (candidate_buffer->candidate_ptr->intra_chroma_mode == UV_CFL_PRED || candidate_buffer->candidate_ptr->intra_chroma_mode == UV_DC_PRED)) {
                     check_best_indepedant_cfl(
@@ -8990,6 +9031,7 @@ void full_loop_core(
                         &cr_coeff_bits);
                 }
             }
+#endif
         }
 
         candidate_ptr->block_has_coeff = (candidate_ptr->y_has_coeff | candidate_ptr->u_has_coeff | candidate_ptr->v_has_coeff) ? EB_TRUE : EB_FALSE;

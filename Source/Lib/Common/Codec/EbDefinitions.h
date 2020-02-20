@@ -240,6 +240,7 @@ extern "C" {
 
 /*****************************************/      
 
+#define FIX_CHROMA_BC                1
 
 #define PROOF_OF_CONCEPT_TEST_0      0
 #define PROOF_OF_CONCEPT_TEST_1      0
