@@ -247,6 +247,7 @@ EbErrorType signal_derivation_me_kernel_oq(
     if (sequence_control_set_ptr->static_config.enable_subpel == DEFAULT)
         // Set the default settings of subpel
         if (picture_control_set_ptr->sc_content_detected)
+#if !SC_ADOPTION_FEB_19
 #if PRESETS_TUNE
             if (enc_mode <= ENC_M5)
 #else
@@ -254,6 +255,7 @@ EbErrorType signal_derivation_me_kernel_oq(
 #endif
                 context_ptr->me_context_ptr->use_subpel_flag = 1;
             else
+#endif
                 context_ptr->me_context_ptr->use_subpel_flag = 0;
         else
             context_ptr->me_context_ptr->use_subpel_flag = 1;

@@ -3944,6 +3944,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
 #if MR_MODE_CLEAN_UP
     // Phoenix: Active only when inter/inter compound is on
+#if SC_ADOPTION_FEB_19
+    if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
+        context_ptr->inter_inter_wedge_variance_th = 0;
+    else
+#endif
     context_ptr->inter_inter_wedge_variance_th = 100;
 #else
 #if PRESETS_OPT

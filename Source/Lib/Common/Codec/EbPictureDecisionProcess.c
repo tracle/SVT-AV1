@@ -1652,6 +1652,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         if (sequence_control_set_ptr->static_config.compound_level == DEFAULT) {
             if (sequence_control_set_ptr->compound_mode)
 #if PRESETS_TUNE
+#if !SC_ADOPTION_FEB_19
                 if (picture_control_set_ptr->sc_content_detected)
 #if SC_PRESETS_OPT
                     if (MR_MODE)
@@ -1666,6 +1667,7 @@ EbErrorType signal_derivation_multi_processes_oq(
                     picture_control_set_ptr->compound_mode = (picture_control_set_ptr->enc_mode <= ENC_M0) ? 2 : 0;
 #endif
                 else
+#endif
 #if M1_FEB4_ADOPTION
 #if M1_FEB12_ADOPTION
 #if M2_FEB14_ADOPTION

@@ -1975,7 +1975,7 @@ void set_md_stage_counts(
 
 #if M1_ADOPTIONS
 #if M1_FEB4_ADOPTION
-#if SC_FEB12_ADOPTION
+#if SC_FEB12_ADOPTION && !NEW_S8 
         uint8_t nics_level = picture_control_set_ptr->enc_mode <= ENC_M0 && picture_control_set_ptr->parent_pcs_ptr->sc_content_detected == 0 ? NIC_S8 : picture_control_set_ptr->enc_mode <= ENC_M3 ? NIC_S11 : NIC_S_OLD;
 #else
         uint8_t nics_level = picture_control_set_ptr->enc_mode <= ENC_M0 ? NIC_S8 : picture_control_set_ptr->enc_mode <= ENC_M3 ? NIC_S11 : NIC_S_OLD;
@@ -2079,7 +2079,11 @@ void set_md_stage_counts(
 #if PROOF_OF_CONCEPT_TEST_0
             context_ptr->md_stage_2_count[CAND_CLASS_0] = (picture_control_set_ptr->slice_type == I_SLICE) ? 64 : 16;
 #else
+#if NEW_S8
+            context_ptr->md_stage_2_count[CAND_CLASS_0] = (picture_control_set_ptr->slice_type == I_SLICE) ? 10 : (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 8 : 4;
+#else
             context_ptr->md_stage_2_count[CAND_CLASS_0] = (picture_control_set_ptr->slice_type == I_SLICE) ? 10 : (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? ((scs->input_resolution >= INPUT_SIZE_1080i_RANGE) ? 7 : 10) : 4;
+#endif
 #endif
             context_ptr->md_stage_2_count[CAND_CLASS_1] = (picture_control_set_ptr->slice_type == I_SLICE) ? 0 : (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 6 : 3;
             context_ptr->md_stage_2_count[CAND_CLASS_2] = (picture_control_set_ptr->slice_type == I_SLICE) ? 0 : (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 6 : 3;
@@ -2118,6 +2122,36 @@ void set_md_stage_counts(
                 context_ptr->md_stage_2_count[CAND_CLASS_1] = (picture_control_set_ptr->slice_type == I_SLICE) ? 0 : (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 12 : 6;
                 context_ptr->md_stage_2_count[CAND_CLASS_2] = (picture_control_set_ptr->slice_type == I_SLICE) ? 0 : (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 12 : 6;
                 context_ptr->md_stage_2_count[CAND_CLASS_3] = (picture_control_set_ptr->slice_type == I_SLICE) ? 0 : (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 8 : 4;
+            }
+#endif
+
+#if NEW_S8
+            uint8_t can_class = CAND_CLASS_0;
+            if (picture_control_set_ptr->slice_type != I_SLICE) {
+                //half
+                can_class = CAND_CLASS_1;
+                context_ptr->md_stage_1_count[can_class] = (context_ptr->md_stage_1_count[can_class] + 1) >> 1;
+                context_ptr->md_stage_2_count[can_class] = (context_ptr->md_stage_2_count[can_class] + 1) >> 1;
+                can_class = CAND_CLASS_2;
+                context_ptr->md_stage_1_count[can_class] = (context_ptr->md_stage_1_count[can_class] + 1) >> 1;
+                context_ptr->md_stage_2_count[can_class] = (context_ptr->md_stage_2_count[can_class] + 1) >> 1;
+                can_class = CAND_CLASS_4;
+                context_ptr->md_stage_1_count[can_class] = (context_ptr->md_stage_1_count[can_class] + 1) >> 1;
+                context_ptr->md_stage_2_count[can_class] = (context_ptr->md_stage_2_count[can_class] + 1) >> 1;
+                //double
+                can_class = CAND_CLASS_0;
+                context_ptr->md_stage_1_count[can_class] = 2 * (context_ptr->md_stage_1_count[can_class]);
+                context_ptr->md_stage_2_count[can_class] = 2 * (context_ptr->md_stage_2_count[can_class]);
+                can_class = CAND_CLASS_6;
+                context_ptr->md_stage_1_count[can_class] = 2 * (context_ptr->md_stage_1_count[can_class]);
+                context_ptr->md_stage_2_count[can_class] = 2 * (context_ptr->md_stage_2_count[can_class]);
+            }
+
+            ////1.3X stage1
+            uint8_t mult_factor_num = 4;
+            uint8_t mult_factor_denum = 3;
+            for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
+                context_ptr->md_stage_1_count[i] = round((mult_factor_num * ((float)context_ptr->md_stage_1_count[i])) / mult_factor_denum);
             }
 #endif
         }

@@ -52,6 +52,8 @@ extern "C" {
 #define MULTI_STAGE_HME         0
 #define FEB14_ADOPTIONS         1
 #define M2_FEB14_ADOPTION       1
+#define NEW_S8                  1
+#define SC_ADOPTION_FEB_19      1
 #define TEST4    0
 #if TEST4
 #define DISABLE_PD1                 1
