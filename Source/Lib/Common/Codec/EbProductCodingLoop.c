@@ -9539,7 +9539,7 @@ void md_stage_2(
         uint64_t best_full_cost = 0xFFFFFFFFull;
         uint32_t fullLoopCandidateIndex;
         uint32_t candidateIndex;
-#if MD_ABS_THR_S2 
+#if MD_ABS_THR_S3 
         uint64_t best_cand_cost = (uint64_t)~0;
 #endif
         for (fullLoopCandidateIndex = 0; fullLoopCandidateIndex < fullCandidateTotalCount; ++fullLoopCandidateIndex) {
@@ -13413,6 +13413,9 @@ EB_EXTERN EbErrorType mode_decision_sb(
 #if SKIP_DEPTH
     uint8_t skip_next_depth = 0;
 #endif
+#if COMB_SQ_WEIGHT_NSQ_REF
+    context_ptr->best_ref_sq_th = PRUNE_REC_TH_12;
+#endif
     do {
         skip_sub_blocks = 0;
         blk_idx_mds = leaf_data_array[cuIdx].mds_idx;
@@ -13680,6 +13683,14 @@ EB_EXTERN EbErrorType mode_decision_sb(
                         uint64_t h_cost = context_ptr->md_local_cu_unit[context_ptr->blk_geom->sqi_mds + 1].default_cost + context_ptr->md_local_cu_unit[context_ptr->blk_geom->sqi_mds + 2].default_cost;
 
                         a_b_shapes_skip_flag = (h_cost > ((sq_cost * sq_weight) / 100));
+#if COMB_SQ_WEIGHT_NSQ_REF
+                        if((h_cost > ((sq_cost * (sq_weight-50)) / 100)))
+                            context_ptr->best_ref_sq_th = PRUNE_REC_TH_5; 
+                        else if((h_cost > ((sq_cost * (sq_weight-30)) / 100)))
+                            context_ptr->best_ref_sq_th = PRUNE_REC_TH_3; 
+                        else if((h_cost > ((sq_cost * (sq_weight-10)) / 100)))
+                            context_ptr->best_ref_sq_th = PRUNE_REC_TH_1; 
+#endif
 
 #if NSQ_HV                        
 
@@ -13706,6 +13717,14 @@ EB_EXTERN EbErrorType mode_decision_sb(
 
                                 uint32_t v_weight = 100 + offset;
                                 a_b_shapes_skip_flag = (h_cost > ((v_cost * v_weight) / 100));
+#if COMB_SQ_WEIGHT_NSQ_REF
+                                if( (h_cost > ((v_cost * (v_weight - 50)) / 100)))
+                                    context_ptr->best_ref_sq_th = PRUNE_REC_TH_5; 
+                                else if((h_cost > ((v_cost * (v_weight-30)) / 100)))
+                                    context_ptr->best_ref_sq_th = PRUNE_REC_TH_3; 
+                                else if((h_cost > ((v_cost * (v_weight-10)) / 100)))
+                                    context_ptr->best_ref_sq_th = PRUNE_REC_TH_1; 
+#endif
                             }
                         }                        
 #endif
@@ -13749,6 +13768,14 @@ EB_EXTERN EbErrorType mode_decision_sb(
                         uint64_t v_cost = context_ptr->md_local_cu_unit[context_ptr->blk_geom->sqi_mds + 3].default_cost + context_ptr->md_local_cu_unit[context_ptr->blk_geom->sqi_mds + 4].default_cost;
 
                         a_b_shapes_skip_flag = (v_cost > ((sq_cost * sq_weight) / 100));
+#if COMB_SQ_WEIGHT_NSQ_REF
+                        if( (v_cost > ((sq_cost * (sq_weight-50)) / 100)))
+                            context_ptr->best_ref_sq_th = PRUNE_REC_TH_5; 
+                        else if( (v_cost > ((sq_cost * (sq_weight-30)) / 100)))
+                            context_ptr->best_ref_sq_th = PRUNE_REC_TH_3; 
+                        else if( (v_cost > ((sq_cost * (sq_weight-10)) / 100)))
+                            context_ptr->best_ref_sq_th = PRUNE_REC_TH_1; 
+#endif
 
 #if NSQ_HV
                         uint32_t sqi = context_ptr->blk_geom->sqi_mds;
@@ -13934,6 +13961,9 @@ EB_EXTERN EbErrorType mode_decision_sb(
 
         if (d1_blocks_accumlated == leafDataPtr->tot_d1_blocks)
         {
+#if COMB_SQ_WEIGHT_NSQ_REF
+            context_ptr->best_ref_sq_th = PRUNE_REC_TH_12;
+#endif
 #if FASTER_SQ_WEIGHT
             skip_next_h_a = 0;
             skip_next_v_a = 0;

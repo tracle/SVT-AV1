@@ -3933,7 +3933,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #else
         if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected || picture_control_set_ptr->enc_mode == ENC_M0)
 #endif
+#if COMB_SQ_WEIGHT_NSQ_REF
+            context_ptr->prune_ref_frame_for_rec_partitions = 1;
+#else
             context_ptr->prune_ref_frame_for_rec_partitions = 0;
+#endif
         else
             context_ptr->prune_ref_frame_for_rec_partitions = 1;
     else

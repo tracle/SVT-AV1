@@ -517,6 +517,9 @@ extern "C" {
 #if ADD_SIGNAL_FOR_NSQ
     uint8_t                   md_disable_nsq;
 #endif
+#if COMB_SQ_WEIGHT_NSQ_REF
+   uint8_t best_ref_sq_th; 
+#endif
     } ModeDecisionContext;
 
     typedef void(*EbAv1LambdaAssignFunc)(

@@ -32,7 +32,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#define COMB_SQ_WEIGHT_NSQ_REF  0
 #define FEB19_PD0_TH            1
 #define NORMALIZED_ABS_TH       1 
 #define MD_ABS_THR_S0           0 // enable ABS_TH for md_stage_0
@@ -1018,6 +1018,12 @@ typedef enum MD_STAGE {
 #define BEST_CANDIDATE_COUNT 4
 #define MAX_REF_TYPE_CAND   30
 #define PRUNE_REC_TH         5
+#if COMB_SQ_WEIGHT_NSQ_REF
+#define PRUNE_REC_TH_1         1
+#define PRUNE_REC_TH_3         3
+#define PRUNE_REC_TH_5         5
+#define PRUNE_REC_TH_12        12
+#endif
 #define PRUNE_REF_ME_TH      2
 #if !SPEED_OPT
 #define MD_EXIT_THSL         0 // MD_EXIT_THSL -->0 is lossless 100 is maximum. Increase with a step of 10-20.
