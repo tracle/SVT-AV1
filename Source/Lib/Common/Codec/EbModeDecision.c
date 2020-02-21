@@ -338,6 +338,7 @@ void precompute_intra_pred_for_inter_intra(
     int compstride, const uint8_t *interpred,
     int interstride, const uint8_t *intrapred,
     int intrastride);
+
 void inter_intra_search(
     PictureControlSet            *picture_control_set_ptr,
     ModeDecisionContext          *context_ptr,
@@ -955,7 +956,6 @@ uint8_t check_ref_beackout(
     uint8_t ref_cnt = 0;
 #if COMB_SQ_WEIGHT_NSQ_REF
     uint8_t allowed_nsq_ref_th = (uint8_t) context_ptr->best_ref_sq_th;
-    printf("%d\n,", allowed_nsq_ref_th);
 #else
     uint8_t allowed_nsq_ref_th = (uint8_t)PRUNE_REC_TH;
 #endif
@@ -5900,53 +5900,62 @@ void  inject_inter_candidates(
     }
 
     // Warped Motion
-    if (frm_hdr->allow_warped_motion &&
-        has_overlappable_candidates(context_ptr->cu_ptr) &&
-        context_ptr->blk_geom->bwidth >= 8 &&
-        context_ptr->blk_geom->bheight >= 8 &&
-        context_ptr->warped_motion_injection) {
-        inject_warped_motion_candidates(
-            picture_control_set_ptr,
-            context_ptr,
-            context_ptr->cu_ptr,
-            &canTotalCnt,
-            me_results);
-    }
-#if ENHANCED_M0_SETTINGS
-    if (!coeff_based_nsq_cand_reduction) {
-#else
-    if (inject_newmv_candidate) {
+#if INTRA_INTER_BALANCE
+    if (context_ptr->md_inter_level < 2) {
 #endif
-        if (isCompoundEnabled) {
-            if (allow_bipred) {
-
-            //----------------------
-            // Bipred2Nx2N
-            //----------------------
-            if (context_ptr->bipred3x3_injection > 0)
-                if (picture_control_set_ptr->slice_type == B_SLICE)
-                    Bipred3x3CandidatesInjection(
-                        sequence_control_set_ptr,
-                        picture_control_set_ptr,
-                        context_ptr,
-                        sb_ptr,
-                        context_ptr->me_sb_addr,
-                        &canTotalCnt);
-
+        if (frm_hdr->allow_warped_motion &&
+            has_overlappable_candidates(context_ptr->cu_ptr) &&
+            context_ptr->blk_geom->bwidth >= 8 &&
+            context_ptr->blk_geom->bheight >= 8 &&
+            context_ptr->warped_motion_injection) {
+            inject_warped_motion_candidates(
+                picture_control_set_ptr,
+                context_ptr,
+                context_ptr->cu_ptr,
+                &canTotalCnt,
+                me_results);
         }
+#if INTRA_INTER_BALANCE
+    }
+#endif
+#if INTRA_INTER_BALANCE
+    if (context_ptr->md_inter_level < 2) {
+#endif
+#if ENHANCED_M0_SETTINGS
+        if (!coeff_based_nsq_cand_reduction) {
+#else
+        if (inject_newmv_candidate) {
+#endif
+            if (isCompoundEnabled) {
+                if (allow_bipred) {
 
-        //----------------------
-        // Unipred2Nx2N
-        //----------------------
-        if (context_ptr->unipred3x3_injection > 0)
-            if (picture_control_set_ptr->slice_type != I_SLICE)
-                Unipred3x3CandidatesInjection(
-                    sequence_control_set_ptr,
-                    picture_control_set_ptr,
-                    context_ptr,
-                    sb_ptr,
-                    context_ptr->me_sb_addr,
-                    &canTotalCnt);
+                    //----------------------
+                    // Bipred2Nx2N
+                    //----------------------
+                    if (context_ptr->bipred3x3_injection > 0)
+                        if (picture_control_set_ptr->slice_type == B_SLICE)
+                            Bipred3x3CandidatesInjection(
+                                sequence_control_set_ptr,
+                                picture_control_set_ptr,
+                                context_ptr,
+                                sb_ptr,
+                                context_ptr->me_sb_addr,
+                                &canTotalCnt);
+
+                }
+
+                //----------------------
+                // Unipred2Nx2N
+                //----------------------
+                if (context_ptr->unipred3x3_injection > 0)
+                    if (picture_control_set_ptr->slice_type != I_SLICE)
+                        Unipred3x3CandidatesInjection(
+                            sequence_control_set_ptr,
+                            picture_control_set_ptr,
+                            context_ptr,
+                            sb_ptr,
+                            context_ptr->me_sb_addr,
+                            &canTotalCnt);
             }
         }
 
@@ -5969,20 +5978,20 @@ void  inject_inter_candidates(
                             ss_mecontext,
                             &canTotalCnt);
 
-            //----------------------
-            // Inject eight-pel uni-pred
-            //----------------------
-            if (context_ptr->unipred3x3_injection > 0)
-                if (picture_control_set_ptr->slice_type != I_SLICE)
-                    eighth_pel_unipred_refinement(
-                        sequence_control_set_ptr,
-                        picture_control_set_ptr,
-                        context_ptr,
-                        me_sb_addr,
-                        ss_mecontext,
-                        &canTotalCnt);
-                }
+                //----------------------
+                // Inject eight-pel uni-pred
+                //----------------------
+                if (context_ptr->unipred3x3_injection > 0)
+                    if (picture_control_set_ptr->slice_type != I_SLICE)
+                        eighth_pel_unipred_refinement(
+                            sequence_control_set_ptr,
+                            picture_control_set_ptr,
+                            context_ptr,
+                            me_sb_addr,
+                            ss_mecontext,
+                            &canTotalCnt);
             }
+        }
 #endif
 
         if (context_ptr->predictive_me_level)
@@ -5992,6 +6001,9 @@ void  inject_inter_candidates(
                 isCompoundEnabled,
                 allow_bipred,
                 &canTotalCnt);
+#if INTRA_INTER_BALANCE
+    }
+#endif
 #if REDUCE_ME_OUTPUT
         if (!canTotalCnt)
             inject_zero_as_backup(
@@ -6630,7 +6642,11 @@ void  inject_intra_candidates(
     uint8_t     angle_delta_shift = 1;
 
 #if MULTI_PASS_PD
+#if INTRA_INTER_BALANCE
+    if (context_ptr->disable_angle_z2_intra_flag || context_ptr->md_intra_level > 1) {
+#else
     if (context_ptr->disable_angle_z2_intra_flag) {
+#endif
         disable_angle_prediction = 1;
         angleDeltaCandidateCount = 1;
         angle_delta_shift = 1;
@@ -7131,6 +7147,9 @@ EbErrorType generate_md_stage_0_cand(
        if (context_ptr->md_filter_intra_mode > 0 && av1_filter_intra_allowed_bsize(sequence_control_set_ptr->seq_header.enable_filter_intra, context_ptr->blk_geom->bsize))
 #else
        if (picture_control_set_ptr->pic_filter_intra_mode > 0 && av1_filter_intra_allowed_bsize(sequence_control_set_ptr->seq_header.enable_filter_intra, context_ptr->blk_geom->bsize))
+#endif
+#if INTRA_INTER_BALANCE
+            if (context_ptr->md_intra_level < 2) 
 #endif
             inject_filter_intra_candidates(
                 picture_control_set_ptr,

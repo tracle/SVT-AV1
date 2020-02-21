@@ -2154,6 +2154,52 @@ void set_md_stage_counts(
                 context_ptr->md_stage_2_count[i] = round((mult_factor_num * ((float)context_ptr->md_stage_2_count[i])) / mult_factor_denum);
             }
 #endif
+#if INTRA_INTER_BALANCE
+/*
+    CAND_CLASS_0, // Intra
+    CAND_CLASS_1, // NewMV
+    CAND_CLASS_2, // Pred
+    CAND_CLASS_3, // InterInter
+#if II_COMP_FLAG
+    CAND_CLASS_4, // IntraInter
+#endif
+#if OBMC_FLAG
+    CAND_CLASS_5, //OBMC
+#endif
+#if FILTER_INTRA_FLAG
+    CAND_CLASS_6, //Filter Intra
+#endif
+#if PAL_CLASS
+    CAND_CLASS_7, // Palette
+#endif
+    CAND_CLASS_8, // Global
+*/
+            if (context_ptr->md_inter_level >= 1) {
+                uint8_t division_factor_num      = 1;
+                uint8_t division_factor_denum    = 2;
+                for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
+                    if (i == CAND_CLASS_1 || CAND_CLASS_2) {
+                        context_ptr->md_stage_1_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_1_count[i])) / division_factor_denum);
+                        context_ptr->md_stage_1_count[i] = MAX(context_ptr->md_stage_1_count[i], 1);
+                        context_ptr->md_stage_2_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_2_count[i])) / division_factor_denum);
+                        context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
+                    }
+                }
+            }
+            else if (context_ptr->md_intra_level >= 1) {
+                uint8_t division_factor_num      = 1;
+                uint8_t division_factor_denum    = 2;
+                for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
+                    if (i == CAND_CLASS_0 || CAND_CLASS_6) {
+                        context_ptr->md_stage_1_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_1_count[i])) / division_factor_denum);
+                        context_ptr->md_stage_1_count[i] = MAX(context_ptr->md_stage_1_count[i], 1);
+                        context_ptr->md_stage_2_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_2_count[i])) / division_factor_denum);
+                        context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
+                    }
+                }
+
+            }
+#endif
         }
         else if (nics_level == NIC_S9) { // s9
             // Step 2: set md_stage count
@@ -11862,6 +11908,67 @@ EbErrorType signal_derivation_block(
 
 }
 #endif
+ #if INTRA_INTER_BALANCE
+ void set_intra_inter_level_based_on_me(
+     PictureControlSet            *picture_control_set_ptr,
+     ModeDecisionContext          *context_ptr) {
+     context_ptr->md_intra_level = 0;
+     context_ptr->md_inter_level = 0;
+     if (picture_control_set_ptr->slice_type != I_SLICE) {
+         if (context_ptr->blk_geom->bheight > 4 && context_ptr->blk_geom->bwidth > 4 && context_ptr->blk_geom->bheight < 128 && context_ptr->blk_geom->bwidth < 128) {
+             const MeLcuResults *me_results = picture_control_set_ptr->parent_pcs_ptr->me_results[context_ptr->me_sb_addr];
+             //uint8_t total_me_cnt = me_results->total_me_candidate_index[me_block_offset];
+             const MeCandidate *me_block_results = me_results->me_candidate[context_ptr->me_block_offset];
+             uint8_t me_candidate_index = 0;
+             const MeCandidate *me_block_results_ptr = &me_block_results[me_candidate_index];
+             const uint8_t inter_direction = me_block_results_ptr->direction;
+             const uint8_t list0_ref_index = me_block_results_ptr->ref_idx_l0;
+             const uint8_t list1_ref_index = me_block_results_ptr->ref_idx_l1;
+             const uint32_t distortion = me_block_results_ptr->distortion;
+
+             const uint32_t very_low_err_th = 100; // allowed error multiplied by 100
+             const uint32_t low_err_th = 110; // allowed error multiplied by 100
+             const uint32_t very_high_err_th = 400; // allowed error multiplied by 100
+             const uint32_t high_err_th = 200; // allowed error multiplied by 100
+             const uint32_t very_low_th = (context_ptr->blk_geom->bheight * context_ptr->blk_geom->bwidth * very_low_err_th) / 100;
+             const uint32_t low_th = (context_ptr->blk_geom->bheight * context_ptr->blk_geom->bwidth * low_err_th) / 100;
+
+             const uint32_t very_high_th = (context_ptr->blk_geom->bheight * context_ptr->blk_geom->bwidth * very_low_err_th) / 100;
+             const uint32_t high_th = (context_ptr->blk_geom->bheight * context_ptr->blk_geom->bwidth * low_err_th) / 100;
+
+             if (distortion < very_low_th) {
+                 context_ptr->md_intra_level = 2;
+             }
+             else if (distortion < low_th) {
+                 context_ptr->md_intra_level = 1;
+             }
+             else if (distortion > high_th) {
+                 context_ptr->md_inter_level = 1;
+             }
+             else if (distortion < very_high_th) {
+                 context_ptr->md_inter_level = 2;
+             }
+             printf("intra %d\tinter %d\n", context_ptr->md_intra_level, context_ptr->md_inter_level);
+#if 0
+             if (inter_direction == 0) {
+                 int16_t to_inject_mv_x = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][list0_ref_index][0];
+                 int16_t to_inject_mv_y = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][list0_ref_index][1];
+             }
+             else if (inter_direction == 1) {
+                 int16_t to_inject_mv_x = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_1][list1_ref_index][0];
+                 int16_t to_inject_mv_y = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_1][list1_ref_index][1];
+             }
+             else if (inter_direction == 2) {
+                 int16_t to_inject_mv_x_l0 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][me_block_results_ptr->ref0_list][list0_ref_index][0];
+                 int16_t to_inject_mv_y_l0 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][me_block_results_ptr->ref0_list][list0_ref_index][1];
+                 int16_t to_inject_mv_x_l1 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][me_block_results_ptr->ref1_list][list1_ref_index][0];
+                 int16_t to_inject_mv_y_l1 = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][me_block_results_ptr->ref1_list][list1_ref_index][1];
+             }
+#endif
+         }
+     }
+ }
+#endif
 void md_encode_block(
     SequenceControlSet             *sequence_control_set_ptr,
     PictureControlSet              *picture_control_set_ptr,
@@ -12180,6 +12287,11 @@ void md_encode_block(
         }
 #endif
 
+ #if INTRA_INTER_BALANCE
+        set_intra_inter_level_based_on_me(
+            picture_control_set_ptr,
+            context_ptr);
+#endif
 #if ME_MV_UPGRADE_LOSSLESS
         // Read/refine (if applicable) ME MVs
         read_refine_me_mvs(
@@ -12190,6 +12302,9 @@ void md_encode_block(
             cuOriginIndex);
 #endif
         // Perform ME search around the best MVP
+#if INTRA_INTER_BALANCE
+        if(context_ptr->md_inter_level == 0)
+#endif
         if (context_ptr->predictive_me_level)
             predictive_me_search(
                 picture_control_set_ptr,

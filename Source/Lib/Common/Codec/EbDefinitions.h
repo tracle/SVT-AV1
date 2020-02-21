@@ -32,6 +32,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define INTRA_INTER_BALANCE     0
 #define M0_FEB21_ADOPTIONS      1
 #define COMB_SQ_WEIGHT_NSQ_REF  0
 #define FEB19_PD0_TH            1
@@ -965,23 +966,23 @@ typedef enum PD_PASS {
 #endif
 
 typedef enum CAND_CLASS {
-    CAND_CLASS_0,
-    CAND_CLASS_1,
-    CAND_CLASS_2,
-    CAND_CLASS_3,
+    CAND_CLASS_0, // Intra
+    CAND_CLASS_1, // NewMV
+    CAND_CLASS_2, // Pred
+    CAND_CLASS_3, // InterInter
 #if II_COMP_FLAG
-    CAND_CLASS_4,
+    CAND_CLASS_4, // IntraInter
 #endif
 #if OBMC_FLAG
-    CAND_CLASS_5,
+    CAND_CLASS_5, //OBMC
 #endif
 #if FILTER_INTRA_FLAG
-    CAND_CLASS_6,
+    CAND_CLASS_6, //Filter Intra
 #endif
 #if PAL_CLASS
-    CAND_CLASS_7,
+    CAND_CLASS_7, // Palette
 #endif
-    CAND_CLASS_8,
+    CAND_CLASS_8, // Global
     CAND_CLASS_TOTAL
 } CAND_CLASS;
 

@@ -262,6 +262,10 @@ extern "C" {
         uint8_t                         injected_mv_count_bipred;
         uint32_t                        fast_candidate_inter_count;
         uint32_t                        me_block_offset;
+#if INTRA_INTER_BALANCE
+        uint8_t                         md_intra_level;
+        uint8_t                         md_inter_level;
+#endif
         uint8_t                         tx_depth;
         uint8_t                         txb_itr;
         uint32_t                        me_sb_addr;
