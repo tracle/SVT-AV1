@@ -3753,7 +3753,6 @@ EbErrorType av1_inter_prediction(
         src_stride = ref_pic_list0->stride_y;
         dst_stride = prediction_ptr->stride_y;
 
-
 //==============================================================
 
 //        const uint32_t ss_x = picture_control_set_ptr->parent_pcs_ptr->scs_ptr->subsampling_x;
@@ -3776,8 +3775,6 @@ EbErrorType av1_inter_prediction(
         const int32_t is_scaled = picture_control_set_ptr != EB_NULL ? av1_is_scaled(sf) : EB_FALSE;
 
         if (is_scaled) {
-
-            printf("scaled prediction Y, compond=%d\n", (int)is_compound);
 
             int orig_pos_y = (pu_origin_y + 0) << SUBPEL_BITS;
             orig_pos_y += mv.row * (1 << (1 - ss_y));
@@ -3821,8 +3818,13 @@ EbErrorType av1_inter_prediction(
             scaled_mv.col += SCALE_EXTRA_OFF;
             // --- end: not used
 
-            int32_t src_offset = (pos_y * src_stride) + pos_x;
-            src_mod = src_ptr + (src_offset << is16bit);
+            src_mod = ref_pic_list0->buffer_y +
+                      ((ref_pic_list0->origin_x + pos_x +
+                        (ref_pic_list0->origin_y + pos_y) *
+                        ref_pic_list0->stride_y) << is16bit);
+
+//            printf("scaled prediction Y-list0, compond=%d, pu_origin_y=%d, pu_origin_x=%d, blk_width=%d, blk_height=%d, mv.row=%d, mv.col=%d\n",
+//                   (int)is_compound, (int)pu_origin_y, (int)pu_origin_x, (int)bwidth, (int)bheight, (int)mv.row, (int)mv.col);
 
             if (is16bit) {
                 uint16_t *src16 = (uint16_t *) src_mod;
@@ -3850,24 +3852,6 @@ EbErrorType av1_inter_prediction(
                                     &conv_params,
                                     interp_filters,
                                     use_intrabc);
-            }
-
-            if(is_compound==0){
-                save_Y_to_file("predicted_blk.yuv",
-                               dst_ptr,
-                               bwidth,
-                               bheight,
-                               dst_stride,
-                               0,
-                               0);
-
-                save_Y_to_file("ref_pic.yuv",
-                               src_ptr,
-                               ref_pic_list0->width,
-                               ref_pic_list0->height,
-                               ref_pic_list0->stride_y,
-                               0,
-                               0);
             }
 
         } // if(scaled)
@@ -4089,65 +4073,146 @@ EbErrorType av1_inter_prediction(
         src_stride = ref_pic_list1->stride_y;
         dst_stride = prediction_ptr->stride_y;
 
-        mv_q4 = clamp_mv_to_umv_border_sb(
-                blk_ptr->av1xd,
-                &mv,
-                bwidth,
-                bheight,
-                0,
-                0); //mv_q4 has 1 extra bit for fractionnal to accomodate chroma when accessing filter coeffs.
-        subpel_x = mv_q4.col & SUBPEL_MASK;
-        subpel_y = mv_q4.row & SUBPEL_MASK;
+        //==============================================================
 
-        src_ptr += ((mv_q4.row >> SUBPEL_BITS) * src_stride + (mv_q4.col >> SUBPEL_BITS)) << is16bit;
-        conv_params = get_conv_params_no_round(0, (mv_unit->pred_direction == BI_PRED) ? 1 : 0, 0, tmp_dstY, 128, is_compound, bit_depth);
+//        const uint32_t ss_x = picture_control_set_ptr->parent_pcs_ptr->scs_ptr->subsampling_x;
+//        const uint32_t ss_y =picture_control_set_ptr->parent_pcs_ptr->scs_ptr->subsampling_y;
 
-        av1_get_convolve_filter_params(
-                interp_filters, &filter_params_x, &filter_params_y, bwidth, bheight);
+        conv_params = get_conv_params_no_round(0, (mv_unit->pred_direction == BI_PRED) ? 1 : 0, 0, tmp_dstY, 128,
+                                               is_compound, bit_depth);
+        av1_get_convolve_filter_params(interp_filters, &filter_params_x, &filter_params_y, bwidth, bheight);
 
-        //the luma data is applied to chroma below
-        av1_dist_wtd_comp_weight_assign(
-                &picture_control_set_ptr->parent_pcs_ptr->scs_ptr->seq_header,
-                picture_control_set_ptr->parent_pcs_ptr->cur_order_hint, // cur_frame_index,
-                picture_control_set_ptr->parent_pcs_ptr->ref_order_hint[rf[0] - 1], // bck_frame_index,
-                picture_control_set_ptr->parent_pcs_ptr->ref_order_hint[rf[1] - 1], // fwd_frame_index,
-                compound_idx,
-                0, // order_idx,
-                &conv_params.fwd_offset,
-                &conv_params.bck_offset,
-                &conv_params.use_dist_wtd_comp_avg,
-                is_compound);
+        const uint32_t ss_x = 0;
+        const uint32_t ss_y = 0;
 
-        conv_params.use_jnt_comp_avg = conv_params.use_dist_wtd_comp_avg;
+        /*ScaleFactor*/
+        const struct ScaleFactors *const sf =
+                use_intrabc ? &sf_identity : &ref1_scale_factors;
 
-        if (is_compound && is_masked_compound_type(interinter_comp->type)) {
-            conv_params.do_average = 0;
-            av1_make_masked_inter_predictor(
-                    src_ptr,
-                    src_stride,
-                    dst_ptr,
-                    dst_stride,
-                    blk_geom,
+        uint8_t *src_mod;
+        SubpelParams subpel_params;
+
+        const int32_t is_scaled = picture_control_set_ptr != EB_NULL ? av1_is_scaled(sf) : EB_FALSE;
+
+        if (is_scaled) {
+
+//            printf("scaled prediction Y-list1, compond=%d, pu_origin_y=%d, pu_origin_x=%d, blk_width=%d, blk_height=%d\n",
+//                    (int)is_compound, (int)pu_origin_y, (int)pu_origin_x, (int)bwidth, (int)bheight);
+
+            int orig_pos_y = (pu_origin_y + 0) << SUBPEL_BITS;
+            orig_pos_y += mv.row * (1 << (1 - ss_y));
+            int orig_pos_x = (pu_origin_x + 0) << SUBPEL_BITS;
+            orig_pos_x += mv.col * (1 << (1 - ss_x));
+            int pos_y = sf->scale_value_y(orig_pos_y, sf);
+            int pos_x = sf->scale_value_x(orig_pos_x, sf);
+            pos_x += SCALE_EXTRA_OFF;
+            pos_y += SCALE_EXTRA_OFF;
+
+            const int top = -AOM_LEFT_TOP_MARGIN_SCALED(ss_y);
+            const int left = -AOM_LEFT_TOP_MARGIN_SCALED(ss_x);
+            const int bottom = ((ref_pic_list1->height >> ss_y) + AOM_INTERP_EXTEND)
+                    << SCALE_SUBPEL_BITS;
+            const int right = ((ref_pic_list1->width >> ss_x) + AOM_INTERP_EXTEND)
+                    << SCALE_SUBPEL_BITS;
+
+            pos_y = clamp(pos_y, top, bottom);
+            pos_x = clamp(pos_x, left, right);
+
+            subpel_params.subpel_x = pos_x & SCALE_SUBPEL_MASK;
+            subpel_params.subpel_y = pos_y & SCALE_SUBPEL_MASK;
+            subpel_params.xs = sf->x_step_q4;
+            subpel_params.ys = sf->y_step_q4;
+
+            pos_y = pos_y >> SCALE_SUBPEL_BITS;
+            pos_x = pos_x >> SCALE_SUBPEL_BITS;
+
+            // --- start: not used
+            MV temp_mv;
+            temp_mv = clamp_mv_to_umv_border_sb(
+                    blk_ptr->av1xd,
+                    &mv,
                     bwidth,
                     bheight,
-                    &filter_params_x,
-                    &filter_params_y,
-                    subpel_x,
-                    subpel_y,
-                    &conv_params,
-                    interinter_comp,
-                    bit_depth,
-                    0//plane=Luma  seg_mask is computed based on luma and used for chroma
-            );
-        }
-        else
-        {
-            if (is16bit)
-                convolveHbd[subpel_x != 0][subpel_y != 0][is_compound](
-                        (uint16_t *)src_ptr,
+                    0,
+                    0); //mv_q4 has 1 extra bit for fractionnal to accomodate chroma when accessing filter coeffs.
+            MV32 scaled_mv;
+            scaled_mv = av1_scale_mv(&temp_mv, (pu_origin_x + 0), (pu_origin_y + 0), sf);
+            scaled_mv.row += SCALE_EXTRA_OFF;
+            scaled_mv.col += SCALE_EXTRA_OFF;
+            // --- end: not used
+
+            src_mod = ref_pic_list1->buffer_y +
+                      ((ref_pic_list1->origin_x + pos_x +
+                        (ref_pic_list1->origin_y + pos_y) *
+                        ref_pic_list1->stride_y) << is16bit);
+
+            if (is16bit) {
+                uint16_t *src16 = (uint16_t *) src_mod;
+                svt_highbd_inter_predictor(src16,
+                                           src_stride,
+                                           (uint16_t *) dst_ptr,
+                                           dst_stride,
+                                           &subpel_params,
+                                           sf,
+                                           bwidth,
+                                           bheight,
+                                           &conv_params,
+                                           interp_filters,
+                                           use_intrabc,
+                                           bit_depth);
+            } else {
+                svt_inter_predictor(src_mod,
+                                    src_stride,
+                                    dst_ptr,
+                                    dst_stride,
+                                    &subpel_params,
+                                    sf,
+                                    bwidth,
+                                    bheight,
+                                    &conv_params,
+                                    interp_filters,
+                                    use_intrabc);
+            }
+
+        } // if(scaled)
+        else {
+//==============================================================
+
+            mv_q4 = clamp_mv_to_umv_border_sb(
+                    blk_ptr->av1xd,
+                    &mv,
+                    bwidth,
+                    bheight,
+                    0,
+                    0); //mv_q4 has 1 extra bit for fractionnal to accomodate chroma when accessing filter coeffs.
+            subpel_x = mv_q4.col & SUBPEL_MASK;
+            subpel_y = mv_q4.row & SUBPEL_MASK;
+
+            src_ptr += ((mv_q4.row >> SUBPEL_BITS) * src_stride + (mv_q4.col >> SUBPEL_BITS)) << is16bit;
+
+            //the luma data is applied to chroma below
+            av1_dist_wtd_comp_weight_assign(
+                    &picture_control_set_ptr->parent_pcs_ptr->scs_ptr->seq_header,
+                    picture_control_set_ptr->parent_pcs_ptr->cur_order_hint, // cur_frame_index,
+                    picture_control_set_ptr->parent_pcs_ptr->ref_order_hint[rf[0] - 1], // bck_frame_index,
+                    picture_control_set_ptr->parent_pcs_ptr->ref_order_hint[rf[1] - 1], // fwd_frame_index,
+                    compound_idx,
+                    0, // order_idx,
+                    &conv_params.fwd_offset,
+                    &conv_params.bck_offset,
+                    &conv_params.use_dist_wtd_comp_avg,
+                    is_compound);
+
+            conv_params.use_jnt_comp_avg = conv_params.use_dist_wtd_comp_avg;
+
+            if (is_compound && is_masked_compound_type(interinter_comp->type)) {
+                conv_params.do_average = 0;
+                av1_make_masked_inter_predictor(
+                        src_ptr,
                         src_stride,
-                        (uint16_t *)dst_ptr,
+                        dst_ptr,
                         dst_stride,
+                        blk_geom,
                         bwidth,
                         bheight,
                         &filter_params_x,
@@ -4155,20 +4220,39 @@ EbErrorType av1_inter_prediction(
                         subpel_x,
                         subpel_y,
                         &conv_params,
-                        bit_depth);
-            else
-                convolve[subpel_x != 0][subpel_y != 0][is_compound](
-                        src_ptr,
-                        src_stride,
-                        dst_ptr,
-                        dst_stride,
-                        bwidth,
-                        bheight,
-                        &filter_params_x,
-                        &filter_params_y,
-                        subpel_x,
-                        subpel_y,
-                        &conv_params);
+                        interinter_comp,
+                        bit_depth,
+                        0//plane=Luma  seg_mask is computed based on luma and used for chroma
+                );
+            } else {
+                if (is16bit)
+                    convolveHbd[subpel_x != 0][subpel_y != 0][is_compound](
+                            (uint16_t *) src_ptr,
+                            src_stride,
+                            (uint16_t *) dst_ptr,
+                            dst_stride,
+                            bwidth,
+                            bheight,
+                            &filter_params_x,
+                            &filter_params_y,
+                            subpel_x,
+                            subpel_y,
+                            &conv_params,
+                            bit_depth);
+                else
+                    convolve[subpel_x != 0][subpel_y != 0][is_compound](
+                            src_ptr,
+                            src_stride,
+                            dst_ptr,
+                            dst_stride,
+                            bwidth,
+                            bheight,
+                            &filter_params_x,
+                            &filter_params_y,
+                            subpel_x,
+                            subpel_y,
+                            &conv_params);
+            }
         }
         if (perform_chroma && blk_geom->has_uv && sub8x8_inter == 0) {
             //List0-Cb

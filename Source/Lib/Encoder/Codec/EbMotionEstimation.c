@@ -11350,7 +11350,7 @@ EbErrorType motion_estimate_sb(
                                              &quarter_ref_pic_ptr,
                                              &sixteenth_ref_pic_ptr);
 
-            printf("frame #%d, width=%d, ref pic=%d, ALT-REF %d\n", (int)pcs_ptr->picture_number, input_picture_ptr->width, ref_picture_number, (int)context_ptr->me_alt_ref);
+            //printf("frame #%d, width=%d, ref pic=%d, ALT-REF %d\n", (int)pcs_ptr->picture_number, input_picture_ptr->width, ref_picture_number, (int)context_ptr->me_alt_ref);
 
             if (pcs_ptr->temporal_layer_index > 0 || list_index == 0) {
                 // A - The MV center for Tier0 search could be either (0,0), or
