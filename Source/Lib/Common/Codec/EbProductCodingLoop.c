@@ -2175,8 +2175,8 @@ void set_md_stage_counts(
     CAND_CLASS_8, // Global
 */
             if (context_ptr->md_inter_level >= 1) {
-                uint8_t division_factor_num      = 1;
-                uint8_t division_factor_denum    = 2;
+                 uint8_t division_factor_num      =  context_ptr->md_intra_level >= 1 ? 3 : 1;
+                 uint8_t division_factor_denum    =  context_ptr->md_intra_level >= 1 ? 4 : 1;
                 for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
                     if (i == CAND_CLASS_1 || CAND_CLASS_2) {
                         context_ptr->md_stage_1_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_1_count[i])) / division_factor_denum);
@@ -2186,9 +2186,9 @@ void set_md_stage_counts(
                     }
                 }
             }
-            else if (context_ptr->md_intra_level >= 1) {
-                uint8_t division_factor_num      = 1;
-                uint8_t division_factor_denum    = 2;
+            if (context_ptr->md_intra_level) {
+                uint8_t division_factor_num      =  context_ptr->md_intra_level == 1 ? 3 : context_ptr->md_intra_level == 2 ? 1 : 1;
+                uint8_t division_factor_denum    =  context_ptr->md_intra_level == 1 ? 4 : context_ptr->md_intra_level == 2 ? 2 : 1;
                 for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
                     if (i == CAND_CLASS_0 || CAND_CLASS_6) {
                         context_ptr->md_stage_1_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_1_count[i])) / division_factor_denum);
@@ -11933,8 +11933,8 @@ EbErrorType signal_derivation_block(
              const uint32_t very_low_th = (context_ptr->blk_geom->bheight * context_ptr->blk_geom->bwidth * very_low_err_th) / 100;
              const uint32_t low_th = (context_ptr->blk_geom->bheight * context_ptr->blk_geom->bwidth * low_err_th) / 100;
 
-             const uint32_t very_high_th = (context_ptr->blk_geom->bheight * context_ptr->blk_geom->bwidth * very_low_err_th) / 100;
-             const uint32_t high_th = (context_ptr->blk_geom->bheight * context_ptr->blk_geom->bwidth * low_err_th) / 100;
+             const uint32_t very_high_th = (context_ptr->blk_geom->bheight * context_ptr->blk_geom->bwidth * very_high_err_th) / 100;
+             const uint32_t high_th = (context_ptr->blk_geom->bheight * context_ptr->blk_geom->bwidth * high_err_th) / 100;
 
              if (distortion < very_low_th) {
                  context_ptr->md_intra_level = 2;
@@ -11943,12 +11943,12 @@ EbErrorType signal_derivation_block(
                  context_ptr->md_intra_level = 1;
              }
              else if (distortion > high_th) {
-                 context_ptr->md_inter_level = 1;
+                 context_ptr->md_inter_level = 0;
              }
-             else if (distortion < very_high_th) {
-                 context_ptr->md_inter_level = 2;
+             else if (distortion > very_high_th) {
+                 context_ptr->md_inter_level = 0;
              }
-             printf("intra %d\tinter %d\n", context_ptr->md_intra_level, context_ptr->md_inter_level);
+             //printf("intra %d\tinter %d\n", context_ptr->md_intra_level, context_ptr->md_inter_level);
 #if 0
              if (inter_direction == 0) {
                  int16_t to_inject_mv_x = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][list0_ref_index][0];
@@ -12115,13 +12115,13 @@ void md_encode_block(
             context_ptr->mode_type_neighbor_array,
             context_ptr->leaf_depth_neighbor_array,
             context_ptr->leaf_partition_neighbor_array);
-         // Skip sub blocks if the current block has the same depth as the left block and above block
+        // Skip sub blocks if the current block has the same depth as the left block and above block
         if (picture_control_set_ptr->parent_pcs_ptr->skip_sub_blks)
-            *skip_sub_blocks =check_skip_sub_blks(picture_control_set_ptr,
-                                                  context_ptr,
-                                                  cu_ptr,
-                                                  is_complete_sb,
-                                                  lcuAddr);
+            *skip_sub_blocks = check_skip_sub_blks(picture_control_set_ptr,
+                context_ptr,
+                cu_ptr,
+                is_complete_sb,
+                lcuAddr);
 #if MOVE_OPT
         if (context_ptr->chroma_level == CHROMA_MODE_0 && context_ptr->chroma_search_opt) {
             if (context_ptr->blk_geom->sq_size < 128) {
@@ -12207,7 +12207,7 @@ void md_encode_block(
             context_ptr->me_sb_addr = lcuAddr;
 
 #if ME_MV_UPGRADE_LOSSY
-       // Derive whether if current block would need to have offsets made
+        // Derive whether if current block would need to have offsets made
         uint32_t bwidth_offset_to_8 = (context_ptr->blk_geom->bwidth == 4) << 2;
         uint32_t bheight_offset_to_8 = (context_ptr->blk_geom->bheight == 4) << 2;
 
@@ -12256,28 +12256,28 @@ void md_encode_block(
 #if MULTI_PASS_PD
         if (!context_ptr->md_skip_mvp_generation) {
 #endif
-        if (frm_hdr->allow_intrabc) // picture_control_set_ptr->slice_type == I_SLICE
-            generate_av1_mvp_table(
-                &context_ptr->sb_ptr->tile_info,
-                context_ptr,
-                context_ptr->cu_ptr,
-                context_ptr->blk_geom,
-                context_ptr->cu_origin_x,
-                context_ptr->cu_origin_y,
-                picture_control_set_ptr->parent_pcs_ptr->ref_frame_type_arr,
-                1,
-                picture_control_set_ptr);
-        else if (picture_control_set_ptr->slice_type != I_SLICE)
-            generate_av1_mvp_table(
-                &context_ptr->sb_ptr->tile_info,
-                context_ptr,
-                context_ptr->cu_ptr,
-                context_ptr->blk_geom,
-                context_ptr->cu_origin_x,
-                context_ptr->cu_origin_y,
-                picture_control_set_ptr->parent_pcs_ptr->ref_frame_type_arr,
-                picture_control_set_ptr->parent_pcs_ptr->tot_ref_frame_types,
-                picture_control_set_ptr);
+            if (frm_hdr->allow_intrabc) // picture_control_set_ptr->slice_type == I_SLICE
+                generate_av1_mvp_table(
+                    &context_ptr->sb_ptr->tile_info,
+                    context_ptr,
+                    context_ptr->cu_ptr,
+                    context_ptr->blk_geom,
+                    context_ptr->cu_origin_x,
+                    context_ptr->cu_origin_y,
+                    picture_control_set_ptr->parent_pcs_ptr->ref_frame_type_arr,
+                    1,
+                    picture_control_set_ptr);
+            else if (picture_control_set_ptr->slice_type != I_SLICE)
+                generate_av1_mvp_table(
+                    &context_ptr->sb_ptr->tile_info,
+                    context_ptr,
+                    context_ptr->cu_ptr,
+                    context_ptr->blk_geom,
+                    context_ptr->cu_origin_x,
+                    context_ptr->cu_origin_y,
+                    picture_control_set_ptr->parent_pcs_ptr->ref_frame_type_arr,
+                    picture_control_set_ptr->parent_pcs_ptr->tot_ref_frame_types,
+                    picture_control_set_ptr);
 #if MULTI_PASS_PD
         }
         else {
@@ -12287,10 +12287,12 @@ void md_encode_block(
         }
 #endif
 
- #if INTRA_INTER_BALANCE
+#if INTRA_INTER_BALANCE
         set_intra_inter_level_based_on_me(
             picture_control_set_ptr,
             context_ptr);
+        if (context_ptr->md_inter_level == 2)
+            context_ptr->compound_types_to_try = MD_COMP_AVG;
 #endif
 #if ME_MV_UPGRADE_LOSSLESS
         // Read/refine (if applicable) ME MVs
@@ -12302,9 +12304,6 @@ void md_encode_block(
             cuOriginIndex);
 #endif
         // Perform ME search around the best MVP
-#if INTRA_INTER_BALANCE
-        if(context_ptr->md_inter_level == 0)
-#endif
         if (context_ptr->predictive_me_level)
             predictive_me_search(
                 picture_control_set_ptr,

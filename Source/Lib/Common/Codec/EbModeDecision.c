@@ -2327,6 +2327,9 @@ void inject_mvp_candidates_II(
 #if OBMC_OPT3
             is_obmc_allowed = 0;
 #endif
+#if INTRA_INTER_BALANCE
+            is_obmc_allowed = context_ptr->md_inter_level == 2 ? 0 : is_obmc_allowed;
+#endif
 #if 0//OBMC_OPT5
             if (context_ptr->blk_geom->shape != PART_N) {
                 CodingUnit *  sq_cu_ptr = &context_ptr->md_cu_arr_nsq[context_ptr->blk_geom->sqi_mds];
@@ -2461,6 +2464,9 @@ void inject_mvp_candidates_II(
             uint8_t is_obmc_allowed = obmc_motion_mode_allowed(picture_control_set_ptr, context_ptr, bsize, rf[0], rf[1], NEARMV) == OBMC_CAUSAL;
             #if OBMC_OPT3
             is_obmc_allowed = 0;
+#endif
+#if INTRA_INTER_BALANCE
+            is_obmc_allowed = context_ptr->md_inter_level == 2 ? 0 : is_obmc_allowed;
 #endif
 #if 0//OBMC_OPT5
             if (context_ptr->blk_geom->shape != PART_N) {
@@ -4253,6 +4259,9 @@ void inject_new_candidates(
 #if OBMC_OPT3
             is_obmc_allowed = 0;
 #endif
+#if INTRA_INTER_BALANCE
+            is_obmc_allowed = context_ptr->md_inter_level == 2 ? 0 : is_obmc_allowed;
+#endif
 #if OBMC_OPT5
             if (context_ptr->blk_geom->shape != PART_N) {
                 CodingUnit *  sq_cu_ptr = &context_ptr->md_cu_arr_nsq[context_ptr->blk_geom->sqi_mds];
@@ -4456,6 +4465,9 @@ void inject_new_candidates(
             uint8_t is_obmc_allowed = obmc_motion_mode_allowed(picture_control_set_ptr, context_ptr, bsize, rf[0], rf[1], NEWMV) == OBMC_CAUSAL;
 #if OBMC_OPT3
             is_obmc_allowed = 0;
+#endif
+#if INTRA_INTER_BALANCE
+            is_obmc_allowed = context_ptr->md_inter_level == 2 ? 0 : is_obmc_allowed;
 #endif
 #if OBMC_OPT5
             if (context_ptr->blk_geom->shape != PART_N) {
@@ -4822,6 +4834,9 @@ void inject_new_candidates(
 #if OBMC_OPT3
             is_obmc_allowed = 0;
 #endif
+#if INTRA_INTER_BALANCE
+            is_obmc_allowed = context_ptr->md_inter_level == 2 ? 0 : is_obmc_allowed;
+#endif
 #if OBMC_OPT5
             if (context_ptr->blk_geom->shape != PART_N) {
                 CodingUnit *  sq_cu_ptr = &context_ptr->md_cu_arr_nsq[context_ptr->blk_geom->sqi_mds];
@@ -4967,8 +4982,11 @@ void inject_new_candidates(
                                 uint8_t tot_inter_types = is_ii_allowed ? II_COUNT : 1;
 #if MULTI_PASS_PD
                                 uint8_t is_obmc_allowed = obmc_motion_mode_allowed(picture_control_set_ptr, context_ptr, bsize, rf[0], rf[1], NEWMV) == OBMC_CAUSAL;
-     #if OBMC_OPT3
+#if OBMC_OPT3
             is_obmc_allowed = 0;
+#endif
+#if INTRA_INTER_BALANCE
+            is_obmc_allowed = context_ptr->md_inter_level == 2 ? 0 : is_obmc_allowed;
 #endif
 #if OBMC_OPT5
             if (context_ptr->blk_geom->shape != PART_N) {
@@ -5382,6 +5400,9 @@ void  inject_inter_candidates(
 
 #if OBMC_OPT3
             is_obmc_allowed = 0;
+#endif
+#if INTRA_INTER_BALANCE
+            is_obmc_allowed = context_ptr->md_inter_level == 2 ? 0 : is_obmc_allowed;
 #endif
 #if OBMC_OPT5
             if (context_ptr->blk_geom->shape != PART_N) {
@@ -5901,7 +5922,7 @@ void  inject_inter_candidates(
 
     // Warped Motion
 #if INTRA_INTER_BALANCE
-    if (context_ptr->md_inter_level < 2) {
+    if (context_ptr->md_inter_level != 2) {
 #endif
         if (frm_hdr->allow_warped_motion &&
             has_overlappable_candidates(context_ptr->cu_ptr) &&
@@ -5918,9 +5939,7 @@ void  inject_inter_candidates(
 #if INTRA_INTER_BALANCE
     }
 #endif
-#if INTRA_INTER_BALANCE
-    if (context_ptr->md_inter_level < 2) {
-#endif
+
 #if ENHANCED_M0_SETTINGS
         if (!coeff_based_nsq_cand_reduction) {
 #else
@@ -6001,9 +6020,7 @@ void  inject_inter_candidates(
                 isCompoundEnabled,
                 allow_bipred,
                 &canTotalCnt);
-#if INTRA_INTER_BALANCE
-    }
-#endif
+
 #if REDUCE_ME_OUTPUT
         if (!canTotalCnt)
             inject_zero_as_backup(
@@ -6642,11 +6659,7 @@ void  inject_intra_candidates(
     uint8_t     angle_delta_shift = 1;
 
 #if MULTI_PASS_PD
-#if INTRA_INTER_BALANCE
-    if (context_ptr->disable_angle_z2_intra_flag || context_ptr->md_intra_level > 1) {
-#else
     if (context_ptr->disable_angle_z2_intra_flag) {
-#endif
         disable_angle_prediction = 1;
         angleDeltaCandidateCount = 1;
         angle_delta_shift = 1;
@@ -7148,9 +7161,7 @@ EbErrorType generate_md_stage_0_cand(
 #else
        if (picture_control_set_ptr->pic_filter_intra_mode > 0 && av1_filter_intra_allowed_bsize(sequence_control_set_ptr->seq_header.enable_filter_intra, context_ptr->blk_geom->bsize))
 #endif
-#if INTRA_INTER_BALANCE
-            if (context_ptr->md_intra_level < 2) 
-#endif
+
             inject_filter_intra_candidates(
                 picture_control_set_ptr,
                 context_ptr,
