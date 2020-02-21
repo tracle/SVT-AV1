@@ -3138,6 +3138,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
     if (sequence_control_set_ptr->static_config.set_chroma_mode == DEFAULT) {
         if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
+#if M0_FEB21_ADOPTIONS
+            if (picture_control_set_ptr->enc_mode <= ENC_M0)
+                context_ptr->chroma_level = CHROMA_MODE_0;
+            else
+#endif
             if (picture_control_set_ptr->enc_mode <= ENC_M6)
                 context_ptr->chroma_level = CHROMA_MODE_1;
             else
@@ -4274,7 +4279,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     //1: ON 10% + skip HA/HB/H4  or skip VA/VB/V4
     //2: ON 10% + skip HA/HB  or skip VA/VB   ,  5% + skip H4  or skip V4
 #if FEB14_ADOPTIONS
+#if M0_FEB21_ADOPTIONS
+    if (MR_MODE || context_ptr->pd_pass < PD_PASS_2)
+#else
     if (picture_control_set_ptr->enc_mode <= ENC_M0 || context_ptr->pd_pass < PD_PASS_2)
+#endif
 #else
     if (MR_MODE || context_ptr->pd_pass < PD_PASS_2)
 #endif
@@ -4558,7 +4567,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
 #if MOVE_OPT
 #if M1_FEB4_ADOPTION
+#if M0_FEB21_ADOPTIONS
+    context_ptr->chroma_search_opt = MR_MODE ? 0 : 1;
+#else
     context_ptr->chroma_search_opt = picture_control_set_ptr->enc_mode <= ENC_M0 ? 0 : 1;
+#endif
 #else
     context_ptr->chroma_search_opt = picture_control_set_ptr->enc_mode <= ENC_M0 ? 0 : 1;
 #endif

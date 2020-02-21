@@ -32,6 +32,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define M0_FEB21_ADOPTIONS      1
 #define COMB_SQ_WEIGHT_NSQ_REF  0
 #define FEB19_PD0_TH            1
 #define NORMALIZED_ABS_TH       1 
