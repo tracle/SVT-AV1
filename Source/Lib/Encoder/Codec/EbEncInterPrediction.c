@@ -21,6 +21,11 @@
 #include "aom_dsp_rtcd.h"
 #include "EbRateDistortionCost.h"
 
+void save_Y_to_file(char *filename, EbByte buffer_y,
+                    uint16_t width, uint16_t height,
+                    uint16_t stride_y,
+                    uint16_t origin_y, uint16_t origin_x);
+
 void use_scaled_rec_refs_if_needed(PictureControlSet *pcs_ptr,
                                    EbPictureBufferDesc *input_picture_ptr,
                                    EbReferenceObject *ref_obj,
@@ -3430,26 +3435,37 @@ EbErrorType av1_inter_prediction(
 
 //=============================================
     ScaleFactors ref0_scale_factors;
-
-    av1_setup_scale_factors_for_frame(&ref0_scale_factors,
-                                      ref_pic_list0->width,
-                                      ref_pic_list0->height,
-                                      picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr->width,
-                                      picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr->height);
+    if(ref_pic_list0 != EB_NULL && picture_control_set_ptr!=EB_NULL){
+        av1_setup_scale_factors_for_frame(&ref0_scale_factors,
+                                          ref_pic_list0->width,
+                                          ref_pic_list0->height,
+                                          picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr->width,
+                                          picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr->height);
+    }
 
     ScaleFactors ref1_scale_factors;
+    if(ref_pic_list1 != EB_NULL && picture_control_set_ptr != EB_NULL){
+            av1_setup_scale_factors_for_frame(&ref1_scale_factors,
+                                              ref_pic_list1->width,
+                                              ref_pic_list1->height,
+                                              picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr->width,
+                                              picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr->height);
+    }
 
-    av1_setup_scale_factors_for_frame(&ref1_scale_factors,
-                                      ref_pic_list1->width,
-                                      ref_pic_list1->height,
-                                      picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr->width,
-                                      picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr->height);
     ScaleFactors sf_identity;
-    av1_setup_scale_factors_for_frame(&sf_identity,
-                                      picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr->width,
-                                      picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr->height,
-                                      picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr->width,
-                                      picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr->height);
+    if(picture_control_set_ptr != EB_NULL) {
+        av1_setup_scale_factors_for_frame(&sf_identity,
+                                          picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr->width,
+                                          picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr->height,
+                                          picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr->width,
+                                          picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr->height);
+    }else{
+        av1_setup_scale_factors_for_frame(&sf_identity,
+                                          200,
+                                          200,
+                                          200,
+                                          200);
+    }
 
 //=============================================
 
@@ -3754,12 +3770,15 @@ EbErrorType av1_inter_prediction(
         const struct ScaleFactors *const sf =
                 use_intrabc ? &sf_identity : &ref0_scale_factors;
 
-//        MV           mv_q4;
-        void *       src_mod;
+        uint8_t *src_mod;
         SubpelParams subpel_params;
 
-        const int32_t is_scaled = av1_is_scaled(sf);
+        const int32_t is_scaled = picture_control_set_ptr != EB_NULL ? av1_is_scaled(sf) : EB_FALSE;
+
         if (is_scaled) {
+
+            printf("scaled prediction Y, compond=%d\n", (int)is_compound);
+
             int orig_pos_y = (pu_origin_y + 0) << SUBPEL_BITS;
             orig_pos_y += mv.row * (1 << (1 - ss_y));
             int orig_pos_x = (pu_origin_x + 0) << SUBPEL_BITS;
@@ -3787,7 +3806,7 @@ EbErrorType av1_inter_prediction(
             pos_y = pos_y >> SCALE_SUBPEL_BITS;
             pos_x = pos_x >> SCALE_SUBPEL_BITS;
 
-
+            // --- start: not used
             MV temp_mv;
             temp_mv = clamp_mv_to_umv_border_sb(
                     blk_ptr->av1xd,
@@ -3796,18 +3815,17 @@ EbErrorType av1_inter_prediction(
                     bheight,
                     0,
                     0); //mv_q4 has 1 extra bit for fractionnal to accomodate chroma when accessing filter coeffs.
-
             MV32 scaled_mv;
-
             scaled_mv = av1_scale_mv(&temp_mv, (pu_origin_x + 0), (pu_origin_y + 0), sf);
             scaled_mv.row += SCALE_EXTRA_OFF;
             scaled_mv.col += SCALE_EXTRA_OFF;
+            // --- end: not used
+
             int32_t src_offset = (pos_y * src_stride) + pos_x;
             src_mod = src_ptr + (src_offset << is16bit);
 
             if (is16bit) {
                 uint16_t *src16 = (uint16_t *) src_mod;
-
                 svt_highbd_inter_predictor(src16,
                                            src_stride,
                                            (uint16_t *) dst_ptr,
@@ -3833,6 +3851,25 @@ EbErrorType av1_inter_prediction(
                                     interp_filters,
                                     use_intrabc);
             }
+
+            if(is_compound==0){
+                save_Y_to_file("predicted_blk.yuv",
+                               dst_ptr,
+                               bwidth,
+                               bheight,
+                               dst_stride,
+                               0,
+                               0);
+
+                save_Y_to_file("ref_pic.yuv",
+                               src_ptr,
+                               ref_pic_list0->width,
+                               ref_pic_list0->height,
+                               ref_pic_list0->stride_y,
+                               0,
+                               0);
+            }
+
         } // if(scaled)
         else {
 //==============================================================
@@ -3847,7 +3884,6 @@ EbErrorType av1_inter_prediction(
             subpel_x = mv_q4.col & SUBPEL_MASK;
             subpel_y = mv_q4.row & SUBPEL_MASK;
             src_ptr += ((mv_q4.row >> SUBPEL_BITS) * src_stride + (mv_q4.col >> SUBPEL_BITS)) << is16bit;
-
 
             if (is16bit)
                 convolveHbd[subpel_x != 0][subpel_y != 0][is_compound](
@@ -3876,6 +3912,7 @@ EbErrorType av1_inter_prediction(
                         subpel_x,
                         subpel_y,
                         &conv_params);
+
         } // if(!scaled)
 
         if (perform_chroma && blk_geom->has_uv && sub8x8_inter == 0) {
