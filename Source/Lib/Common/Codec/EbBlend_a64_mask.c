@@ -15,7 +15,8 @@
  */
 
 #include <assert.h>
-#include "smmintrin.h"
+
+
 
 #include "EbDefinitions.h"
 
