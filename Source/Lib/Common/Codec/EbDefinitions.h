@@ -33,7 +33,7 @@
 extern "C" {
 #endif
 
-#define NIC_SCALING             1
+#define NIC_SCALING             0
 #define EARLY_EXIT_ABS_TH       0
 #if EARLY_EXIT_ABS_TH
 #define  EXIT_BRANCH_TH         5
