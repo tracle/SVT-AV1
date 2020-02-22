@@ -32,6 +32,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define EARLY_EXIT_ABS_TH       0
+#if EARLY_EXIT_ABS_TH
+#define  EXIT_BRANCH_TH         5
+#endif
+
 #define INTRA_INTER_BALANCE     0
 #define M0_FEB21_ADOPTIONS      1
 #define COMB_SQ_WEIGHT_NSQ_REF  0

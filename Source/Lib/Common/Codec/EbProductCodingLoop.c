@@ -13287,7 +13287,11 @@ static void set_child_to_be_skipped(
         blk_geom->sq_size == 128 ? 17 :
         blk_geom->sq_size > 8 ? 25 :
         blk_geom->sq_size == 8 ? 5 : 1;
+#if EARLY_EXIT_ABS_TH 
+    if (context_ptr->md_cu_arr_nsq[blk_index].split_flag && blk_geom->sq_size > 4) {
+#else
     if (blk_geom->sq_size > 4) {
+#endif
         //Set first child to be considered
         child_block_idx_1 = blk_index + d1_depth_offset[sb_size == BLOCK_128X128][blk_geom->depth];
         const BlockGeom * child1_blk_geom = get_blk_geom_mds(child_block_idx_1);
@@ -14108,6 +14112,22 @@ EB_EXTERN EbErrorType mode_decision_sb(
 #endif
 #if SKIP_DEPTH
 #if SC_FEB12_ADOPTION
+#if EARLY_EXIT_ABS_TH 
+                if (sequence_control_set_ptr->sb_geom[lcuAddr].is_complete_sb) {
+                    if (context_ptr->md_cu_arr_nsq[cuIdx].split_flag) {
+                        uint32_t full_lambda = context_ptr->hbd_mode_decision ? context_ptr->full_lambda_md[EB_10_BIT_MD] : context_ptr->full_lambda_md[EB_8_BIT_MD];
+                        uint64_t dist_sum = (context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight * EXIT_BRANCH_TH);
+                        uint64_t early_exit_th = RDCOST(full_lambda, 16, dist_sum);
+                        uint8_t max_depth = sequence_control_set_ptr->seq_header.sb_size == BLOCK_128X128 ? 6 : 5;
+                        if (nsq_cost[nsq_shape_table[0]] < early_exit_th && context_ptr->pd_pass == PD_PASS_2)
+                            set_child_to_be_skipped(
+                                context_ptr,
+                                context_ptr->blk_geom->sqi_mds,
+                                sequence_control_set_ptr->seq_header.sb_size,
+                                max_depth - context_ptr->blk_geom->depth);
+                    }
+                } else                       
+#endif
                 if (context_ptr->skip_depth && sequence_control_set_ptr->sb_geom[lcuAddr].is_complete_sb) {
 #else
                 if (sequence_control_set_ptr->sb_geom[lcuAddr].is_complete_sb) {
