@@ -4194,6 +4194,21 @@ EbErrorType av1_inter_prediction(
                                                is_compound, bit_depth);
         av1_get_convolve_filter_params(interp_filters, &filter_params_x, &filter_params_y, bwidth, bheight);
 
+        //the luma data is applied to chroma below
+        av1_dist_wtd_comp_weight_assign(
+                &picture_control_set_ptr->parent_pcs_ptr->scs_ptr->seq_header,
+                picture_control_set_ptr->parent_pcs_ptr->cur_order_hint, // cur_frame_index,
+                picture_control_set_ptr->parent_pcs_ptr->ref_order_hint[rf[0] - 1], // bck_frame_index,
+                picture_control_set_ptr->parent_pcs_ptr->ref_order_hint[rf[1] - 1], // fwd_frame_index,
+                compound_idx,
+                0, // order_idx,
+                &conv_params.fwd_offset,
+                &conv_params.bck_offset,
+                &conv_params.use_dist_wtd_comp_avg,
+                is_compound);
+
+        conv_params.use_jnt_comp_avg = conv_params.use_dist_wtd_comp_avg;
+
         uint32_t ss_x = 0;
         uint32_t ss_y = 0;
 
@@ -4383,6 +4398,22 @@ EbErrorType av1_inter_prediction(
                                            blk_geom->bwidth_uv,
                                            blk_geom->bheight_uv);
 
+            av1_dist_wtd_comp_weight_assign(
+                    &picture_control_set_ptr->parent_pcs_ptr->scs_ptr->seq_header,
+                    picture_control_set_ptr->parent_pcs_ptr->cur_order_hint, // cur_frame_index,
+                    picture_control_set_ptr->parent_pcs_ptr
+                            ->ref_order_hint[rf[0] - 1], // bck_frame_index,
+                    picture_control_set_ptr->parent_pcs_ptr
+                            ->ref_order_hint[rf[1] - 1], // fwd_frame_index,
+                    compound_idx,
+                    0, // order_idx,
+                    &conv_params.fwd_offset,
+                    &conv_params.bck_offset,
+                    &conv_params.use_dist_wtd_comp_avg,
+                    is_compound);
+
+            conv_params.use_jnt_comp_avg = conv_params.use_dist_wtd_comp_avg;
+
             if (is_scaled) {
 
                 int orig_pos_y = (pu_origin_y_chroma + 0) << SUBPEL_BITS;
@@ -4454,22 +4485,6 @@ EbErrorType av1_inter_prediction(
                 subpel_y = mv_q4.row & SUBPEL_MASK;
                 src_ptr += ((mv_q4.row >> SUBPEL_BITS) * src_stride + (mv_q4.col >> SUBPEL_BITS)) << is16bit;
 
-                av1_dist_wtd_comp_weight_assign(
-                        &picture_control_set_ptr->parent_pcs_ptr->scs_ptr->seq_header,
-                        picture_control_set_ptr->parent_pcs_ptr->cur_order_hint, // cur_frame_index,
-                        picture_control_set_ptr->parent_pcs_ptr
-                                ->ref_order_hint[rf[0] - 1], // bck_frame_index,
-                        picture_control_set_ptr->parent_pcs_ptr
-                                ->ref_order_hint[rf[1] - 1], // fwd_frame_index,
-                        compound_idx,
-                        0, // order_idx,
-                        &conv_params.fwd_offset,
-                        &conv_params.bck_offset,
-                        &conv_params.use_dist_wtd_comp_avg,
-                        is_compound);
-
-                conv_params.use_jnt_comp_avg = conv_params.use_dist_wtd_comp_avg;
-
                 if (is_compound && is_masked_compound_type(interinter_comp->type)) {
                     conv_params.do_average = 0;
                     av1_make_masked_inter_predictor(
@@ -4534,6 +4549,22 @@ EbErrorType av1_inter_prediction(
 
             conv_params = get_conv_params_no_round(0, (mv_unit->pred_direction == BI_PRED) ? 1 : 0, 0,
                                                    tmp_dstCr, 64, is_compound, bit_depth);
+
+            av1_dist_wtd_comp_weight_assign(
+                    &picture_control_set_ptr->parent_pcs_ptr->scs_ptr->seq_header,
+                    picture_control_set_ptr->parent_pcs_ptr->cur_order_hint, // cur_frame_index,
+                    picture_control_set_ptr->parent_pcs_ptr
+                            ->ref_order_hint[rf[0] - 1], // bck_frame_index,
+                    picture_control_set_ptr->parent_pcs_ptr
+                            ->ref_order_hint[rf[1] - 1], // fwd_frame_index,
+                    compound_idx,
+                    0, // order_idx,
+                    &conv_params.fwd_offset,
+                    &conv_params.bck_offset,
+                    &conv_params.use_dist_wtd_comp_avg,
+                    is_compound);
+
+            conv_params.use_jnt_comp_avg = conv_params.use_dist_wtd_comp_avg;
 
             if (is_scaled) {
 
@@ -4605,22 +4636,6 @@ EbErrorType av1_inter_prediction(
                 subpel_x = mv_q4.col & SUBPEL_MASK;
                 subpel_y = mv_q4.row & SUBPEL_MASK;
                 src_ptr += ((mv_q4.row >> SUBPEL_BITS) * src_stride + (mv_q4.col >> SUBPEL_BITS)) << is16bit;
-
-                av1_dist_wtd_comp_weight_assign(
-                        &picture_control_set_ptr->parent_pcs_ptr->scs_ptr->seq_header,
-                        picture_control_set_ptr->parent_pcs_ptr->cur_order_hint, // cur_frame_index,
-                        picture_control_set_ptr->parent_pcs_ptr
-                                ->ref_order_hint[rf[0] - 1], // bck_frame_index,
-                        picture_control_set_ptr->parent_pcs_ptr
-                                ->ref_order_hint[rf[1] - 1], // fwd_frame_index,
-                        compound_idx,
-                        0, // order_idx,
-                        &conv_params.fwd_offset,
-                        &conv_params.bck_offset,
-                        &conv_params.use_dist_wtd_comp_avg,
-                        is_compound);
-
-                conv_params.use_jnt_comp_avg = conv_params.use_dist_wtd_comp_avg;
 
                 if (is_compound && is_masked_compound_type(interinter_comp->type)) {
                     conv_params.do_average = 0;
