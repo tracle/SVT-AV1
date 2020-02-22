@@ -1978,7 +1978,11 @@ void set_md_stage_counts(
 #if SC_FEB12_ADOPTION && !NEW_S8 
         uint8_t nics_level = picture_control_set_ptr->enc_mode <= ENC_M0 && picture_control_set_ptr->parent_pcs_ptr->sc_content_detected == 0 ? NIC_S8 : picture_control_set_ptr->enc_mode <= ENC_M3 ? NIC_S11 : NIC_S_OLD;
 #else
+#if NIC_SCALING
+        uint8_t nics_level = picture_control_set_ptr->enc_mode <= ENC_M2 ? NIC_S8 : picture_control_set_ptr->enc_mode <= ENC_M3 ? NIC_S11 : NIC_S_OLD;
+#else
         uint8_t nics_level = picture_control_set_ptr->enc_mode <= ENC_M0 ? NIC_S8 : picture_control_set_ptr->enc_mode <= ENC_M3 ? NIC_S11 : NIC_S_OLD;
+#endif
 #endif
 #else
         uint8_t nics_level = picture_control_set_ptr->enc_mode <= ENC_M1 ? NIC_S8 : picture_control_set_ptr->enc_mode <= ENC_M3 ? NIC_S11 : NIC_S_OLD;
@@ -2152,6 +2156,52 @@ void set_md_stage_counts(
             uint8_t mult_factor_denum = 3;
             for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
                 context_ptr->md_stage_2_count[i] = round((mult_factor_num * ((float)context_ptr->md_stage_2_count[i])) / mult_factor_denum);
+            }
+#endif
+#if NIC_SCALING
+            if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected) {
+                ////DIVIDE
+                uint8_t division_factor_num = 3;
+                uint8_t division_factor_denum = 4;
+                if (picture_control_set_ptr->enc_mode <= ENC_M1) {
+                    division_factor_num = 3;
+                    division_factor_denum = 4;
+                }
+                else {
+                    division_factor_num = 2;
+                    division_factor_denum = 3;
+                }
+
+                for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
+                    context_ptr->md_stage_1_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_1_count[i])) / division_factor_denum);
+                    context_ptr->md_stage_1_count[i] = MAX(context_ptr->md_stage_1_count[i], 1);
+                    context_ptr->md_stage_2_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_2_count[i])) / division_factor_denum);
+                    context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
+                }
+            }
+            else {
+                ////DIVIDE
+                uint8_t division_factor_num = 3;
+                uint8_t division_factor_denum = 4;
+                if (picture_control_set_ptr->enc_mode <= ENC_M0) {
+                    division_factor_num = 3;
+                    division_factor_denum = 4;
+                }
+                else if (picture_control_set_ptr->enc_mode <= ENC_M1) {
+                    division_factor_num = 2;
+                    division_factor_denum = 3;
+                }
+                else {
+                    division_factor_num = 1;
+                    division_factor_denum = 2;
+                }
+
+                for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
+                    context_ptr->md_stage_1_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_1_count[i])) / division_factor_denum);
+                    context_ptr->md_stage_1_count[i] = MAX(context_ptr->md_stage_1_count[i], 1);
+                    context_ptr->md_stage_2_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_2_count[i])) / division_factor_denum);
+                    context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
+                }
             }
 #endif
 #if INTRA_INTER_BALANCE

@@ -32,6 +32,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define NIC_SCALING             0
 #define INTRA_INTER_BALANCE     0
 #define M0_FEB21_ADOPTIONS      1
 #define COMB_SQ_WEIGHT_NSQ_REF  0
