@@ -1477,6 +1477,20 @@ void scale_rec_references(PictureControlSet *pcs_ptr,
                                      down_ref_pic_ptr->origin_x,
                                      down_ref_pic_ptr->origin_y);
 
+                    generate_padding(down_ref_pic_ptr->buffer_cb,
+                                     down_ref_pic_ptr->stride_cb,
+                                     down_ref_pic_ptr->width >> ss_x,
+                                     down_ref_pic_ptr->height >> ss_y,
+                                     down_ref_pic_ptr->origin_x >> ss_x,
+                                     down_ref_pic_ptr->origin_y >> ss_y);
+
+                    generate_padding(down_ref_pic_ptr->buffer_cr,
+                                     down_ref_pic_ptr->stride_cr,
+                                     down_ref_pic_ptr->width >> ss_x,
+                                     down_ref_pic_ptr->height >> ss_y,
+                                     down_ref_pic_ptr->origin_x >> ss_x,
+                                     down_ref_pic_ptr->origin_y >> ss_y);
+
                     printf("rescaled reference picture %d\n", (int)ref_picture_number);
 
                 }
