@@ -1759,7 +1759,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
             picture_control_set_ptr->gm_level = GM_FULL;
         else
-            picture_control_set_ptr->gm_level = GM_DOWN;
+            picture_control_set_ptr->gm_level = GM_TRAN_ONLY;
 #else
         picture_control_set_ptr->gm_level = picture_control_set_ptr->sc_content_detected ? GM_TRAN_ONLY : GM_DOWN;
 #endif
