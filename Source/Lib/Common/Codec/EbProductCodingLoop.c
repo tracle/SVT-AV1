@@ -2097,22 +2097,42 @@ void set_md_stage_counts(
                 context_ptr->md_stage_2_count[CAND_CLASS_1] = context_ptr->md_stage_2_count[CAND_CLASS_1] * 2;
             }
 
+#if M0_FEB23_ADOPTIONS
+            ////MULT
+            if (picture_control_set_ptr->enc_mode <= ENC_M0) {
+                uint8_t mult_factor_num = 5;
+                uint8_t mult_factor_denum = 4;
+                for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
+                    if (i == CAND_CLASS_0 || i == CAND_CLASS_6 || i == CAND_CLASS_7) {
+                        mult_factor_num = 3;
+                        mult_factor_denum = 2;
+                    }
+                    else {
+                        mult_factor_num = 5;
+                        mult_factor_denum = 4;
+                    }
+                    context_ptr->md_stage_1_count[i] = round((mult_factor_num * ((float)context_ptr->md_stage_1_count[i])) / mult_factor_denum);
+                    context_ptr->md_stage_2_count[i] = round((mult_factor_num * ((float)context_ptr->md_stage_2_count[i])) / mult_factor_denum);
+                }
+            }
+#endif
+
 #if NIC_SCALING
             if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected) {
                 ////DIVIDE
-                uint8_t division_factor_num = 7;
-                uint8_t division_factor_denum = 8;
+                uint8_t division_factor_num = 1;
+                uint8_t division_factor_denum = 1;
                 if (picture_control_set_ptr->enc_mode <= ENC_M0) {
-                    division_factor_num = 7;
-                    division_factor_denum = 8;
+                    division_factor_num = 1;
+                    division_factor_denum = 1;
                 }
                 else if (picture_control_set_ptr->enc_mode <= ENC_M1) {
-                    division_factor_num = 3;
-                    division_factor_denum = 4;
+                    division_factor_num = 1;
+                    division_factor_denum = 1;
                 }
                 else {
-                    division_factor_num = 2;
-                    division_factor_denum = 3;
+                    division_factor_num = 7;
+                    division_factor_denum = 8;
                 }
 
                 for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
@@ -2126,19 +2146,19 @@ void set_md_stage_counts(
             }
             else {
                 ////DIVIDE
-                uint8_t division_factor_num = 3;
-                uint8_t division_factor_denum = 4;
+                uint8_t division_factor_num = 1;
+                uint8_t division_factor_denum = 1;
                 if (picture_control_set_ptr->enc_mode <= ENC_M0) {
-                    division_factor_num = 3;
-                    division_factor_denum = 4;
+                    division_factor_num = 1;
+                    division_factor_denum = 1;
                 }
                 else if (picture_control_set_ptr->enc_mode <= ENC_M1) {
-                    division_factor_num = 2;
-                    division_factor_denum = 3;
+                    division_factor_num = 1;
+                    division_factor_denum = 1;
                 }
                 else {
-                    division_factor_num = 1;
-                    division_factor_denum = 2;
+                    division_factor_num = 3;
+                    division_factor_denum = 4;
                 }
 
                 for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
@@ -2171,31 +2191,37 @@ void set_md_stage_counts(
             #endif
                 CAND_CLASS_8, // Global
             */
-            if (context_ptr->md_inter_level >= 1) {
-                uint8_t division_factor_num = context_ptr->md_inter_level >= 1 ? 3 : 1;
-                uint8_t division_factor_denum = context_ptr->md_inter_level >= 1 ? 4 : 1;
-                for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
-                    if (i == CAND_CLASS_1 || CAND_CLASS_2) {
-                        context_ptr->md_stage_1_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_1_count[i])) / division_factor_denum);
-                        context_ptr->md_stage_1_count[i] = MAX(context_ptr->md_stage_1_count[i], 1);
-                        context_ptr->md_stage_2_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_2_count[i])) / division_factor_denum);
-                        context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
+#if M0_FEB23_ADOPTIONS
+            if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected) {
+#endif
+                if (context_ptr->md_inter_level >= 1) {
+                    uint8_t division_factor_num = context_ptr->md_inter_level >= 1 ? 3 : 1;
+                    uint8_t division_factor_denum = context_ptr->md_inter_level >= 1 ? 4 : 1;
+                    for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
+                        if (i == CAND_CLASS_1 || CAND_CLASS_2) {
+                            context_ptr->md_stage_1_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_1_count[i])) / division_factor_denum);
+                            context_ptr->md_stage_1_count[i] = MAX(context_ptr->md_stage_1_count[i], 1);
+                            context_ptr->md_stage_2_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_2_count[i])) / division_factor_denum);
+                            context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
+                        }
                     }
                 }
-            }
-            if (context_ptr->md_intra_level) {
-                uint8_t division_factor_num = context_ptr->md_intra_level == 1 ? 3 : context_ptr->md_intra_level == 2 ? 1 : 1;
-                uint8_t division_factor_denum = context_ptr->md_intra_level == 1 ? 4 : context_ptr->md_intra_level == 2 ? 2 : 1;
-                for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
-                    if (i == CAND_CLASS_0 || CAND_CLASS_6) {
-                        context_ptr->md_stage_1_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_1_count[i])) / division_factor_denum);
-                        context_ptr->md_stage_1_count[i] = MAX(context_ptr->md_stage_1_count[i], 1);
-                        context_ptr->md_stage_2_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_2_count[i])) / division_factor_denum);
-                        context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
+                if (context_ptr->md_intra_level) {
+                    uint8_t division_factor_num = context_ptr->md_intra_level == 1 ? 3 : context_ptr->md_intra_level == 2 ? 1 : 1;
+                    uint8_t division_factor_denum = context_ptr->md_intra_level == 1 ? 4 : context_ptr->md_intra_level == 2 ? 2 : 1;
+                    for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
+                        if (i == CAND_CLASS_0 || CAND_CLASS_6) {
+                            context_ptr->md_stage_1_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_1_count[i])) / division_factor_denum);
+                            context_ptr->md_stage_1_count[i] = MAX(context_ptr->md_stage_1_count[i], 1);
+                            context_ptr->md_stage_2_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_2_count[i])) / division_factor_denum);
+                            context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
+                        }
                     }
-                }
 
+                }
+#if M0_FEB23_ADOPTIONS
             }
+#endif
 #endif
         }
 #endif

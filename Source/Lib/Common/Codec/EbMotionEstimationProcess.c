@@ -334,7 +334,11 @@ EbErrorType signal_derivation_me_kernel_oq(
 #if M1_FEB4_ADOPTION  || M0_FEB4_ADOPTION
 #if M0_FEB12_ADOPTION
 #if FEB18_ADOPTIONS
+#if M0_FEB23_ADOPTIONS
+    context_ptr->me_context_ptr->h_pel_search_wind = H_PEL_SEARCH_WIND_2;
+#else
     context_ptr->me_context_ptr->h_pel_search_wind = MR_MODE ? H_PEL_SEARCH_WIND_2 : H_PEL_SEARCH_WIND_1;
+#endif
 #else
     context_ptr->me_context_ptr->h_pel_search_wind = sequence_control_set_ptr->input_resolution <= INPUT_SIZE_576p_RANGE_OR_LOWER ?
         H_PEL_SEARCH_WIND_2 : H_PEL_SEARCH_WIND_1;

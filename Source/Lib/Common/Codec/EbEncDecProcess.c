@@ -2957,6 +2957,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else {
             if (context_ptr->tx_search_level == TX_SEARCH_ENC_DEC)
                 context_ptr->tx_weight = MAX_MODE_COST;
+#if M0_FEB23_ADOPTIONS
+            else if (picture_control_set_ptr->enc_mode <= ENC_M0)
+                context_ptr->tx_weight = MAX_MODE_COST;
+#endif
 #if !M0_FEB22_ADOPTIONS
 #if M0_FEB4_ADOPTION
 #if SC_FEB12_ADOPTION
@@ -4006,7 +4010,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if SC_REDUCE_DIFF //md_exit_th
 #if M2_FEB14_ADOPTION
 #if M1_FEB22_ADOPTIONS
+#if M0_FEB23_ADOPTIONS
+    if (picture_control_set_ptr->enc_mode <= ENC_M0 && picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
+#else
     if (picture_control_set_ptr->enc_mode <= ENC_M0)
+#endif
 #else
     if (picture_control_set_ptr->enc_mode <= ENC_M1)
 #endif

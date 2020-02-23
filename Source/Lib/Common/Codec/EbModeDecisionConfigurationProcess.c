@@ -2727,10 +2727,12 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
             picture_control_set_ptr->parent_pcs_ptr->sc_content_detected == 0 && picture_control_set_ptr->slice_type != I_SLICE ? 1 : 0;
 #endif
 #endif
+#if !M0_FEB23_ADOPTIONS
 #if FEB18_ADOPTIONS
 #if MR_MODE
         picture_control_set_ptr->parent_pcs_ptr->pic_obmc_mode =
             picture_control_set_ptr->slice_type != I_SLICE || picture_control_set_ptr->parent_pcs_ptr->sc_content_detected == 1 ? 1 : 0;
+#endif
 #endif
 #endif
     }

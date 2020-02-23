@@ -32,11 +32,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define M0_FEB23_ADOPTIONS      1
 #define M2_FEB22_ADOPTION       1
 #define M1_FEB22_ADOPTIONS      1
 #define M0_FEB22_ADOPTIONS      1
 #define RESTRICT_NEW_NEAREST_FOR_CLOSE_REF 0 // Restrict new_nearest_ new_near to be done only for the closest ref_pic
-#define NIC_SCALING             0
+#define NIC_SCALING             1
 #define EARLY_EXIT_ABS_TH       0
 #if EARLY_EXIT_ABS_TH
 #define  EXIT_BRANCH_TH         5
@@ -3899,10 +3900,17 @@ static const uint16_t min_search_area_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_
     {
 #if M0_ME_ADOPT
 #if M0_FEB22_ADOPTIONS
+#if M0_FEB23_ADOPTIONS
+        {  128,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64},
+        {  256,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64},
+        {  384,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64},
+        {  384,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64}
+#else
         {  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64},
         {  128,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64},
         {  192,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64},
         {  192,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64}
+#endif
 #else
         {  32,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64},
         {  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64},
@@ -3934,10 +3942,17 @@ static const uint16_t min_search_area_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX
     {
 #if M0_ME_ADOPT
 #if M0_FEB22_ADOPTIONS
+#if M0_FEB23_ADOPTIONS
+        {  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64},
+        {  128,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64},
+        {  192,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64},
+        {  192,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64}
+#else
         {  32,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64},
         {  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64},
         {  96,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64},
         {  96,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64}
+#endif
 #else
         {  16,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64},
         {  32,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64},
