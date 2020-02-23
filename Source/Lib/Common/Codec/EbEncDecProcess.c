@@ -3337,7 +3337,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
 #endif
 #if FEB14_ADOPTIONS
+#if M1_FEB22_ADOPTIONS
+            if (picture_control_set_ptr->enc_mode <= ENC_M0)
+#else
             if (picture_control_set_ptr->enc_mode <= ENC_M1)
+#endif
 #else
             if (picture_control_set_ptr->enc_mode <= ENC_M0)
 #endif
@@ -4001,7 +4005,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if M2_ADOPTIONS
 #if SC_REDUCE_DIFF //md_exit_th
 #if M2_FEB14_ADOPTION
+#if M1_FEB22_ADOPTIONS
+    if (picture_control_set_ptr->enc_mode <= ENC_M0)
+#else
     if (picture_control_set_ptr->enc_mode <= ENC_M1)
+#endif
 #else
     if (picture_control_set_ptr->enc_mode <= ENC_M3)
 #endif
@@ -5018,7 +5026,7 @@ void derive_start_end_depth(
     *e_depth = MIN(*e_depth, 1);
 #endif
 }
-#if TEST5
+#if TEST5 || FEB19_PD0_TH
 static uint64_t generate_best_part_cost(
     SequenceControlSet  *sequence_control_set_ptr,
     PictureControlSet   *picture_control_set_ptr,
@@ -5248,7 +5256,9 @@ static void perform_pred_depth_refinement(
                                     &e_depth,
                                     blk_geom);
 #endif
+#if TEST5
                             }
+#endif
 #if TEST_PIC_MULTI_PASS_PD_MODE_4
                             s_depth = 0;
                             e_depth = 0;

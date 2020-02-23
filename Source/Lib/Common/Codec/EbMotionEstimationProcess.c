@@ -312,7 +312,11 @@ EbErrorType signal_derivation_me_kernel_oq(
 #if JAN31_M2
 #if M1_FEB12_ADOPTION
 #if FEB14_ADOPTIONS
+#if M1_FEB22_ADOPTIONS
+    context_ptr->me_context_ptr->switched_half_pel_mode = enc_mode <= ENC_M0 ? 0 : 1;
+#else
     context_ptr->me_context_ptr->switched_half_pel_mode = enc_mode <= ENC_M1 ? 0 : 1;
+#endif
 #else
     context_ptr->me_context_ptr->switched_half_pel_mode = enc_mode <= ENC_M0 ? 0 : 1;
 #endif
@@ -788,7 +792,11 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
 #if M1_ADOPTIONS
 #if M1_FEB12_ADOPTION
 #if FEB14_ADOPTIONS
+#if M1_FEB22_ADOPTIONS
+    context_ptr->me_context_ptr->switched_half_pel_mode = enc_mode <= ENC_M0 ? 0 : 1;
+#else
     context_ptr->me_context_ptr->switched_half_pel_mode = enc_mode <= ENC_M1 ? 0 : 1;
+#endif
 #else
     context_ptr->me_context_ptr->switched_half_pel_mode = enc_mode <= ENC_M0 ? 0 : 1;
 #endif

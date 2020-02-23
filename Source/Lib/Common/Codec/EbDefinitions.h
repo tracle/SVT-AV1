@@ -32,6 +32,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define M2_FEB22_ADOPTION       1
+#define M1_FEB22_ADOPTIONS      1
 #define M0_FEB22_ADOPTIONS      1
 #define RESTRICT_NEW_NEAREST_FOR_CLOSE_REF 0 // Restrict new_nearest_ new_near to be done only for the closest ref_pic
 #define NIC_SCALING             0
@@ -70,7 +72,7 @@ extern "C" {
 #define DISABLE_PD1                 1
 #define RESTRICT_DEPTH_TO_BE_TESTED 1
 #endif
-#if M2_FEB14_ADOPTION
+#if M2_FEB14_ADOPTION && !M2_FEB22_ADOPTION
 #define TEST5    1
 #else
 #define TEST5    0
