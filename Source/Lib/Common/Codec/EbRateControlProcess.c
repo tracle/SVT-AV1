@@ -4323,7 +4323,7 @@ static int adaptive_qindex_calc(
     return q;
 }
 #if QPS_CHANGE_P2
-#define DEFAULT_KF_BOOST 2300
+#define DEFAULT_KF_BOOST 2700
 #define DEFAULT_GF_BOOST 1350 
 static int cqp_qindex_calc(
     PictureControlSet         *picture_control_set_ptr,
