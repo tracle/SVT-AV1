@@ -2795,6 +2795,10 @@ void inject_new_nearest_new_comb_candidates(
         if (ref_idx_0 > context_ptr->md_max_ref_count - 1 || ref_idx_1 > context_ptr->md_max_ref_count - 1)
             return;
 #endif
+#if RESTRICT_NEW_NEAREST_FOR_CLOSE_REF
+        if (ref_idx_0 || ref_idx_1)
+            return;
+#endif
 
         if (rf[1] != NONE_FRAME)
         {

@@ -33,12 +33,13 @@
 extern "C" {
 #endif
 
+#define RESTRICT_NEW_NEAREST_FOR_CLOSE_REF 0 // Restrict new_nearest_ new_near to be done only for the closest ref_pic
 #define NIC_SCALING             0
 #define EARLY_EXIT_ABS_TH       0
 #if EARLY_EXIT_ABS_TH
 #define  EXIT_BRANCH_TH         5
 #endif
-#define INTRA_INTER_BALANCE     1
+#define INTRA_INTER_BALANCE     1 // ME-based NICs scaling
 #define M0_FEB21_ADOPTIONS      1
 #define COMB_SQ_WEIGHT_NSQ_REF  0
 #define FEB19_PD0_TH            1
