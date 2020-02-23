@@ -38,7 +38,7 @@ extern "C" {
 #if EARLY_EXIT_ABS_TH
 #define  EXIT_BRANCH_TH         5
 #endif
-#define INTRA_INTER_BALANCE     0
+#define INTRA_INTER_BALANCE     1
 #define M0_FEB21_ADOPTIONS      1
 #define COMB_SQ_WEIGHT_NSQ_REF  0
 #define FEB19_PD0_TH            1

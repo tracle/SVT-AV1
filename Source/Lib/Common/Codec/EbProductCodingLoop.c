@@ -2225,8 +2225,8 @@ void set_md_stage_counts(
     CAND_CLASS_8, // Global
 */
             if (context_ptr->md_inter_level >= 1) {
-                 uint8_t division_factor_num      =  context_ptr->md_intra_level >= 1 ? 3 : 1;
-                 uint8_t division_factor_denum    =  context_ptr->md_intra_level >= 1 ? 4 : 1;
+                 uint8_t division_factor_num      =  context_ptr->md_inter_level >= 1 ? 3 : 1;
+                 uint8_t division_factor_denum    =  context_ptr->md_inter_level >= 1 ? 4 : 1;
                 for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
                     if (i == CAND_CLASS_1 || CAND_CLASS_2) {
                         context_ptr->md_stage_1_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_1_count[i])) / division_factor_denum);
@@ -11975,28 +11975,20 @@ EbErrorType signal_derivation_block(
              const uint8_t list0_ref_index = me_block_results_ptr->ref_idx_l0;
              const uint8_t list1_ref_index = me_block_results_ptr->ref_idx_l1;
              const uint32_t distortion = me_block_results_ptr->distortion;
-
-             const uint32_t very_low_err_th = 100; // allowed error multiplied by 100
-             const uint32_t low_err_th = 110; // allowed error multiplied by 100
+             const uint32_t very_low_err_th = 110; // allowed error multiplied by 100
              const uint32_t very_high_err_th = 400; // allowed error multiplied by 100
-             const uint32_t high_err_th = 200; // allowed error multiplied by 100
+             //const uint32_t low_err_th = 110; // allowed error multiplied by 100
+             //const uint32_t high_err_th = 200; // allowed error multiplied by 100
              const uint32_t very_low_th = (context_ptr->blk_geom->bheight * context_ptr->blk_geom->bwidth * very_low_err_th) / 100;
-             const uint32_t low_th = (context_ptr->blk_geom->bheight * context_ptr->blk_geom->bwidth * low_err_th) / 100;
-
+             //const uint32_t low_th = (context_ptr->blk_geom->bheight * context_ptr->blk_geom->bwidth * low_err_th) / 100;
              const uint32_t very_high_th = (context_ptr->blk_geom->bheight * context_ptr->blk_geom->bwidth * very_high_err_th) / 100;
-             const uint32_t high_th = (context_ptr->blk_geom->bheight * context_ptr->blk_geom->bwidth * high_err_th) / 100;
+             //const uint32_t high_th = (context_ptr->blk_geom->bheight * context_ptr->blk_geom->bwidth * high_err_th) / 100;
 
-             if (distortion < very_low_th) {
-                 context_ptr->md_intra_level = 2;
-             }
-             else if (distortion < low_th) {
+             if (distortion < very_low_th && picture_control_set_ptr->parent_pcs_ptr->sc_content_detected) {
                  context_ptr->md_intra_level = 1;
              }
-             else if (distortion > high_th) {
-                 context_ptr->md_inter_level = 0;
-             }
-             else if (distortion > very_high_th) {
-                 context_ptr->md_inter_level = 0;
+             else if (distortion > very_high_th && !picture_control_set_ptr->parent_pcs_ptr->sc_content_detected) {
+                 context_ptr->md_inter_level = 1;
              }
              //printf("intra %d\tinter %d\n", context_ptr->md_intra_level, context_ptr->md_inter_level);
 #if 0
