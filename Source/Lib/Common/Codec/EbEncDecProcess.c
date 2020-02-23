@@ -2957,6 +2957,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else {
             if (context_ptr->tx_search_level == TX_SEARCH_ENC_DEC)
                 context_ptr->tx_weight = MAX_MODE_COST;
+#if !M0_FEB22_ADOPTIONS
 #if M0_FEB4_ADOPTION
 #if SC_FEB12_ADOPTION
             else if (picture_control_set_ptr->enc_mode <= ENC_M0 && picture_control_set_ptr->parent_pcs_ptr->sc_content_detected == 0)
@@ -2964,6 +2965,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             else if (picture_control_set_ptr->enc_mode <= ENC_M0)
 #endif
                 context_ptr->tx_weight = MAX_MODE_COST;
+#endif
 #endif
             else if (picture_control_set_ptr->enc_mode <= ENC_M5)
                 context_ptr->tx_weight = FC_SKIP_TX_SR_TH025;
@@ -4328,12 +4330,34 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if  M1_FEB4_ADOPTION   || M0_FEB4_ADOPTION
     // Set pred ME full search area
     if (context_ptr->pd_pass == PD_PASS_0) {
+#if M0_FEB22_ADOPTIONS
+        if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected) {
+            context_ptr->full_pel_ref_window_width_th = FULL_PEL_REF_WINDOW_WIDTH_7;
+            context_ptr->full_pel_ref_window_height_th = FULL_PEL_REF_WINDOW_WIDTH_7;
+        }
+        else {
+            context_ptr->full_pel_ref_window_width_th = FULL_PEL_REF_WINDOW_WIDTH_15;
+            context_ptr->full_pel_ref_window_height_th = FULL_PEL_REF_WINDOW_HEIGHT_15;
+        }
+#else
         context_ptr->full_pel_ref_window_width_th  =FULL_PEL_REF_WINDOW_WIDTH_15 ;
         context_ptr->full_pel_ref_window_height_th =FULL_PEL_REF_WINDOW_HEIGHT_15;
+#endif
     }
     else if (context_ptr->pd_pass == PD_PASS_1) {
-        context_ptr->full_pel_ref_window_width_th  = FULL_PEL_REF_WINDOW_WIDTH_15 ;
+#if M0_FEB22_ADOPTIONS
+        if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected) {
+            context_ptr->full_pel_ref_window_width_th = FULL_PEL_REF_WINDOW_WIDTH_7;
+            context_ptr->full_pel_ref_window_height_th = FULL_PEL_REF_WINDOW_WIDTH_7;
+        }
+        else {
+            context_ptr->full_pel_ref_window_width_th = FULL_PEL_REF_WINDOW_WIDTH_15;
+            context_ptr->full_pel_ref_window_height_th = FULL_PEL_REF_WINDOW_HEIGHT_15;
+        }
+#else
+        context_ptr->full_pel_ref_window_width_th = FULL_PEL_REF_WINDOW_WIDTH_15;
         context_ptr->full_pel_ref_window_height_th = FULL_PEL_REF_WINDOW_HEIGHT_15;
+#endif
     }
 #else
     // Set pred ME full search area
@@ -4353,8 +4377,19 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if PME_SEARCH_AREA_TUNE
 #if M1_FEB4_ADOPTION   || M0_FEB4_ADOPTION
 #if M2_FEB14_ADOPTION
+#if M0_FEB22_ADOPTIONS
+        if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected) {
+            context_ptr->full_pel_ref_window_width_th = FULL_PEL_REF_WINDOW_WIDTH_7;
+            context_ptr->full_pel_ref_window_height_th = FULL_PEL_REF_WINDOW_WIDTH_7;
+        }
+        else {
+            context_ptr->full_pel_ref_window_width_th = picture_control_set_ptr->enc_mode <= ENC_M1 ? FULL_PEL_REF_WINDOW_WIDTH_15 : FULL_PEL_REF_WINDOW_WIDTH_7;
+            context_ptr->full_pel_ref_window_height_th = picture_control_set_ptr->enc_mode <= ENC_M1 ? FULL_PEL_REF_WINDOW_HEIGHT_15 : FULL_PEL_REF_WINDOW_HEIGHT_5;
+        }
+#else
         context_ptr->full_pel_ref_window_width_th  = picture_control_set_ptr->enc_mode <= ENC_M1 ? FULL_PEL_REF_WINDOW_WIDTH_15 : FULL_PEL_REF_WINDOW_WIDTH_7;
         context_ptr->full_pel_ref_window_height_th = picture_control_set_ptr->enc_mode <= ENC_M1 ? FULL_PEL_REF_WINDOW_HEIGHT_15 : FULL_PEL_REF_WINDOW_HEIGHT_5;
+#endif
 #else
         context_ptr->full_pel_ref_window_width_th  = picture_control_set_ptr->enc_mode <= ENC_M3 ? FULL_PEL_REF_WINDOW_WIDTH_15 : FULL_PEL_REF_WINDOW_WIDTH_7;
         context_ptr->full_pel_ref_window_height_th = picture_control_set_ptr->enc_mode <= ENC_M3 ? FULL_PEL_REF_WINDOW_HEIGHT_15 : FULL_PEL_REF_WINDOW_HEIGHT_5;
