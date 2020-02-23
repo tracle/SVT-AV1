@@ -2971,6 +2971,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 context_ptr->tx_weight = MAX_MODE_COST;
 #endif
 #endif
+#if M2_FEB22_ADOPTION
+            else if (picture_control_set_ptr->enc_mode <= ENC_M1)
+                context_ptr->tx_weight = FC_SKIP_TX_SR_TH025;
+            else
+                context_ptr->tx_weight = FC_SKIP_TX_SR_TH010;
+#else
             else if (picture_control_set_ptr->enc_mode <= ENC_M5)
                 context_ptr->tx_weight = FC_SKIP_TX_SR_TH025;
             else {
@@ -2979,6 +2985,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 else
                     context_ptr->tx_weight = FC_SKIP_TX_SR_TH010;
             }
+#endif
         }
 #else
         if (context_ptr->tx_search_level == TX_SEARCH_ENC_DEC)
@@ -4011,7 +4018,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if M2_FEB14_ADOPTION
 #if M1_FEB22_ADOPTIONS
 #if M0_FEB23_ADOPTIONS
-    if (picture_control_set_ptr->enc_mode <= ENC_M0 && picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
+    if (MR_MODE)
+        context_ptr->md_exit_th = 0;
+    else if (picture_control_set_ptr->enc_mode <= ENC_M0 && picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
 #else
     if (picture_control_set_ptr->enc_mode <= ENC_M0)
 #endif
