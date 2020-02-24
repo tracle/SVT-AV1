@@ -11844,7 +11844,19 @@ void interintra_class_pruning_2(ModeDecisionContext *context_ptr, uint64_t best_
             if (cand_class_it != CAND_CLASS_0)
 #endif
 #if ENHANCED_M0_SETTINGS
+#if SQ_NSQ_AGRESSIVE_MDS_2_CLASS_PRUNING || SQ_ONLY_AGRESSIVE_MDS_2_CLASS_PRUNING || NSQ_ONLY_AGRESSIVE_MDS_2_CLASS_PRUNING
+                uint64_t md_stage_2_class_prune_th = context_ptr->md_stage_2_class_prune_th;
+#if SQ_NSQ_AGRESSIVE_MDS_2_CLASS_PRUNING 
+            md_stage_2_class_prune_th = MAX(0,md_stage_2_class_prune_th - 10);
+#elif SQ_ONLY_AGRESSIVE_MDS_2_CLASS_PRUNING
+            md_stage_2_class_prune_th = (context_ptr->blk_geom->shape == PART_N) ? MAX(0, md_stage_2_class_prune_th - 10) : md_stage_2_class_prune_th;
+#elif NSQ_ONLY_AGRESSIVE_MDS_2_CLASS_PRUNING
+            md_stage_2_class_prune_th = (context_ptr->blk_geom->shape != PART_N) ? MAX(0, md_stage_2_class_prune_th - 10) : md_stage_2_class_prune_th;
+#endif
+            if (best_md_stage_cost && class_best_cost && ((((class_best_cost - best_md_stage_cost) * 100) / best_md_stage_cost) > md_stage_2_class_prune_th)) {
+#else
             if (best_md_stage_cost && class_best_cost && ((((class_best_cost - best_md_stage_cost) * 100) / best_md_stage_cost) > context_ptr->md_stage_2_class_prune_th)) {
+#endif
 #else
             if ((((class_best_cost - best_md_stage_cost) * 100) / best_md_stage_cost) > context_ptr->md_stage_2_class_prune_th) {
 #endif
