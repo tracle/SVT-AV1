@@ -511,6 +511,17 @@ extern "C" {
         uint8_t best_list_idx;
         uint8_t best_ref_idx;
 #endif
+#if TF_SUBPEL_SEARCH
+        signed short tf_mv_16x16_x[16];
+        signed short tf_mv_16x16_y[16];      
+        int tf_16x16_block_error[16];
+
+        signed short tf_mv_32x32_x[4];
+        signed short tf_mv_32x32_y[4];
+        int tf_32x32_block_error[4];
+
+        int tf_32x32_block_split[4];
+#endif
     } MeContext;
 
     typedef uint64_t(*EB_ME_DISTORTION_FUNC)(

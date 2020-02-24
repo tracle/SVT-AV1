@@ -40,6 +40,17 @@ extern "C" {
 #define OPT_REC_ME              0
 #define OPT_REC_SUBP            0
 
+
+// HG
+#define TF_SUBPEL_SEARCH         1 
+#if TF_SUBPEL_SEARCH
+#define USE_32x32                1
+#endif
+
+#define SEARCH_REGULAR           1
+#define SEARCH_15x15             1
+#define SEARCH_15x15_SUB_PEL_OFF 1 
+
 #define CORE_LIMIT 0
 #define M1_FEB4_ADOPTION                   1
 #define M0_FEB4_ADOPTION                   1

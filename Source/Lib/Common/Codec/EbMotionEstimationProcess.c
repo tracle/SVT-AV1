@@ -761,6 +761,10 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
    // context_ptr->me_context_ptr->search_area_width = 128; 
    // context_ptr->me_context_ptr->search_area_height = 128;
 #endif
+
+#if SEARCH_15x15_SUB_PEL_OFF
+    context_ptr->me_context_ptr->use_subpel_flag = 0;
+#endif
     // Set fractional search model
     // 0: search all blocks
     // 1: selective based on Full-Search SAD & MV.
