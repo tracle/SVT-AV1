@@ -265,6 +265,9 @@ extern "C" {
 #define ENABLE_NEW_NN_SC             1 // SC ONLY
 
 /*****************************************/      
+#define PME_OFF_PD1 0
+#define PME_MRP_BLIND 0
+
 #define SQ_NSQ_AGRESSIVE_MDS_2_CLASS_PRUNING   0
 #define SQ_ONLY_AGRESSIVE_MDS_2_CLASS_PRUNING  0
 #define NSQ_ONLY_AGRESSIVE_MDS_2_CLASS_PRUNING 0

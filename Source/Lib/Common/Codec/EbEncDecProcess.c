@@ -3521,7 +3521,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         if (context_ptr->pd_pass == PD_PASS_0)
             context_ptr->predictive_me_level = 0;
         else if (context_ptr->pd_pass == PD_PASS_1)
+#if PME_OFF_PD1
+            context_ptr->predictive_me_level = 0;
+#else
             context_ptr->predictive_me_level = 2;
+#endif
     else
 #endif
         if (sequence_control_set_ptr->static_config.pred_me == DEFAULT) {

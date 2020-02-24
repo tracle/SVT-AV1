@@ -4597,6 +4597,11 @@ void predictive_me_search(
             full_pel_ref_window_height_th = MIN((full_pel_ref_window_height_th * dist), 64);
 #endif
 
+#if PME_MRP_BLIND
+            if (ref_idx > 0)
+                continue;
+#endif
+
 #if MULTI_PASS_PD
             if (ref_idx > context_ptr->md_max_ref_count - 1)
                 continue;
