@@ -2104,18 +2104,42 @@ void set_md_stage_counts(
                 uint8_t mult_factor_denum = 4;
                 for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
                     if (i == CAND_CLASS_0 || i == CAND_CLASS_6 || i == CAND_CLASS_7) {
-                        mult_factor_num = 3;
-                        mult_factor_denum = 2;
+                        // INTRA scaling
+                        if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected) {
+                            mult_factor_num = 5;
+                            mult_factor_denum = 4;
+                        }
+                        else {
+                            mult_factor_num = 1;
+                            mult_factor_denum = 1;
+                        }
                     }
                     else {
-                        mult_factor_num = 5;
-                        mult_factor_denum = 4;
+                        // INTER scaling
+                        if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected) {
+                            mult_factor_num = 1;
+                            mult_factor_denum = 1;
+                        }
+                        else {
+                            mult_factor_num = 5;
+                            mult_factor_denum = 4;
+                        }
                     }
                     context_ptr->md_stage_1_count[i] = round((mult_factor_num * ((float)context_ptr->md_stage_1_count[i])) / mult_factor_denum);
                     context_ptr->md_stage_2_count[i] = round((mult_factor_num * ((float)context_ptr->md_stage_2_count[i])) / mult_factor_denum);
                 }
             }
 #endif
+            if (!(picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag)) {
+                uint8_t mult_factor_num = 4;
+                uint8_t mult_factor_denum = 3;
+                for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
+                    if (i != CAND_CLASS_0 || i != CAND_CLASS_6 || i != CAND_CLASS_7) {
+                        context_ptr->md_stage_1_count[i] = round((mult_factor_num * ((float)context_ptr->md_stage_1_count[i])) / mult_factor_denum);
+                        context_ptr->md_stage_2_count[i] = round((mult_factor_num * ((float)context_ptr->md_stage_2_count[i])) / mult_factor_denum);
+                    }
+                }
+            }
 
 #if NIC_SCALING
             if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected) {
