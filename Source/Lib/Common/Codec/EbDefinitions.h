@@ -37,6 +37,15 @@ extern "C" {
 #define DISABLE_HME_REF_DISTANCE           0
 #define DISABLE_SPARCE_SEARCH              0
 
+#define MRP1D_COMPOUND                 0
+#define MAX_REF_DISTANCE_COMPOUND      1//1: only first ref     4 : keep all
+
+#define MRP1D_OBMC                     0
+#define MAX_REF_DISTANCE_OBMC          1//1: only first ref     4 : keep all
+
+#define MRP1D_WARP                     0
+#define MAX_REF_DISTANCE_WARP          1 //1: only first ref     4 : keep all
+
 #define M0_FEB23_ADOPTIONS      1
 #define M2_FEB22_ADOPTION       1
 #define M1_FEB22_ADOPTIONS      1

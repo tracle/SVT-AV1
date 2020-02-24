@@ -1596,6 +1596,11 @@ void Bipred3x3CandidatesInjection(
             context_ptr->variance_ready = 0;
             for (cur_type = MD_COMP_AVG; cur_type <= tot_comp_types; cur_type++)
             {
+
+#if MRP1D_COMPOUND
+                if (list0_ref_index > MAX_REF_DISTANCE_COMPOUND - 1 && list1_ref_index > MAX_REF_DISTANCE_COMPOUND - 1)
+                    if (cur_type > MD_COMP_DIST) continue;
+#endif
                 if (cur_type == MD_COMP_WEDGE && wedge_params_lookup[context_ptr->blk_geom->bsize].bits == 0) continue;
                 // If two predictors are very similar, skip wedge compound mode search
                 if (context_ptr->variance_ready)
@@ -1743,6 +1748,12 @@ void Bipred3x3CandidatesInjection(
                 context_ptr->variance_ready = 0;
                 for (cur_type = MD_COMP_AVG; cur_type <= tot_comp_types; cur_type++)
                 {
+
+#if MRP1D_COMPOUND
+                    if (list0_ref_index > MAX_REF_DISTANCE_COMPOUND - 1 && list1_ref_index > MAX_REF_DISTANCE_COMPOUND - 1)
+                        if (cur_type > MD_COMP_DIST) continue;
+#endif
+
                     if (cur_type == MD_COMP_WEDGE && wedge_params_lookup[context_ptr->blk_geom->bsize].bits == 0) continue;
                     // If two predictors are very similar, skip wedge compound mode search
                     if (context_ptr->variance_ready)
@@ -2327,6 +2338,12 @@ void inject_mvp_candidates_II(
 #if OBMC_OPT3
             is_obmc_allowed = 0;
 #endif
+
+#if MRP1D_OBMC
+            if (ref_idx > MAX_REF_DISTANCE_OBMC - 1 )
+                is_obmc_allowed = 0;
+#endif
+
 #if INTRA_INTER_BALANCE
             is_obmc_allowed = context_ptr->md_inter_level == 2 ? 0 : is_obmc_allowed;
 #endif
@@ -2465,6 +2482,12 @@ void inject_mvp_candidates_II(
             #if OBMC_OPT3
             is_obmc_allowed = 0;
 #endif
+
+#if MRP1D_OBMC
+            if (ref_idx > MAX_REF_DISTANCE_OBMC - 1)
+                is_obmc_allowed = 0;
+#endif
+
 #if INTRA_INTER_BALANCE
             is_obmc_allowed = context_ptr->md_inter_level == 2 ? 0 : is_obmc_allowed;
 #endif
@@ -2831,6 +2854,12 @@ void inject_new_nearest_new_comb_candidates(
                     context_ptr->variance_ready = 0;
                     for (cur_type = MD_COMP_AVG; cur_type <= tot_comp_types; cur_type++)
                     {
+
+
+#if MRP1D_COMPOUND
+                        if (ref_idx_0 > MAX_REF_DISTANCE_COMPOUND -1 && ref_idx_1 > MAX_REF_DISTANCE_COMPOUND - 1)
+                            if (cur_type > MD_COMP_DIST ) continue;
+#endif
                         if (cur_type == MD_COMP_WEDGE && wedge_params_lookup[context_ptr->blk_geom->bsize].bits == 0) continue;
                         // If two predictors are very similar, skip wedge compound mode search
                         if (context_ptr->variance_ready)
@@ -2946,6 +2975,12 @@ void inject_new_nearest_new_comb_candidates(
                     context_ptr->variance_ready = 0;
                     for (cur_type = MD_COMP_AVG; cur_type <= tot_comp_types; cur_type++)
                     {
+
+#if MRP1D_COMPOUND
+                        if (ref_idx_0 > MAX_REF_DISTANCE_COMPOUND - 1 && ref_idx_1 > MAX_REF_DISTANCE_COMPOUND - 1)
+                            if (cur_type > MD_COMP_DIST) continue;
+#endif
+
                         if (cur_type == MD_COMP_WEDGE && wedge_params_lookup[context_ptr->blk_geom->bsize].bits == 0) continue;
                         // If two predictors are very similar, skip wedge compound mode search
                         if (context_ptr->variance_ready)
@@ -3066,6 +3101,12 @@ void inject_new_nearest_new_comb_candidates(
                         if (inj_mv){
                             context_ptr->variance_ready = 0 ;
                             for (cur_type = MD_COMP_AVG; cur_type <= tot_comp_types; cur_type++){
+
+#if MRP1D_COMPOUND
+                                if (ref_idx_0 > MAX_REF_DISTANCE_COMPOUND - 1 && ref_idx_1 > MAX_REF_DISTANCE_COMPOUND - 1)
+                                    if (cur_type > MD_COMP_DIST) continue;
+#endif
+
                                 // If two predictors are very similar, skip wedge compound mode search
                                 if (context_ptr->variance_ready)
                                     if (context_ptr->prediction_mse < 8 || (!have_newmv_in_inter_mode(NEW_NEARMV) && context_ptr->prediction_mse < 64))
@@ -3159,6 +3200,12 @@ void inject_new_nearest_new_comb_candidates(
 
                        context_ptr->variance_ready = 0 ;
                        for (cur_type = MD_COMP_AVG; cur_type <= tot_comp_types ; cur_type++){
+
+#if MRP1D_COMPOUND
+                           if (ref_idx_0 > MAX_REF_DISTANCE_COMPOUND - 1 && ref_idx_1 > MAX_REF_DISTANCE_COMPOUND - 1)
+                               if (cur_type > MD_COMP_DIST) continue;
+#endif
+
                            // If two predictors are very similar, skip wedge compound mode search
                            if (context_ptr->variance_ready)
                                if (context_ptr->prediction_mse < 8 || (!have_newmv_in_inter_mode(NEAR_NEWMV) && context_ptr->prediction_mse  < 64))
@@ -3259,6 +3306,13 @@ void inject_warped_motion_candidates(
             if (ref_idx > context_ptr->md_max_ref_count - 1)
                 continue;
 #endif
+
+#if MRP1D_WARP
+            if (ref_idx > MAX_REF_DISTANCE_WARP - 1)
+                continue;
+#endif
+            
+
             //NEAREST
             int16_t to_inject_mv_x = context_ptr->cu_ptr->ref_mvs[frame_type][0].as_mv.col;
             int16_t to_inject_mv_y = context_ptr->cu_ptr->ref_mvs[frame_type][0].as_mv.row;
@@ -3421,6 +3475,12 @@ void inject_warped_motion_candidates(
             if (list0_ref_index > context_ptr->md_max_ref_count - 1)
                 continue;
 #endif
+
+#if MRP1D_WARP
+            if (list0_ref_index > MAX_REF_DISTANCE_WARP - 1)
+                continue;
+#endif
+
 #if ME_MV_UPGRADE_LOSSLESS
             int16_t to_inject_mv_x = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][list0_ref_index][0];
             int16_t to_inject_mv_y = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][list0_ref_index][1];
@@ -3523,6 +3583,11 @@ void inject_warped_motion_candidates(
             if (list1_ref_index > context_ptr->md_max_ref_count - 1)
                 continue;
 #endif
+#if MRP1D_WARP
+            if (list1_ref_index > MAX_REF_DISTANCE_WARP - 1)
+                continue;
+#endif
+
 #if ME_MV_UPGRADE_LOSSLESS
             int16_t to_inject_mv_x = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_1][list1_ref_index][0];
             int16_t to_inject_mv_y = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_1][list1_ref_index][1];
@@ -4263,6 +4328,12 @@ void inject_new_candidates(
 #if OBMC_OPT3
             is_obmc_allowed = 0;
 #endif
+
+#if MRP1D_OBMC
+            if (list0_ref_index > MAX_REF_DISTANCE_OBMC - 1)
+                is_obmc_allowed = 0;
+#endif
+
 #if INTRA_INTER_BALANCE
             is_obmc_allowed = context_ptr->md_inter_level == 2 ? 0 : is_obmc_allowed;
 #endif
@@ -4470,6 +4541,12 @@ void inject_new_candidates(
 #if OBMC_OPT3
             is_obmc_allowed = 0;
 #endif
+
+#if MRP1D_OBMC
+            if (list1_ref_index > MAX_REF_DISTANCE_OBMC - 1)
+                is_obmc_allowed = 0;
+#endif
+
 #if INTRA_INTER_BALANCE
             is_obmc_allowed = context_ptr->md_inter_level == 2 ? 0 : is_obmc_allowed;
 #endif
@@ -4671,6 +4748,12 @@ void inject_new_candidates(
                         context_ptr->variance_ready = 0;
                         for (cur_type = MD_COMP_AVG; cur_type <= tot_comp_types; cur_type++)
                         {
+
+#if MRP1D_COMPOUND
+                            if (list0_ref_index > MAX_REF_DISTANCE_COMPOUND - 1 && list1_ref_index > MAX_REF_DISTANCE_COMPOUND - 1)
+                                if (cur_type > MD_COMP_DIST) continue;
+#endif
+
                             if (cur_type == MD_COMP_WEDGE && wedge_params_lookup[context_ptr->blk_geom->bsize].bits == 0) continue;
                             // If two predictors are very similar, skip wedge compound mode search
                             if (context_ptr->variance_ready)
@@ -4838,6 +4921,12 @@ void inject_new_candidates(
 #if OBMC_OPT3
             is_obmc_allowed = 0;
 #endif
+#if MRP1D_OBMC
+            if (ref_pic_index > MAX_REF_DISTANCE_OBMC - 1)
+                is_obmc_allowed = 0;
+#endif
+
+
 #if INTRA_INTER_BALANCE
             is_obmc_allowed = context_ptr->md_inter_level == 2 ? 0 : is_obmc_allowed;
 #endif
@@ -4989,6 +5078,12 @@ void inject_new_candidates(
 #if OBMC_OPT3
             is_obmc_allowed = 0;
 #endif
+
+#if MRP1D_OBMC
+            if (ref_pic_index > MAX_REF_DISTANCE_OBMC - 1)
+                is_obmc_allowed = 0;
+#endif
+
 #if INTRA_INTER_BALANCE
             is_obmc_allowed = context_ptr->md_inter_level == 2 ? 0 : is_obmc_allowed;
 #endif
@@ -5141,6 +5236,11 @@ void inject_new_candidates(
                                     context_ptr->variance_ready = 0;
                                     for (cur_type = MD_COMP_AVG; cur_type <= tot_comp_types; cur_type++)
                                     {
+
+#if MRP1D_COMPOUND
+                                        if (ref_pic_index_l0 > MAX_REF_DISTANCE_COMPOUND - 1 && ref_pic_index_l1 > MAX_REF_DISTANCE_COMPOUND - 1)
+                                            if (cur_type > MD_COMP_DIST) continue;
+#endif
                                         // If two predictors are very similar, skip wedge compound mode search
                                         if (context_ptr->variance_ready)
                                             if (context_ptr->prediction_mse < 8 || (!have_newmv_in_inter_mode(NEW_NEWMV) && context_ptr->prediction_mse < 64))
