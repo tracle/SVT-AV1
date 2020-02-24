@@ -32,6 +32,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define MIN_ME_8x8_MAX_ME_16x16            0
+#define ENABLE_HME_FOR_NON_COMPLETE_SB     0
+#define DISABLE_HME_REF_DISTANCE           0
+#define DISABLE_SPARCE_SEARCH              0
+
 #define M0_FEB23_ADOPTIONS      1
 #define M2_FEB22_ADOPTION       1
 #define M1_FEB22_ADOPTIONS      1
@@ -3471,6 +3476,56 @@ static const int32_t global_motion_threshold[MAX_HIERARCHICAL_LEVEL][MAX_TEMPORA
     { 64, 32, 16, 8, 4, 2 }
 };
 
+#if DISABLE_HME_REF_DISTANCE
+static const int32_t hme_level_0_search_area_multiplier_x[2][MAX_HIERARCHICAL_LEVEL][MAX_TEMPORAL_LAYERS] = { // [Highest Temporal Layer] [Temporal Layer Index]
+    { 
+        { 100 },
+    { 100, 100 },
+    { 100, 100, 100 },
+    { 100, 100, 100, 100 },
+    { 100, 100, 100, 100, 100 },
+    { 100, 100, 100, 100, 100, 100 }
+    },
+    { 
+       /* { 100 },
+    { 100, 100 },
+    { 100, 100, 100 },
+    { 200, 140, 100,  70 },
+    { 350, 200, 100, 100, 100 },
+    { 525, 350, 200, 100, 100, 100 }*/
+         { 100 },
+    { 100, 100 },
+    { 100, 100, 100 },
+    { 100, 100, 100, 100 },
+    { 100, 100, 100, 100, 100 },
+    { 100, 100, 100, 100, 100, 100 }
+    }
+};
+static const int32_t hme_level_0_search_area_multiplier_y[2][MAX_HIERARCHICAL_LEVEL][MAX_TEMPORAL_LAYERS] = { // [Highest Temporal Layer] [Temporal Layer Index]
+    {
+        { 100 },
+    { 100, 100 },
+    { 100, 100, 100 },
+    { 100, 100, 100, 100 },
+    { 100, 100, 100, 100, 100 },
+    { 100, 100, 100, 100, 100, 100 }
+    },
+    {
+        /*{ 100 },
+    { 100, 100 },
+    { 100, 100, 100 },
+    { 200, 140, 100, 70 },
+    { 350, 200, 100, 100, 100 },
+    { 525, 350, 200, 100, 100, 100 }*/
+        { 100 },
+    { 100, 100 },
+    { 100, 100, 100 },
+    { 100, 100, 100, 100 },
+    { 100, 100, 100, 100, 100 },
+    { 100, 100, 100, 100, 100, 100 }
+    }
+};
+#else
 static const int32_t hme_level_0_search_area_multiplier_x[MAX_HIERARCHICAL_LEVEL][MAX_TEMPORAL_LAYERS] = { // [Highest Temporal Layer] [Temporal Layer Index]
     { 100 },
     { 100, 100 },
@@ -3488,7 +3543,7 @@ static const int32_t hme_level_0_search_area_multiplier_y[MAX_HIERARCHICAL_LEVEL
     { 350, 200, 100, 100, 100 },
     { 525, 350, 200, 100, 100, 100 }
 };
-
+#endif
 typedef enum RasterScanCuIndex
 {
     // 2Nx2N [85 partitions]

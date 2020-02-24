@@ -13968,6 +13968,12 @@ void integer_search_sb(
             }
 #endif
 #endif
+#if MIN_ME_8x8_MAX_ME_16x16
+            search_area_width = MIN(search_area_width, 16);
+            search_area_width = MAX(search_area_width, 8);
+            search_area_height = MIN(search_area_height, 16);
+            search_area_height = MAX(search_area_height, 8);
+#endif
             if ((x_search_center != 0 || y_search_center != 0) &&
                 (picture_control_set_ptr->is_used_as_reference_flag ==
                     EB_TRUE)) {
@@ -15623,7 +15629,11 @@ void hme_sb(
             if (picture_control_set_ptr->temporal_layer_index > 0 || listIndex == 0) {
                 // A - The MV center for Tier0 search could be either (0,0), or
                 // HME A - Set HME MV Center
+#if DISABLE_SPARCE_SEARCH
+                if (0)
+#else
                 if (context_ptr->update_hme_search_center_flag)
+#endif
                     hme_mv_center_check(refPicPtr,
                         context_ptr,
                         &x_search_center,
@@ -15640,7 +15650,11 @@ void hme_sb(
 
                 // B - NO HME in boundaries
                 // C - Skip HME
+#if ENABLE_HME_FOR_NON_COMPLETE_SB
+                if (context_ptr->enable_hme_flag ) {
+#else
                 if (context_ptr->enable_hme_flag && /*B*/ sb_height ==  BLOCK_SIZE_64) {
+#endif
 
                     while (searchRegionNumberInHeight <
                         context_ptr->number_hme_search_region_in_height) {
@@ -15699,12 +15713,20 @@ void hme_sb(
                                 &(yHmeLevel0SearchCenter
                                     [searchRegionNumberInWidth]
                             [searchRegionNumberInHeight]),
+#if DISABLE_HME_REF_DISTANCE
+                                hme_level_0_search_area_multiplier_x[picture_control_set_ptr->sc_content_detected]
+#else
                                 hme_level_0_search_area_multiplier_x
+#endif
                                 [picture_control_set_ptr
                                 ->hierarchical_levels]
                             [picture_control_set_ptr
                                 ->temporal_layer_index],
+#if DISABLE_HME_REF_DISTANCE
+                                hme_level_0_search_area_multiplier_y[picture_control_set_ptr->sc_content_detected]
+#else
                                 hme_level_0_search_area_multiplier_y
+#endif
                                 [picture_control_set_ptr
                                 ->hierarchical_levels]
                             [picture_control_set_ptr
