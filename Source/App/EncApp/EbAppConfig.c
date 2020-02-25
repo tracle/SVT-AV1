@@ -3353,6 +3353,39 @@ EbErrorType set_token_getopt(EbConfig *config, uint32_t num_channel, int32_t tok
     return EB_ErrorNone;
 }
 
+EbErrorType warning_or_error_log(const uint32_t token, const char *str_argv) {
+    // Token wanrings or errors
+    int length = (int)strlen(str_argv);
+    //fprintf(stderr, "The length of %s is %d\n", str_argv, length);
+    if (token >= DOUBLE_DASH_ONLY && *(str_argv + 1) != '-') {
+        fprintf(stderr, "%s not supported, use -%s\n", str_argv, str_argv);
+        return EB_ErrorBadParameter;
+    } else if (token >= MAX_ASCII_PLUS_ONE && *(str_argv + 1) != '-') {
+        switch (token) {
+        case ARG_ENC_MODE:
+            fprintf(stderr, "WARNING: %s will be deprecated, please use --preset\n", str_argv);
+            break;
+        case ARG_QPFILE_NEW:
+            fprintf(stderr, "WARNING: %s will be deprecated, please use --qpfile\n", str_argv);
+            break;
+        case ARG_BIT_DEPTH:
+            fprintf(stderr, "WARNING: %s will be deprecated, please use --input-depth\n", str_argv);
+            break;
+        case ARG_INTRA_PERIOD:
+            fprintf(stderr, "WARNING: %s will be deprecated, please use --keyint\n", str_argv);
+            break;
+        case ARG_LAD:
+            fprintf(stderr, "WARNING: %s will be deprecated, please use --lookahead\n", str_argv);
+            break;
+        default:
+            fprintf(stderr, "WARNING: %s will be deprecated, please use -%s\n", str_argv, str_argv);
+        }
+    } else if (length > 2 && *(str_argv + 1) != '-') { // for short tokens
+        fprintf(stderr, "WARNING: %s will be deprecated, please use -%s\n", str_argv, str_argv);
+    }
+    return EB_ErrorNone;
+}
+
 EbErrorType read_command_line_getopt(int32_t argc, char *const argv[], EbConfig **configs,
                                      uint32_t num_channels, EbErrorType *return_errors) {
     //EbErrorType return_error;
