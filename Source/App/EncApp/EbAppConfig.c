@@ -3438,16 +3438,16 @@ EbErrorType warning_or_error_log(const uint32_t token, const char *str_argv) {
 
 EbErrorType read_command_line_getopt(int32_t argc, char *const argv[], EbConfig **configs,
                                      uint32_t num_channels, EbErrorType *return_errors) {
-    int32_t  token;
+    int32_t  token = ARG_ADAPTIVE_QUANTIZATION;
     uint32_t index;
     uint32_t i = 1;
     //for (index = 0; index < num_channels; ++index) {
-        while ((token = getopt_long_only(argc, argv, short_opts, long_opts, NULL)) != -1) {
+        //while ((token = getopt_long_only(argc, argv, short_opts, long_opts, NULL)) != -1) {
             if (warning_or_error_log(token, argv[i]) == EB_ErrorBadParameter)
                 return EB_ErrorBadParameter;
             //return_errors[index] = set_token_getopt(configs[index], num_channels, token);
             i                    = i + 2;
-        }
+        //}
     //}
     if (return_errors[0] == EB_ErrorMax) return EB_ErrorMax;
 
