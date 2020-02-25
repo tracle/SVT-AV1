@@ -11,6 +11,7 @@
 #include "EbAppString.h"
 #include "EbAppConfig.h"
 #include "EbAppInputy4m.h"
+#include "getopt.h"
 
 #ifdef _WIN32
 #include <windows.h>
