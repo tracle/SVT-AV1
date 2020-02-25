@@ -16,7 +16,7 @@
 #endif
 
 // Temp Macro
-#define GETOPT 0
+#define GETOPT 1
 
 // Define Cross-Platform 64-bit fseek() and ftell()
 

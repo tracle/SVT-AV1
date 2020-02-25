@@ -2335,7 +2335,7 @@ static void line_split(uint32_t *argc, char *argv[CONFIG_FILE_MAX_ARG_COUNT],
 /**********************************
 * Set Config value
 **********************************/
-static void set_config_value(EbConfig *config, const char *name, char *value) {
+static void set_config_value(EbConfig *config, const char *name,const char *value) {
 #if GETOPT
     static uint32_t i = 1;
     //uint32_t i           = 1;
