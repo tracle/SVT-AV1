@@ -24,8 +24,8 @@
 #if GETOPT
 // getopt macro
 #define MAX_ASCII_PLUS_ONE 256
-#define ONE_DASH_WARNING 500
-#define DOUBLE_DASH_ONLY 600
+//#define ONE_DASH_WARNING 500
+#define DOUBLE_DASH_ONLY 400
 static const char short_opts[] = "c:i:b:o:w:h:q:";
 enum Arg_Tokens_e {
     ARG_HELP = MAX_ASCII_PLUS_ONE,
@@ -1037,7 +1037,7 @@ static const struct option long_opts[] = {
 #define MD_FULL_PRUNE_C_TH "-md-full-class-th"
 #define MD_FULL_PRUNE_S_TH "-md-full-cand-th"
 
-    /**********************************
+/**********************************
  * Set Cfg Functions
  **********************************/
     static void set_cfg_input_file(const char *filename, EbConfig *cfg) {
