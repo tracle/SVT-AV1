@@ -3352,7 +3352,7 @@ EbErrorType set_token_getopt(EbConfig *config, uint32_t num_channel, int32_t tok
     }
     return EB_ErrorNone;
 }
-
+/*
 void get_help_getopt() {
     int i                = 0;
     int prev_enum_option = -1;
@@ -3475,5 +3475,5 @@ EbErrorType read_command_line_getopt(int32_t argc, char *const argv[], EbConfig 
     }
     return EB_ErrorNone;
 }
-
 #endif
+*/
