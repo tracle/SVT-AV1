@@ -3438,6 +3438,7 @@ EbErrorType warning_or_error_log(const uint32_t token, const char *str_argv) {
 
 EbErrorType read_command_line_getopt(int32_t argc, char *const argv[], EbConfig **configs,
                                      uint32_t num_channels, EbErrorType *return_errors) {
+    /*
     int32_t  token;
     uint32_t index;
     uint32_t i = 1;
