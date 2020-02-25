@@ -2378,6 +2378,7 @@ static void set_config_value(EbConfig *config, const char *name, char *value) {
 /**********************************
 * Parse Config File
 **********************************/
+/*
 static void parse_config_file(EbConfig *config, char *buffer, int32_t size) {
     uint32_t argc;
     char *   argv[CONFIG_FILE_MAX_ARG_COUNT];
@@ -2444,10 +2445,11 @@ static void parse_config_file(EbConfig *config, char *buffer, int32_t size) {
 
     return;
 }
-
+*/
 /**********************************
 * Read Config File
 **********************************/
+/*
 static int32_t read_config_file(EbConfig *config, char *config_path, uint32_t instance_idx) {
     int32_t return_error = 0;
 
@@ -2486,7 +2488,7 @@ static int32_t read_config_file(EbConfig *config, char *config_path, uint32_t in
 
     return return_error;
 }
-
+*/
 /******************************************
 * Verify Settings
 ******************************************/
@@ -2977,7 +2979,7 @@ EbErrorType read_command_line(int32_t argc, char *const argv[], EbConfig **confi
         // Parse the config file
         for (index = 0; index < num_channels; ++index) {
             return_errors[index] =
-                (EbErrorType)read_config_file(configs[index], config_strings[index], index);
+                //(EbErrorType)read_config_file(configs[index], config_strings[index], index);
             return_error = (EbErrorType)(return_error & return_errors[index]);
         }
     } else {
