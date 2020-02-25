@@ -3438,7 +3438,6 @@ EbErrorType warning_or_error_log(const uint32_t token, const char *str_argv) {
 
 EbErrorType read_command_line_getopt(int32_t argc, char *const argv[], EbConfig **configs,
                                      uint32_t num_channels, EbErrorType *return_errors) {
-    //EbErrorType return_error;
     int32_t  token;
     uint32_t index;
     uint32_t i = 1;
@@ -3451,7 +3450,7 @@ EbErrorType read_command_line_getopt(int32_t argc, char *const argv[], EbConfig 
         }
     }
     if (return_errors[0] == EB_ErrorMax) return EB_ErrorMax;
-
+    /*
     // Check this code later
     for (index = 0; index < num_channels; ++index) {
         //if (return_errors[index] == EB_ErrorNone) {
@@ -3478,6 +3477,7 @@ EbErrorType read_command_line_getopt(int32_t argc, char *const argv[], EbConfig 
         //}
         //return_error = (EbErrorType)(return_error & return_errors[index]);
     }
+    */
     return EB_ErrorNone;
 }
 
