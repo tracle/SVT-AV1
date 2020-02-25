@@ -33,6 +33,11 @@
 extern "C" {
 #endif
 #define FEB24_ADOPTIONS                    1
+#define MODULATE_ME_OUTPUT_BESTME          0
+#if MODULATE_ME_OUTPUT_BESTME
+#define REDUCE_ME_OUTPUT_BESTME            0
+#define REDUCE_ME_OUTPUT_DISTANCE_1        0
+#endif
 #define PME_SNQ_INHETIT_MVS_FULL_PEL       0
 #define PME_SNQ_INHETIT_MVS_SUB_PEL        0
 #define MIN_ME_8x8_MAX_ME_16x16            0

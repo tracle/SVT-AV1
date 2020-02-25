@@ -17987,7 +17987,7 @@ if (context_ptr->me_alt_ref == EB_FALSE) {
 
         mePuResult->total_me_candidate_index[pu_index] =
             MIN(total_me_candidate_index, ME_RES_CAND_MRP_MODE_0);
-#if REDUCE_ME_OUTPUT
+#if REDUCE_ME_OUTPUT || MODULATE_ME_OUTPUT_BESTME
         uint8_t adjusted_total_me_candidate_index = total_me_candidate_index;
         uint64_t best =  MAX_CU_COST;
 #endif
@@ -18011,6 +18011,8 @@ if (context_ptr->me_alt_ref == EB_FALSE) {
                 continue;
             }
 #endif
+
+
             picture_control_set_ptr->me_results[sb_index]
                 ->me_candidate[pu_index][candidateIndex]
                 .direction = me_candidate->prediction_direction;
@@ -18026,8 +18028,46 @@ if (context_ptr->me_alt_ref == EB_FALSE) {
             picture_control_set_ptr->me_results[sb_index]
                 ->me_candidate[pu_index][candidateIndex]
                 .ref1_list = me_candidate->ref1_list;
+#if REDUCE_ME_OUTPUT_BESTME
+            if (candidateIndex) {
+                adjusted_total_me_candidate_index--;
+                continue;
+            }      
+#endif
+#if REDUCE_ME_OUTPUT_DISTANCE_1
+            {
+                uint8_t direction   = me_candidate->prediction_direction;
+                uint8_t ref_index0  = me_candidate->ref_index[0];
+                uint8_t ref_index1  = me_candidate->ref_index[1];
+                uint8_t list_index0 = me_candidate->ref0_list;
+                uint8_t list_index1 = me_candidate->ref1_list;
+                if (direction == 0) {
+                    uint16_t dist0 = ABS((int16_t)(picture_control_set_ptr->picture_number - picture_control_set_ptr->ref_pic_poc_array[list_index0][ref_index0]));      
+                    if (dist0) {
+                        adjusted_total_me_candidate_index--;
+                        continue;
+                    }        
+                } else if (direction == 1) {
+                    uint16_t dist1 = ABS((int16_t)(picture_control_set_ptr->picture_number - picture_control_set_ptr->ref_pic_poc_array[list_index1][ref_index1]));
+                    if (dist1) {
+                        adjusted_total_me_candidate_index--;
+                        continue;
+                    }
+                } else if (direction == 2) {
+                    uint16_t dist0 = ABS((int16_t)(picture_control_set_ptr->picture_number - picture_control_set_ptr->ref_pic_poc_array[list_index0][ref_index0]));
+                    uint16_t dist1 = ABS((int16_t)(picture_control_set_ptr->picture_number - picture_control_set_ptr->ref_pic_poc_array[list_index1][ref_index1]));
+                    if (dist0) {
+                        adjusted_total_me_candidate_index--;
+                        continue;
+                    }else if (dist1) {
+                        adjusted_total_me_candidate_index--;
+                        continue;
+                    }
+                }
+            }   
+#endif
         }
-#if REDUCE_ME_OUTPUT
+#if REDUCE_ME_OUTPUT || MODULATE_ME_OUTPUT_BESTME
         //printf("%d\t%d\t%d\n", total_me_candidate_index, adjusted_total_me_candidate_index,total_me_candidate_index - adjusted_total_me_candidate_index);
         mePuResult->total_me_candidate_index[pu_index] =
         MIN(adjusted_total_me_candidate_index, ME_RES_CAND_MRP_MODE_0);
