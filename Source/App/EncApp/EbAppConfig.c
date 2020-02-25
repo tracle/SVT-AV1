@@ -3204,7 +3204,7 @@ EbErrorType read_command_line(int32_t argc, char *const argv[], EbConfig **confi
 #endif
 
 #if GETOPT
-/*
+
 EbErrorType set_token_getopt(EbConfig *config, uint32_t num_channel, int32_t token) {
     switch (token) {
     case ARG_HELP: break;//get_help_getopt(); return EB_ErrorMax;
@@ -3357,7 +3357,7 @@ EbErrorType set_token_getopt(EbConfig *config, uint32_t num_channel, int32_t tok
     }
     return EB_ErrorNone;
 }
-*/
+
 void get_help_getopt() {
     int i                = 0;
     int prev_enum_option = -1;
@@ -3439,13 +3439,13 @@ EbErrorType warning_or_error_log(const uint32_t token, const char *str_argv) {
 EbErrorType read_command_line_getopt(int32_t argc, char *const argv[], EbConfig **configs,
                                      uint32_t num_channels, EbErrorType *return_errors) {
     int32_t  token = ARG_ADAPTIVE_QUANTIZATION;
-    uint32_t index;
+    uint32_t index = 0;
     uint32_t i = 1;
     //for (index = 0; index < num_channels; ++index) {
         //while ((token = getopt_long_only(argc, argv, short_opts, long_opts, NULL)) != -1) {
             if (warning_or_error_log(token, argv[i]) == EB_ErrorBadParameter)
                 return EB_ErrorBadParameter;
-            //return_errors[index] = set_token_getopt(configs[index], num_channels, token);
+            return_errors[index] = set_token_getopt(configs[index], num_channels, token);
             i                    = i + 2;
         //}
     //}
