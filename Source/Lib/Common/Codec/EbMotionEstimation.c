@@ -18043,23 +18043,20 @@ if (context_ptr->me_alt_ref == EB_FALSE) {
                 uint8_t list_index1 = me_candidate->ref1_list;
                 if (direction == 0) {
                     uint16_t dist0 = ABS((int16_t)(picture_control_set_ptr->picture_number - picture_control_set_ptr->ref_pic_poc_array[list_index0][ref_index0]));      
-                    if (dist0) {
+                    if (dist0 && candidateIndex) {
                         adjusted_total_me_candidate_index--;
                         continue;
                     }        
                 } else if (direction == 1) {
                     uint16_t dist1 = ABS((int16_t)(picture_control_set_ptr->picture_number - picture_control_set_ptr->ref_pic_poc_array[list_index1][ref_index1]));
-                    if (dist1) {
+                    if (dist1 && candidateIndex) {
                         adjusted_total_me_candidate_index--;
                         continue;
                     }
                 } else if (direction == 2) {
                     uint16_t dist0 = ABS((int16_t)(picture_control_set_ptr->picture_number - picture_control_set_ptr->ref_pic_poc_array[list_index0][ref_index0]));
                     uint16_t dist1 = ABS((int16_t)(picture_control_set_ptr->picture_number - picture_control_set_ptr->ref_pic_poc_array[list_index1][ref_index1]));
-                    if (dist0) {
-                        adjusted_total_me_candidate_index--;
-                        continue;
-                    }else if (dist1) {
+                    if ((dist0 || dist1) && candidateIndex) {
                         adjusted_total_me_candidate_index--;
                         continue;
                     }
