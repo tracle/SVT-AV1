@@ -3432,7 +3432,7 @@ EbErrorType warning_or_error_log(const uint32_t token, const char *str_argv) {
     }
     return EB_ErrorNone;
 }
-
+/*
 EbErrorType read_command_line_getopt(int32_t argc, char *const argv[], EbConfig **configs,
                                      uint32_t num_channels, EbErrorType *return_errors) {
     //EbErrorType return_error;
@@ -3477,6 +3477,6 @@ EbErrorType read_command_line_getopt(int32_t argc, char *const argv[], EbConfig 
     }
     return EB_ErrorNone;
 }
-
+*/
 //#endif
 
