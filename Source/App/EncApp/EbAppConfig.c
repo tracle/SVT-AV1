@@ -3451,9 +3451,10 @@ EbErrorType read_command_line_getopt(int32_t argc, char *const argv[], EbConfig 
         }
     }
     if (return_errors[0] == EB_ErrorMax) return EB_ErrorMax;
-    /*
+    */
+
     // Check this code later
-    for (index = 0; index < num_channels; ++index) {
+    for (uint32_t index = 0; index < num_channels; ++index) {
         //if (return_errors[index] == EB_ErrorNone) {
         //return_errors[index] = verify_settings(configs[index], index);
         // Assuming no errors, add padding to width and height
@@ -3478,7 +3479,6 @@ EbErrorType read_command_line_getopt(int32_t argc, char *const argv[], EbConfig 
         //}
         //return_error = (EbErrorType)(return_error & return_errors[index]);
     }
-    */
     return EB_ErrorNone;
 }
 
