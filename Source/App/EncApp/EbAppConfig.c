@@ -3207,8 +3207,7 @@ EbErrorType read_command_line(int32_t argc, char *const argv[], EbConfig **confi
 
 EbErrorType set_token_getopt(EbConfig *config, uint32_t num_channel, int32_t token) {
     switch (token) {
-    case ARG_HELP: break;//get_help_getopt(); return EB_ErrorMax;
-
+    case ARG_HELP: get_help_getopt(); return EB_ErrorMax;
     case ARG_NCH:
         // num_channel is handled differently for this case
         if (optarg == NULL) {
@@ -3347,7 +3346,8 @@ EbErrorType set_token_getopt(EbConfig *config, uint32_t num_channel, int32_t tok
     case ARG_MD_FULL_CLASS_TH: set_md_full_cost_class_prune_th(optarg, config); break;
     case ARG_MD_FULL_CAND_TH:
         set_md_full_cost_cand_prune_th(optarg, config);
-        break; // double dash only
+        break;
+    // double dash only
     case ARG_PRESET: set_enc_mode(optarg, config); break;
     case ARG_QPFILE_NEW: set_cfg_qp_file(optarg, config); break;
     case ARG_INPUT_DEPTH: set_encoder_bit_depth(optarg, config); break;
@@ -3445,7 +3445,7 @@ EbErrorType read_command_line_getopt(int32_t argc, char *const argv[], EbConfig 
         //while ((token = getopt_long_only(argc, argv, short_opts, long_opts, NULL)) != -1) {
             if (warning_or_error_log(token, argv[i]) == EB_ErrorBadParameter)
                 return EB_ErrorBadParameter;
-            return_errors[index] = set_token_getopt(configs[index], num_channels, token);
+            //return_errors[index] = set_token_getopt(configs[index], num_channels, token);
             i                    = i + 2;
         //}
     //}
