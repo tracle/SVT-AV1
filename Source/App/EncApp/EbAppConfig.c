@@ -19,889 +19,7 @@
 #else
 #include <unistd.h>
 #endif
-/*
-#if GETOPT
-// getopt macro
-#define MAX_ASCII_PLUS_ONE 256
-#define ONE_DASH_WARNING 500
-#define DOUBLE_DASH_ONLY 600
 
-static const char short_opts[] = "c:i:b:o:w:h:q:";
-
-enum Arg_Tokens_e {
-    ARG_HELP = MAX_ASCII_PLUS_ONE,
-    ARG_NCH,
-    ARG_ERRLOG,
-    ARG_QP_FILE,
-    ARG_INPUT_STAT_FILE,
-    ARG_OUTPUT_STAT_FILE,
-    ARG_STAT_FILE,
-    ARG_PRED_STRUCT_FILE,
-    ARG_NB,
-    ARG_BASE_LAYER_SWITCH_MODE,
-    ARG_USE_Q_FILE,
-    ARG_STAT_REPORT,
-    ARG_FPS,
-    ARG_FPS_NUM,
-    ARG_FPS_DENOM,
-    ARG_BIT_DEPTH,
-    ARG_COLOR_FORMAT,
-    ARG_COMPRESSED_TEN_BIT_FORMAT,
-    ARG_ENC_MODE_2P,
-    ARG_HIERARCHICHAL_LEVELS,
-    ARG_PRED_STRUCT,
-    ARG_INTRA_PERIOD,
-    ARG_PROFILE,
-    ARG_TIER,
-    ARG_LEVEL,
-    ARG_LATENCY_MODE,
-    ARG_FILM_GRAIN,
-    ARG_IREFRESH_TYPE,
-    ARG_DLF,
-    ARG_RESTORATION_FILTERING,
-    ARG_CLASS_12,
-    ARG_INTRA_EDGE_SKP,
-    ARG_INTERINTRA_COMP,
-    ARG_FRAC_SEARCH_64,
-    ARG_MFMV,
-    ARG_REDUNDANT_BLK,
-    ARG_TRELLIS,
-    ARG_SPATIAL_SSE_FL,
-    ARG_SUBPEL,
-    ARG_OVER_BNDRY_BLK,
-    ARG_NEW_NRST_NEAR_COMB,
-    ARG_NX4_4XN_MV_INJECT,
-    ARG_PRUNE_UNIPRED_ME,
-    ARG_PRUNE_REF_REC_PART,
-    ARG_NSQ_TABLE_USE,
-    ARG_FRAME_END_CDF_UPD_MODE,
-    ARG_LOCAL_WARP,
-    ARG_GLOBAL_MOTION,
-    ARG_OBMC,
-    ARG_RDOQ,
-    ARG_PRED_ME,
-    ARG_BIPRED_3X3_GRAIN,
-    ARG_COMPOUND,
-    ARG_FILTER_INTRA,
-    ARG_USE_DEFAULT_ME_HME,
-    ARG_HME,
-    ARG_HME_L0,
-    ARG_HME_L1,
-    ARG_HME_L2,
-    ARG_EXT_BLOCK,
-    ARG_SEARCH_W,
-    ARG_SEARCH_H,
-    ARG_NUM_HME_W,
-    ARG_NUM_HME_H,
-    ARG_HME_TOT_L0_W,
-    ARG_HME_TOT_L0_H,
-    ARG_HME_L0_W,
-    ARG_HME_L0_H,
-    ARG_HME_L1_W,
-    ARG_HME_L1_H,
-    ARG_HME_L2_W,
-    ARG_HME_L2_H,
-    ARG_SCM,
-    ARG_ENABLE_ALTREFS,
-    ARG_ALTREF_STRENGTH,
-    ARG_ALTREF_NFRAMES,
-    ARG_ENABLE_OVERLAYS,
-    ARG_SUPERRES_MODE,
-    ARG_SUPERRES_DENOM,
-    ARG_SUPERRES_KF_DENOM,
-    ARG_SUPERRES_QTHRES,
-    ARG_HBD_MD,
-    ARG_PALETTE,
-    ARG_OLPD_REFINEMENT,
-    ARG_HDR,
-    ARG_RC,
-    ARG_TBR,
-    ARG_MAX_QP,
-    ARG_VBV_BUFSIZE,
-    ARG_MIN_QP,
-    ARG_ADAPTIVE_QUANTIZATION,
-    ARG_LAD,
-    ARG_SB_SIZE,
-    ARG_TILE_ROWS,
-    ARG_TILE_COLUMNS,
-    ARG_SQW,
-    ARG_ENABLE_AMP,
-    ARG_CHROMA_MODE,
-    ARG_SCD,
-    ARG_INJ,
-    ARG_INJ_FRM_RT,
-    ARG_SPEED_CTRL,
-    ARG_ASM,
-    ARG_LP,
-    ARG_UNPIN_LP1,
-    ARG_SS,
-    ARG_UMV,
-    ARG_MD_FAST_CLASS_TH,
-    ARG_MD_FAST_CAND_TH,
-    ARG_MD_FULL_CLASS_TH,
-    ARG_MD_FULL_CAND_TH,
-    ARG_ENC_MODE,
-
-    ARG_PRESET = DOUBLE_DASH_ONLY,
-    ARG_QPFILE_NEW,
-    ARG_INPUT_DEPTH,
-    ARG_KEYINT,
-    ARG_LOOKAHEAD
-};
-
-static const struct option long_opts[] = {
-    // Options:
-    {"help", "help menu", NULL, 0, NULL, ARG_HELP, OPTIONS},
-    {"input", "Input filename", "InputFile", 1, NULL, 'i', OPTIONS}, // long token
-    {"output-bitstream", "Output filename", "StreamFile", 1, NULL, 'b', OPTIONS}, // long token
-    {"errlog", "Error filename", "ErrorFile", 1, NULL, ARG_ERRLOG, OPTIONS},
-    {"output-recon", "Recon filename", "ReconFile", 1, NULL, 'o', OPTIONS}, // long token
-    {"stat-file", "Stat filename", "StatFile", 1, NULL, ARG_STAT_FILE, OPTIONS},
-
-    // Global Options
-    {"width", "frame width", "SourceWidth", 1, NULL, 'w', ENCODER_GLOBAL_OPTIONS},
-    {"height", "frame height", "SourceHeight", 1, NULL, 'h', ENCODER_GLOBAL_OPTIONS},
-    {"frames",
-     "Stop encoding after n input frames",
-     "FrameToBeEncoded",
-     1,
-     NULL,
-     'n',
-     ENCODER_GLOBAL_OPTIONS}, // long token
-    {"nb", "buffer n input frames", "BufferedInput", 1, NULL, ARG_NB, ENCODER_GLOBAL_OPTIONS},
-    {"color-format",
-     "Set encoder color format(EB_YUV400, EB_YUV420, EB_YUV422, EB_YUV444)",
-     "EncoderColorFormat",
-     1,
-     NULL,
-     ARG_COLOR_FORMAT,
-     ENCODER_GLOBAL_OPTIONS},
-    {"profile",
-     "Bitstream profile number to use(0: main profile[default], 1: high profile, 2: professional "
-     "profile",
-     "Profile",
-     1,
-     NULL,
-     ARG_PROFILE,
-     ENCODER_GLOBAL_OPTIONS},
-    {"fps",
-     "Stream frame rate (rate/scale)",
-     "FrameRate",
-     1,
-     NULL,
-     ARG_FPS,
-     ENCODER_GLOBAL_OPTIONS},
-    {"fps-num",
-     "Stream frame rate numerator",
-     "FrameRateNumerator",
-     1,
-     NULL,
-     ARG_FPS_NUM,
-     ENCODER_GLOBAL_OPTIONS},
-    {"fps-denom",
-     "Stream frame rate denominator",
-     "FrameRateDenominator",
-     1,
-     NULL,
-     ARG_FPS_DENOM,
-     ENCODER_GLOBAL_OPTIONS},
-    {"input-depth",
-     "Bit depth for codec(8 or 10)",
-     "EncoderBitDepth",
-     1,
-     NULL,
-     ARG_INPUT_DEPTH,
-     ENCODER_GLOBAL_OPTIONS}, // double dash only
-    {"hierarchical-levels",
-     "Set hierarchical levels(3 or 4[default])",
-     "HierarchicalLevels",
-     1,
-     NULL,
-     ARG_HIERARCHICHAL_LEVELS,
-     ENCODER_GLOBAL_OPTIONS},
-    {"pred-struct",
-     "Set prediction structure( 0: low delay P, 1: low delay B, 2: random access [default])",
-     "PredStructure",
-     1,
-     NULL,
-     ARG_PRED_STRUCT,
-     ENCODER_GLOBAL_OPTIONS},
-    {"hdr",
-     "Enable high dynamic range(0: OFF[default], ON: 1)",
-     "HighDynamicRangeInput",
-     1,
-     NULL,
-     ARG_HDR,
-     ENCODER_GLOBAL_OPTIONS},
-    {"asm",
-     "Assembly instruction set (0: Automatically select lowest assembly instruction set supported, "
-     "1: Automatically select highest assembly instruction set supported)",
-     "Asm",
-     1,
-     NULL,
-     ARG_ASM,
-     ENCODER_GLOBAL_OPTIONS},
-    {"lp",
-     "number of logical processors to be used",
-     "LogicalProcessors",
-     1,
-     NULL,
-     ARG_LP,
-     ENCODER_GLOBAL_OPTIONS},
-    {"unpin-lp1",
-     "allows the execution of multiple encodes on the CPU without having to pin them to a specific "
-     "mask( 0: OFF ,1: ON[default]) ",
-     "UnpinSingleCoreExecution",
-     1,
-     NULL,
-     ARG_UNPIN_LP1,
-     ENCODER_GLOBAL_OPTIONS},
-    {"ss",
-     "Specify  which socket the encoder runs on",
-     "TargetSocket",
-     1,
-     NULL,
-     ARG_SS,
-     ENCODER_GLOBAL_OPTIONS},
-
-    // Rate control options
-    {"rc",
-     "Rate control mode(0 = CQP , 1 = VBR , 2 = CVBR)",
-     "RateControlMode",
-     1,
-     NULL,
-     ARG_RC,
-     RATE_CONTROL_OPTIONS},
-    {"tbr", "Target Bitrate (kbps)", "TargetBitRate", 1, NULL, ARG_TBR, RATE_CONTROL_OPTIONS},
-    {"use-q-file",
-     "Overwrite QP assignment using qp values in QP file",
-     "UseQpFile",
-     1,
-     NULL,
-     ARG_USE_Q_FILE,
-     RATE_CONTROL_OPTIONS},
-    {"qpfile",
-     "Path to Qp file",
-     "QpFile",
-     1,
-     NULL,
-     ARG_QPFILE_NEW,
-     RATE_CONTROL_OPTIONS}, // doubale dash only
-    {"min-qp",
-     "Minimum (best) quantizer[0-63]",
-     "MinQpAllowed",
-     1,
-     NULL,
-     ARG_MIN_QP,
-     RATE_CONTROL_OPTIONS},
-    {"adaptive-quantization",
-     "Set adaptive QP level(0: OFF ,1: variance base using segments ,2: Deltaq pred efficiency)",
-     "AdaptiveQuantization",
-     1,
-     NULL,
-     ARG_ADAPTIVE_QUANTIZATION,
-     RATE_CONTROL_OPTIONS},
-    {"vbv-bufsize",
-     "VBV buffer size",
-     "VBVBufSize",
-     1,
-     NULL,
-     ARG_VBV_BUFSIZE,
-     RATE_CONTROL_OPTIONS},
-
-    // 2P options
-    {"output-stat-file",
-     "First pass stat file output",
-     "OutputStatFile",
-     1,
-     NULL,
-     ARG_OUTPUT_STAT_FILE,
-     TWO_PASS_OPTIONS},
-    {"input-stat-file",
-     "Input the first pass output to the second pass",
-     "InputStatFile",
-     1,
-     NULL,
-     ARG_INPUT_STAT_FILE,
-     TWO_PASS_OPTIONS},
-    {"enc-mode-2p",
-     "Use Hme/Me settings of the second pass'encoder mode in the first pass",
-     "EncoderMode2p",
-     1,
-     NULL,
-     ARG_ENC_MODE_2P,
-     TWO_PASS_OPTIONS},
-
-    // Intra refresh options
-    {"keyint",
-     "Intra period interval(frames) (-2: No intra update, -1: default intra period or [0-255])",
-     "IntraPeriod",
-     1,
-     NULL,
-     ARG_KEYINT,
-     KEYFRAME_PLACEMENT_OPTIONS}, // double dash only
-    {"irefresh-type",
-     "Intra refresh type (1: CRA (Open GOP)2: IDR (Closed GOP))",
-     "IntraRefreshType",
-     1,
-     NULL,
-     ARG_IREFRESH_TYPE,
-     KEYFRAME_PLACEMENT_OPTIONS},
-
-    // Specific options
-    {"preset",
-     "Encoder mode/Preset used[0-8]",
-     "EncoderMode",
-     1,
-     NULL,
-     ARG_PRESET,
-     AV1_SPECIAL_OPTIONS}, // double dash only
-    {"compressed-ten-bit-format",
-     "Offline packing of the 2bits: requires two bits packed input (0: OFF[default], 1: ON)",
-     "CompressedTenBitFormat",
-     1,
-     NULL,
-     ARG_COMPRESSED_TEN_BIT_FORMAT,
-     AV1_SPECIAL_OPTIONS},
-    {"tile-rows",
-     "Number of tile rows to use, log2[0-6]",
-     "TileRow",
-     1,
-     NULL,
-     ARG_TILE_ROWS,
-     AV1_SPECIAL_OPTIONS},
-    {"tile-columns",
-     "Number of tile columns to use, log2[0-6]",
-     "TileCol",
-     1,
-     NULL,
-     ARG_TILE_COLUMNS,
-     AV1_SPECIAL_OPTIONS},
-    {"qp",
-     "Constant/Constrained Quality level",
-     "QP",
-     1,
-     NULL,
-     'q',
-     AV1_SPECIAL_OPTIONS}, // long token
-    {"lookahead",
-     "When RC is ON , it is best to set this parameter to be equal to the intra period value",
-     "LookAheadDistance",
-     1,
-     NULL,
-     ARG_LOOKAHEAD,
-     AV1_SPECIAL_OPTIONS}, // double dash only
-    {"dlf",
-     "Disable loop filter(0: loop filter enabled[default] ,1: loop filter disabled)",
-     "LoopFilterDisable",
-     1,
-     NULL,
-     ARG_DLF,
-     AV1_SPECIAL_OPTIONS},
-    {"restoration-filtering",
-     "Enable the loop restoration filter(0: OFF ,1: ON ,-1:DEFAULT)",
-     "RestorationFilter",
-     1,
-     NULL,
-     ARG_RESTORATION_FILTERING,
-     AV1_SPECIAL_OPTIONS},
-    {"mfmv",
-     "Enable motion field motion vector( 0: OFF, 1: ON, -1: DEFAULT)",
-     "Mfmv",
-     1,
-     NULL,
-     ARG_MFMV,
-     AV1_SPECIAL_OPTIONS},
-    {"redundant-blk",
-     "Use the same md results(mode, residual , cost,etc..)as the previously processed identical "
-     "block(0: OFF, 1: ON, -1: DEFAULT)",
-     "RedundantBlock",
-     1,
-     NULL,
-     ARG_REDUNDANT_BLK,
-     AV1_SPECIAL_OPTIONS},
-    {"trellis",
-     "Disable trellis optimization of quantized coefficients (0: OFF 1: ON  2: ON for rd search 3: "
-     "ON for estimate yrd serch (default)",
-     "Trellis",
-     1,
-     NULL,
-     ARG_TRELLIS,
-     AV1_SPECIAL_OPTIONS},
-    {"spatial-sse-fl",
-     "Enable spatial sse full loop(0: OFF, 1: ON, -1: DEFAULT)",
-     "SpatialSSEfl",
-     1,
-     NULL,
-     ARG_SPATIAL_SSE_FL,
-     AV1_SPECIAL_OPTIONS},
-    {"subpel",
-     "Enable subpel(0: OFF, 1: ON, -1: DEFAULT)",
-     "Subpel",
-     1,
-     NULL,
-     ARG_SUBPEL,
-     AV1_SPECIAL_OPTIONS},
-    {"over-bndry-blk",
-     "Enable over boundary block mode (0: OFF, 1: ON, -1: DEFAULT)",
-     "OverBoundryBlock",
-     1,
-     NULL,
-     ARG_OVER_BNDRY_BLK,
-     AV1_SPECIAL_OPTIONS},
-    {"new-nrst-near-comb",
-     "Enable new nearest near comb injection (0: OFF, 1: ON, -1: DEFAULT)",
-     "NewNearestCombInjection",
-     1,
-     NULL,
-     ARG_NEW_NRST_NEAR_COMB,
-     AV1_SPECIAL_OPTIONS},
-    {"nx4-4xn-mv-inject",
-     "Enable nx4 4xn parent mv injection (0: OFF, 1: ON, -1: DEFAULT)",
-     "nx4ParentMvInjection",
-     1,
-     NULL,
-     ARG_NX4_4XN_MV_INJECT,
-     AV1_SPECIAL_OPTIONS},
-    {"prune-unipred-me",
-     "Enable prune unipred at me (0: OFF, 1: ON, -1: DEFAULT)",
-     "PruneUnipredMe",
-     1,
-     NULL,
-     ARG_PRUNE_UNIPRED_ME,
-     AV1_SPECIAL_OPTIONS},
-    {"prune-ref-rec-part",
-     "Enable prune ref frame for rec partitions (0: OFF, 1: ON, -1: DEFAULT)",
-     "PruneRefRecPart",
-     1,
-     NULL,
-     ARG_PRUNE_REF_REC_PART,
-     AV1_SPECIAL_OPTIONS},
-    {"nsq-table-use",
-     "Enable nsq table (0: OFF, 1: ON, -1: DEFAULT)",
-     "NsqTable",
-     1,
-     NULL,
-     ARG_NSQ_TABLE_USE,
-     AV1_SPECIAL_OPTIONS},
-    {"frame-end-cdf-upd-mode",
-     "Enable frame end cdf update mode (0: OFF, 1: ON, -1: DEFAULT)",
-     "FrameEndCdfUpdate",
-     1,
-     NULL,
-     ARG_FRAME_END_CDF_UPD_MODE,
-     AV1_SPECIAL_OPTIONS},
-    {"chroma-mode",
-     "Select chroma mode([0-3], -1: DEFAULT)",
-     "ChromaMode",
-     1,
-     NULL,
-     ARG_CHROMA_MODE,
-     AV1_SPECIAL_OPTIONS},
-    {"local-warp",
-     "Enable local warped motion (0: OFF, 1: ON [default])",
-     "LocalWarpedMotion",
-     1,
-     NULL,
-     ARG_LOCAL_WARP,
-     AV1_SPECIAL_OPTIONS},
-    {"global-motion",
-     "Enable global motion (0: OFF, 1: ON [default])",
-     "GlobalMotion",
-     1,
-     NULL,
-     ARG_GLOBAL_MOTION,
-     AV1_SPECIAL_OPTIONS},
-    {"class-12",
-     "Enable combine MD Class1&2 (0: OFF, 1: ON, -1: DEFAULT)",
-     "CombineClass12",
-     1,
-     NULL,
-     ARG_CLASS_12,
-     AV1_SPECIAL_OPTIONS},
-    {"intra-edge-skp",
-     "Enable intra edge filtering (0: OFF, 1: ON (default))",
-     "EdgeSkipAngleIntra",
-     1,
-     NULL,
-     ARG_INTRA_EDGE_SKP,
-     AV1_SPECIAL_OPTIONS},
-    {"interintra-comp",
-     "Enable interintra compound (0: OFF, 1: ON (default))",
-     "InterIntraCompound",
-     1,
-     NULL,
-     ARG_INTERINTRA_COMP,
-     AV1_SPECIAL_OPTIONS},
-    {"frac-search-64",
-     "Enable fractional search for 64x64 (0: OFF, 1: ON, -1: DEFAULT)",
-     "FractionalSearch64",
-     1,
-     NULL,
-     ARG_FRAC_SEARCH_64,
-     AV1_SPECIAL_OPTIONS},
-    {"obmc",
-     "Enable OBMC(0: OFF, 1: ON[default]) ",
-     "Obmc",
-     1,
-     NULL,
-     ARG_OBMC,
-     AV1_SPECIAL_OPTIONS},
-    {"rdoq",
-     "Enable RDOQ (0: OFF, 1: ON, -1: DEFAULT)",
-     "RDOQ",
-     1,
-     NULL,
-     ARG_RDOQ,
-     AV1_SPECIAL_OPTIONS},
-    {"filter-intra",
-     "Enable filter intra prediction mode (0: OFF, 1: ON [default])",
-     "FilterIntra",
-     1,
-     NULL,
-     ARG_FILTER_INTRA,
-     AV1_SPECIAL_OPTIONS},
-    {"pred-me",
-     "Set predictive motion estimation level(-1: default, [0-5])",
-     "PredMe",
-     1,
-     NULL,
-     ARG_PRED_ME,
-     AV1_SPECIAL_OPTIONS},
-    {"bipred-3x3-grain",
-     "Set bipred3x3 injection (0: OFF, 1: ON FULL, 2: Reduced set, -1: DEFAULT)",
-     "Bipred3x3",
-     1,
-     NULL,
-     ARG_BIPRED_3X3_GRAIN,
-     AV1_SPECIAL_OPTIONS},
-    {"compound",
-     "Enable compound mode(0: OFF, 1:ON[AVG/DIST/DIFF], 2: ON[AVG/DIST/DIFF/WEDGE], -1: default)",
-     "CompoundLevel",
-     1,
-     NULL,
-     ARG_COMPOUND,
-     AV1_SPECIAL_OPTIONS},
-    {"use-default-me-hme",
-     "Use default motion estimation/hierarchical motion estimation settings(0: OFF, 1: "
-     "ON[default])",
-     "UseDefaultMeHme",
-     1,
-     NULL,
-     ARG_USE_DEFAULT_ME_HME,
-     AV1_SPECIAL_OPTIONS},
-    {"hme",
-     "Enable hierarchical motion estimation(0: OFF, 1: ON)",
-     "HME",
-     1,
-     NULL,
-     ARG_HME,
-     AV1_SPECIAL_OPTIONS},
-    {"hme-l0",
-     "Enable hierarchical motion estimation Level 0 (0: OFF, 1: ON)",
-     "HMELevel0",
-     1,
-     NULL,
-     ARG_HME_L0,
-     AV1_SPECIAL_OPTIONS},
-    {"hme-l1",
-     "Enable hierarchical motion estimation Level 1 (0: OFF, 1: ON)",
-     "HMELevel1",
-     1,
-     NULL,
-     ARG_HME_L1,
-     AV1_SPECIAL_OPTIONS},
-    {"hme-l2",
-     "Enable hierarchical motion estimation Level 2 (0: OFF, 1: ON)",
-     "HMELevel2",
-     1,
-     NULL,
-     ARG_HME_L2,
-     AV1_SPECIAL_OPTIONS},
-    {"ext-block",
-     "Enable the rectangular and asymetric block (0: OFF, 1: ON)",
-     "ExtBlockFlag",
-     1,
-     NULL,
-     ARG_EXT_BLOCK,
-     AV1_SPECIAL_OPTIONS},
-    {"search-w",
-     "Set search area in width[1-256]",
-     "SearchAreaWidth",
-     1,
-     NULL,
-     ARG_SEARCH_W,
-     AV1_SPECIAL_OPTIONS},
-    {"search-h",
-     "Set search area in height[1-256]",
-     "SearchAreaHeight",
-     1,
-     NULL,
-     ARG_SEARCH_H,
-     AV1_SPECIAL_OPTIONS},
-    {"num-hme-w",
-     "Set hierarchical motion estimation search region in Width",
-     "NumberHmeSearchRegionInWidth",
-     1,
-     NULL,
-     ARG_NUM_HME_W,
-     AV1_SPECIAL_OPTIONS},
-    {"num-hme-h",
-     "Set hierarchical motion estimation search region in height",
-     "NumberHmeSearchRegionInHeight",
-     1,
-     NULL,
-     ARG_NUM_HME_H,
-     AV1_SPECIAL_OPTIONS},
-    {"hme-tot-l0-w",
-     "Set hierarchical motion estimation level0 total search area in Width",
-     "HmeLevel0TotalSearchAreaWidth",
-     1,
-     NULL,
-     ARG_HME_TOT_L0_W,
-     AV1_SPECIAL_OPTIONS},
-    {"hme-tot-l0-h",
-     "Set hierarchical motion estimation level0 total search area in height",
-     "HmeLevel0TotalSearchAreaHeight",
-     1,
-     NULL,
-     ARG_HME_TOT_L0_H,
-     AV1_SPECIAL_OPTIONS},
-    {"scm",
-     "Set screen content detection level([0-2], 2: DEFAULT)",
-     "ScreenContentMode",
-     1,
-     NULL,
-     ARG_SCM,
-     AV1_SPECIAL_OPTIONS},
-    {"hbd-md",
-     "Enable high bit depth mode decision(0: OFF, 1: ON partially[default],2: fully ON)",
-     "HighBitDepthModeDecision",
-     1,
-     NULL,
-     ARG_HBD_MD,
-     AV1_SPECIAL_OPTIONS},
-    {"palette",
-     "Set palette prediction mode(-1: default or [0-6])",
-     "PaletteMode",
-     1,
-     NULL,
-     ARG_PALETTE,
-     AV1_SPECIAL_OPTIONS},
-    {"umv",
-     "Allow motion vectors to reach outside of the picture boundary(O: OFF, 1: ON[default])",
-     "UnrestrictedMotionVector",
-     1,
-     NULL,
-     ARG_UMV,
-     AV1_SPECIAL_OPTIONS},
-    {"inj",
-     "Inject pictures at defined frame rate(0: OFF[default],1: ON)",
-     "Injector",
-     1,
-     NULL,
-     ARG_INJ,
-     AV1_SPECIAL_OPTIONS},
-    {"inj-frm-rt",
-     "Set injector frame rate",
-     "InjectorFrameRate",
-     1,
-     NULL,
-     ARG_INJ_FRM_RT,
-     AV1_SPECIAL_OPTIONS},
-    {"speed-ctrl",
-     "Enable speed control(0: OFF[default], 1: ON)",
-     "SpeedControlFlag",
-     1,
-     NULL,
-     ARG_SPEED_CTRL,
-     AV1_SPECIAL_OPTIONS},
-    {"film-grain",
-     "Enable film grain(0: OFF[default], 1: ON)",
-     "FilmGrain",
-     1,
-     NULL,
-     ARG_FILM_GRAIN,
-     AV1_SPECIAL_OPTIONS},
-    {"hme-l0-w",
-     "Set hierarchical motion estimation level0 search area in Width",
-     "HmeLevel0SearchAreaInWidth",
-     1,
-     NULL,
-     ARG_HME_L0_W,
-     AV1_SPECIAL_OPTIONS},
-    {"hme-l0-h",
-     "Set hierarchical motion estimation level0 search area in height",
-     "HmeLevel0SearchAreaInHeight",
-     1,
-     NULL,
-     ARG_HME_L0_H,
-     AV1_SPECIAL_OPTIONS},
-    {"hme-l1-w",
-     "Set hierarchical motion estimation level1 search area in Width",
-     "HmeLevel1SearchAreaInWidth",
-     1,
-     NULL,
-     ARG_HME_L1_W,
-     AV1_SPECIAL_OPTIONS},
-    {"hme-l1-h",
-     "Set hierarchical motion estimation level1 search area in height",
-     "HmeLevel1SearchAreaInHeight",
-     1,
-     NULL,
-     ARG_HME_L1_H,
-     AV1_SPECIAL_OPTIONS},
-    {"hme-l2-w",
-     "Set hierarchical motion estimation level2 search area in Width",
-     "HmeLevel2SearchAreaInWidth",
-     1,
-     NULL,
-     ARG_HME_L2_W,
-     AV1_SPECIAL_OPTIONS},
-    {"hme-l2-h",
-     "Set hierarchical motion estimation level2 search area in height",
-     "HmeLevel2SearchAreaInHeight",
-     1,
-     NULL,
-     ARG_HME_L2_H,
-     AV1_SPECIAL_OPTIONS},
-    // --- start: ALTREF_FILTERING_SUPPORT
-    {"enable-altrefs",
-     "Enable automatic alt reference frames(0: OFF, 1: ON[default])",
-     "EnableAltRefs",
-     1,
-     NULL,
-     ARG_ENABLE_ALTREFS,
-     AV1_SPECIAL_OPTIONS},
-    {"altref-strength",
-     "AltRef filter strength([0-6], default: 5)",
-     "AltRefStrength",
-     1,
-     NULL,
-     ARG_ALTREF_STRENGTH,
-     AV1_SPECIAL_OPTIONS},
-    {"altref-nframes",
-     "AltRef max frames([0-10], default: 7)",
-     "AltRefNframes",
-     1,
-     NULL,
-     ARG_ALTREF_NFRAMES,
-     AV1_SPECIAL_OPTIONS},
-    {"enable-overlays",
-     "Enable the insertion of an extra picture called overlayer picture which will be used as an "
-     "extra reference frame for the base-layer picture(0: OFF[default], 1: ON)",
-     "EnableOverlays",
-     1,
-     NULL,
-     ARG_ENABLE_OVERLAYS,
-     AV1_SPECIAL_OPTIONS},
-    // --- end: ALTREF_FILTERING_SUPPORT
-    {"sqw",
-     "Determines if HA, HB, VA, VB, H4 and V4 shapes could be skipped based on the cost of SQ, H "
-     "and V shapes([75-100], default: 100)",
-     "SquareWeight",
-     1,
-     NULL,
-     ARG_SQW,
-     AV1_SPECIAL_OPTIONS},
-    {"enable-amp",
-     "Auto max partition: Decide whether to skip 128x128 or not(0: OFF, 1: ON[default])",
-     "AutomaxPartition",
-     1,
-     NULL,
-     ARG_ENABLE_AMP,
-     AV1_SPECIAL_OPTIONS},
-    {"md-fast-class-th",
-     "Set MD fast prune class threshold[5-200]",
-     "MDStage1PruneClassThreshold",
-     1,
-     NULL,
-     ARG_MD_FAST_CLASS_TH,
-     AV1_SPECIAL_OPTIONS},
-    {"md-fast-cand-th",
-     "Set MD fast prune candidate threshold[5,150]",
-     "MDStage1PruneCandThreshold",
-     1,
-     NULL,
-     ARG_MD_FAST_CAND_TH,
-     AV1_SPECIAL_OPTIONS},
-    {"md-full-class-th",
-     "Set MD full prune class threshold[5,100]",
-     "MDStage2PruneClassThreshold",
-     1,
-     NULL,
-     ARG_MD_FULL_CLASS_TH,
-     AV1_SPECIAL_OPTIONS},
-    {"md-full-cand-th",
-     "Set MD full prune candidate threshold[5,50]",
-     "MDStage2PruneCandThreshold",
-     1,
-     NULL,
-     ARG_MD_FULL_CAND_TH,
-     AV1_SPECIAL_OPTIONS},
-
-    // extras
-    {"nch", "number of channels", NULL, 1, NULL, ARG_NCH, EXTRA_OPTIONS},
-    {"config-file;", NULL, NULL, 1, NULL, 'c', EXTRA_OPTIONS}, // long token
-    {"pred-struct-file", NULL, "pred_struct_file", 1, NULL, ARG_PRED_STRUCT_FILE, EXTRA_OPTIONS},
-    {"base-layer-switch-mode", NULL, NULL, 1, NULL, ARG_BASE_LAYER_SWITCH_MODE, EXTRA_OPTIONS},
-    {"stat-report", NULL, "StatReport", 1, NULL, ARG_STAT_REPORT, EXTRA_OPTIONS},
-    {"tier", NULL, "Tier", 1, NULL, ARG_TIER, EXTRA_OPTIONS},
-    {"level", NULL, "Level", 1, NULL, ARG_LEVEL, EXTRA_OPTIONS},
-    {"latency-mode", NULL, "LatencyMode", 1, NULL, ARG_LATENCY_MODE, EXTRA_OPTIONS},
-
-    // --- start: SUPER-RESOLUTION SUPPORT
-    {"superres-mode", NULL, "SuperresMode", 1, NULL, ARG_SUPERRES_MODE, EXTRA_OPTIONS},
-    {"superres-denom", NULL, "SuperresDenom", 1, NULL, ARG_SUPERRES_DENOM, EXTRA_OPTIONS},
-    {"superres-kf-denom", NULL, "SuperresKfDenom", 1, NULL, ARG_SUPERRES_KF_DENOM, EXTRA_OPTIONS},
-    {"superres-qthres", NULL, "SuperresQthres", 1, NULL, ARG_SUPERRES_QTHRES, EXTRA_OPTIONS},
-    // --- end: SUPER-RESOLUTION SUPPORT
-    {"olpd-refinement", NULL, "OlpdRefinement", 1, NULL, ARG_OLPD_REFINEMENT, EXTRA_OPTIONS},
-    {"sb-size", NULL, NULL, 1, NULL, ARG_SB_SIZE, EXTRA_OPTIONS},
-    {"scd", NULL, "SceneChangeDetection", 1, NULL, ARG_SCD, EXTRA_OPTIONS},
-
-    // Will deprecated in the future
-    {"enc-mode",
-     "Encoder mode/Preset used[0-8]",
-     "EncoderMode",
-     1,
-     NULL,
-     ARG_ENC_MODE,
-     AV1_SPECIAL_OPTIONS},
-    {"qp-file", "Path to Qp file", "QpFile", 1, NULL, ARG_QP_FILE, RATE_CONTROL_OPTIONS},
-    {"max-qp",
-     "Maximum (worst) quantizer[0-63]",
-     "MaxQpAllowed",
-     1,
-     NULL,
-     ARG_MAX_QP,
-     RATE_CONTROL_OPTIONS},
-    {"bit-depth",
-     "Bit depth for codec(8 or 10)",
-     "EncoderBitDepth",
-     1,
-     NULL,
-     ARG_BIT_DEPTH,
-     ENCODER_GLOBAL_OPTIONS},
-    {"intra-period",
-     "Intra period interval(frames) (-2: No intra update, -1: default intra period or [0-255])",
-     "IntraPeriod",
-     1,
-     NULL,
-     ARG_INTRA_PERIOD,
-     KEYFRAME_PLACEMENT_OPTIONS},
-    {"lad",
-     "When RC is ON , it is best to set this parameter to be equal to the intra period value",
-     "LookAheadDistance",
-     1,
-     NULL,
-     ARG_LAD,
-     AV1_SPECIAL_OPTIONS},
-
-    {NULL, NULL, NULL, 0, NULL, 0, -1},
-};
-#endif
-*/
 /**********************************
  * Defines
  **********************************/
@@ -1035,8 +153,8 @@ static const struct option long_opts[] = {
 #define CONFIG_FILE_ARRAY_SEP_CHAR CONFIG_FILE_SPACE_CHAR
 #define CONFIG_FILE_TAB_CHAR '\t'
 #define CONFIG_FILE_NULL_CHAR '\0'
-#define CONFIG_FILE_MAX_ARG_COUNT 256 // used in GETOPT
-#define CONFIG_FILE_MAX_VAR_LEN 128 // used in GETOPT
+#define CONFIG_FILE_MAX_ARG_COUNT 256
+#define CONFIG_FILE_MAX_VAR_LEN 128
 #define EVENT_FILE_MAX_ARG_COUNT 20
 #define EVENT_FILE_MAX_VAR_LEN 256
 #define BUFFER_FILE_MAX_ARG_COUNT 320
@@ -1047,10 +165,10 @@ static const struct option long_opts[] = {
 #define MD_FULL_PRUNE_C_TH "-md-full-class-th"
 #define MD_FULL_PRUNE_S_TH "-md-full-cand-th"
 
-/**********************************
+    /**********************************
  * Set Cfg Functions
  **********************************/
-static void set_cfg_input_file(const char *filename, EbConfig *cfg) {
+    static void set_cfg_input_file(const char *filename, EbConfig *cfg) {
     if (cfg->input_file && !cfg->input_file_is_fifo) fclose(cfg->input_file);
 
     if (!filename) {
@@ -1148,11 +266,9 @@ static void set_frame_rate_denominator(const char *value, EbConfig *cfg) {
 static void set_encoder_bit_depth(const char *value, EbConfig *cfg) {
     cfg->encoder_bit_depth = strtoul(value, NULL, 0);
 }
-#if !GETOPT
 static void set_encoder_16bit_pipeline(const char *value, EbConfig *cfg) {
     cfg->encoder_16bit_pipeline = (EbBool)strtoul(value, NULL, 0);
 }
-#endif
 static void set_encoder_color_format(const char *value, EbConfig *cfg) {
     cfg->encoder_color_format = strtoul(value, NULL, 0);
 }
@@ -1522,7 +638,6 @@ ConfigEntry config_entry_options[] = {
     {SINGLE_INPUT, STAT_FILE_TOKEN, "Stat filename", set_cfg_stat_file},
     {SINGLE_INPUT, NULL, NULL, NULL}};
 
-#if !GETOPT
 ConfigEntry config_entry_global_options[] = {
     // Picture Dimensions
     {SINGLE_INPUT, WIDTH_TOKEN, "Frame width", set_cfg_source_width},
@@ -1538,8 +653,7 @@ ConfigEntry config_entry_global_options[] = {
      set_encoder_color_format},
     {SINGLE_INPUT,
      PROFILE_TOKEN,
-     "Bitstream profile number to use(0: main profile[default], 1: high profile, 2: "
-     "professional "
+     "Bitstream profile number to use(0: main profile[default], 1: high profile, 2: professional "
      "profile) ",
      set_profile},
     {SINGLE_INPUT, FRAME_RATE_TOKEN, "Stream frame rate (rate/scale)", set_frame_rate},
@@ -1568,8 +682,7 @@ ConfigEntry config_entry_global_options[] = {
     // Asm Type
     {SINGLE_INPUT,
      ASM_TYPE_TOKEN,
-     "Assembly instruction set (0: Automatically select lowest assembly instruction set "
-     "supported, "
+     "Assembly instruction set (0: Automatically select lowest assembly instruction set supported, "
      "1: Automatically select highest assembly instruction set supported)",
      set_asm_type},
     {SINGLE_INPUT, THREAD_MGMNT, "number of logical processors to be used", set_logical_processors},
@@ -1885,7 +998,11 @@ ConfigEntry config_entry_specific[] = {
      "extra reference frame for the base-layer picture(0: OFF[default], 1: ON)",
      set_enable_overlays},
     // --- end: ALTREF_FILTERING_SUPPORT
-    {SINGLE_INPUT, SQ_WEIGHT_TOKEN, "Determines if HA, HB, VA, VB, H4 and V4 shapes could be skipped based on the cost of SQ, H and V shapes([75-100], default: 100)", set_square_weight},
+    {SINGLE_INPUT,
+     SQ_WEIGHT_TOKEN,
+     "Determines if HA, HB, VA, VB, H4 and V4 shapes could be skipped based on the cost of SQ, H "
+     "and V shapes([75-100], default: 100)",
+     set_square_weight},
     {SINGLE_INPUT,
      MD_FAST_PRUNE_C_TH,
      "Set MD fast prune class threshold[5-200]",
@@ -1940,7 +1057,7 @@ ConfigEntry config_entry[] = {
      "CompressedTenBitFormat",
      set_compressed_ten_bit_format},
     {SINGLE_INPUT, HIERARCHICAL_LEVELS_TOKEN, "HierarchicalLevels", set_hierarchical_levels},
-    {SINGLE_INPUT, PRED_STRUCT_TOKEN, "PredStructure", set_snd_pass_enc_mode},
+    {SINGLE_INPUT, PRED_STRUCT_TOKEN, "PredStructure", set_cfg_pred_structure},
     {SINGLE_INPUT, TILE_ROW_TOKEN, "TileRow", set_tile_row},
     {SINGLE_INPUT, TILE_COL_TOKEN, "TileCol", set_tile_col},
     // Rate Control
@@ -2116,26 +1233,31 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, SUPERRES_QTHRES, "SuperresQthres", set_superres_qthres},
 
     {SINGLE_INPUT, SQ_WEIGHT_TOKEN, "SquareWeight", set_square_weight},
-    {SINGLE_INPUT, MD_FAST_PRUNE_C_TH, "MdFastPruneClassThreshold", set_md_fast_cost_class_prune_th},
+    {SINGLE_INPUT,
+     MD_FAST_PRUNE_C_TH,
+     "MdFastPruneClassThreshold",
+     set_md_fast_cost_class_prune_th},
     {SINGLE_INPUT, MD_FAST_PRUNE_S_TH, "MdFastPruneCandThreshold", set_md_fast_cost_cand_prune_th},
-    {SINGLE_INPUT, MD_FULL_PRUNE_C_TH, "MdFullPruneClassThreshold", set_md_full_cost_class_prune_th},
+    {SINGLE_INPUT,
+     MD_FULL_PRUNE_C_TH,
+     "MdFullPruneClassThreshold",
+     set_md_full_cost_class_prune_th},
     {SINGLE_INPUT, MD_FULL_PRUNE_S_TH, "MdFullPruneCandThreshold", set_md_full_cost_cand_prune_th},
 
     // Termination
     {SINGLE_INPUT, NULL, NULL, NULL}};
-#endif // !GETOPT
 
 /**********************************
  * Constructor
  **********************************/
 void eb_config_ctor(EbConfig *config_ptr) {
     memset(config_ptr, 0, sizeof(*config_ptr));
-    config_ptr->error_log_file       = stderr;
-    config_ptr->frame_rate           = 30 << 16;
-    config_ptr->encoder_bit_depth    = 8;
+    config_ptr->error_log_file         = stderr;
+    config_ptr->frame_rate             = 30 << 16;
+    config_ptr->encoder_bit_depth      = 8;
     config_ptr->encoder_16bit_pipeline = 0;
-    config_ptr->encoder_color_format = 1; //EB_YUV420
-    config_ptr->buffered_input       = -1;
+    config_ptr->encoder_color_format   = 1; //EB_YUV420
+    config_ptr->buffered_input         = -1;
 
     config_ptr->qp                  = 50;
     config_ptr->use_qp_file         = EB_FALSE;
@@ -2223,7 +1345,7 @@ void eb_config_ctor(EbConfig *config_ptr) {
     config_ptr->superres_qthres   = 43; // random threshold for now
     // end - super-resolution support
 
-    config_ptr->sq_weight                 = 100;
+    config_ptr->sq_weight = 100;
 
     config_ptr->md_fast_cost_cand_prune_th  = 75;
     config_ptr->md_fast_cost_class_prune_th = 100;
@@ -2335,50 +1457,21 @@ static void line_split(uint32_t *argc, char *argv[CONFIG_FILE_MAX_ARG_COUNT],
 /**********************************
 * Set Config value
 **********************************/
-static void set_config_value(EbConfig *config, const char *name, char *value) {
-#if GETOPT
-    static uint32_t i = 1;
-    //uint32_t i           = 1;
-    uint32_t num_channel = 0;
-    optarg               = value;
-    //fprintf(stderr, "var_name: %s\n", name);
-    //fprintf(stderr, "cfg_name: %s\n", long_opts[i].cfg_name);
-    //fprintf(stderr, "i: %d\n", i);
+static void set_config_value(EbConfig *config, const char *name, const char *value) {
+    int32_t i = 0;
 
-    while (EB_STRCMP(long_opts[i].cfg_name, name) != 0) {
-        //fprintf(stderr, "long_opts[i].cfg_name: %s", long_opts[i].cfg_name);
-        //fprintf(stderr, "i: %d\n", i);
-        i++;
-    }
-    if (EB_STRCMP(long_opts[i].cfg_name, name) != 0) {
-        i = 0;
-        fprintf(stderr, "Didnt find it in the first loop");
-        while (EB_STRCMP(long_opts[i++].cfg_name, name) != 0)
-            ;
-    }
-
-    if (EB_STRCMP(long_opts[i].cfg_name, name) == 0) {
-        //fprintf(stderr, "token: %s", long_opts[i].cfg_name);
-        //fprintf(stderr, "       optarg: %s", optarg);
-        //fprintf(stderr, "       value: %s\n", value);
-
-        set_token_getopt(config, num_channel, long_opts[i].val);
-    }
-#else
-    int32_t i               = 0;
     while (config_entry[i].name != NULL) {
         if (EB_STRCMP(config_entry[i].name, name) == 0)
             (*config_entry[i].scf)((const char *)value, config);
         ++i;
     }
+
     return;
-#endif
 }
 
 /**********************************
 * Parse Config File
 **********************************/
-/*
 static void parse_config_file(EbConfig *config, char *buffer, int32_t size) {
     uint32_t argc;
     char *   argv[CONFIG_FILE_MAX_ARG_COUNT];
@@ -2445,11 +1538,24 @@ static void parse_config_file(EbConfig *config, char *buffer, int32_t size) {
 
     return;
 }
-*/
+
+/******************************************
+* Find Token
+******************************************/
+static int32_t find_token(int32_t argc, char *const argv[], char const *token, char *configStr) {
+    int32_t return_error = -1;
+
+    while ((argc > 0) && (return_error != 0)) {
+        return_error = EB_STRCMP(argv[--argc], token);
+        if (return_error == 0) { EB_STRCPY(configStr, COMMAND_LINE_MAX_SIZE, argv[argc + 1]); }
+    }
+
+    return return_error;
+}
+
 /**********************************
 * Read Config File
 **********************************/
-/*
 static int32_t read_config_file(EbConfig *config, char *config_path, uint32_t instance_idx) {
     int32_t return_error = 0;
 
@@ -2488,7 +1594,7 @@ static int32_t read_config_file(EbConfig *config, char *config_path, uint32_t in
 
     return return_error;
 }
-*/
+
 /******************************************
 * Verify Settings
 ******************************************/
@@ -2572,20 +1678,6 @@ static EbErrorType verify_settings(EbConfig *config, uint32_t channel_number) {
 }
 
 /******************************************
-* Find Token
-******************************************/
-static int32_t find_token(int32_t argc, char *const argv[], char const *token, char *configStr) {
-    int32_t return_error = -1;
-
-    while ((argc > 0) && (return_error != 0)) {
-        return_error = EB_STRCMP(argv[--argc], token);
-        if (return_error == 0) { EB_STRCPY(configStr, COMMAND_LINE_MAX_SIZE, argv[argc + 1]); }
-    }
-
-    return return_error;
-}
-
-/******************************************
  * Find Token for multiple inputs
  ******************************************/
 int32_t find_token_multiple_inputs(int32_t argc, char *const argv[], const char *token,
@@ -2623,8 +1715,6 @@ int32_t find_token_multiple_inputs(int32_t argc, char *const argv[], const char 
 
     return return_error;
 }
-
-#if !GETOPT
 uint32_t get_help(int32_t argc, char *const argv[]) {
     char config_string[COMMAND_LINE_MAX_SIZE];
     if (find_token(argc, argv, HELP_TOKEN, config_string) == 0) {
@@ -2686,8 +1776,6 @@ uint32_t get_help(int32_t argc, char *const argv[]) {
     } else
         return 0;
 }
-#endif //!GETOPT
-
 //uint32_t get_help(int32_t argc, char *const argv[]) {
 //    char config_string[COMMAND_LINE_MAX_SIZE];
 //    if (find_token(argc, argv, HELP_TOKEN, config_string) == 0) {
@@ -2710,12 +1798,6 @@ uint32_t get_help(int32_t argc, char *const argv[]) {
 * Get the number of channels and validate it with input
 ******************************************************/
 uint32_t get_number_of_channels(int32_t argc, char *const argv[]) {
-#if GETOPT
-    fprintf(stderr, "Let the warning go away: %d, %s\n", argc, argv[0]);
-    uint32_t channel = set_token_getopt(NULL, 0, ARG_NCH);
-    fprintf(stderr, "Channel: %d\n", channel);
-    return channel;
-#else
     char     config_string[COMMAND_LINE_MAX_SIZE];
     uint32_t channel_number;
     if (find_token(argc, argv, CHANNEL_NUMBER_TOKEN, config_string) == 0) {
@@ -2730,7 +1812,6 @@ uint32_t get_number_of_channels(int32_t argc, char *const argv[]) {
             return channel_number;
         }
     }
-#endif
     return 1;
 }
 
@@ -2785,7 +1866,6 @@ int32_t compute_frames_to_be_encoded(EbConfig *config) {
 /**********************************
 * Parse Pred Struct File
 **********************************/
-/*
 static int32_t parse_pred_struct_file(EbConfig *config, char *buffer, int32_t size) {
     uint32_t argc;
     char *   argv[CONFIG_FILE_MAX_ARG_COUNT];
@@ -2900,7 +1980,7 @@ static int32_t parse_pred_struct_file(EbConfig *config, char *buffer, int32_t si
 
     return 0;
 }
-*/
+
 /**********************************
 * Read Prediction Structure File
 **********************************/
@@ -2920,7 +2000,7 @@ static int32_t read_pred_struct_file(EbConfig *config, char *PredStructPath,
                 config_file_buffer, 1, config_file_size, config->input_pred_struct_file);
 
             if (result_size == config_file_size) {
-                //parse_pred_struct_file(config, config_file_buffer, config_file_size);
+                parse_pred_struct_file(config, config_file_buffer, config_file_size);
             } else {
                 fprintf(stderr, "Error channel %u: File Read Failed\n", instance_idx + 1);
                 return_error = -1;
@@ -2963,7 +2043,6 @@ EbErrorType read_command_line(int32_t argc, char *const argv[], EbConfig **confi
     // Copy tokens (except for CHANNEL_NUMBER_TOKEN ) into a temp token buffer hosting all tokens that are passed through the command line
     size_t len = EB_STRLEN(CHANNEL_NUMBER_TOKEN, COMMAND_LINE_MAX_SIZE);
     for (token_index = 0; token_index < argc; ++token_index) {
-        //if (argv[token_index][1] == 'i' || argv[token_index][2] == 'i') continue;
         if ((argv[token_index][0] == '-') &&
             strncmp(argv[token_index], CHANNEL_NUMBER_TOKEN, len) &&
             !is_negative_number(argv[token_index]))
@@ -2980,7 +2059,7 @@ EbErrorType read_command_line(int32_t argc, char *const argv[], EbConfig **confi
         // Parse the config file
         for (index = 0; index < num_channels; ++index) {
             return_errors[index] =
-                //(EbErrorType)read_config_file(configs[index], config_strings[index], index);
+                (EbErrorType)read_config_file(configs[index], config_strings[index], index);
             return_error = (EbErrorType)(return_error & return_errors[index]);
         }
     } else {
@@ -2994,7 +2073,6 @@ EbErrorType read_command_line(int32_t argc, char *const argv[], EbConfig **confi
     /***************************************************************************************************/
     /***********   Find SINGLE_INPUT configuration parameter tokens and call respective functions  **********/
     /***************************************************************************************************/
-#if !GETOPT
     token_index = -1;
     // Parse command line for tokens
     while (config_entry[++token_index].name != NULL) {
@@ -3014,7 +2092,7 @@ EbErrorType read_command_line(int32_t argc, char *const argv[], EbConfig **confi
             }
         }
     }
-#endif
+
     /***************************************************************************************************/
     /********************** Parse parameters from input file if in y4m format **************************/
     /********************** overriding config file and command line inputs    **************************/
@@ -3250,288 +2328,3 @@ EbErrorType read_command_line(int32_t argc, char *const argv[], EbConfig **confi
     for (index = 0; index < MAX_CHANNEL_NUMBER; ++index) free(config_strings[index]);
     return return_error;
 }
-/*
-#if GETOPT
-
-EbErrorType set_token_getopt(EbConfig *config, uint32_t num_channel, int32_t token) {
-    switch (token) {
-    case ARG_HELP: get_help_getopt(); return EB_ErrorMax;
-    case ARG_NCH:
-        // num_channel is handled differently for this case
-        if (optarg == NULL) {
-            num_channel = 1;
-        } else {
-            num_channel = strtol(optarg, NULL, 0);
-        }
-        if ((num_channel > (uint32_t)MAX_CHANNEL_NUMBER) || num_channel == 0) {
-            fprintf(stderr,
-                    "Error: The number of channels has to be within the range [1,%u]\n",
-                    (uint32_t)MAX_CHANNEL_NUMBER);
-            return EB_ErrorBadParameter;
-        }
-        return num_channel;
-    case 'c':
-        read_config_file(config, optarg, num_channel); // num_channel = index
-        break;
-    case 'i': set_cfg_input_file(optarg, config); break;
-    case 'b': set_cfg_stream_file(optarg, config); break;
-    case 'o': set_cfg_recon_file(optarg, config); break;
-    case ARG_ERRLOG: set_cfg_error_file(optarg, config); break;
-    case ARG_QP_FILE: set_cfg_qp_file(optarg, config); break;
-    case ARG_INPUT_STAT_FILE: set_input_stat_file(optarg, config); break;
-    case ARG_OUTPUT_STAT_FILE: set_output_stat_file(optarg, config); break;
-    case ARG_STAT_FILE: set_cfg_stat_file(optarg, config); break;
-    case ARG_PRED_STRUCT_FILE: set_pred_struct_file(optarg, config); break;
-    case 'w': set_cfg_source_width(optarg, config); break;
-    case 'h':
-        set_cfg_source_height(optarg, config);
-        //fprintf(stderr, "h: %s:\n", optarg); break;
-        break;
-    case 'n': set_cfg_frames_to_be_encoded(optarg, config); break;
-    case ARG_NB: set_buffered_input(optarg, config); break;
-    //case ARG_BASE_LAYER_SWITCH_MODE: set_base_layer_switch_mode(optarg, config); break;
-    case 'q': set_cfg_qp(optarg, config); break;
-    case ARG_USE_Q_FILE: set_cfg_use_qp_file(optarg, config); break;
-    case ARG_STAT_REPORT: set_stat_report(optarg, config); break;
-    case ARG_FPS: set_frame_rate(optarg, config); break;
-    case ARG_FPS_NUM: set_frame_rate_numerator(optarg, config); break;
-    case ARG_FPS_DENOM: set_frame_rate_denominator(optarg, config); break;
-    case ARG_BIT_DEPTH: set_encoder_bit_depth(optarg, config); break;
-    case ARG_COLOR_FORMAT: set_encoder_color_format(optarg, config); break;
-    case ARG_COMPRESSED_TEN_BIT_FORMAT: set_compressed_ten_bit_format(optarg, config); break;
-    case ARG_ENC_MODE: set_enc_mode(optarg, config); break;
-    case ARG_ENC_MODE_2P: set_snd_pass_enc_mode(optarg, config); break;
-    case ARG_HIERARCHICHAL_LEVELS: set_hierarchical_levels(optarg, config); break;
-    case ARG_PRED_STRUCT: set_cfg_pred_structure(optarg, config); break;
-    case ARG_INTRA_PERIOD: set_cfg_intra_period(optarg, config); break;
-    case ARG_PROFILE: set_profile(optarg, config); break;
-    case ARG_TIER: set_tier(optarg, config); break;
-    case ARG_LEVEL: set_level(optarg, config); break;
-    case ARG_LATENCY_MODE: set_latency_mode(optarg, config); break;
-    case ARG_FILM_GRAIN: set_cfg_film_grain(optarg, config); break;
-    case ARG_IREFRESH_TYPE: set_cfg_intra_refresh_type(optarg, config); break;
-    case ARG_DLF: set_disable_dlf_flag(optarg, config); break;
-    case ARG_RESTORATION_FILTERING: set_enable_restoration_filter_flag(optarg, config); break;
-    case ARG_CLASS_12: set_class_12_flag(optarg, config); break;
-    case ARG_INTRA_EDGE_SKP: set_edge_skip_angle_intra_flag(optarg, config); break;
-    case ARG_INTERINTRA_COMP: set_interintra_compound_flag(optarg, config); break;
-    //case ARG_FRAC_SEARCH_64: set_fractional_search_64_flag(optarg, config); break;
-    case ARG_MFMV: set_enable_mfmv_flag(optarg, config); break;
-    case ARG_REDUNDANT_BLK: set_enable_redundant_blk_flag(optarg, config); break;
-    case ARG_TRELLIS: set_enable_trellis_flag(optarg, config); break;
-    case ARG_SPATIAL_SSE_FL: set_spatial_sse_fl_flag(optarg, config); break;
-    case ARG_SUBPEL: set_enable_sub_pel_flag(optarg, config); break;
-    case ARG_OVER_BNDRY_BLK: set_over_bndry_blk_flag(optarg, config); break;
-    case ARG_NEW_NRST_NEAR_COMB: set_new_nearest_comb_inject_flag(optarg, config); break;
-    case ARG_NX4_4XN_MV_INJECT: set_nx4_4xn_parent_mv_inject_flag(optarg, config); break;
-    case ARG_PRUNE_UNIPRED_ME: set_prune_unipred_me_flag(optarg, config); break;
-    case ARG_PRUNE_REF_REC_PART: set_prune_ref_rec_part_flag(optarg, config); break;
-    case ARG_NSQ_TABLE_USE: set_nsq_table_flag(optarg, config); break;
-    case ARG_FRAME_END_CDF_UPD_MODE: set_frame_end_cdf_update_flag(optarg, config); break;
-    case ARG_LOCAL_WARP: set_enable_local_warped_motion_flag(optarg, config); break;
-    case ARG_GLOBAL_MOTION: set_enable_global_motion_flag(optarg, config); break;
-    case ARG_OBMC: set_enable_obmc_flag(optarg, config); break;
-    case ARG_RDOQ: set_enable_rdoq_flag(optarg, config); break;
-    case ARG_PRED_ME: set_predictive_me_flag(optarg, config); break;
-    case ARG_BIPRED_3X3_GRAIN: set_bipred3x3inject_flag(optarg, config); break;
-    case ARG_COMPOUND: set_compound_level_flag(optarg, config); break;
-    case ARG_FILTER_INTRA: set_enable_filter_intra_flag(optarg, config); break;
-    case ARG_USE_DEFAULT_ME_HME: set_cfg_use_default_me_hme(optarg, config); break;
-    case ARG_HME: set_enable_hme_flag(optarg, config); break;
-    case ARG_HME_L0: set_enable_hme_level_0_flag(optarg, config); break;
-    case ARG_HME_L1: set_enable_hme_level_1_flag(optarg, config); break;
-    case ARG_HME_L2: set_enable_hme_level_2_flag(optarg, config); break;
-    case ARG_EXT_BLOCK: set_enable_ext_block_flag(optarg, config); break;
-    case ARG_SEARCH_W: set_cfg_search_area_width(optarg, config); break;
-    case ARG_SEARCH_H: set_cfg_search_area_height(optarg, config); break;
-    case ARG_NUM_HME_W: set_cfg_number_hme_search_region_in_width(optarg, config); break;
-    case ARG_NUM_HME_H: set_cfg_number_hme_search_region_in_height(optarg, config); break;
-    case ARG_HME_TOT_L0_W: set_cfg_hme_level_0_total_search_area_width(optarg, config); break;
-    case ARG_HME_TOT_L0_H: set_cfg_hme_level_0_total_search_area_height(optarg, config); break;
-    case ARG_HME_L0_W: set_hme_level_0_search_area_in_width_array(optarg, config); break;
-    case ARG_HME_L0_H: set_hme_level_0_search_area_in_height_array(optarg, config); break;
-    case ARG_HME_L1_W: set_hme_level_1_search_area_in_width_array(optarg, config); break;
-    case ARG_HME_L1_H: set_hme_level_1_search_area_in_height_array(optarg, config); break;
-    case ARG_HME_L2_W: set_hme_level_2_search_area_in_width_array(optarg, config); break;
-    case ARG_HME_L2_H: set_hme_level_2_search_area_in_height_array(optarg, config); break;
-    case ARG_SCM: set_screen_content_mode(optarg, config); break;
-    case ARG_ENABLE_ALTREFS: set_enable_altrefs(optarg, config); break;
-    case ARG_ALTREF_STRENGTH: set_altref_strength(optarg, config); break;
-    case ARG_ALTREF_NFRAMES: set_altref_n_frames(optarg, config); break;
-    case ARG_ENABLE_OVERLAYS: set_enable_overlays(optarg, config); break;
-    case ARG_SUPERRES_MODE: set_superres_mode(optarg, config); break;
-    case ARG_SUPERRES_DENOM: set_superres_denom(optarg, config); break;
-    case ARG_SUPERRES_KF_DENOM: set_superres_kf_denom(optarg, config); break;
-    case ARG_SUPERRES_QTHRES: set_superres_qthres(optarg, config); break;
-    case ARG_HBD_MD: set_enable_hbd_mode_decision(optarg, config); break;
-    case ARG_PALETTE: set_enable_palette(optarg, config); break;
-    case ARG_OLPD_REFINEMENT: set_enable_olpd_refinement(optarg, config); break;
-    case ARG_HDR: set_high_dynamic_range_input(optarg, config); break;
-    case ARG_RC: set_rate_control_mode(optarg, config); break;
-    case ARG_TBR: set_target_bit_rate(optarg, config); break;
-    case ARG_MAX_QP: set_max_qp_allowed(optarg, config); break;
-    case ARG_VBV_BUFSIZE: set_vbv_buf_size(optarg, config); break;
-    case ARG_MIN_QP: set_min_qp_allowed(optarg, config); break;
-    case ARG_ADAPTIVE_QUANTIZATION: set_adaptive_quantization(optarg, config); break;
-    case ARG_LAD: set_look_ahead_distance(optarg, config); break;
-    case ARG_TILE_ROWS: set_tile_row(optarg, config); break;
-    case ARG_TILE_COLUMNS: set_tile_col(optarg, config); break;
-    case ARG_SQW: set_square_weight(optarg, config); break;
-    //case ARG_ENABLE_AMP: set_enable_auto_max_partition(optarg, config); break;
-    case ARG_CHROMA_MODE: set_chroma_mode(optarg, config); break;
-    case ARG_SCD: set_scene_change_detection(optarg, config); break;
-    case ARG_INJ: set_injector(optarg, config); break;
-    case ARG_INJ_FRM_RT: set_injector_frame_rate(optarg, config); break;
-    case ARG_SPEED_CTRL: speed_control_flag(optarg, config); break;
-    case ARG_ASM: set_asm_type(optarg, config); break;
-    case ARG_LP: set_logical_processors(optarg, config); break;
-    case ARG_UNPIN_LP1: set_unpin_single_core_execution(optarg, config); break;
-    case ARG_SS: set_target_socket(optarg, config); break;
-    case ARG_UMV: set_unrestricted_motion_vector(optarg, config); break;
-    case ARG_MD_FAST_CLASS_TH: set_md_fast_cost_class_prune_th(optarg, config); break;
-    case ARG_MD_FAST_CAND_TH: set_md_fast_cost_cand_prune_th(optarg, config); break;
-    case ARG_MD_FULL_CLASS_TH: set_md_full_cost_class_prune_th(optarg, config); break;
-    case ARG_MD_FULL_CAND_TH:
-        set_md_full_cost_cand_prune_th(optarg, config);
-        break; // double dash only
-    case ARG_PRESET: set_enc_mode(optarg, config); break;
-    case ARG_QPFILE_NEW: set_cfg_qp_file(optarg, config); break;
-    case ARG_INPUT_DEPTH: set_encoder_bit_depth(optarg, config); break;
-    case ARG_KEYINT: set_cfg_intra_period(optarg, config); break;
-    case ARG_LOOKAHEAD: set_look_ahead_distance(optarg, config); break;
-    default: return EB_ErrorBadParameter;
-    }
-    return EB_ErrorNone;
-}
-
-void get_help_getopt() {
-    int i                = 0;
-    int prev_enum_option = -1;
-    int curr_enum_option;
-    fprintf(
-        stderr, "\n%-25s\n", "Usage: SvtAv1EncApp.exe <options> -b dst_filename -i src_filename");
-    while (long_opts[++i].name != NULL) {
-        curr_enum_option = long_opts[i].opt;
-        // Print the options
-        if (prev_enum_option != curr_enum_option) {
-            switch (curr_enum_option) {
-            case OPTIONS: fprintf(stderr, "\n%-25s\n", "Options:"); break;
-            case ENCODER_GLOBAL_OPTIONS:
-                fprintf(stderr, "\n%-25s\n", "Encoder Global Options:");
-                break;
-            case RATE_CONTROL_OPTIONS: fprintf(stderr, "\n%-25s\n", "Rate Control Options:"); break;
-            case TWO_PASS_OPTIONS: fprintf(stderr, "\n%-25s\n", "Twopass Options:"); break;
-            case KEYFRAME_PLACEMENT_OPTIONS:
-                fprintf(stderr, "\n%-25s\n", "Keyframe Placement Options:");
-                break;
-            case AV1_SPECIAL_OPTIONS: fprintf(stderr, "\n%-25s\n", "AV1 Specific Options:"); break;
-            case EXTRA_OPTIONS: return;
-            default: break; // Nothing to do
-            }
-            prev_enum_option++;
-        }
-
-        //Prtint the tokens
-        if (long_opts[i].val < MAX_ASCII_PLUS_ONE) {
-            if (long_opts[i].description == NULL) continue;
-            fprintf(stderr,
-                    "\t-%-5c\t--%-25s\t%-25s\n",
-                    (char)long_opts[i].val,
-                    long_opts[i].name,
-                    long_opts[i].description);
-        } else {
-            if (long_opts[i].description == NULL) continue;
-            fprintf(stderr,
-                    "\t%-5s\t--%-25s\t%-25s\n",
-                    "",
-                    long_opts[i].name,
-                    long_opts[i].description);
-        }
-    }
-}
-
-EbErrorType warning_or_error_log(const uint32_t token, const char *str_argv) {
-    // Token wanrings or errors
-    int length = (int)strlen(str_argv);
-    //fprintf(stderr, "The length of %s is %d\n", str_argv, length);
-    if (token >= DOUBLE_DASH_ONLY && *(str_argv + 1) != '-') {
-        fprintf(stderr, "%s not supported, use -%s\n", str_argv, str_argv);
-        return EB_ErrorBadParameter;
-    } else if (token >= MAX_ASCII_PLUS_ONE && *(str_argv + 1) != '-') {
-        switch (token) {
-        case ARG_ENC_MODE:
-            fprintf(stderr, "WARNING: %s will be deprecated, please use --preset\n", str_argv);
-            break;
-        case ARG_QPFILE_NEW:
-            fprintf(stderr, "WARNING: %s will be deprecated, please use --qpfile\n", str_argv);
-            break;
-        case ARG_BIT_DEPTH:
-            fprintf(stderr, "WARNING: %s will be deprecated, please use --input-depth\n", str_argv);
-            break;
-        case ARG_INTRA_PERIOD:
-            fprintf(stderr, "WARNING: %s will be deprecated, please use --keyint\n", str_argv);
-            break;
-        case ARG_LAD:
-            fprintf(stderr, "WARNING: %s will be deprecated, please use --lookahead\n", str_argv);
-            break;
-        default:
-            fprintf(stderr, "WARNING: %s will be deprecated, please use -%s\n", str_argv, str_argv);
-        }
-    } else if (length > 2 && *(str_argv + 1) != '-') { // for short tokens
-        fprintf(stderr, "WARNING: %s will be deprecated, please use -%s\n", str_argv, str_argv);
-    }
-    return EB_ErrorNone;
-}
-
-EbErrorType read_command_line_getopt(int32_t argc, char *const argv[], EbConfig **configs,
-                                     uint32_t num_channels, EbErrorType *return_errors) {
-    //EbErrorType return_error;
-    int32_t  token;
-    uint32_t index;
-    uint32_t i = 1;
-    for (index = 0; index < num_channels; ++index) {
-        while ((token = getopt_long_only(argc, argv, short_opts, long_opts, NULL)) != -1) {
-            if (warning_or_error_log(token, argv[i]) == EB_ErrorBadParameter)
-                return EB_ErrorBadParameter;
-            return_errors[index] = set_token_getopt(configs[index], num_channels, token);
-            i                    = i + 2;
-        }
-    }
-    if (return_errors[0] == EB_ErrorMax) return EB_ErrorMax;
-    /*
-    Check this code later
-    *
-    for (index = 0; index < num_channels; ++index) {
-        //if (return_errors[index] == EB_ErrorNone) {
-        //return_errors[index] = verify_settings(configs[index], index);
-
-        // Assuming no errors, add padding to width and height
-        //if (return_errors[index] == EB_ErrorNone) {
-        configs[index]->input_padded_width =
-            configs[index]->source_width + configs[index]->source_width % 8;
-        configs[index]->input_padded_height =
-            configs[index]->source_height + configs[index]->source_width % 8;
-        //}
-
-        // Assuming no errors, set the frames to be encoded to the number of frames in the input yuv
-        //if (return_errors[index] == EB_ErrorNone && configs[index]->frames_to_be_encoded == 0)
-        configs[index]->frames_to_be_encoded = compute_frames_to_be_encoded(configs[index]);
-
-        //if (configs[index]->frames_to_be_encoded == -1) {
-        //    fprintf(configs[index]->error_log_file,
-        //            "Error instance %u: Input yuv does not contain enough frames \n",
-        //            index + 1);
-        //   return_errors[index] = EB_ErrorBadParameter;
-        //}
-
-        // Force the injector latency mode, and injector frame rate when speed control is on
-        //if (return_errors[index] == EB_ErrorNone && configs[index]->speed_control_flag == 1)
-        //configs[index]->injector = 1;
-        //}
-        //return_error = (EbErrorType)(return_error & return_errors[index]);
-    }
-    return EB_ErrorNone;
-}
-
-#endif
-*/

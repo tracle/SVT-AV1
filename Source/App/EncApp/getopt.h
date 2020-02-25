@@ -61,8 +61,8 @@ extern "C" {
 struct option       /* specification for a long form option...  */
 {
   const char *name;     /* option name, without leading hyphens */
-  const char *description;  /*The description of the option*/
-  const char *cfg_name;
+  const char *description;  /* The description of the option */
+  const char *cfg_name;   /* description for config file */
   int         has_arg;      /* does it take an argument?        */
   int        *flag;     /* where to save its status, or NULL    */
   int         val;      /* its associated status value      */
