@@ -3205,6 +3205,7 @@ EbErrorType read_command_line(int32_t argc, char *const argv[], EbConfig **confi
 EbErrorType set_token_getopt(EbConfig *config, uint32_t num_channel, int32_t token) {
     switch (token) {
     case ARG_HELP: break;//get_help_getopt(); return EB_ErrorMax;
+    /*
     case ARG_NCH:
         // num_channel is handled differently for this case
         if (optarg == NULL) {
@@ -3219,6 +3220,7 @@ EbErrorType set_token_getopt(EbConfig *config, uint32_t num_channel, int32_t tok
             return EB_ErrorBadParameter;
         }
         return num_channel;
+    */
     case 'c':
         read_config_file(config, optarg, num_channel); // num_channel = index
         break;
