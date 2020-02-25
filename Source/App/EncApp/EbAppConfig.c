@@ -3201,6 +3201,7 @@ EbErrorType read_command_line(int32_t argc, char *const argv[], EbConfig **confi
     return return_error;
 }
 
+/*
 #if GETOPT
 EbErrorType set_token_getopt(EbConfig *config, uint32_t num_channel, int32_t token) {
     switch (token) {
@@ -3446,9 +3447,8 @@ EbErrorType read_command_line_getopt(int32_t argc, char *const argv[], EbConfig 
         }
     }
     if (return_errors[0] == EB_ErrorMax) return EB_ErrorMax;
-    /*
-    Check this code later
-    */
+    
+    // Check this code later
     for (index = 0; index < num_channels; ++index) {
         //if (return_errors[index] == EB_ErrorNone) {
         //return_errors[index] = verify_settings(configs[index], index);
@@ -3478,3 +3478,4 @@ EbErrorType read_command_line_getopt(int32_t argc, char *const argv[], EbConfig 
 }
 
 #endif
+*/
