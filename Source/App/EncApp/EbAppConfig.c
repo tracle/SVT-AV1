@@ -3200,3 +3200,203 @@ EbErrorType read_command_line(int32_t argc, char *const argv[], EbConfig **confi
     for (index = 0; index < MAX_CHANNEL_NUMBER; ++index) free(config_strings[index]);
     return return_error;
 }
+
+#if GETOPT
+EbErrorType set_token_getopt(EbConfig *config, uint32_t num_channel, int32_t token) {
+    switch (token) {
+    case ARG_HELP: get_help_getopt(); return EB_ErrorMax;
+    case ARG_NCH:
+        // num_channel is handled differently for this case
+        if (optarg == NULL) {
+            num_channel = 1;
+        } else {
+            num_channel = strtol(optarg, NULL, 0);
+        }
+        if ((num_channel > (uint32_t)MAX_CHANNEL_NUMBER) || num_channel == 0) {
+            fprintf(stderr,
+                    "Error: The number of channels has to be within the range [1,%u]\n",
+                    (uint32_t)MAX_CHANNEL_NUMBER);
+            return EB_ErrorBadParameter;
+        }
+        return num_channel;
+    case 'c':
+        read_config_file(config, optarg, num_channel); // num_channel = index
+        break;
+    case 'i': set_cfg_input_file(optarg, config); break;
+    case 'b': set_cfg_stream_file(optarg, config); break;
+    case 'o': set_cfg_recon_file(optarg, config); break;
+    case ARG_ERRLOG: set_cfg_error_file(optarg, config); break;
+    case ARG_QP_FILE: set_cfg_qp_file(optarg, config); break;
+    case ARG_INPUT_STAT_FILE: set_input_stat_file(optarg, config); break;
+    case ARG_OUTPUT_STAT_FILE: set_output_stat_file(optarg, config); break;
+    case ARG_STAT_FILE: set_cfg_stat_file(optarg, config); break;
+    case ARG_PRED_STRUCT_FILE: set_pred_struct_file(optarg, config); break;
+    case 'w': set_cfg_source_width(optarg, config); break;
+    case 'h':
+        set_cfg_source_height(optarg, config);
+        //fprintf(stderr, "h: %s:\n", optarg); break;
+        break;
+    case 'n': set_cfg_frames_to_be_encoded(optarg, config); break;
+    case ARG_NB: set_buffered_input(optarg, config); break;
+    //case ARG_BASE_LAYER_SWITCH_MODE: set_base_layer_switch_mode(optarg, config); break;
+    case 'q': set_cfg_qp(optarg, config); break;
+    case ARG_USE_Q_FILE: set_cfg_use_qp_file(optarg, config); break;
+    case ARG_STAT_REPORT: set_stat_report(optarg, config); break;
+    case ARG_FPS: set_frame_rate(optarg, config); break;
+    case ARG_FPS_NUM: set_frame_rate_numerator(optarg, config); break;
+    case ARG_FPS_DENOM: set_frame_rate_denominator(optarg, config); break;
+    case ARG_BIT_DEPTH: set_encoder_bit_depth(optarg, config); break;
+    case ARG_COLOR_FORMAT: set_encoder_color_format(optarg, config); break;
+    case ARG_COMPRESSED_TEN_BIT_FORMAT: set_compressed_ten_bit_format(optarg, config); break;
+    case ARG_ENC_MODE: set_enc_mode(optarg, config); break;
+    case ARG_ENC_MODE_2P: set_snd_pass_enc_mode(optarg, config); break;
+    case ARG_HIERARCHICHAL_LEVELS: set_hierarchical_levels(optarg, config); break;
+    case ARG_PRED_STRUCT: set_cfg_pred_structure(optarg, config); break;
+    case ARG_INTRA_PERIOD: set_cfg_intra_period(optarg, config); break;
+    case ARG_PROFILE: set_profile(optarg, config); break;
+    case ARG_TIER: set_tier(optarg, config); break;
+    case ARG_LEVEL: set_level(optarg, config); break;
+    case ARG_LATENCY_MODE: set_latency_mode(optarg, config); break;
+    case ARG_FILM_GRAIN: set_cfg_film_grain(optarg, config); break;
+    case ARG_IREFRESH_TYPE: set_cfg_intra_refresh_type(optarg, config); break;
+    case ARG_DLF: set_disable_dlf_flag(optarg, config); break;
+    case ARG_RESTORATION_FILTERING: set_enable_restoration_filter_flag(optarg, config); break;
+    case ARG_CLASS_12: set_class_12_flag(optarg, config); break;
+    case ARG_INTRA_EDGE_SKP: set_edge_skip_angle_intra_flag(optarg, config); break;
+    case ARG_INTERINTRA_COMP: set_interintra_compound_flag(optarg, config); break;
+    //case ARG_FRAC_SEARCH_64: set_fractional_search_64_flag(optarg, config); break;
+    case ARG_MFMV: set_enable_mfmv_flag(optarg, config); break;
+    case ARG_REDUNDANT_BLK: set_enable_redundant_blk_flag(optarg, config); break;
+    case ARG_TRELLIS: set_enable_trellis_flag(optarg, config); break;
+    case ARG_SPATIAL_SSE_FL: set_spatial_sse_fl_flag(optarg, config); break;
+    case ARG_SUBPEL: set_enable_sub_pel_flag(optarg, config); break;
+    case ARG_OVER_BNDRY_BLK: set_over_bndry_blk_flag(optarg, config); break;
+    case ARG_NEW_NRST_NEAR_COMB: set_new_nearest_comb_inject_flag(optarg, config); break;
+    case ARG_NX4_4XN_MV_INJECT: set_nx4_4xn_parent_mv_inject_flag(optarg, config); break;
+    case ARG_PRUNE_UNIPRED_ME: set_prune_unipred_me_flag(optarg, config); break;
+    case ARG_PRUNE_REF_REC_PART: set_prune_ref_rec_part_flag(optarg, config); break;
+    case ARG_NSQ_TABLE_USE: set_nsq_table_flag(optarg, config); break;
+    case ARG_FRAME_END_CDF_UPD_MODE: set_frame_end_cdf_update_flag(optarg, config); break;
+    case ARG_LOCAL_WARP: set_enable_local_warped_motion_flag(optarg, config); break;
+    case ARG_GLOBAL_MOTION: set_enable_global_motion_flag(optarg, config); break;
+    case ARG_OBMC: set_enable_obmc_flag(optarg, config); break;
+    case ARG_RDOQ: set_enable_rdoq_flag(optarg, config); break;
+    case ARG_PRED_ME: set_predictive_me_flag(optarg, config); break;
+    case ARG_BIPRED_3X3_GRAIN: set_bipred3x3inject_flag(optarg, config); break;
+    case ARG_COMPOUND: set_compound_level_flag(optarg, config); break;
+    case ARG_FILTER_INTRA: set_enable_filter_intra_flag(optarg, config); break;
+    case ARG_USE_DEFAULT_ME_HME: set_cfg_use_default_me_hme(optarg, config); break;
+    case ARG_HME: set_enable_hme_flag(optarg, config); break;
+    case ARG_HME_L0: set_enable_hme_level_0_flag(optarg, config); break;
+    case ARG_HME_L1: set_enable_hme_level_1_flag(optarg, config); break;
+    case ARG_HME_L2: set_enable_hme_level_2_flag(optarg, config); break;
+    case ARG_EXT_BLOCK: set_enable_ext_block_flag(optarg, config); break;
+    case ARG_SEARCH_W: set_cfg_search_area_width(optarg, config); break;
+    case ARG_SEARCH_H: set_cfg_search_area_height(optarg, config); break;
+    case ARG_NUM_HME_W: set_cfg_number_hme_search_region_in_width(optarg, config); break;
+    case ARG_NUM_HME_H: set_cfg_number_hme_search_region_in_height(optarg, config); break;
+    case ARG_HME_TOT_L0_W: set_cfg_hme_level_0_total_search_area_width(optarg, config); break;
+    case ARG_HME_TOT_L0_H: set_cfg_hme_level_0_total_search_area_height(optarg, config); break;
+    case ARG_HME_L0_W: set_hme_level_0_search_area_in_width_array(optarg, config); break;
+    case ARG_HME_L0_H: set_hme_level_0_search_area_in_height_array(optarg, config); break;
+    case ARG_HME_L1_W: set_hme_level_1_search_area_in_width_array(optarg, config); break;
+    case ARG_HME_L1_H: set_hme_level_1_search_area_in_height_array(optarg, config); break;
+    case ARG_HME_L2_W: set_hme_level_2_search_area_in_width_array(optarg, config); break;
+    case ARG_HME_L2_H: set_hme_level_2_search_area_in_height_array(optarg, config); break;
+    case ARG_SCM: set_screen_content_mode(optarg, config); break;
+    case ARG_ENABLE_ALTREFS: set_enable_altrefs(optarg, config); break;
+    case ARG_ALTREF_STRENGTH: set_altref_strength(optarg, config); break;
+    case ARG_ALTREF_NFRAMES: set_altref_n_frames(optarg, config); break;
+    case ARG_ENABLE_OVERLAYS: set_enable_overlays(optarg, config); break;
+    case ARG_SUPERRES_MODE: set_superres_mode(optarg, config); break;
+    case ARG_SUPERRES_DENOM: set_superres_denom(optarg, config); break;
+    case ARG_SUPERRES_KF_DENOM: set_superres_kf_denom(optarg, config); break;
+    case ARG_SUPERRES_QTHRES: set_superres_qthres(optarg, config); break;
+    case ARG_HBD_MD: set_enable_hbd_mode_decision(optarg, config); break;
+    case ARG_PALETTE: set_enable_palette(optarg, config); break;
+    case ARG_OLPD_REFINEMENT: set_enable_olpd_refinement(optarg, config); break;
+    case ARG_HDR: set_high_dynamic_range_input(optarg, config); break;
+    case ARG_RC: set_rate_control_mode(optarg, config); break;
+    case ARG_TBR: set_target_bit_rate(optarg, config); break;
+    case ARG_MAX_QP: set_max_qp_allowed(optarg, config); break;
+    case ARG_VBV_BUFSIZE: set_vbv_buf_size(optarg, config); break;
+    case ARG_MIN_QP: set_min_qp_allowed(optarg, config); break;
+    case ARG_ADAPTIVE_QUANTIZATION: set_adaptive_quantization(optarg, config); break;
+    case ARG_LAD: set_look_ahead_distance(optarg, config); break;
+    case ARG_TILE_ROWS: set_tile_row(optarg, config); break;
+    case ARG_TILE_COLUMNS: set_tile_col(optarg, config); break;
+    case ARG_SQW: set_square_weight(optarg, config); break;
+    //case ARG_ENABLE_AMP: set_enable_auto_max_partition(optarg, config); break;
+    case ARG_CHROMA_MODE: set_chroma_mode(optarg, config); break;
+    case ARG_SCD: set_scene_change_detection(optarg, config); break;
+    case ARG_INJ: set_injector(optarg, config); break;
+    case ARG_INJ_FRM_RT: set_injector_frame_rate(optarg, config); break;
+    case ARG_SPEED_CTRL: speed_control_flag(optarg, config); break;
+    case ARG_ASM: set_asm_type(optarg, config); break;
+    case ARG_LP: set_logical_processors(optarg, config); break;
+    case ARG_UNPIN_LP1: set_unpin_single_core_execution(optarg, config); break;
+    case ARG_SS: set_target_socket(optarg, config); break;
+    case ARG_UMV: set_unrestricted_motion_vector(optarg, config); break;
+    case ARG_MD_FAST_CLASS_TH: set_md_fast_cost_class_prune_th(optarg, config); break;
+    case ARG_MD_FAST_CAND_TH: set_md_fast_cost_cand_prune_th(optarg, config); break;
+    case ARG_MD_FULL_CLASS_TH: set_md_full_cost_class_prune_th(optarg, config); break;
+    case ARG_MD_FULL_CAND_TH:
+        set_md_full_cost_cand_prune_th(optarg, config);
+        break; // double dash only
+    case ARG_PRESET: set_enc_mode(optarg, config); break;
+    case ARG_QPFILE_NEW: set_cfg_qp_file(optarg, config); break;
+    case ARG_INPUT_DEPTH: set_encoder_bit_depth(optarg, config); break;
+    case ARG_KEYINT: set_cfg_intra_period(optarg, config); break;
+    case ARG_LOOKAHEAD: set_look_ahead_distance(optarg, config); break;
+    default: return EB_ErrorBadParameter;
+    }
+    return EB_ErrorNone;
+}
+
+EbErrorType read_command_line_getopt(int32_t argc, char *const argv[], EbConfig **configs,
+                                     uint32_t num_channels, EbErrorType *return_errors) {
+    //EbErrorType return_error;
+    int32_t  token;
+    uint32_t index;
+    uint32_t i = 1;
+    for (index = 0; index < num_channels; ++index) {
+        while ((token = getopt_long_only(argc, argv, short_opts, long_opts, NULL)) != -1) {
+            if (warning_or_error_log(token, argv[i]) == EB_ErrorBadParameter)
+                return EB_ErrorBadParameter;
+            return_errors[index] = set_token_getopt(configs[index], num_channels, token);
+            i                    = i + 2;
+        }
+    }
+    if (return_errors[0] == EB_ErrorMax) return EB_ErrorMax;
+    /*
+    Check this code later
+    */
+    for (index = 0; index < num_channels; ++index) {
+        //if (return_errors[index] == EB_ErrorNone) {
+        //return_errors[index] = verify_settings(configs[index], index);
+        // Assuming no errors, add padding to width and height
+        //if (return_errors[index] == EB_ErrorNone) {
+        configs[index]->input_padded_width =
+            configs[index]->source_width + configs[index]->source_width % 8;
+        configs[index]->input_padded_height =
+            configs[index]->source_height + configs[index]->source_width % 8;
+        //}
+        // Assuming no errors, set the frames to be encoded to the number of frames in the input yuv
+        //if (return_errors[index] == EB_ErrorNone && configs[index]->frames_to_be_encoded == 0)
+        configs[index]->frames_to_be_encoded = compute_frames_to_be_encoded(configs[index]);
+        //if (configs[index]->frames_to_be_encoded == -1) {
+        //    fprintf(configs[index]->error_log_file,
+        //            "Error instance %u: Input yuv does not contain enough frames \n",
+        //            index + 1);
+        //   return_errors[index] = EB_ErrorBadParameter;
+        //}
+        // Force the injector latency mode, and injector frame rate when speed control is on
+        //if (return_errors[index] == EB_ErrorNone && configs[index]->speed_control_flag == 1)
+        //configs[index]->injector = 1;
+        //}
+        //return_error = (EbErrorType)(return_error & return_errors[index]);
+    }
+    return EB_ErrorNone;
+}
+
+#endif
