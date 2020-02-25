@@ -2340,7 +2340,7 @@ static void set_config_value(EbConfig *config, const char *name,const char *valu
     static uint32_t i = 1;
     //uint32_t i           = 1;
     uint32_t num_channel = 0;
-    optarg               = value;
+    EB_STRCPY(optarg, COMMAND_LINE_MAX_SIZE, value);
     //fprintf(stderr, "var_name: %s\n", name);
     //fprintf(stderr, "cfg_name: %s\n", long_opts[i].cfg_name);
     //fprintf(stderr, "i: %d\n", i);
