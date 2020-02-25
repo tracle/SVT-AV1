@@ -3438,23 +3438,21 @@ EbErrorType warning_or_error_log(const uint32_t token, const char *str_argv) {
 
 EbErrorType read_command_line_getopt(int32_t argc, char *const argv[], EbConfig **configs,
                                      uint32_t num_channels, EbErrorType *return_errors) {
-    /*
     int32_t  token;
     uint32_t index;
     uint32_t i = 1;
-    for (index = 0; index < num_channels; ++index) {
+    //for (index = 0; index < num_channels; ++index) {
         while ((token = getopt_long_only(argc, argv, short_opts, long_opts, NULL)) != -1) {
             if (warning_or_error_log(token, argv[i]) == EB_ErrorBadParameter)
                 return EB_ErrorBadParameter;
             //return_errors[index] = set_token_getopt(configs[index], num_channels, token);
             i                    = i + 2;
         }
-    }
+    //}
     if (return_errors[0] == EB_ErrorMax) return EB_ErrorMax;
-    */
 
     // Check this code later
-    for (uint32_t index = 0; index < num_channels; ++index) {
+    for (index = 0; index < num_channels; ++index) {
         //if (return_errors[index] == EB_ErrorNone) {
         //return_errors[index] = verify_settings(configs[index], index);
         // Assuming no errors, add padding to width and height
