@@ -19,7 +19,7 @@
 #else
 #include <unistd.h>
 #endif
-
+/*
 #if GETOPT
 // getopt macro
 #define MAX_ASCII_PLUS_ONE 256
@@ -901,7 +901,7 @@ static const struct option long_opts[] = {
     {NULL, NULL, NULL, 0, NULL, 0, -1},
 };
 #endif
-
+*/
 /**********************************
  * Defines
  **********************************/
@@ -3247,7 +3247,7 @@ EbErrorType read_command_line(int32_t argc, char *const argv[], EbConfig **confi
     for (index = 0; index < MAX_CHANNEL_NUMBER; ++index) free(config_strings[index]);
     return return_error;
 }
-
+/*
 #if GETOPT
 
 EbErrorType set_token_getopt(EbConfig *config, uint32_t num_channel, int32_t token) {
@@ -3497,7 +3497,7 @@ EbErrorType read_command_line_getopt(int32_t argc, char *const argv[], EbConfig 
     if (return_errors[0] == EB_ErrorMax) return EB_ErrorMax;
     /*
     Check this code later
-    */
+    *
     for (index = 0; index < num_channels; ++index) {
         //if (return_errors[index] == EB_ErrorNone) {
         //return_errors[index] = verify_settings(configs[index], index);
@@ -3531,3 +3531,4 @@ EbErrorType read_command_line_getopt(int32_t argc, char *const argv[], EbConfig 
 }
 
 #endif
+*/
