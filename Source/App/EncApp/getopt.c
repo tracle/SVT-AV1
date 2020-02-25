@@ -70,7 +70,7 @@ int optopt = '?';       /* character checked for validity */
 #undef optreset        /* see getopt.h */
 #define optreset        __mingw_optreset
 int optreset;       /* reset getopt */
-char    *optarg;        /* argument associated with option */
+//char    *optarg;        /* argument associated with option */
 #endif
 
 #define PRINT_ERROR ((opterr) && (*options != ':'))
