@@ -5336,7 +5336,7 @@ void inject_new_candidates(
 
             (*candidateTotalCnt) = canTotalCnt;
         }
-#if REDUCE_ME_OUTPUT || MODULATE_ME_OUTPUT_BESTME
+#if REDUCE_ME_OUTPUT || MODULATE_ME_OUTPUT
         void inject_zero_as_backup(
             const SequenceControlSet   *sequence_control_set_ptr,
             struct ModeDecisionContext *context_ptr,
@@ -6125,7 +6125,7 @@ void  inject_inter_candidates(
                 allow_bipred,
                 &canTotalCnt);
 
-#if REDUCE_ME_OUTPUT || MODULATE_ME_OUTPUT_BESTME
+#if REDUCE_ME_OUTPUT || MODULATE_ME_OUTPUT
         if (!canTotalCnt)
             inject_zero_as_backup(
                 sequence_control_set_ptr,

@@ -34,7 +34,7 @@ extern "C" {
 #endif
 #define FROM_MASTER_GLB            1 // Adrien: do not take an I_SLICE as global motion reference
 #define FEB24_ADOPTIONS                    1
-#define MODULATE_ME_OUTPUT_BESTME          0
+#define MODULATE_ME_OUTPUT                 0
 #if MODULATE_ME_OUTPUT_BESTME
 #define REDUCE_ME_OUTPUT_BESTME            0
 #define REDUCE_ME_OUTPUT_DISTANCE_1        0

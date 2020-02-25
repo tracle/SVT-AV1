@@ -17987,7 +17987,7 @@ if (context_ptr->me_alt_ref == EB_FALSE) {
 
         mePuResult->total_me_candidate_index[pu_index] =
             MIN(total_me_candidate_index, ME_RES_CAND_MRP_MODE_0);
-#if REDUCE_ME_OUTPUT || MODULATE_ME_OUTPUT_BESTME
+#if REDUCE_ME_OUTPUT || MODULATE_ME_OUTPUT
         uint8_t adjusted_total_me_candidate_index = total_me_candidate_index;
         uint64_t best =  MAX_CU_COST;
 #endif
@@ -18064,7 +18064,7 @@ if (context_ptr->me_alt_ref == EB_FALSE) {
             }   
 #endif
         }
-#if REDUCE_ME_OUTPUT || MODULATE_ME_OUTPUT_BESTME
+#if REDUCE_ME_OUTPUT || MODULATE_ME_OUTPUT
         //printf("%d\t%d\t%d\n", total_me_candidate_index, adjusted_total_me_candidate_index,total_me_candidate_index - adjusted_total_me_candidate_index);
         mePuResult->total_me_candidate_index[pu_index] =
         MIN(adjusted_total_me_candidate_index, ME_RES_CAND_MRP_MODE_0);
