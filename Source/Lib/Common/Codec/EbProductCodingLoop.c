@@ -4610,7 +4610,10 @@ void predictive_me_search(
             if (ref_idx > 0)
                 continue;
 #endif
-
+#if PME_UP_TO_4_REF
+            if (ref_idx > 1)
+                continue;
+#endif
 #if MULTI_PASS_PD
             if (ref_idx > context_ptr->md_max_ref_count - 1)
                 continue;

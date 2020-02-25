@@ -269,6 +269,7 @@ extern "C" {
 /*****************************************/      
 #define PME_OFF_PD1 0
 #define PME_MRP_BLIND 0
+#define PME_UP_TO_4_REF  0
 
 #define SQ_NSQ_AGRESSIVE_MDS_2_CLASS_PRUNING   0
 #define SQ_ONLY_AGRESSIVE_MDS_2_CLASS_PRUNING  0
