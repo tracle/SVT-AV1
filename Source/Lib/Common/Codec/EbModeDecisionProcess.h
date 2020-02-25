@@ -330,6 +330,10 @@ extern "C" {
 #endif
         int16_t                         best_spatial_pred_mv[2][4][2];
         int8_t                          valid_refined_mv[2][4];
+#if PME_SNQ_INHETIT_MVS_FULL_PEL
+        int16_t                         sq_best_spatial_pred_mv[2][4][2];
+        int8_t                          sq_valid_refined_mv[2][4];
+#endif
         EbPictureBufferDesc            *input_sample16bit_buffer;
         DECLARE_ALIGNED(16, uint8_t, pred0[2 * MAX_SB_SQUARE]);
         DECLARE_ALIGNED(16, uint8_t, pred1[2 * MAX_SB_SQUARE]);

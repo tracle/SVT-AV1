@@ -15714,7 +15714,7 @@ void hme_sb(
                                     [searchRegionNumberInWidth]
                             [searchRegionNumberInHeight]),
 #if DISABLE_HME_REF_DISTANCE
-                                hme_level_0_search_area_multiplier_x[picture_control_set_ptr->sc_content_detected]
+                                hme_level_0_search_area_multiplier_x[picture_control_set_ptr->sc_content_detected? 1 :0]
 #else
                                 hme_level_0_search_area_multiplier_x
 #endif
@@ -15723,7 +15723,7 @@ void hme_sb(
                             [picture_control_set_ptr
                                 ->temporal_layer_index],
 #if DISABLE_HME_REF_DISTANCE
-                                hme_level_0_search_area_multiplier_y[picture_control_set_ptr->sc_content_detected]
+                                hme_level_0_search_area_multiplier_y[picture_control_set_ptr->sc_content_detected ? 1 :0]
 #else
                                 hme_level_0_search_area_multiplier_y
 #endif
@@ -15765,12 +15765,20 @@ void hme_sb(
                                             &(yHmeLevel0SearchCenter
                                                 [searchRegionNumberInWidth]
                                         [searchRegionNumberInHeight]),
+#if DISABLE_HME_REF_DISTANCE
+                                            hme_level_0_search_area_multiplier_x[picture_control_set_ptr->sc_content_detected ? 1 : 0]
+#else
                                             hme_level_0_search_area_multiplier_x
+#endif
                                             [picture_control_set_ptr
                                             ->hierarchical_levels]
                                         [picture_control_set_ptr
                                             ->temporal_layer_index],
+#if DISABLE_HME_REF_DISTANCE
+                                            hme_level_0_search_area_multiplier_y[picture_control_set_ptr->sc_content_detected ? 1 :0]
+#else
                                             hme_level_0_search_area_multiplier_y
+#endif
                                             [picture_control_set_ptr
                                             ->hierarchical_levels]
                                         [picture_control_set_ptr

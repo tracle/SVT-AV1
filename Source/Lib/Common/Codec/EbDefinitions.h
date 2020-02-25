@@ -32,6 +32,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define PME_SNQ_INHETIT_MVS_FULL_PEL       0
+#define PME_SNQ_INHETIT_MVS_SUB_PEL        0
 #define MIN_ME_8x8_MAX_ME_16x16            0
 #define ENABLE_HME_FOR_NON_COMPLETE_SB     0
 #define DISABLE_HME_REF_DISTANCE           0
@@ -3499,18 +3501,12 @@ static const int32_t hme_level_0_search_area_multiplier_x[2][MAX_HIERARCHICAL_LE
     { 100, 100, 100, 100, 100, 100 }
     },
     { 
-       /* { 100 },
+         { 100 },
     { 100, 100 },
     { 100, 100, 100 },
     { 200, 140, 100,  70 },
     { 350, 200, 100, 100, 100 },
-    { 525, 350, 200, 100, 100, 100 }*/
-         { 100 },
-    { 100, 100 },
-    { 100, 100, 100 },
-    { 100, 100, 100, 100 },
-    { 100, 100, 100, 100, 100 },
-    { 100, 100, 100, 100, 100, 100 }
+    { 525, 350, 200, 100, 100, 100 }
     }
 };
 static const int32_t hme_level_0_search_area_multiplier_y[2][MAX_HIERARCHICAL_LEVEL][MAX_TEMPORAL_LAYERS] = { // [Highest Temporal Layer] [Temporal Layer Index]
@@ -3523,19 +3519,12 @@ static const int32_t hme_level_0_search_area_multiplier_y[2][MAX_HIERARCHICAL_LE
     { 100, 100, 100, 100, 100, 100 }
     },
     {
-        /*{ 100 },
+    { 100 },
     { 100, 100 },
     { 100, 100, 100 },
     { 200, 140, 100, 70 },
     { 350, 200, 100, 100, 100 },
-    { 525, 350, 200, 100, 100, 100 }*/
-        { 100 },
-    { 100, 100 },
-    { 100, 100, 100 },
-    { 100, 100, 100, 100 },
-    { 100, 100, 100, 100, 100 },
-    { 100, 100, 100, 100, 100, 100 }
-    }
+    { 525, 350, 200, 100, 100, 100 }}
 };
 #else
 static const int32_t hme_level_0_search_area_multiplier_x[MAX_HIERARCHICAL_LEVEL][MAX_TEMPORAL_LAYERS] = { // [Highest Temporal Layer] [Temporal Layer Index]

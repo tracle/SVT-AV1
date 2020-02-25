@@ -4560,6 +4560,12 @@ void predictive_me_search(
     // Reset valid_refined_mv
     memset(context_ptr->valid_refined_mv, 0, 8); // [2][4]
 
+   // Reset sq_valid_refined_mv
+#if PME_SNQ_INHETIT_MVS_FULL_PEL
+    if(context_ptr->blk_geom->shape == PART_N)
+        memset(context_ptr->sq_valid_refined_mv, 0, 8); // [2][4]
+#endif
+
     for (uint32_t refIt = 0; refIt < picture_control_set_ptr->parent_pcs_ptr->tot_ref_frame_types; ++refIt) {
         MvReferenceFrame ref_pair = picture_control_set_ptr->parent_pcs_ptr->ref_frame_type_arr[refIt];
 
@@ -4573,6 +4579,9 @@ void predictive_me_search(
         // Reset search variable(s)
         uint32_t best_mvp_distortion = (int32_t)~0;
         uint32_t mvp_distortion;
+#if PME_SNQ_INHETIT_MVS_FULL_PEL
+        uint32_t sq_distortion;
+#endif
 
         int16_t  best_search_mvx = (int16_t)~0;
         int16_t  best_search_mvy = (int16_t)~0;
@@ -4768,50 +4777,112 @@ void predictive_me_search(
                         best_mvp_y = mvp_y_array[mvp_index];
                     }
                 }
+#if PME_SNQ_INHETIT_MVS_FULL_PEL
+                if(context_ptr->blk_geom->shape != PART_N && context_ptr->sq_valid_refined_mv[list_idx][ref_idx]){
+                    int16_t sq_mv_x = context_ptr->sq_best_spatial_pred_mv[list_idx][ref_idx][0];
+                    int16_t sq_mv_y = context_ptr->sq_best_spatial_pred_mv[list_idx][ref_idx][1];
+                    context_ptr->valid_refined_mv[list_idx][ref_idx] = context_ptr->sq_valid_refined_mv[list_idx][ref_idx];
+                    // SQ Distortion
+                    EbReferenceObject *refObj = picture_control_set_ptr->ref_pic_ptr_array[list_idx][ref_idx]->object_ptr;
+                    EbPictureBufferDesc *ref_pic = hbd_mode_decision ?
+                        refObj->reference_picture16bit : refObj->reference_picture;
 
-                // Step 2: perform full pel search around the best MVP
-                best_mvp_x = (best_mvp_x + 4)&~0x07;
-                best_mvp_y = (best_mvp_y + 4)&~0x07;
+                   uint32_t ref_origin_index = ref_pic->origin_x + (context_ptr->cu_origin_x + (sq_mv_x >> 3)) + (context_ptr->cu_origin_y + (sq_mv_y >> 3) + ref_pic->origin_y) * ref_pic->stride_y;
+                    if (use_ssd) {
+                        EbSpatialFullDistType spatial_full_dist_type_fun = hbd_mode_decision ?
+                            full_distortion_kernel16_bits : spatial_full_distortion_kernel;
 
-                predictive_me_full_pel_search(
-                    picture_control_set_ptr,
-                    context_ptr,
-                    input_picture_ptr,
-                    inputOriginIndex,
-                    use_ssd,
-                    list_idx,
-                    ref_idx,
-                    best_mvp_x,
-                    best_mvp_y,
+                        sq_distortion = (uint32_t) spatial_full_dist_type_fun(
+                            input_picture_ptr->buffer_y,
+                            inputOriginIndex,
+                            input_picture_ptr->stride_y,
+                            ref_pic->buffer_y,
+                            ref_origin_index,
+                            ref_pic->stride_y,
+                            context_ptr->blk_geom->bwidth,
+                            context_ptr->blk_geom->bheight);
+                    }
+                    else {
+                        assert((context_ptr->blk_geom->bwidth >> 3) < 17);
+
+                       if (hbd_mode_decision) {
+                            sq_distortion = sad_16b_kernel(
+                                ((uint16_t *)input_picture_ptr->buffer_y) + inputOriginIndex,
+                                input_picture_ptr->stride_y,
+                                ((uint16_t *)ref_pic->buffer_y) + ref_origin_index,
+                                ref_pic->stride_y,
+                                context_ptr->blk_geom->bheight,
+                                context_ptr->blk_geom->bwidth);
+                        } else {
+                            sq_distortion = nxm_sad_kernel_sub_sampled(
+                                input_picture_ptr->buffer_y + inputOriginIndex,
+                                input_picture_ptr->stride_y,
+                                ref_pic->buffer_y + ref_origin_index,
+                                ref_pic->stride_y,
+                                context_ptr->blk_geom->bheight,
+                                context_ptr->blk_geom->bwidth);
+                        }
+                    }
+
+                    if (sq_distortion < best_mvp_distortion) {
+                        best_search_mvx = (sq_mv_x + 4)&~0x07;
+                        best_search_mvy = (sq_mv_y + 4)&~0x07;
+                        best_search_distortion = sq_distortion;
+                    }
+                    else {
+                        best_search_mvx = (best_mvp_x + 4)&~0x07;
+                        best_search_mvy = (best_mvp_y + 4)&~0x07;
+                        best_search_distortion = best_mvp_distortion;
+                    }
+                }
+                else {
+#endif
+                    // Step 2: perform full pel search around the best MVP
+                    best_mvp_x = (best_mvp_x + 4)&~0x07;
+                    best_mvp_y = (best_mvp_y + 4)&~0x07;
+
+                    predictive_me_full_pel_search(
+                        picture_control_set_ptr,
+                        context_ptr,
+                        input_picture_ptr,
+                        inputOriginIndex,
+                        use_ssd,
+                        list_idx,
+                        ref_idx,
+                        best_mvp_x,
+                        best_mvp_y,
 #if M0_OPT
 #if MULTI_PASS_PD
 #if DIST_BASED_PME_SEARCH_AREA
-                   - (full_pel_ref_window_width_th >> 1),
-                    +(full_pel_ref_window_width_th >> 1),
-                    -(full_pel_ref_window_height_th >> 1),
-                    +(full_pel_ref_window_height_th >> 1),
+                        - (full_pel_ref_window_width_th >> 1),
+                        +(full_pel_ref_window_width_th >> 1),
+                        -(full_pel_ref_window_height_th >> 1),
+                        +(full_pel_ref_window_height_th >> 1),
 #else
-                   - (context_ptr->full_pel_ref_window_width_th >> 1),
-                    +(context_ptr->full_pel_ref_window_width_th >> 1),
-                    -(context_ptr->full_pel_ref_window_height_th >> 1),
-                    +(context_ptr->full_pel_ref_window_height_th >> 1),
+                        - (context_ptr->full_pel_ref_window_width_th >> 1),
+                        +(context_ptr->full_pel_ref_window_width_th >> 1),
+                        -(context_ptr->full_pel_ref_window_height_th >> 1),
+                        +(context_ptr->full_pel_ref_window_height_th >> 1),
 #endif
 #else
-                    - (full_pel_ref_window_width_th >> 1),
-                    +(full_pel_ref_window_width_th >> 1),
-                    -(full_pel_ref_window_height_th >> 1),
-                    +(full_pel_ref_window_height_th >> 1),
+                        - (full_pel_ref_window_width_th >> 1),
+                        +(full_pel_ref_window_width_th >> 1),
+                        -(full_pel_ref_window_height_th >> 1),
+                        +(full_pel_ref_window_height_th >> 1),
 #endif
 #else
-                    -(FULL_PEL_REF_WINDOW_WIDTH >> 1),
-                    +(FULL_PEL_REF_WINDOW_WIDTH >> 1),
-                    -(FULL_PEL_REF_WINDOW_HEIGHT >> 1),
-                    +(FULL_PEL_REF_WINDOW_HEIGHT >> 1),
+                        - (FULL_PEL_REF_WINDOW_WIDTH >> 1),
+                        +(FULL_PEL_REF_WINDOW_WIDTH >> 1),
+                        -(FULL_PEL_REF_WINDOW_HEIGHT >> 1),
+                        +(FULL_PEL_REF_WINDOW_HEIGHT >> 1),
 #endif
-                    8,
-                    &best_search_mvx,
-                    &best_search_mvy,
-                    &best_search_distortion);
+                        8,
+                        &best_search_mvx,
+                        &best_search_mvy,
+                        &best_search_distortion);
+#if PME_SNQ_INHETIT_MVS_FULL_PEL
+                }
+#endif
 
                 EbBool exit_predictive_me_sub_pel;
 
@@ -4826,175 +4897,196 @@ void predictive_me_search(
                 }
 
                 if (exit_predictive_me_sub_pel == EB_FALSE || context_ptr->predictive_me_level >= 5) {
-
-                    if (context_ptr->predictive_me_level >= 2) {
-
-                        uint8_t search_pattern;
-                        // 0: all possible position(s): horizontal, vertical, diagonal
-                        // 1: horizontal, vertical
-                        // 2: horizontal only
-                        // 3: vertical only
-
-                        // Step 3: perform half pel search around the best full pel position
-                        search_pattern = (context_ptr->predictive_me_level >= 4) ? 0 : 1;
-
-                        predictive_me_sub_pel_search(
-                            picture_control_set_ptr,
-                            context_ptr,
-                            input_picture_ptr,
-                            inputOriginIndex,
-                            cuOriginIndex,
-                            use_ssd,
-                            list_idx,
-                            ref_idx,
-                            best_search_mvx,
-                            best_search_mvy,
-                            -(HALF_PEL_REF_WINDOW >> 1),
-                            +(HALF_PEL_REF_WINDOW >> 1),
-                            -(HALF_PEL_REF_WINDOW >> 1),
-                            +(HALF_PEL_REF_WINDOW >> 1),
-                            4,
-                            &best_search_mvx,
-                            &best_search_mvy,
-                            &best_search_distortion,
-#if ME_MV_UPGRADE_LOSSLESS
-                            0,
-#endif
-                            search_pattern);
-
-                        if (context_ptr->predictive_me_level == 3) {
-                            if ((best_search_mvx & 0x07) != 0 || (best_search_mvy & 0x07) != 0) {
-
-                                if ((best_search_mvx & 0x07) == 0)
-                                    search_pattern = 2;
-                                else // if(best_search_mvy & 0x07 == 0)
-                                    search_pattern = 3;
-
-                                predictive_me_sub_pel_search(
-                                    picture_control_set_ptr,
-                                    context_ptr,
-                                    input_picture_ptr,
-                                    inputOriginIndex,
-                                    cuOriginIndex,
-                                    use_ssd,
-                                    list_idx,
-                                    ref_idx,
-                                    best_search_mvx,
-                                    best_search_mvy,
-                                    -(HALF_PEL_REF_WINDOW >> 1),
-                                    +(HALF_PEL_REF_WINDOW >> 1),
-                                    -(HALF_PEL_REF_WINDOW >> 1),
-                                    +(HALF_PEL_REF_WINDOW >> 1),
-                                    4,
-                                    &best_search_mvx,
-                                    &best_search_mvy,
-                                    &best_search_distortion,
-#if ME_MV_UPGRADE_LOSSLESS
-                                    0,
-#endif
-                                    search_pattern);
-                            }
-                        }
-
-                        // Step 4: perform quarter pel search around the best half pel position
-                        search_pattern = (context_ptr->predictive_me_level >= 4) ? 0 : 1;
-                        predictive_me_sub_pel_search(
-                            picture_control_set_ptr,
-                            context_ptr,
-                            input_picture_ptr,
-                            inputOriginIndex,
-                            cuOriginIndex,
-                            use_ssd,
-                            list_idx,
-                            ref_idx,
-                            best_search_mvx,
-                            best_search_mvy,
-                            -(QUARTER_PEL_REF_WINDOW >> 1),
-                            +(QUARTER_PEL_REF_WINDOW >> 1),
-                            -(QUARTER_PEL_REF_WINDOW >> 1),
-                            +(QUARTER_PEL_REF_WINDOW >> 1),
-                            2,
-                            &best_search_mvx,
-                            &best_search_mvy,
-                            &best_search_distortion,
-#if ME_MV_UPGRADE_LOSSLESS
-                            0,
-#endif
-                            search_pattern);
-
-                        if (context_ptr->predictive_me_level == 3) {
-                            if ((best_search_mvx & 0x03) != 0 || (best_search_mvy & 0x03) != 0) {
-
-                                if ((best_search_mvx & 0x03) == 0)
-                                    search_pattern = 2;
-                                else // if(best_search_mvy & 0x03 == 0)
-                                    search_pattern = 3;
-
-                                predictive_me_sub_pel_search(
-                                    picture_control_set_ptr,
-                                    context_ptr,
-                                    input_picture_ptr,
-                                    inputOriginIndex,
-                                    cuOriginIndex,
-                                    use_ssd,
-                                    list_idx,
-                                    ref_idx,
-                                    best_search_mvx,
-                                    best_search_mvy,
-                                    -(QUARTER_PEL_REF_WINDOW >> 1),
-                                    +(QUARTER_PEL_REF_WINDOW >> 1),
-                                    -(QUARTER_PEL_REF_WINDOW >> 1),
-                                    +(QUARTER_PEL_REF_WINDOW >> 1),
-                                    2,
-                                    &best_search_mvx,
-                                    &best_search_mvy,
-                                    &best_search_distortion,
-#if ME_MV_UPGRADE_LOSSLESS
-                                    0,
-#endif
-                                    search_pattern);
-                            }
-                        }
+#if PME_SNQ_INHETIT_MVS_SUB_PEL
+                    if (context_ptr->blk_geom->shape != PART_N && context_ptr->sq_valid_refined_mv[list_idx][ref_idx]) {
+                        int16_t sq_mv_x = context_ptr->sq_best_spatial_pred_mv[list_idx][ref_idx][0];
+                        int16_t sq_mv_y = context_ptr->sq_best_spatial_pred_mv[list_idx][ref_idx][1];
+                        context_ptr->valid_refined_mv[list_idx][ref_idx] = context_ptr->sq_valid_refined_mv[list_idx][ref_idx];
+                        best_search_mvx = (sq_mv_x + 4)&~0x07;
+                        best_search_mvy = (sq_mv_y + 4)&~0x07;
+                        best_search_distortion = sq_distortion;
                     }
+                    else {
+#endif
+
+                        if (context_ptr->predictive_me_level >= 2) {
+
+                            uint8_t search_pattern;
+                            // 0: all possible position(s): horizontal, vertical, diagonal
+                            // 1: horizontal, vertical
+                            // 2: horizontal only
+                            // 3: vertical only
+
+                            // Step 3: perform half pel search around the best full pel position
+                            search_pattern = (context_ptr->predictive_me_level >= 4) ? 0 : 1;
+
+                            predictive_me_sub_pel_search(
+                                picture_control_set_ptr,
+                                context_ptr,
+                                input_picture_ptr,
+                                inputOriginIndex,
+                                cuOriginIndex,
+                                use_ssd,
+                                list_idx,
+                                ref_idx,
+                                best_search_mvx,
+                                best_search_mvy,
+                                -(HALF_PEL_REF_WINDOW >> 1),
+                                +(HALF_PEL_REF_WINDOW >> 1),
+                                -(HALF_PEL_REF_WINDOW >> 1),
+                                +(HALF_PEL_REF_WINDOW >> 1),
+                                4,
+                                &best_search_mvx,
+                                &best_search_mvy,
+                                &best_search_distortion,
+#if ME_MV_UPGRADE_LOSSLESS
+                                0,
+#endif
+                                search_pattern);
+
+                            if (context_ptr->predictive_me_level == 3) {
+                                if ((best_search_mvx & 0x07) != 0 || (best_search_mvy & 0x07) != 0) {
+
+                                    if ((best_search_mvx & 0x07) == 0)
+                                        search_pattern = 2;
+                                    else // if(best_search_mvy & 0x07 == 0)
+                                        search_pattern = 3;
+
+                                    predictive_me_sub_pel_search(
+                                        picture_control_set_ptr,
+                                        context_ptr,
+                                        input_picture_ptr,
+                                        inputOriginIndex,
+                                        cuOriginIndex,
+                                        use_ssd,
+                                        list_idx,
+                                        ref_idx,
+                                        best_search_mvx,
+                                        best_search_mvy,
+                                        -(HALF_PEL_REF_WINDOW >> 1),
+                                        +(HALF_PEL_REF_WINDOW >> 1),
+                                        -(HALF_PEL_REF_WINDOW >> 1),
+                                        +(HALF_PEL_REF_WINDOW >> 1),
+                                        4,
+                                        &best_search_mvx,
+                                        &best_search_mvy,
+                                        &best_search_distortion,
+#if ME_MV_UPGRADE_LOSSLESS
+                                        0,
+#endif
+                                        search_pattern);
+                                }
+                            }
+
+                            // Step 4: perform quarter pel search around the best half pel position
+                            search_pattern = (context_ptr->predictive_me_level >= 4) ? 0 : 1;
+                            predictive_me_sub_pel_search(
+                                picture_control_set_ptr,
+                                context_ptr,
+                                input_picture_ptr,
+                                inputOriginIndex,
+                                cuOriginIndex,
+                                use_ssd,
+                                list_idx,
+                                ref_idx,
+                                best_search_mvx,
+                                best_search_mvy,
+                                -(QUARTER_PEL_REF_WINDOW >> 1),
+                                +(QUARTER_PEL_REF_WINDOW >> 1),
+                                -(QUARTER_PEL_REF_WINDOW >> 1),
+                                +(QUARTER_PEL_REF_WINDOW >> 1),
+                                2,
+                                &best_search_mvx,
+                                &best_search_mvy,
+                                &best_search_distortion,
+#if ME_MV_UPGRADE_LOSSLESS
+                                0,
+#endif
+                                search_pattern);
+
+                            if (context_ptr->predictive_me_level == 3) {
+                                if ((best_search_mvx & 0x03) != 0 || (best_search_mvy & 0x03) != 0) {
+
+                                    if ((best_search_mvx & 0x03) == 0)
+                                        search_pattern = 2;
+                                    else // if(best_search_mvy & 0x03 == 0)
+                                        search_pattern = 3;
+
+                                    predictive_me_sub_pel_search(
+                                        picture_control_set_ptr,
+                                        context_ptr,
+                                        input_picture_ptr,
+                                        inputOriginIndex,
+                                        cuOriginIndex,
+                                        use_ssd,
+                                        list_idx,
+                                        ref_idx,
+                                        best_search_mvx,
+                                        best_search_mvy,
+                                        -(QUARTER_PEL_REF_WINDOW >> 1),
+                                        +(QUARTER_PEL_REF_WINDOW >> 1),
+                                        -(QUARTER_PEL_REF_WINDOW >> 1),
+                                        +(QUARTER_PEL_REF_WINDOW >> 1),
+                                        2,
+                                        &best_search_mvx,
+                                        &best_search_mvy,
+                                        &best_search_distortion,
+#if ME_MV_UPGRADE_LOSSLESS
+                                        0,
+#endif
+                                        search_pattern);
+                                }
+                            }
+                        }
 #if EIGHT_PEL_PREDICTIVE_ME
-                    // Step 5: perform eigh pel search around the best quarter pel position
-                    if (picture_control_set_ptr->parent_pcs_ptr->frm_hdr.allow_high_precision_mv) {
-                        uint8_t search_pattern = 0;
-                        predictive_me_sub_pel_search(
-                            picture_control_set_ptr,
-                            context_ptr,
-                            input_picture_ptr,
-                            inputOriginIndex,
-                            cuOriginIndex,
-                            use_ssd,
-                            list_idx,
-                            ref_idx,
-                            best_search_mvx,
-                            best_search_mvy,
+                        // Step 5: perform eigh pel search around the best quarter pel position
+                        if (picture_control_set_ptr->parent_pcs_ptr->frm_hdr.allow_high_precision_mv) {
+                            uint8_t search_pattern = 0;
+                            predictive_me_sub_pel_search(
+                                picture_control_set_ptr,
+                                context_ptr,
+                                input_picture_ptr,
+                                inputOriginIndex,
+                                cuOriginIndex,
+                                use_ssd,
+                                list_idx,
+                                ref_idx,
+                                best_search_mvx,
+                                best_search_mvy,
 #if MDC_ADAPTIVE_LEVEL || ME_MV_UPGRADE_LOSSLESS
-                            -(EIGHT_PEL_REF_WINDOW >> 1),
-                            +(EIGHT_PEL_REF_WINDOW >> 1),
-                            -(EIGHT_PEL_REF_WINDOW >> 1),
-                            +(EIGHT_PEL_REF_WINDOW >> 1),
+                                - (EIGHT_PEL_REF_WINDOW >> 1),
+                                +(EIGHT_PEL_REF_WINDOW >> 1),
+                                -(EIGHT_PEL_REF_WINDOW >> 1),
+                                +(EIGHT_PEL_REF_WINDOW >> 1),
 #else
-                            -(QUARTER_PEL_REF_WINDOW >> 1),
-                            +(QUARTER_PEL_REF_WINDOW >> 1),
-                            -(QUARTER_PEL_REF_WINDOW >> 1),
-                            +(QUARTER_PEL_REF_WINDOW >> 1),
+                                - (QUARTER_PEL_REF_WINDOW >> 1),
+                                +(QUARTER_PEL_REF_WINDOW >> 1),
+                                -(QUARTER_PEL_REF_WINDOW >> 1),
+                                +(QUARTER_PEL_REF_WINDOW >> 1),
 #endif
-                            1,
-                            &best_search_mvx,
-                            &best_search_mvy,
-                            &best_search_distortion,
+                                1,
+                                &best_search_mvx,
+                                &best_search_mvy,
+                                &best_search_distortion,
 #if ME_MV_UPGRADE_LOSSLESS
-                            0,
+                                0,
 #endif
-                            search_pattern);
+                                search_pattern);
+                        }
+#endif
+                        context_ptr->best_spatial_pred_mv[list_idx][ref_idx][0] = best_search_mvx;
+                        context_ptr->best_spatial_pred_mv[list_idx][ref_idx][1] = best_search_mvy;
+                        context_ptr->valid_refined_mv[list_idx][ref_idx] = 1;
+#if PME_SNQ_INHETIT_MVS_FULL_PEL
+                        if (context_ptr->blk_geom->shape == PART_N) {
+                            context_ptr->sq_best_spatial_pred_mv[list_idx][ref_idx][0] = best_search_mvx;
+                            context_ptr->sq_best_spatial_pred_mv[list_idx][ref_idx][1] = best_search_mvy;
+                            context_ptr->sq_valid_refined_mv[list_idx][ref_idx] = 1;
+                        }
+#endif
+#if PME_SNQ_INHETIT_MVS_SUB_PEL
                     }
 #endif
-                    context_ptr->best_spatial_pred_mv[list_idx][ref_idx][0] = best_search_mvx;
-                    context_ptr->best_spatial_pred_mv[list_idx][ref_idx][1] = best_search_mvy;
-                    context_ptr->valid_refined_mv[list_idx][ref_idx] = 1;
                 }
             }
         }
