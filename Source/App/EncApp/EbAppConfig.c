@@ -3353,6 +3353,51 @@ EbErrorType set_token_getopt(EbConfig *config, uint32_t num_channel, int32_t tok
     return EB_ErrorNone;
 }
 
+void get_help_getopt() {
+    int i                = 0;
+    int prev_enum_option = -1;
+    int curr_enum_option;
+    fprintf(
+        stderr, "\n%-25s\n", "Usage: SvtAv1EncApp.exe <options> -b dst_filename -i src_filename");
+    while (long_opts[++i].name != NULL) {
+        curr_enum_option = long_opts[i].opt;
+        // Print the options
+        if (prev_enum_option != curr_enum_option) {
+            switch (curr_enum_option) {
+            case OPTIONS: fprintf(stderr, "\n%-25s\n", "Options:"); break;
+            case ENCODER_GLOBAL_OPTIONS:
+                fprintf(stderr, "\n%-25s\n", "Encoder Global Options:");
+                break;
+            case RATE_CONTROL_OPTIONS: fprintf(stderr, "\n%-25s\n", "Rate Control Options:"); break;
+            case TWO_PASS_OPTIONS: fprintf(stderr, "\n%-25s\n", "Twopass Options:"); break;
+            case KEYFRAME_PLACEMENT_OPTIONS:
+                fprintf(stderr, "\n%-25s\n", "Keyframe Placement Options:");
+                break;
+            case AV1_SPECIAL_OPTIONS: fprintf(stderr, "\n%-25s\n", "AV1 Specific Options:"); break;
+            case EXTRA_OPTIONS: return;
+            default: break; // Nothing to do
+            }
+            prev_enum_option++;
+        }
+        //Prtint the tokens
+        if (long_opts[i].val < MAX_ASCII_PLUS_ONE) {
+            if (long_opts[i].description == NULL) continue;
+            fprintf(stderr,
+                    "\t-%-5c\t--%-25s\t%-25s\n",
+                    (char)long_opts[i].val,
+                    long_opts[i].name,
+                    long_opts[i].description);
+        } else {
+            if (long_opts[i].description == NULL) continue;
+            fprintf(stderr,
+                    "\t%-5s\t--%-25s\t%-25s\n",
+                    "",
+                    long_opts[i].name,
+                    long_opts[i].description);
+        }
+    }
+}
+
 EbErrorType warning_or_error_log(const uint32_t token, const char *str_argv) {
     // Token wanrings or errors
     int length = (int)strlen(str_argv);
