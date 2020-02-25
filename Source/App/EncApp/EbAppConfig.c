@@ -2896,6 +2896,7 @@ static int32_t read_pred_struct_file(EbConfig *config, char *PredStructPath,
     return return_error;
 }
 
+#if !GETOPT
 /******************************************
 * Read Command Line
 ******************************************/
@@ -3200,8 +3201,10 @@ EbErrorType read_command_line(int32_t argc, char *const argv[], EbConfig **confi
     for (index = 0; index < MAX_CHANNEL_NUMBER; ++index) free(config_strings[index]);
     return return_error;
 }
+#endif
 
 #if GETOPT
+/*
 EbErrorType set_token_getopt(EbConfig *config, uint32_t num_channel, int32_t token) {
     switch (token) {
     case ARG_HELP: break;//get_help_getopt(); return EB_ErrorMax;
@@ -3354,7 +3357,7 @@ EbErrorType set_token_getopt(EbConfig *config, uint32_t num_channel, int32_t tok
     }
     return EB_ErrorNone;
 }
-
+*/
 void get_help_getopt() {
     int i                = 0;
     int prev_enum_option = -1;
@@ -3432,7 +3435,7 @@ EbErrorType warning_or_error_log(const uint32_t token, const char *str_argv) {
     }
     return EB_ErrorNone;
 }
-/*
+
 EbErrorType read_command_line_getopt(int32_t argc, char *const argv[], EbConfig **configs,
                                      uint32_t num_channels, EbErrorType *return_errors) {
     //EbErrorType return_error;
@@ -3477,6 +3480,6 @@ EbErrorType read_command_line_getopt(int32_t argc, char *const argv[], EbConfig 
     }
     return EB_ErrorNone;
 }
-*/
+
 #endif
 
