@@ -2785,6 +2785,7 @@ int32_t compute_frames_to_be_encoded(EbConfig *config) {
 /**********************************
 * Parse Pred Struct File
 **********************************/
+/*
 static int32_t parse_pred_struct_file(EbConfig *config, char *buffer, int32_t size) {
     uint32_t argc;
     char *   argv[CONFIG_FILE_MAX_ARG_COUNT];
@@ -2899,7 +2900,7 @@ static int32_t parse_pred_struct_file(EbConfig *config, char *buffer, int32_t si
 
     return 0;
 }
-
+*/
 /**********************************
 * Read Prediction Structure File
 **********************************/
@@ -2919,7 +2920,7 @@ static int32_t read_pred_struct_file(EbConfig *config, char *PredStructPath,
                 config_file_buffer, 1, config_file_size, config->input_pred_struct_file);
 
             if (result_size == config_file_size) {
-                parse_pred_struct_file(config, config_file_buffer, config_file_size);
+                //parse_pred_struct_file(config, config_file_buffer, config_file_size);
             } else {
                 fprintf(stderr, "Error channel %u: File Read Failed\n", instance_idx + 1);
                 return_error = -1;
