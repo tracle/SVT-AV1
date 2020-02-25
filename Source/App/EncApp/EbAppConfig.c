@@ -3264,7 +3264,7 @@ EbErrorType set_token_getopt(EbConfig *config, uint32_t num_channel, int32_t tok
             fprintf(stderr,
                     "Error: The number of channels has to be within the range [1,%u]\n",
                     (uint32_t)MAX_CHANNEL_NUMBER);
-            return 0;
+            return EB_ErrorBadParameter;
         }
         return num_channel;
     case 'c':
