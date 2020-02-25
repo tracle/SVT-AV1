@@ -32,6 +32,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define FROM_MASTER_GLB            1 // Adrien: do not take an I_SLICE as global motion reference
 #define FEB24_ADOPTIONS                    1
 #define MODULATE_ME_OUTPUT_BESTME          0
 #if MODULATE_ME_OUTPUT_BESTME
@@ -164,8 +165,8 @@ extern "C" {
 #define ADOPT_SETTING_9_NIC_CHANGES 0 // Modify MD_STAGE_COUNT candidates for enc-mode 0 only
 #define MD_SKIP_FIX            1 // Fix the crash in debug mode due to MD skip
 #define WARP_IMPROVEMENT       1 // Improve Warp motion by adding all the candidates in list0 and list 1
-#define ALTREF_TL1             1 // Enable TF for layer 1, where the distance is more or equal to 4
-#define ALTREF_STR_UPDATE      1 // Adjust the filter strength
+#define ALTREF_TL1             1 // Enable TF for layer 1, where the distance is more or equal to 4  ---CHKN-already-in
+#define ALTREF_STR_UPDATE      1 // Adjust the filter strength   ---CHKN-already-in
 
 #define ENCDEC_SERIAL          1 // No ENCDec Segment. To improme MD rate estimation. Active for M0-M3
 #define SHUT_HME_L1_CHECK      1//Remove usage of ME results for list=0 refIndex=0 to be decide HME centre. Feauture assumes no MRP. and list1 distance = list0 distance.
@@ -212,7 +213,7 @@ extern "C" {
 #endif
 #define COMPOUND_WEDGE_OPT       1   // optimize compound wedge For M1 and higher
 
-#define NSQ_ME_OPT               1
+#define NSQ_ME_OPT               1   // ---CHKN-already-in
 
 #define PME_SEARCH_AREA_TUNE        1
 #define SC_REDUCE_DIFF              1 // Reduce feature diff to normal encoder
@@ -239,7 +240,7 @@ extern "C" {
 
 #define NEW_MD_LAMBDA               1
 #endif
-#define TX_SIZE_EARLY_EXIT          1 // Exit TX size search when all coefficients are zero.
+#define TX_SIZE_EARLY_EXIT          1 // Exit TX size search when all coefficients are zero.   // ---CHKN-already-in
 
 #define   SINGLE_CORE_ENCODE   1
 #if SINGLE_CORE_ENCODE
@@ -248,8 +249,8 @@ extern "C" {
 #define PAREF_OUT                    1 // Disconnect pa ref  from input for both single/multi core
 #define NO_THREAD_PIN                1 // Adding the ability to not pin the -lp 1 use case to core 0
 #endif
-#define INIT_GM_FIX           1 // initilize global motion to be OFF for all references frames.
-#define REVERT_ALTREF_FIX     1 // put back padding r2r fix for altref
+#define INIT_GM_FIX           1 // initilize global motion to be OFF for all references frames.  // ---CHKN-already-in
+#define REVERT_ALTREF_FIX     1 // put back padding r2r fix for altref  // ---CHKN-already-in
 
 #define ENHANCED_M0_SETTINGS         1 // Updated M0 settings(optimized independent chroma search for all layers, conservative coeff - based NSQ cands reduction, shut coeff - based skip tx size search, warped for all layers, SUB - SAD as ME search method for non - SC only)
 #define MULTI_PASS_PD                1 // Multi-Pass Partitioning Depth (Multi-Pass PD) performs multiple PD stages for the same SB towards 1 final Partitioning Structure. As we go from PDn to PDn + 1, the prediction accuracy of the MD feature(s) increases while the number of block(s) decreases
@@ -257,18 +258,18 @@ extern "C" {
 
 
 
-#define DIST_BASED_ME_SEARCH_AREA    1
+#define DIST_BASED_ME_SEARCH_AREA    1// ---CHKN-already-in
 #define ABILITY_BYPASS_HME_LEVEL_0   0
 #define ENABLE_HME_360P              1
-#define ENABLE_SB128_360P            1
+#define ENABLE_SB128_360P            1// ---CHKN-already-in
 #define ENABLE_FULL_MRP_ME_SC        1
 #define ENABLE_FRAME_RATE_ME         1 // NON_SC
 #define TUNE_SUBPEL_SEARCH           1
 #define ENABLE_GM_TRANS              1 // SC ONLY
 #define TUNE_TF_ME                   1
-#define DISTANCE_ME_FACTOR           1 // NON_SC
+#define DISTANCE_ME_FACTOR           1 // NON_SC  // ---CHKN-already-in
 #define TUNE_ME_MAX                  1 // NON_SC
-#define TUNE_PRUNE_SC                1 // SC ONLY
+#define TUNE_PRUNE_SC                1 // SC ONLY // ---CHKN-already-in
 #define ENABLE_WARPED_SC             1 // SC ONLY
 #define ENABLE_NEW_NN_SC             1 // SC ONLY
 
@@ -281,7 +282,7 @@ extern "C" {
 #define SQ_ONLY_AGRESSIVE_MDS_2_CLASS_PRUNING  0
 #define NSQ_ONLY_AGRESSIVE_MDS_2_CLASS_PRUNING 0
 
-#define FIX_CHROMA_BC                1
+#define FIX_CHROMA_BC                1// ---CHKN-already-in
 
 #define PROOF_OF_CONCEPT_TEST_0      0
 #define PROOF_OF_CONCEPT_TEST_1      0
@@ -309,27 +310,28 @@ extern "C" {
 #define FIXED_TX_TYPE_COSTING        1 // Fix costing of inter transform types
 #define FIXED_CDF_PROPABILITY        1
 
+//from Hsan: only the 2 1st not committed there is that note 1 // --> identical streams 
 
 
 #define DIST_BASED_PME_SEARCH_AREA   0
-#define FIXED_PME_LARGE_SEARCH_AREA  1
-#define FP_QUANT_BOTH_INTRA_INTER    1
-#define TUNE_AUTO_MAX_PARTITION      1
+#define FIXED_PME_LARGE_SEARCH_AREA  1 // ---CHKN-already-in
+#define FP_QUANT_BOTH_INTRA_INTER    1// ---CHKN-already-in
+#define TUNE_AUTO_MAX_PARTITION      1 //enable_auto_max_partition is already OFF
 #define FASTER_SQ_WEIGHT             0
-#define ENHANCED_SQ_WEIGHT           1
+#define ENHANCED_SQ_WEIGHT           1// ---CHKN-already-in
 
-#define LOSSLESS_TX_SIZE_OPT         1
-#define LOSSLESS_TX_TYPE_OPT         1
-#define TX_SEARCH_REDUCED            1
+#define LOSSLESS_TX_SIZE_OPT         1// ---CHKN-already-in
+#define LOSSLESS_TX_TYPE_OPT         1// ---CHKN-already-in
+#define TX_SEARCH_REDUCED            1// ---CHKN-already-in --- modified
 
-#define ATB_INTRA_2_DEPTH            1 // ATB INTRA Depth 2
+#define ATB_INTRA_2_DEPTH            1 // ATB INTRA Depth 2    --- TXS_DEPTH_2
 #define SHUT_TX_WEIGHT               0
-#define ATB_INTER_2_DEPTH            1 // ATB INTRA Depth 2
-#define TX_ORG_INTERINTRA            1
-#define SUPPORT_BC                   1   
-#define ENABLE_TX_BC                 1 // ATB for BC
+#define ATB_INTER_2_DEPTH            1 // ATB INTRA Depth 2   ---TXS_DEPTH_2
+#define TX_ORG_INTERINTRA            1 // ---CHKN-already-in
+#define SUPPORT_BC                   1  // ---TXS_DEPTH_2
+#define ENABLE_TX_BC                 1 // ATB for BC// ---TXS_DEPTH_2
 #define ENABLE_RDOQ_BC               1 // RDOQ for BC
-#define FASTER_RDOQ                  1
+#define FASTER_RDOQ                  1// ---TXS_DEPTH_2
 #define UPGRAGDE_TX_WEIGHT           0
 #define ADD_4TH_MD_STAGE             1
 #if ADD_4TH_MD_STAGE
@@ -374,7 +376,7 @@ extern "C" {
 #define FREQUENCY_SPATIAL_DOMAIN     1
 #if FREQUENCY_SPATIAL_DOMAIN
 #define FREQUENCY_DOMAIN_TX_TYPE_SEARCH 0
-#define SPATIAL_DOMAIN_ONLY_LAST_STAGE  1
+#define SPATIAL_DOMAIN_ONLY_LAST_STAGE  1  //CHKN in
 #endif
 
 #define LOSSLESS_CLEAN_UP               1  // Lossless for MR, M0, M1
@@ -386,9 +388,9 @@ extern "C" {
 #define TEST_PIC_MULTI_PASS_PD_MODE_4   0
 
 
-#define MD_STAGE_1_CAND_PRUNNING_TH     1 // to enable as part of blue towards bd-rate
+#define MD_STAGE_1_CAND_PRUNNING_TH     1 // to enable as part of blue towards bd-rate    //md_fast_cost_class_prune_th
 #define MD_STAGE_1_CLASS_PRUNNING_TH    1 // to enable as part of blue towards speed
-#define MD_STAGE_2_CAND_PRUNNING_TH     1 // to enable as part of blue towards bd-rate
+#define MD_STAGE_2_CAND_PRUNNING_TH     1 // to enable as part of blue towards bd-rate     //md_full_cost_cand_prune_th
 
 #define LAYER_CHECK_REMOVAL             1
 
