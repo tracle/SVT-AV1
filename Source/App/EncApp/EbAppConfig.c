@@ -3205,7 +3205,7 @@ EbErrorType read_command_line(int32_t argc, char *const argv[], EbConfig **confi
 
 #if GETOPT
 
-EbErrorType set_token_getopt(EbConfig *config, uint32_t num_channel, int32_t token) {
+EbErrorType set_token_getopt(EbConfig *config, uint32_t num_channel, int token) {
     switch (token) {
     case ARG_HELP: get_help_getopt(); return EB_ErrorMax;
     case ARG_NCH:
@@ -3438,7 +3438,7 @@ EbErrorType warning_or_error_log(const uint32_t token, const char *str_argv) {
 
 EbErrorType read_command_line_getopt(int32_t argc, char *const argv[], EbConfig **configs,
                                      uint32_t num_channels, EbErrorType *return_errors) {
-    int32_t  token = ARG_ADAPTIVE_QUANTIZATION;
+    int  token = ARG_ADAPTIVE_QUANTIZATION;
     uint32_t index = 0;
     uint32_t i = 1;
     //for (index = 0; index < num_channels; ++index) {
