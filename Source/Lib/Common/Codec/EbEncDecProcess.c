@@ -4181,7 +4181,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #else
     if (MR_MODE || picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
 #endif
+#if FEB24_ADOPTIONS
+        context_ptr->md_stage_2_cand_prune_th = 15;
+#else
         context_ptr->md_stage_2_cand_prune_th = (uint64_t)~0;
+#endif
 #if !M0_OPT
     else if (picture_control_set_ptr->enc_mode <= ENC_M0)
         context_ptr->md_stage_2_cand_prune_th = sequence_control_set_ptr->static_config.md_stage_2_cand_prune_th;

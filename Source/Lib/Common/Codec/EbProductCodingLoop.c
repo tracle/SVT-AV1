@@ -11990,10 +11990,18 @@ void interintra_class_pruning_2(ModeDecisionContext *context_ptr, uint64_t best_
 
             // intra class pruning
             uint32_t cand_count = 1;
+#if FEB24_ADOPTIONS
+            uint64_t md_stage_2_cand_prune_th = context_ptr->md_stage_2_cand_prune_th;
+            md_stage_2_cand_prune_th = (cand_class_it == CAND_CLASS_0 || cand_class_it == CAND_CLASS_6 || cand_class_it == CAND_CLASS_7) ? (uint64_t)~0 : md_stage_2_cand_prune_th;
+#endif
 #if ENHANCED_M0_SETTINGS
             if(class_best_cost)
 #endif
+#if FEB24_ADOPTIONS
+            while (cand_count < context_ptr->md_stage_2_count[cand_class_it] && ((((*(context_ptr->candidate_buffer_ptr_array[cand_buff_indices[cand_count]]->full_cost_ptr) - class_best_cost) * 100) / class_best_cost) < md_stage_2_cand_prune_th)) {
+#else
             while (cand_count < context_ptr->md_stage_2_count[cand_class_it] && ((((*(context_ptr->candidate_buffer_ptr_array[cand_buff_indices[cand_count]]->full_cost_ptr) - class_best_cost) * 100) / class_best_cost) < context_ptr->md_stage_2_cand_prune_th)) {
+#endif
                 cand_count++;
             }
             context_ptr->md_stage_2_count[cand_class_it] = cand_count;

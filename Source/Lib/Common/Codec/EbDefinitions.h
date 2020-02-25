@@ -32,6 +32,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define FEB24_ADOPTIONS                    1
 #define PME_SNQ_INHETIT_MVS_FULL_PEL       0
 #define PME_SNQ_INHETIT_MVS_SUB_PEL        0
 #define MIN_ME_8x8_MAX_ME_16x16            0
