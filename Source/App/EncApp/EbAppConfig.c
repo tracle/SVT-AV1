@@ -1148,9 +1148,11 @@ static void set_frame_rate_denominator(const char *value, EbConfig *cfg) {
 static void set_encoder_bit_depth(const char *value, EbConfig *cfg) {
     cfg->encoder_bit_depth = strtoul(value, NULL, 0);
 }
+#if !GETOPT
 static void set_encoder_16bit_pipeline(const char *value, EbConfig *cfg) {
     cfg->encoder_16bit_pipeline = (EbBool)strtoul(value, NULL, 0);
 }
+#endif
 static void set_encoder_color_format(const char *value, EbConfig *cfg) {
     cfg->encoder_color_format = strtoul(value, NULL, 0);
 }
@@ -1883,7 +1885,7 @@ ConfigEntry config_entry_specific[] = {
      "extra reference frame for the base-layer picture(0: OFF[default], 1: ON)",
      set_enable_overlays},
     // --- end: ALTREF_FILTERING_SUPPORT
-	{SINGLE_INPUT, SQ_WEIGHT_TOKEN, "Determines if HA, HB, VA, VB, H4 and V4 shapes could be skipped based on the cost of SQ, H and V shapes([75-100], default: 100)", set_square_weight},
+    {SINGLE_INPUT, SQ_WEIGHT_TOKEN, "Determines if HA, HB, VA, VB, H4 and V4 shapes could be skipped based on the cost of SQ, H and V shapes([75-100], default: 100)", set_square_weight},
     {SINGLE_INPUT,
      MD_FAST_PRUNE_C_TH,
      "Set MD fast prune class threshold[5-200]",
