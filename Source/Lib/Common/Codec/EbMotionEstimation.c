@@ -18063,6 +18063,75 @@ if (context_ptr->me_alt_ref == EB_FALSE) {
                 }
             }   
 #endif
+#if MODULATE_ME_OUTPUT_LEVELS
+            {
+                uint64_t pa_me_th = 1000;
+                uint8_t direction   = me_candidate->prediction_direction;
+                uint8_t ref_index0  = me_candidate->ref_index[0];
+                uint8_t ref_index1  = me_candidate->ref_index[1];
+                uint8_t list_index0 = me_candidate->ref0_list;
+                uint8_t list_index1 = me_candidate->ref1_list;
+                int16_t mv_th = 4;
+                uint8_t dist_th = 1;
+                uint8_t d1 = 0;
+                uint8_t short_mv = 0;
+                uint8_t closest_ref = 0;
+                uint8_t second_close_ref = 0;
+                uint8_t farthest_ref = 0;
+                int16_t x_mv, y_mv;
+                if (direction == 0) {
+                    uint16_t dist0 = ABS((int16_t)(picture_control_set_ptr->picture_number - picture_control_set_ptr->ref_pic_poc_array[list_index0][ref_index0]));    
+                    d1 = dist0 > dist_th ? 0 : 1;
+                    x_mv = _MVXT(context_ptr->p_sb_best_mv[list_index0][ref_index0][nIdx]);
+                    y_mv = _MVYT(context_ptr->p_sb_best_mv[list_index0][ref_index0][nIdx]);
+                    short_mv = (x_mv <= mv_th && y_mv <= mv_th) ? 1 : 0;    
+                    closest_ref = (ref_index0 == 0) ? 1 : 0;
+                    second_close_ref = (ref_index0 == 1) ? 1 : 0;
+                    farthest_ref = (ref_index0 > 2) ? 1 : 0;
+                } else if (direction == 1) {
+                    uint16_t dist1 = ABS((int16_t)(picture_control_set_ptr->picture_number - picture_control_set_ptr->ref_pic_poc_array[list_index1][ref_index1]));
+                    d1 = dist1 > 0 ? dist_th : 1;
+                    x_mv = _MVXT(context_ptr->p_sb_best_mv[list_index1][ref_index1][nIdx]);
+                    y_mv = _MVYT(context_ptr->p_sb_best_mv[list_index1][ref_index1][nIdx]);
+                    short_mv = (x_mv <= mv_th && y_mv <= mv_th) ? 1 : 0; 
+                    closest_ref = (ref_index1 == 0) ? 1 : 0;
+                    second_close_ref = (ref_index1 == 1) ? 1 : 0;
+                    farthest_ref = (ref_index1 > 2) ? 1 : 0;
+                } else if (direction == 2) {
+                    uint16_t dist0 = ABS((int16_t)(picture_control_set_ptr->picture_number - picture_control_set_ptr->ref_pic_poc_array[list_index0][ref_index0]));
+                    uint16_t dist1 = ABS((int16_t)(picture_control_set_ptr->picture_number - picture_control_set_ptr->ref_pic_poc_array[list_index1][ref_index1]));
+                    d1 = (dist0 > dist_th || dist1 > dist_th) ? 0 : 1;
+                    x_mv = _MVXT(context_ptr->p_sb_best_mv[list_index0][ref_index0][nIdx]);
+                    y_mv = _MVYT(context_ptr->p_sb_best_mv[list_index0][ref_index0][nIdx]);
+                    short_mv = (x_mv <= mv_th && y_mv <= mv_th) ? 1 : 0; 
+                    x_mv = _MVXT(context_ptr->p_sb_best_mv[list_index1][ref_index1][nIdx]);
+                    y_mv = _MVYT(context_ptr->p_sb_best_mv[list_index1][ref_index1][nIdx]);
+                    short_mv = short_mv && (x_mv <= mv_th && y_mv <= mv_th) ? 1 : 0; 
+                    closest_ref = (ref_index0 == 0) || (ref_index1 == 0) ? 1 : 0;
+                    second_close_ref = (ref_index0 == 1) || (ref_index1 == 1)? 1 : 0;
+                    farthest_ref = (ref_index0 > 2) || (ref_index1 > 2) ? 1 : 0;
+                }
+
+                if (d1 && short_mv && !picture_control_set_ptr->is_used_as_reference_flag)
+                    pa_me_th = 0;
+                else if (d1 && short_mv && picture_control_set_ptr->is_used_as_reference_flag)
+                    pa_me_th = 15;
+                else if (d1)
+                    pa_me_th = 30;
+                else if (closest_ref)
+                    pa_me_th = 50;
+                else if(second_close_ref)
+                    pa_me_th = 100;
+                else if(farthest_ref)
+                    pa_me_th = 200;
+
+                best = candidateIndex == 0 ? me_candidate->distortion : best;
+                if ((me_candidate->distortion - best) * 100 > pa_me_th*best) {
+                    adjusted_total_me_candidate_index--;
+                    continue;
+                }
+            }
+#endif
         }
 #if REDUCE_ME_OUTPUT || MODULATE_ME_OUTPUT
         //printf("%d\t%d\t%d\n", total_me_candidate_index, adjusted_total_me_candidate_index,total_me_candidate_index - adjusted_total_me_candidate_index);
