@@ -132,8 +132,9 @@ int32_t main(int32_t argc, char *argv[]) {
         }
 
         // Read all configuration files.
-        return_error = read_command_line(argc, argv, configs, num_channels, return_errors);
-
+        char warning[MAX_NUM_TOKENS][WARNING_LENGTH];
+        return_error = read_command_line(
+            argc, argv, configs, num_channels, return_errors, warning);
         // Process any command line options, including the configuration file
 
         if (return_error == EB_ErrorNone) {
@@ -183,6 +184,10 @@ int32_t main(int32_t argc, char *argv[]) {
 #if DISPLAY_MEMORY
                     EB_APP_MEMORY();
 #endif
+                }
+                for (uint32_t warning_id = 0; warning_id < MAX_NUM_TOKENS; warning_id++) {
+                    if (*warning[warning_id] == '-')
+                        fprintf(stderr, "warning: %s\n", warning[warning_id]);
                 }
                 fprintf(stderr, "Encoding          ");
                 fflush(stdout);

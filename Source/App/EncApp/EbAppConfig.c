@@ -23,6 +23,7 @@
  * Defines
  **********************************/
 #define HELP_TOKEN "-help"
+#define HELP_LONG_TOKEN "--help"
 #define CHANNEL_NUMBER_TOKEN "-nch"
 #define COMMAND_LINE_MAX_SIZE 2048
 #define CONFIG_FILE_TOKEN "-c"
@@ -163,6 +164,44 @@
 #define MD_FAST_PRUNE_S_TH "-md-fast-cand-th"
 #define MD_FULL_PRUNE_C_TH "-md-full-class-th"
 #define MD_FULL_PRUNE_S_TH "-md-full-cand-th"
+
+//double dash
+#define PRESET_TOKEN "--preset"
+#define QP_FILE_NEW_TOKEN "--qpfile"
+#define INPUT_DEPTH_TOKEN "--input-depth"
+#define KEYINT_TOKEN "--keyint"
+#define LOOKAHEAD_NEW_TOKEN "--lookahead"
+
+#define STAT_REPORT_NEW_TOKEN "--enable-stat-report"
+#define RESTORATION_ENABLE_NEW_TOKEN "--enable-restoration-filtering"
+#define EDGE_SKIP_ANGLE_INTRA_NEW_TOKEN "--enable-intra-edge-skp"
+#define INTER_INTRA_COMPOUND_NEW_TOKEN "--enable-interintra-comp"
+#define FRAC_SEARCH_64_NEW_TOKEN "--enable-frac-search-64"
+#define MFMV_ENABLE_NEW_TOKEN "--enable-mfmv"
+#define REDUNDANT_BLK_NEW_TOKEN "--enable-redundant-blk"
+#define SPATIAL_SSE_FL_NEW_TOKEN "--enable-spatial-sse-fl"
+#define OVR_BNDRY_BLK_NEW_TOKEN "--enable-over-bndry-blk"
+#define NEW_NEAREST_COMB_INJECT_NEW_TOKEN "--enable-new-nrst-near-comb"
+#define NX4_4XN_MV_INJECT_NEW_TOKEN "--enable-nx4-4xn-mv-inject"
+#define PRUNE_UNIPRED_ME_NEW_TOKEN "--enable-prune-unipred-me"
+#define PRUNE_REF_REC_PART_NEW_TOKEN "--enable-prune-ref-rec-part"
+#define NSQ_TABLE_NEW_TOKEN "--enable-nsq-table-use"
+#define FRAME_END_CDF_UPDATE_NEW_TOKEN "--enable-framend-cdf-upd-mode"
+#define LOCAL_WARPED_ENABLE_NEW_TOKEN "--enable-local-warp"
+#define GLOBAL_MOTION_ENABLE_NEW_TOKEN "--enable-global-motion"
+#define RDOQ_NEW_TOKEN "--enable-rdoq"
+#define FILTER_INTRA_NEW_TOKEN "--enable-filter-intra"
+#define HDR_INPUT_NEW_TOKEN "--enable-hdr"
+#define ADAPTIVE_QP_ENABLE_NEW_TOKEN "--aq-mode"
+
+#define INPUT_FILE_LONG_TOKEN "--input"
+#define OUTPUT_BITSTREAM_LONG_TOKEN "--output"
+#define OUTPUT_RECON_LONG_TOKEN "--recon"
+#define WIDTH_LONG_TOKEN "--width"
+#define HEIGHT_LONG_TOKEN "--height"
+#define NUMBER_OF_PICTURES_LONG_TOKEN "--frames"
+#define QP_LONG_TOKEN "--qp"
+#define CLASS_12_NEW_TOKEN "-class-12"
 
 /**********************************
  * Set Cfg Functions
@@ -630,21 +669,38 @@ typedef struct config_entry_s {
 ConfigEntry config_entry_options[] = {
     // File I/O
     {SINGLE_INPUT, HELP_TOKEN, "Show usage options and exit", set_cfg_input_file},
+
     {SINGLE_INPUT, INPUT_FILE_TOKEN, "Input filename", set_cfg_input_file},
+    {SINGLE_INPUT, INPUT_FILE_LONG_TOKEN, "Input filename", set_cfg_input_file},
+
     {SINGLE_INPUT, OUTPUT_BITSTREAM_TOKEN, "Output filename", set_cfg_stream_file},
+    {SINGLE_INPUT, OUTPUT_BITSTREAM_LONG_TOKEN, "Output filename", set_cfg_stream_file},
+
     {SINGLE_INPUT, ERROR_FILE_TOKEN, "Error filename", set_cfg_error_file},
+
     {SINGLE_INPUT, OUTPUT_RECON_TOKEN, "Recon filename", set_cfg_recon_file},
+    {SINGLE_INPUT, OUTPUT_RECON_LONG_TOKEN, "Recon filename", set_cfg_recon_file},
+
     {SINGLE_INPUT, STAT_FILE_TOKEN, "Stat filename", set_cfg_stat_file},
     {SINGLE_INPUT, NULL, NULL, NULL}};
 
 ConfigEntry config_entry_global_options[] = {
     // Picture Dimensions
     {SINGLE_INPUT, WIDTH_TOKEN, "Frame width", set_cfg_source_width},
+    {SINGLE_INPUT, WIDTH_LONG_TOKEN, "Frame width", set_cfg_source_width},
+
     {SINGLE_INPUT, HEIGHT_TOKEN, "Frame height", set_cfg_source_height},
+    {SINGLE_INPUT, HEIGHT_LONG_TOKEN, "Frame height", set_cfg_source_height},
+
     {SINGLE_INPUT,
      NUMBER_OF_PICTURES_TOKEN,
      "Stop encoding after n input frames",
      set_cfg_frames_to_be_encoded},
+    {SINGLE_INPUT,
+     NUMBER_OF_PICTURES_LONG_TOKEN,
+     "Stop encoding after n input frames",
+     set_cfg_frames_to_be_encoded},
+
     {SINGLE_INPUT, BUFFERED_INPUT_TOKEN, "Buffer n input frames", set_buffered_input},
     {SINGLE_INPUT,
      ENCODER_COLOR_FORMAT,
@@ -664,14 +720,25 @@ ConfigEntry config_entry_global_options[] = {
      FRAME_RATE_DENOMINATOR_TOKEN,
      "Stream frame rate denominator",
      set_frame_rate_denominator},
-    {SINGLE_INPUT, ENCODER_BIT_DEPTH, "Bit depth for codec(8 or 10)", set_encoder_bit_depth},
+    //{SINGLE_INPUT, ENCODER_BIT_DEPTH, "Bit depth for codec(8 or 10)", set_encoder_bit_depth},
+    {SINGLE_INPUT, INPUT_DEPTH_TOKEN, "Bit depth for codec(8 or 10)", set_encoder_bit_depth},
     //{SINGLE_INPUT, LEVEL_TOKEN, "Level", set_level},
-    {SINGLE_INPUT, HIERARCHICAL_LEVELS_TOKEN, "Set hierarchical levels(3 or 4[default])", set_hierarchical_levels},
+    {SINGLE_INPUT,
+     HIERARCHICAL_LEVELS_TOKEN,
+     "Set hierarchical levels(3 or 4[default])",
+     set_hierarchical_levels},
     {SINGLE_INPUT,
      PRED_STRUCT_TOKEN,
      "Set prediction structure( 0: low delay P, 1: low delay B, 2: random access [default])",
      set_cfg_pred_structure},
-    {SINGLE_INPUT, HDR_INPUT_TOKEN, "Enable high dynamic range(0: OFF[default], ON: 1)", set_high_dynamic_range_input},
+    //{SINGLE_INPUT,
+    // HDR_INPUT_TOKEN,
+    // "Enable high dynamic range(0: OFF[default], ON: 1)",
+    // set_high_dynamic_range_input},
+    {SINGLE_INPUT,
+     HDR_INPUT_NEW_TOKEN,
+     "Enable high dynamic range(0: OFF[default], ON: 1)",
+     set_high_dynamic_range_input},
     // Asm Type
     {SINGLE_INPUT,
      ASM_TYPE_TOKEN,
@@ -699,11 +766,16 @@ ConfigEntry config_entry_rc[] = {
      USE_QP_FILE_TOKEN,
      "Overwrite QP assignment using qp values in QP file",
      set_cfg_use_qp_file},
-    {SINGLE_INPUT, QP_FILE_TOKEN, "Path to Qp file", set_cfg_qp_file},
+    //{SINGLE_INPUT, QP_FILE_TOKEN, "Path to Qp file", set_cfg_qp_file},
+    {SINGLE_INPUT, QP_FILE_NEW_TOKEN, "Path to Qp file", set_cfg_qp_file},
     {SINGLE_INPUT, MAX_QP_TOKEN, "Maximum (worst) quantizer[0-63]", set_max_qp_allowed},
     {SINGLE_INPUT, MIN_QP_TOKEN, "Minimum (best) quantizer[0-63]", set_min_qp_allowed},
+    //{SINGLE_INPUT,
+    // ADAPTIVE_QP_ENABLE_TOKEN,
+    // "Set adaptive QP level(0: OFF ,1: variance base using segments ,2: Deltaq pred efficiency)",
+    // set_adaptive_quantization},
     {SINGLE_INPUT,
-     ADAPTIVE_QP_ENABLE_TOKEN,
+     ADAPTIVE_QP_ENABLE_NEW_TOKEN,
      "Set adaptive QP level(0: OFF ,1: variance base using segments ,2: Deltaq pred efficiency)",
      set_adaptive_quantization},
     {SINGLE_INPUT, VBV_BUFSIZE_TOKEN, "VBV buffer size", set_vbv_buf_size},
@@ -724,8 +796,12 @@ ConfigEntry config_entry_2p[] = {
     {SINGLE_INPUT, NULL, NULL, NULL}};
 ConfigEntry config_entry_intra_refresh[] = {
     // File I/O
+    //{SINGLE_INPUT,
+    // INTRA_PERIOD_TOKEN,
+    //"Intra period interval(frames) (-2: No intra update, -1: default intra period or [0-255])",
+    // set_cfg_intra_period},
     {SINGLE_INPUT,
-     INTRA_PERIOD_TOKEN,
+     KEYINT_TOKEN,
      "Intra period interval(frames) (-2: No intra update, -1: default intra period or [0-255])",
      set_cfg_intra_period},
     {SINGLE_INPUT,
@@ -736,16 +812,24 @@ ConfigEntry config_entry_intra_refresh[] = {
     {SINGLE_INPUT, NULL, NULL, NULL}};
 ConfigEntry config_entry_specific[] = {
     // Prediction Structure
-    {SINGLE_INPUT, ENCMODE_TOKEN, "Encoder mode/Preset used[0-8]", set_enc_mode},
+    //{SINGLE_INPUT, ENCMODE_TOKEN, "Encoder mode/Preset used[0-8]", set_enc_mode},
+    {SINGLE_INPUT, PRESET_TOKEN, "Encoder mode/Preset used[0-8]", set_enc_mode},
     {SINGLE_INPUT,
      INPUT_COMPRESSED_TEN_BIT_FORMAT,
      "Offline packing of the 2bits: requires two bits packed input (0: OFF[default], 1: ON)",
      set_compressed_ten_bit_format},
     {SINGLE_INPUT, TILE_ROW_TOKEN, "Number of tile rows to use, log2[0-6]", set_tile_row},
     {SINGLE_INPUT, TILE_COL_TOKEN, "Number of tile columns to use, log2[0-6]", set_tile_col},
+
     {SINGLE_INPUT, QP_TOKEN, "Constant/Constrained Quality level", set_cfg_qp},
+    {SINGLE_INPUT, QP_LONG_TOKEN, "Constant/Constrained Quality level", set_cfg_qp},
+
+    //{SINGLE_INPUT,
+    // LOOK_AHEAD_DIST_TOKEN,
+    // "When RC is ON , it is best to set this parameter to be equal to the intra period value",
+    // set_look_ahead_distance},
     {SINGLE_INPUT,
-     LOOK_AHEAD_DIST_TOKEN,
+     LOOKAHEAD_NEW_TOKEN,
      "When RC is ON , it is best to set this parameter to be equal to the intra period value",
      set_look_ahead_distance},
     // DLF
@@ -754,16 +838,29 @@ ConfigEntry config_entry_specific[] = {
      "Disable loop filter(0: loop filter enabled[default] ,1: loop filter disabled)",
      set_disable_dlf_flag},
     // RESTORATION
+    //{SINGLE_INPUT,
+     //RESTORATION_ENABLE_TOKEN,
+     //"Enable the loop restoration filter(0: OFF ,1: ON ,-1:DEFAULT)",
+     //set_enable_restoration_filter_flag},
     {SINGLE_INPUT,
-     RESTORATION_ENABLE_TOKEN,
+     RESTORATION_ENABLE_NEW_TOKEN,
      "Enable the loop restoration filter(0: OFF ,1: ON ,-1:DEFAULT)",
      set_enable_restoration_filter_flag},
+    //{SINGLE_INPUT,
+     //MFMV_ENABLE_TOKEN,
+     //"Enable motion field motion vector( 0: OFF, 1: ON, -1: DEFAULT)",
+     //set_enable_mfmv_flag},
     {SINGLE_INPUT,
-     MFMV_ENABLE_TOKEN,
+     MFMV_ENABLE_NEW_TOKEN,
      "Enable motion field motion vector( 0: OFF, 1: ON, -1: DEFAULT)",
      set_enable_mfmv_flag},
+    //{SINGLE_INPUT,
+    // REDUNDANT_BLK_TOKEN,
+    // "Use the same md results(mode, residual , cost,etc..)as the previously processed identical "
+    // "block(0: OFF, 1: ON, -1: DEFAULT)",
+    // set_enable_redundant_blk_flag},
     {SINGLE_INPUT,
-     REDUNDANT_BLK_TOKEN,
+     REDUNDANT_BLK_NEW_TOKEN,
      "Use the same md results(mode, residual , cost,etc..)as the previously processed identical "
      "block(0: OFF, 1: ON, -1: DEFAULT)",
      set_enable_redundant_blk_flag},
@@ -772,79 +869,136 @@ ConfigEntry config_entry_specific[] = {
      "Disable trellis optimization of quantized coefficients (0: OFF 1: ON  2: ON for rd "
      "search 3: ON for estimate yrd serch (default))",
      set_enable_trellis_flag},
+    //{SINGLE_INPUT,
+    // SPATIAL_SSE_FL_TOKEN,
+    // "Enable spatial sse full loop(0: OFF, 1: ON, -1: DEFAULT)",
+    // set_spatial_sse_fl_flag},
     {SINGLE_INPUT,
-     SPATIAL_SSE_FL_TOKEN,
+     SPATIAL_SSE_FL_NEW_TOKEN,
      "Enable spatial sse full loop(0: OFF, 1: ON, -1: DEFAULT)",
      set_spatial_sse_fl_flag},
     {SINGLE_INPUT,
      SUBPEL_TOKEN,
      "Enable subpel(0: OFF, 1: ON, -1: DEFAULT)",
      set_enable_sub_pel_flag},
+    //{SINGLE_INPUT,
+    // OVR_BNDRY_BLK_TOKEN,
+    // "Enable over boundary block mode (0: OFF, 1: ON, -1: DEFAULT)",
+    // set_over_bndry_blk_flag},
     {SINGLE_INPUT,
-     OVR_BNDRY_BLK_TOKEN,
+     OVR_BNDRY_BLK_NEW_TOKEN,
      "Enable over boundary block mode (0: OFF, 1: ON, -1: DEFAULT)",
      set_over_bndry_blk_flag},
+    //{SINGLE_INPUT,
+    // NEW_NEAREST_COMB_INJECT_TOKEN,
+    // "Enable new nearest near comb injection (0: OFF, 1: ON, -1: DEFAULT)",
+    // set_new_nearest_comb_inject_flag},
     {SINGLE_INPUT,
-     NEW_NEAREST_COMB_INJECT_TOKEN,
+     NEW_NEAREST_COMB_INJECT_NEW_TOKEN,
      "Enable new nearest near comb injection (0: OFF, 1: ON, -1: DEFAULT)",
      set_new_nearest_comb_inject_flag},
+    //{SINGLE_INPUT,
+    // NX4_4XN_MV_INJECT_TOKEN,
+    // "Enable nx4 4xn parent mv injection (0: OFF, 1: ON, -1: DEFAULT)",
+    // set_nx4_4xn_parent_mv_inject_flag},
     {SINGLE_INPUT,
-     NX4_4XN_MV_INJECT_TOKEN,
+     NX4_4XN_MV_INJECT_NEW_TOKEN,
      "Enable nx4 4xn parent mv injection (0: OFF, 1: ON, -1: DEFAULT)",
      set_nx4_4xn_parent_mv_inject_flag},
+    //{SINGLE_INPUT,
+    // PRUNE_UNIPRED_ME_TOKEN,
+    // "Enable prune unipred at me (0: OFF, 1: ON, -1: DEFAULT)",
+    // set_prune_unipred_me_flag},
     {SINGLE_INPUT,
-     PRUNE_UNIPRED_ME_TOKEN,
+     PRUNE_UNIPRED_ME_NEW_TOKEN,
      "Enable prune unipred at me (0: OFF, 1: ON, -1: DEFAULT)",
      set_prune_unipred_me_flag},
+    //{SINGLE_INPUT,
+    // PRUNE_REF_REC_PART_TOKEN,
+    // "Enable prune ref frame for rec partitions (0: OFF, 1: ON, -1: DEFAULT)",
+    // set_prune_ref_rec_part_flag},
     {SINGLE_INPUT,
-     PRUNE_REF_REC_PART_TOKEN,
+     PRUNE_REF_REC_PART_NEW_TOKEN,
      "Enable prune ref frame for rec partitions (0: OFF, 1: ON, -1: DEFAULT)",
      set_prune_ref_rec_part_flag},
+    //{SINGLE_INPUT,
+    // NSQ_TABLE_TOKEN,
+    // "Enable nsq table (0: OFF, 1: ON, -1: DEFAULT)",
+    // set_nsq_table_flag},
     {SINGLE_INPUT,
-     NSQ_TABLE_TOKEN,
+     NSQ_TABLE_NEW_TOKEN,
      "Enable nsq table (0: OFF, 1: ON, -1: DEFAULT)",
      set_nsq_table_flag},
+    //{SINGLE_INPUT,
+    // FRAME_END_CDF_UPDATE_TOKEN,
+    // "Enable frame end cdf update mode (0: OFF, 1: ON, -1: DEFAULT)",
+    // set_frame_end_cdf_update_flag},
     {SINGLE_INPUT,
-     FRAME_END_CDF_UPDATE_TOKEN,
+     FRAME_END_CDF_UPDATE_NEW_TOKEN,
      "Enable frame end cdf update mode (0: OFF, 1: ON, -1: DEFAULT)",
      set_frame_end_cdf_update_flag},
 
     // CHROMA
     {SINGLE_INPUT, CHROMA_MODE_TOKEN, "Select chroma mode([0-3], -1: DEFAULT)", set_chroma_mode},
     // LOCAL WARPED MOTION
+    //{SINGLE_INPUT,
+    // LOCAL_WARPED_ENABLE_TOKEN,
+    // "Enable local warped motion (0: OFF, 1: ON [default])",
+    // set_enable_local_warped_motion_flag},
     {SINGLE_INPUT,
-     LOCAL_WARPED_ENABLE_TOKEN,
+     LOCAL_WARPED_ENABLE_NEW_TOKEN,
      "Enable local warped motion (0: OFF, 1: ON [default])",
      set_enable_local_warped_motion_flag},
     // GLOBAL MOTION
+    //{SINGLE_INPUT,
+    // GLOBAL_MOTION_ENABLE_TOKEN,
+    // "Enable global motion (0: OFF, 1: ON [default])",
+    // set_enable_global_motion_flag},
     {SINGLE_INPUT,
-     GLOBAL_MOTION_ENABLE_TOKEN,
+     GLOBAL_MOTION_ENABLE_NEW_TOKEN,
      "Enable global motion (0: OFF, 1: ON [default])",
      set_enable_global_motion_flag},
 
     // CLASS 12
+    //{SINGLE_INPUT,
+    // CLASS_12_TOKEN,
+    // "Enable combine MD Class1&2 (0: OFF, 1: ON, -1: DEFAULT)",
+    // set_class_12_flag},
     {SINGLE_INPUT,
-     CLASS_12_TOKEN,
+     CLASS_12_NEW_TOKEN,
      "Enable combine MD Class1&2 (0: OFF, 1: ON, -1: DEFAULT)",
      set_class_12_flag},
     // EDGE SKIP ANGLE INTRA
+    //{SINGLE_INPUT,
+     //EDGE_SKIP_ANGLE_INTRA_TOKEN,
+     //"Enable intra edge filtering (0: OFF, 1: ON (default))",
+     //set_edge_skip_angle_intra_flag},
     {SINGLE_INPUT,
-     EDGE_SKIP_ANGLE_INTRA_TOKEN,
+     EDGE_SKIP_ANGLE_INTRA_NEW_TOKEN,
      "Enable intra edge filtering (0: OFF, 1: ON (default))",
      set_edge_skip_angle_intra_flag},
     // INTER INTRA COMPOUND
+    //{SINGLE_INPUT,
+    // INTER_INTRA_COMPOUND_TOKEN,
+    // "Enable interintra compound (0: OFF, 1: ON (default))",
+    // set_interintra_compound_flag},
     {SINGLE_INPUT,
-     INTER_INTRA_COMPOUND_TOKEN,
+     INTER_INTRA_COMPOUND_NEW_TOKEN,
      "Enable interintra compound (0: OFF, 1: ON (default))",
      set_interintra_compound_flag},
     // OBMC
     {SINGLE_INPUT, OBMC_TOKEN, "Enable OBMC(0: OFF, 1: ON[default]) ", set_enable_obmc_flag},
     // RDOQ
-    {SINGLE_INPUT, RDOQ_TOKEN, "Enable RDOQ (0: OFF, 1: ON, -1: DEFAULT)", set_enable_rdoq_flag},
+    //{SINGLE_INPUT, RDOQ_TOKEN, "Enable RDOQ (0: OFF, 1: ON, -1: DEFAULT)", set_enable_rdoq_flag},
+    {SINGLE_INPUT, RDOQ_NEW_TOKEN, "Enable RDOQ (0: OFF, 1: ON, -1: DEFAULT)", set_enable_rdoq_flag},
 
     // Filter Intra
+    //{SINGLE_INPUT,
+    // FILTER_INTRA_TOKEN,
+    // "Enable filter intra prediction mode (0: OFF, 1: ON [default])",
+    // set_enable_filter_intra_flag},
     {SINGLE_INPUT,
-     FILTER_INTRA_TOKEN,
+     FILTER_INTRA_NEW_TOKEN,
      "Enable filter intra prediction mode (0: OFF, 1: ON [default])",
      set_enable_filter_intra_flag},
 
@@ -976,12 +1130,26 @@ ConfigEntry config_entry_specific[] = {
      "Set hierarchical motion estimation level2 search area in height",
      set_hme_level_2_search_area_in_height_array},
     // --- start: ALTREF_FILTERING_SUPPORT
-    {SINGLE_INPUT, ENABLE_ALTREFS, "Enable automatic alt reference frames(0: OFF, 1: ON[default])", set_enable_altrefs},
-    {SINGLE_INPUT, ALTREF_STRENGTH, "AltRef filter strength([0-6], default: 5)", set_altref_strength},
+    {SINGLE_INPUT,
+     ENABLE_ALTREFS,
+     "Enable automatic alt reference frames(0: OFF, 1: ON[default])",
+     set_enable_altrefs},
+    {SINGLE_INPUT,
+     ALTREF_STRENGTH,
+     "AltRef filter strength([0-6], default: 5)",
+     set_altref_strength},
     {SINGLE_INPUT, ALTREF_NFRAMES, "AltRef max frames([0-10], default: 7)", set_altref_n_frames},
-    {SINGLE_INPUT, ENABLE_OVERLAYS, "Enable the insertion of an extra picture called overlayer picture which will be used as an extra reference frame for the base-layer picture(0: OFF[default], 1: ON)", set_enable_overlays},
+    {SINGLE_INPUT,
+     ENABLE_OVERLAYS,
+     "Enable the insertion of an extra picture called overlayer picture which will be used as an "
+     "extra reference frame for the base-layer picture(0: OFF[default], 1: ON)",
+     set_enable_overlays},
     // --- end: ALTREF_FILTERING_SUPPORT
-    {SINGLE_INPUT, SQ_WEIGHT_TOKEN, "Determines if HA, HB, VA, VB, H4 and V4 shapes could be skipped based on the cost of SQ, H and V shapes([75-100], default: 100)", set_square_weight},
+    {SINGLE_INPUT,
+     SQ_WEIGHT_TOKEN,
+     "Determines if HA, HB, VA, VB, H4 and V4 shapes could be skipped based on the cost of SQ, H "
+     "and V shapes([75-100], default: 100)",
+     set_square_weight},
     {SINGLE_INPUT,
      MD_FAST_PRUNE_C_TH,
      "Set MD fast prune class threshold[5-200]",
@@ -999,8 +1167,69 @@ ConfigEntry config_entry_specific[] = {
      "Set MD full prune candidate threshold[5,50]",
      set_md_full_cost_cand_prune_th},
 
+    {SINGLE_INPUT, STAT_REPORT_NEW_TOKEN, "Stat Report", set_stat_report},
+
+    /*
+    // double dash
+    {SINGLE_INPUT, PRESET_TOKEN, "Encoder mode/Preset used[0-8]", set_enc_mode},
+    {SINGLE_INPUT, QP_FILE_NEW_TOKEN, "Path to Qp file", set_cfg_qp_file},
+    {SINGLE_INPUT, INPUT_DEPTH_TOKEN, "Bit depth for codec(8 or 10)", set_encoder_bit_depth},
+    {SINGLE_INPUT,
+     KEYINT_TOKEN,
+     "Intra period interval(frames) (-2: No intra update, -1: default intra period or [0-255])",
+     set_cfg_intra_period},
+    {SINGLE_INPUT,
+     LOOKAHEAD_NEW_TOKEN,
+     "When RC is ON , it is best to set this parameter to be equal to the intra period value",
+     set_look_ahead_distance},
+
+    {SINGLE_INPUT, STAT_REPORT_NEW_TOKEN, "StatReport", set_stat_report},
+    {SINGLE_INPUT,
+     RESTORATION_ENABLE_NEW_TOKEN,
+     "RestorationFilter",
+     set_enable_restoration_filter_flag},
+    {SINGLE_INPUT,
+     EDGE_SKIP_ANGLE_INTRA_TOKEN,
+     "EdgeSkipAngleIntra",
+     set_edge_skip_angle_intra_flag},
+    {SINGLE_INPUT,
+     INTER_INTRA_COMPOUND_NEW_TOKEN,
+     "InterIntraCompound",
+     set_interintra_compound_flag},
+    //{SINGLE_INPUT, FRAC_SEARCH_64_NEW_TOKEN, "FracSearch64", ??}, // todo
+    {SINGLE_INPUT, MFMV_ENABLE_NEW_TOKEN, "Mfmv", set_enable_mfmv_flag},
+    {SINGLE_INPUT, REDUNDANT_BLK_NEW_TOKEN, "RedundantBlock", set_enable_redundant_blk_flag},
+    {SINGLE_INPUT, SPATIAL_SSE_FL_NEW_TOKEN, "SpatialSSEfl", set_spatial_sse_fl_flag},
+    {SINGLE_INPUT, OVR_BNDRY_BLK_NEW_TOKEN, "OverBoundryBlock", set_over_bndry_blk_flag},
+    {SINGLE_INPUT,
+     NEW_NEAREST_COMB_INJECT_NEW_TOKEN,
+     "NewNearestCombInjection",
+     set_new_nearest_comb_inject_flag},
+    {SINGLE_INPUT,
+     NX4_4XN_MV_INJECT_NEW_TOKEN,
+     "nx4ParentMvInjection",
+     set_nx4_4xn_parent_mv_inject_flag},
+    {SINGLE_INPUT, PRUNE_UNIPRED_ME_NEW_TOKEN, "PruneUnipredMe", set_prune_unipred_me_flag},
+    {SINGLE_INPUT, PRUNE_REF_REC_PART_NEW_TOKEN, "PruneRefRecPart", set_prune_ref_rec_part_flag},
+    {SINGLE_INPUT, NSQ_TABLE_NEW_TOKEN, "NsqTable", set_nsq_table_flag},
+    {SINGLE_INPUT,
+     FRAME_END_CDF_UPDATE_NEW_TOKEN,
+     "FrameEndCdfUpdate",
+     set_frame_end_cdf_update_flag},
+    {SINGLE_INPUT,
+     LOCAL_WARPED_ENABLE_NEW_TOKEN,
+     "LocalWarpedMotion",
+     set_enable_local_warped_motion_flag},
+    {SINGLE_INPUT, GLOBAL_MOTION_ENABLE_NEW_TOKEN, "GlobalMotion", set_enable_global_motion_flag},
+    {SINGLE_INPUT, RDOQ_NEW_TOKEN, "RDOQ", set_enable_rdoq_flag},
+    {SINGLE_INPUT, FILTER_INTRA_NEW_TOKEN, "FilterIntra", set_enable_filter_intra_flag},
+    {SINGLE_INPUT, HDR_INPUT_NEW_TOKEN, "HighDynamicRangeInput", set_high_dynamic_range_input},
+    {SINGLE_INPUT, ADAPTIVE_QP_ENABLE_NEW_TOKEN, "AdaptiveQuantization", set_adaptive_quantization},
+    */
+
     // Termination
     {SINGLE_INPUT, NULL, NULL, NULL}};
+
 ConfigEntry config_entry[] = {
     // File I/O
     {SINGLE_INPUT, INPUT_FILE_TOKEN, "InputFile", set_cfg_input_file},
@@ -1212,10 +1441,87 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, SUPERRES_QTHRES, "SuperresQthres", set_superres_qthres},
 
     {SINGLE_INPUT, SQ_WEIGHT_TOKEN, "SquareWeight", set_square_weight},
-    {SINGLE_INPUT, MD_FAST_PRUNE_C_TH, "MdFastPruneClassThreshold", set_md_fast_cost_class_prune_th},
+    {SINGLE_INPUT,
+     MD_FAST_PRUNE_C_TH,
+     "MdFastPruneClassThreshold",
+     set_md_fast_cost_class_prune_th},
     {SINGLE_INPUT, MD_FAST_PRUNE_S_TH, "MdFastPruneCandThreshold", set_md_fast_cost_cand_prune_th},
-    {SINGLE_INPUT, MD_FULL_PRUNE_C_TH, "MdFullPruneClassThreshold", set_md_full_cost_class_prune_th},
+    {SINGLE_INPUT,
+     MD_FULL_PRUNE_C_TH,
+     "MdFullPruneClassThreshold",
+     set_md_full_cost_class_prune_th},
     {SINGLE_INPUT, MD_FULL_PRUNE_S_TH, "MdFullPruneCandThreshold", set_md_full_cost_cand_prune_th},
+
+    // double dash
+    {SINGLE_INPUT, PRESET_TOKEN, "Encoder mode/Preset used[0-8]", set_enc_mode},
+    {SINGLE_INPUT, QP_FILE_NEW_TOKEN, "Path to Qp file", set_cfg_qp_file},
+    {SINGLE_INPUT, INPUT_DEPTH_TOKEN, "Bit depth for codec(8 or 10)", set_encoder_bit_depth},
+    {SINGLE_INPUT,
+     KEYINT_TOKEN,
+     "Intra period interval(frames) (-2: No intra update, -1: default intra period or [0-255])",
+     set_cfg_intra_period},
+    {SINGLE_INPUT,
+     LOOKAHEAD_NEW_TOKEN,
+     "When RC is ON , it is best to set this parameter to be equal to the intra period value",
+     set_look_ahead_distance},
+
+    {SINGLE_INPUT, STAT_REPORT_NEW_TOKEN, "Stat Report", set_stat_report},
+    {SINGLE_INPUT,
+     RESTORATION_ENABLE_NEW_TOKEN,
+     "Restoration Filter",
+     set_enable_restoration_filter_flag},
+    {SINGLE_INPUT,
+     EDGE_SKIP_ANGLE_INTRA_TOKEN,
+     "Edge Skip Angle Intra",
+     set_edge_skip_angle_intra_flag},
+    {SINGLE_INPUT,
+     INTER_INTRA_COMPOUND_NEW_TOKEN,
+     "Inter Intra Compound",
+     set_interintra_compound_flag},
+    //{SINGLE_INPUT, FRAC_SEARCH_64_NEW_TOKEN, "FracSearch64", ??}, // todo
+    {SINGLE_INPUT, MFMV_ENABLE_NEW_TOKEN, "Mfmv token with double dash", set_enable_mfmv_flag},
+    {SINGLE_INPUT, REDUNDANT_BLK_NEW_TOKEN, "Redundant Block", set_enable_redundant_blk_flag},
+    {SINGLE_INPUT, SPATIAL_SSE_FL_NEW_TOKEN, "Spatial SSE fl", set_spatial_sse_fl_flag},
+    {SINGLE_INPUT, OVR_BNDRY_BLK_NEW_TOKEN, "Over Boundry Block", set_over_bndry_blk_flag},
+    {SINGLE_INPUT,
+     NEW_NEAREST_COMB_INJECT_NEW_TOKEN,
+     "New Nearest Comb Injection",
+     set_new_nearest_comb_inject_flag},
+    {SINGLE_INPUT,
+     NX4_4XN_MV_INJECT_NEW_TOKEN,
+     "nx4 Parent Mv Injection",
+     set_nx4_4xn_parent_mv_inject_flag},
+    {SINGLE_INPUT, PRUNE_UNIPRED_ME_NEW_TOKEN, "Prune Uni pred Me", set_prune_unipred_me_flag},
+    {SINGLE_INPUT, PRUNE_REF_REC_PART_NEW_TOKEN, "Prune Ref Rec Part", set_prune_ref_rec_part_flag},
+    {SINGLE_INPUT, NSQ_TABLE_NEW_TOKEN, "Nsq Table", set_nsq_table_flag},
+    {SINGLE_INPUT,
+     FRAME_END_CDF_UPDATE_NEW_TOKEN,
+     "Frame End Cdf Update",
+     set_frame_end_cdf_update_flag},
+    {SINGLE_INPUT,
+     LOCAL_WARPED_ENABLE_NEW_TOKEN,
+     "Local Warped Motion",
+     set_enable_local_warped_motion_flag},
+    {SINGLE_INPUT, GLOBAL_MOTION_ENABLE_NEW_TOKEN, "Global Motion", set_enable_global_motion_flag},
+    {SINGLE_INPUT, RDOQ_NEW_TOKEN, "RDOQ double dash token", set_enable_rdoq_flag},
+    {SINGLE_INPUT, FILTER_INTRA_NEW_TOKEN, "Filter Intra", set_enable_filter_intra_flag},
+    {SINGLE_INPUT, HDR_INPUT_NEW_TOKEN, "High Dynamic Range Input", set_high_dynamic_range_input},
+    {SINGLE_INPUT,
+     ADAPTIVE_QP_ENABLE_NEW_TOKEN,
+     "Adaptive Quantization",
+     set_adaptive_quantization},
+
+    {SINGLE_INPUT, INPUT_FILE_LONG_TOKEN, "Input File", set_cfg_input_file},
+    {SINGLE_INPUT, OUTPUT_BITSTREAM_LONG_TOKEN, "Stream File", set_cfg_stream_file},
+    {SINGLE_INPUT, OUTPUT_RECON_LONG_TOKEN, "Recon File", set_cfg_recon_file},
+
+    {SINGLE_INPUT, WIDTH_LONG_TOKEN, "Source Width", set_cfg_source_width},
+    {SINGLE_INPUT, HEIGHT_LONG_TOKEN, "Source Height", set_cfg_source_height},
+    {SINGLE_INPUT,
+     NUMBER_OF_PICTURES_LONG_TOKEN,
+     "Frame To Be Encoded",
+     set_cfg_frames_to_be_encoded},
+    {SINGLE_INPUT, QP_LONG_TOKEN, "QP double dash token", set_cfg_qp},
 
     // Termination
     {SINGLE_INPUT, NULL, NULL, NULL}};
@@ -1225,12 +1531,12 @@ ConfigEntry config_entry[] = {
  **********************************/
 void eb_config_ctor(EbConfig *config_ptr) {
     memset(config_ptr, 0, sizeof(*config_ptr));
-    config_ptr->error_log_file       = stderr;
-    config_ptr->frame_rate           = 30 << 16;
-    config_ptr->encoder_bit_depth    = 8;
+    config_ptr->error_log_file         = stderr;
+    config_ptr->frame_rate             = 30 << 16;
+    config_ptr->encoder_bit_depth      = 8;
     config_ptr->encoder_16bit_pipeline = 0;
-    config_ptr->encoder_color_format = 1; //EB_YUV420
-    config_ptr->buffered_input       = -1;
+    config_ptr->encoder_color_format   = 1; //EB_YUV420
+    config_ptr->buffered_input         = -1;
 
     config_ptr->qp                  = 50;
     config_ptr->use_qp_file         = EB_FALSE;
@@ -1318,7 +1624,7 @@ void eb_config_ctor(EbConfig *config_ptr) {
     config_ptr->superres_qthres   = 43; // random threshold for now
     // end - super-resolution support
 
-    config_ptr->sq_weight                 = 100;
+    config_ptr->sq_weight = 100;
 
     config_ptr->md_fast_cost_cand_prune_th  = 75;
     config_ptr->md_fast_cost_class_prune_th = 100;
@@ -1688,9 +1994,21 @@ int32_t find_token_multiple_inputs(int32_t argc, char *const argv[], const char 
 
     return return_error;
 }
+
+uint32_t check_long(ConfigEntry config_entry, ConfigEntry config_entry_next) {
+    if (config_entry_next.name == NULL) {
+        return 0;
+    }
+    if (EB_STRCMP(config_entry.name, config_entry_next.name) == 0) {
+        return 1;
+    }
+    return 0;
+}
+
 uint32_t get_help(int32_t argc, char *const argv[]) {
     char config_string[COMMAND_LINE_MAX_SIZE];
-    if (find_token(argc, argv, HELP_TOKEN, config_string) == 0) {
+    if (find_token(argc, argv, HELP_TOKEN, config_string) == 0 ||
+        find_token(argc, argv, HELP_LONG_TOKEN, config_string) == 0) {
         int32_t options_token_index        = -1;
         int32_t global_options_token_index = -1;
         int32_t rc_token_index             = -1;
@@ -1699,51 +2017,157 @@ uint32_t get_help(int32_t argc, char *const argv[]) {
         int32_t sp_token_index             = -1;
         //fprintf(stderr, "\n%-25s\t%-25s\n", "TOKEN", "DESCRIPTION");
         //fprintf(stderr, "%-25s\t%-25s\n", "-nch", "NumberOfChannels");
-        const char *token_options_format = "\t%-25s\t%-25s\n";
+       char *token_options_format = "\t%-5s\t%-25s\t%-25s\n";
+        const char *empty_string         = "";
         fprintf(stderr,
                 "\n%-25s\n",
                 "Usage: SvtAv1EncApp.exe <options> -b dst_filename -i src_filename");
         fprintf(stderr, "\n%-25s\n", "Options:");
         while (config_entry_options[++options_token_index].token != NULL) {
-            fprintf(stderr,
-                    token_options_format,
-                    config_entry_options[options_token_index].token,
-                    config_entry_options[options_token_index].name);
+            uint32_t check = check_long(config_entry_options[options_token_index],
+                                                        config_entry_options[options_token_index + 1]);
+            if (check == 1) {
+                token_options_format = "\t%-5s\t%-25s\t%-25s\n";
+                fprintf(stderr,
+                        token_options_format,
+                        config_entry_options[options_token_index].token,
+                        config_entry_options[options_token_index + 1].token,
+                        config_entry_options[options_token_index].name);
+                options_token_index++;
+            } else {
+                if (*(config_entry_options[options_token_index].token + 1) == '-')
+                    token_options_format = "\t%-5s\t%-25s\t%-25s\n";
+                else
+                    token_options_format = "\t%-5s\t-%-25s\t%-25s\n";
+                fprintf(stderr,
+                        token_options_format,
+                        empty_string,
+                        config_entry_options[options_token_index].token,
+                        config_entry_options[options_token_index].name);
+            }
         }
         fprintf(stderr, "\n%-25s\n", "Encoder Global Options:");
         while (config_entry_global_options[++global_options_token_index].token != NULL) {
-            fprintf(stderr,
-                    token_options_format,
-                    config_entry_global_options[global_options_token_index].token,
-                    config_entry_global_options[global_options_token_index].name);
+            uint32_t check =
+                check_long(config_entry_global_options[global_options_token_index],
+                    config_entry_global_options[global_options_token_index + 1]);
+            if (check == 1) {
+                token_options_format = "\t%-5s\t%-25s\t%-25s\n";
+                fprintf(stderr,
+                        token_options_format,
+                        config_entry_global_options[global_options_token_index].token,
+                        config_entry_global_options[global_options_token_index + 1].token,
+                        config_entry_global_options[global_options_token_index].name);
+                global_options_token_index++;
+            } else {
+                if (*(config_entry_global_options[global_options_token_index].token + 1) == '-')
+                    token_options_format = "\t%-5s\t%-25s\t%-25s\n";
+                else
+                    token_options_format = "\t%-5s\t-%-25s\t%-25s\n";
+                fprintf(stderr,
+                        token_options_format,
+                        empty_string,
+                        config_entry_global_options[global_options_token_index].token,
+                        config_entry_global_options[global_options_token_index].name);
+            }
         }
         fprintf(stderr, "\n%-25s\n", "Rate Control Options:");
         while (config_entry_rc[++rc_token_index].token != NULL) {
-            fprintf(stderr,
-                    token_options_format,
-                    config_entry_rc[rc_token_index].token,
-                    config_entry_rc[rc_token_index].name);
+            uint32_t check = check_long(config_entry_rc[rc_token_index],
+                                                        config_entry_rc[rc_token_index + 1]);
+            if (check == 1) {
+                token_options_format = "\t%-5s\t%-25s\t%-25s\n";
+                fprintf(stderr,
+                        token_options_format,
+                        config_entry_rc[rc_token_index].token,
+                        config_entry_rc[rc_token_index + 1].token,
+                        config_entry_rc[rc_token_index].name);
+                rc_token_index++;
+            } else {
+                if (*(config_entry_rc[rc_token_index].token + 1) == '-')
+                    token_options_format = "\t%-5s\t%-25s\t%-25s\n";
+                else
+                    token_options_format = "\t%-5s\t-%-25s\t%-25s\n";
+                fprintf(stderr,
+                        token_options_format,
+                        empty_string,
+                        config_entry_rc[rc_token_index].token,
+                        config_entry_rc[rc_token_index].name);
+            }
         }
         fprintf(stderr, "\n%-25s\n", "Twopass Options:");
         while (config_entry_2p[++two_p_token_index].token != NULL) {
-            fprintf(stderr,
-                    token_options_format,
-                    config_entry_2p[two_p_token_index].token,
-                    config_entry_2p[two_p_token_index].name);
+            uint32_t check = check_long(
+                config_entry_2p[two_p_token_index],
+                config_entry_2p[two_p_token_index + 1]);
+            if (check == 1) {
+                token_options_format = "\t%-5s\t%-25s\t%-25s\n";
+                fprintf(stderr,
+                        token_options_format,
+                        config_entry_2p[two_p_token_index].token,
+                        config_entry_2p[two_p_token_index + 1].token,
+                        config_entry_2p[two_p_token_index].name);
+                two_p_token_index++;
+            } else {
+                if (*(config_entry_2p[two_p_token_index].token + 1) == '-')
+                    token_options_format = "\t%-5s\t%-25s\t%-25s\n";
+                else
+                    token_options_format = "\t%-5s\t-%-25s\t%-25s\n";
+                fprintf(stderr,
+                        token_options_format,
+                        empty_string,
+                        config_entry_2p[two_p_token_index].token,
+                        config_entry_2p[two_p_token_index].name);
+            }
         }
         fprintf(stderr, "\n%-25s\n", "Keyframe Placement Options:");
         while (config_entry_intra_refresh[++kf_token_index].token != NULL) {
-            fprintf(stderr,
-                    token_options_format,
-                    config_entry_intra_refresh[kf_token_index].token,
-                    config_entry_intra_refresh[kf_token_index].name);
+            uint32_t check = check_long(
+                config_entry_intra_refresh[kf_token_index],
+                config_entry_intra_refresh[kf_token_index + 1]);
+            if (check == 1) {
+                token_options_format = "\t%-5s\t%-25s\t%-25s\n";
+                fprintf(stderr,
+                        token_options_format,
+                        config_entry_intra_refresh[kf_token_index].token,
+                        config_entry_intra_refresh[kf_token_index + 1].token,
+                        config_entry_intra_refresh[kf_token_index].name);
+                kf_token_index++;
+            } else {
+                if (*(config_entry_intra_refresh[kf_token_index].token + 1) == '-')
+                    token_options_format = "\t%-5s\t%-25s\t%-25s\n";
+                else
+                    token_options_format = "\t%-5s\t-%-25s\t%-25s\n";
+                fprintf(stderr,
+                        token_options_format,
+                        empty_string,
+                        config_entry_intra_refresh[kf_token_index].token,
+                        config_entry_intra_refresh[kf_token_index].name);
+            }
         }
         fprintf(stderr, "\n%-25s\n", "AV1 Specific Options:");
         while (config_entry_specific[++sp_token_index].token != NULL) {
-            fprintf(stderr,
-                    token_options_format,
-                    config_entry_specific[sp_token_index].token,
-                    config_entry_specific[sp_token_index].name);
+            uint32_t check = check_long(config_entry_specific[sp_token_index],
+                                                        config_entry_specific[sp_token_index + 1]);
+            if (check == 1) {
+                token_options_format = "\t%-5s\t%-25s\t%-25s\n";
+                fprintf(stderr,
+                        token_options_format,
+                        config_entry_specific[sp_token_index].token,
+                        config_entry_specific[sp_token_index + 1].token,
+                        config_entry_specific[sp_token_index].name);
+                sp_token_index++;
+            } else {
+                if (*(config_entry_specific[sp_token_index].token + 1) == '-')
+                    token_options_format = "\t%-5s\t%-25s\t%-25s\n";
+                else
+                    token_options_format = "\t%-5s\t-%-25s\t%-25s\n";
+                fprintf(stderr,
+                        token_options_format,
+                        empty_string,
+                        config_entry_specific[sp_token_index].token,
+                        config_entry_specific[sp_token_index].name);
+            };
         }
         return 1;
     } else
@@ -1997,11 +2421,30 @@ static int32_t read_pred_struct_file(EbConfig *config, char *PredStructPath,
     return return_error;
 }
 
+EbErrorType handle_exceptions(char *string) {
+    char *short_token_only  = string + 2;
+
+    if (EB_STRCMP(short_token_only, "w") == 0) {
+        fprintf(stderr, "please use -w\n");
+        return EB_ErrorBadParameter;
+    }
+    if (EB_STRCMP(short_token_only, "h") == 0) {
+        fprintf(stderr, "please use -h\n");
+        return EB_ErrorBadParameter;
+    }
+    if (EB_STRCMP(short_token_only, "b") == 0) {
+        fprintf(stderr, "please use -b\n");
+        return EB_ErrorBadParameter;
+    }
+    return EB_ErrorNone;
+}
+
 /******************************************
 * Read Command Line
 ******************************************/
 EbErrorType read_command_line(int32_t argc, char *const argv[], EbConfig **configs,
-                              uint32_t num_channels, EbErrorType *return_errors) {
+                              uint32_t num_channels, EbErrorType *return_errors,
+                              char     warning_str[MAX_NUM_TOKENS][WARNING_LENGTH]) {
     EbErrorType return_error = EB_ErrorBadParameter;
     char        config_string[COMMAND_LINE_MAX_SIZE]; // for one input options
     char *      config_strings[MAX_CHANNEL_NUMBER]; // for multiple input options
@@ -2046,12 +2489,41 @@ EbErrorType read_command_line(int32_t argc, char *const argv[], EbConfig **confi
     /***************************************************************************************************/
     /***********   Find SINGLE_INPUT configuration parameter tokens and call respective functions  **********/
     /***************************************************************************************************/
-    token_index = -1;
+    token_index                  = -1;
+    uint32_t return_result_error = 0;
+    uint32_t warning_index       = 0;
     // Parse command line for tokens
     while (config_entry[++token_index].name != NULL) {
         if (config_entry[token_index].type == SINGLE_INPUT) {
+            EbErrorType result = EB_ErrorNone;
+
+            // concat strings with '-'
+            char concat_str[50] = "-";
+            EB_STRCPY(concat_str + 1, sizeof(concat_str), config_entry[token_index].token);
             if (find_token_multiple_inputs(
                     argc, argv, config_entry[token_index].token, config_strings) == 0) {
+                //Warning for one dahs
+                if (*(config_entry[token_index].token + 2) != '\0' &&
+                    *(config_entry[token_index].token + 1) != '-' &&
+                    result != EB_ErrorBadParameter) {
+                    char *str = " will be deprecated, please use -";
+                    EB_STRCPY(warning_str[warning_index],
+                              WARNING_LENGTH,
+                              config_entry[token_index].token); // add token
+                    EB_STRCPY(warning_str[warning_index] +
+                              EB_STRLEN(warning_str[warning_index], WARNING_LENGTH),
+                              WARNING_LENGTH,
+                              str);
+                    EB_STRCPY(warning_str[warning_index] +
+                              EB_STRLEN(warning_str[warning_index], WARNING_LENGTH),
+                              WARNING_LENGTH,
+                        config_entry[token_index].token);
+                    warning_index++;
+                    //fprintf(stderr,
+                     //       "%s will be deprecated, please use -%s\n",
+                     //       config_entry[token_index].token,
+                     //       config_entry[token_index].token);
+                }
                 // When a token is found mark it as found in the temp token buffer
                 mark_token_as_read(config_entry[token_index].token, cmd_copy, &cmd_token_cnt);
 
@@ -2062,9 +2534,24 @@ EbErrorType read_command_line(int32_t argc, char *const argv[], EbConfig **confi
                     else
                         break;
                 }
+            } else if (find_token_multiple_inputs(argc, argv, concat_str, config_strings) ==
+                       0) { // handle double dash
+                result = handle_exceptions(concat_str);
+                // When a token is found mark it as found in the temp token buffer
+                mark_token_as_read(concat_str, cmd_copy, &cmd_token_cnt);
+
+                // Fill up the values corresponding to each channel
+                for (index = 0; index < num_channels; ++index) {
+                    if (EB_STRCMP(config_strings[index], " "))
+                        (*config_entry[token_index].scf)(config_strings[index], configs[index]);
+                    else
+                        break;
+                }
+                if (result == EB_ErrorBadParameter) return_result_error = 1;
             }
         }
     }
+    if (return_result_error == 1) return EB_ErrorBadParameter;
 
     /***************************************************************************************************/
     /********************** Parse parameters from input file if in y4m format **************************/
