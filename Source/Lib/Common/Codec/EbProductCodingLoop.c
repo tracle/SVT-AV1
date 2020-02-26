@@ -12041,7 +12041,7 @@ void interintra_class_pruning_2(ModeDecisionContext *context_ptr, uint64_t best_
             uint32_t cand_count = 1;
 #if FEB24_ADOPTIONS
             uint64_t md_stage_2_cand_prune_th = context_ptr->md_stage_2_cand_prune_th;
-            md_stage_2_cand_prune_th = (cand_class_it == CAND_CLASS_0 || cand_class_it == CAND_CLASS_6 || cand_class_it == CAND_CLASS_7) ? (uint64_t)~0 : md_stage_2_cand_prune_th;
+            md_stage_2_cand_prune_th = (cand_class_it == CAND_CLASS_0 || cand_class_it == CAND_CLASS_6 || cand_class_it == CAND_CLASS_7) ? (uint64_t)~0 : (context_ptr->blk_geom->shape == PART_N) ? (uint64_t)~0 : md_stage_2_cand_prune_th;
 #endif
 #if ENHANCED_M0_SETTINGS
             if(class_best_cost)
