@@ -3852,22 +3852,24 @@ void construct_best_sorted_arrays_md_stage_3(
                 context_ptr->best_non_skip_cost = *buffer_ptr_array[id]->full_cost_ptr;        
     }
 #endif
-#if TH_BASED_CHROMA_SEARCH
-    uint64_t best_intra_cost = MAX_MODE_COST;
-    uint64_t best_inter_cost = MAX_MODE_COST;
+#if TH_BASED_CHROMA_SEARCH || TH_BASED_CFL
+    context_ptr->best_intra_cost = MAX_MODE_COST;
+    context_ptr->best_inter_cost = MAX_MODE_COST;
     for (i = 0; i < fullReconCandidateCount; ++i) {
         id = sorted_candidate_index_array[i];
          int32_t is_inter = (buffer_ptr_array[id]->candidate_ptr->type == INTER_MODE || buffer_ptr_array[id]->candidate_ptr->use_intrabc) ? EB_TRUE : EB_FALSE;
         if (!is_inter) 
-            if (*buffer_ptr_array[id]->full_cost_ptr < best_intra_cost)
-               best_intra_cost = *buffer_ptr_array[id]->full_cost_ptr;
+            if (*buffer_ptr_array[id]->full_cost_ptr < context_ptr->best_intra_cost)
+               context_ptr->best_intra_cost = *buffer_ptr_array[id]->full_cost_ptr;
         if (is_inter) 
-            if (*buffer_ptr_array[id]->full_cost_ptr < best_inter_cost)
-                best_inter_cost = *buffer_ptr_array[id]->full_cost_ptr;        
+            if (*buffer_ptr_array[id]->full_cost_ptr < context_ptr->best_inter_cost)
+                context_ptr->best_inter_cost = *buffer_ptr_array[id]->full_cost_ptr;        
     }
+#if TH_BASED_CHROMA_SEARCH
     uint64_t intra_th = 1;
-    if (best_inter_cost < (best_intra_cost * intra_th))
+    if (context_ptr->best_inter_cost < (context_ptr->best_intra_cost * intra_th))
         context_ptr->md_stage_3_total_intra_count = 0;
+#endif
 #endif
 
     //sorted best: *(buffer_ptr_array[sorted_candidate_index_array[?]]->fast_cost_ptr)
@@ -10088,6 +10090,26 @@ void md_stage_2(
                         disable_cfl_flag = context_ptr->cfl_level ? disable_cfl_flag : EB_TRUE;
 #endif
 
+#if TH_BASED_CFL
+                        uint64_t cfl_th = 1;
+                        uint32_t intra_chroma_mode;
+                        int32_t angle_delta;
+                        uint8_t is_directional_chroma_mode_flag;
+                        if (context_ptr->best_inter_cost < (context_ptr->best_intra_cost * cfl_th)) {
+                            intra_chroma_mode = context_ptr->best_uv_mode[candidate_ptr->intra_luma_mode][MAX_ANGLE_DELTA + candidate_ptr->angle_delta[PLANE_TYPE_Y]];
+                            angle_delta = context_ptr->best_uv_angle[candidate_ptr->intra_luma_mode][MAX_ANGLE_DELTA + candidate_ptr->angle_delta[PLANE_TYPE_Y]];
+                            is_directional_chroma_mode_flag = (uint8_t)av1_is_directional_mode((PredictionMode)(context_ptr->best_uv_mode[candidate_ptr->intra_luma_mode][MAX_ANGLE_DELTA + candidate_ptr->angle_delta[PLANE_TYPE_Y]]));
+                        }
+                        else {
+                            intra_chroma_mode = candidate_ptr->intra_chroma_mode != UV_CFL_PRED ?
+                                context_ptr->best_uv_mode[candidate_ptr->intra_luma_mode][MAX_ANGLE_DELTA + candidate_ptr->angle_delta[PLANE_TYPE_Y]] :
+                                UV_CFL_PRED;
+                            angle_delta = candidate_ptr->intra_chroma_mode != UV_CFL_PRED ?
+                                context_ptr->best_uv_angle[candidate_ptr->intra_luma_mode][MAX_ANGLE_DELTA + candidate_ptr->angle_delta[PLANE_TYPE_Y]] : 0;
+                            is_directional_chroma_mode_flag = candidate_ptr->intra_chroma_mode != UV_CFL_PRED ?
+                                (uint8_t)av1_is_directional_mode((PredictionMode)(context_ptr->best_uv_mode[candidate_ptr->intra_luma_mode][MAX_ANGLE_DELTA + candidate_ptr->angle_delta[PLANE_TYPE_Y]])) : 0;
+                        }
+#else
                         uint32_t intra_chroma_mode = candidate_ptr->intra_chroma_mode != UV_CFL_PRED ?
                             context_ptr->best_uv_mode[candidate_ptr->intra_luma_mode][MAX_ANGLE_DELTA + candidate_ptr->angle_delta[PLANE_TYPE_Y]] :
                             UV_CFL_PRED;
@@ -10095,7 +10117,7 @@ void md_stage_2(
                             context_ptr->best_uv_angle[candidate_ptr->intra_luma_mode][MAX_ANGLE_DELTA + candidate_ptr->angle_delta[PLANE_TYPE_Y]] : 0;
                         uint8_t is_directional_chroma_mode_flag = candidate_ptr->intra_chroma_mode != UV_CFL_PRED ?
                             (uint8_t)av1_is_directional_mode((PredictionMode)(context_ptr->best_uv_mode[candidate_ptr->intra_luma_mode][MAX_ANGLE_DELTA + candidate_ptr->angle_delta[PLANE_TYPE_Y]])) : 0;
-
+#endif
                         candidate_ptr->intra_chroma_mode = intra_chroma_mode;
                         candidate_ptr->angle_delta[PLANE_TYPE_UV] = angle_delta;
                         candidate_ptr->is_directional_chroma_mode_flag = is_directional_chroma_mode_flag;
