@@ -18084,6 +18084,8 @@ if (context_ptr->me_alt_ref == EB_FALSE) {
                     d1 = dist0 > dist_th ? 0 : 1;
                     x_mv = _MVXT(context_ptr->p_sb_best_mv[list_index0][ref_index0][nIdx]);
                     y_mv = _MVYT(context_ptr->p_sb_best_mv[list_index0][ref_index0][nIdx]);
+                    x_mv = ABS(x_mv);
+                    y_mv = ABS(y_mv);
                     short_mv = (x_mv <= mv_th && y_mv <= mv_th) ? 1 : 0;    
                     closest_ref = (ref_index0 == 0) ? 1 : 0;
                     second_close_ref = (ref_index0 == 1) ? 1 : 0;
@@ -18093,6 +18095,8 @@ if (context_ptr->me_alt_ref == EB_FALSE) {
                     d1 = dist1 > 0 ? dist_th : 1;
                     x_mv = _MVXT(context_ptr->p_sb_best_mv[list_index1][ref_index1][nIdx]);
                     y_mv = _MVYT(context_ptr->p_sb_best_mv[list_index1][ref_index1][nIdx]);
+                    x_mv = ABS(x_mv);
+                    y_mv = ABS(y_mv);
                     short_mv = (x_mv <= mv_th && y_mv <= mv_th) ? 1 : 0; 
                     closest_ref = (ref_index1 == 0) ? 1 : 0;
                     second_close_ref = (ref_index1 == 1) ? 1 : 0;
@@ -18103,9 +18107,13 @@ if (context_ptr->me_alt_ref == EB_FALSE) {
                     d1 = (dist0 > dist_th || dist1 > dist_th) ? 0 : 1;
                     x_mv = _MVXT(context_ptr->p_sb_best_mv[list_index0][ref_index0][nIdx]);
                     y_mv = _MVYT(context_ptr->p_sb_best_mv[list_index0][ref_index0][nIdx]);
+                    x_mv = ABS(x_mv);
+                    y_mv = ABS(y_mv);
                     short_mv = (x_mv <= mv_th && y_mv <= mv_th) ? 1 : 0; 
                     x_mv = _MVXT(context_ptr->p_sb_best_mv[list_index1][ref_index1][nIdx]);
                     y_mv = _MVYT(context_ptr->p_sb_best_mv[list_index1][ref_index1][nIdx]);
+                    x_mv = ABS(x_mv);
+                    y_mv = ABS(y_mv);
                     short_mv = short_mv && (x_mv <= mv_th && y_mv <= mv_th) ? 1 : 0; 
                     closest_ref = (ref_index0 == 0) || (ref_index1 == 0) ? 1 : 0;
                     second_close_ref = (ref_index0 == 1) || (ref_index1 == 1)? 1 : 0;
