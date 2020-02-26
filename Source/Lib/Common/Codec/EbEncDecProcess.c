@@ -5228,6 +5228,54 @@ static void perform_pred_depth_refinement(
                             }
                         }
 
+
+#if SQ_NSQ_DEV_BASED_REF
+
+         uint64_t psq_cost = context_ptr->md_local_cu_unit[blk_index].default_cost; 
+         uint64_t best_d1_cost = context_ptr->md_local_cu_unit[blk_index].cost;
+         uint64_t cost_diff = (psq_cost >= best_d1_cost) ?
+             (psq_cost - best_d1_cost) : 
+             (best_d1_cost - psq_cost);
+
+         uint32_t SQ_PERC = 5; 
+         if (100 * cost_diff < psq_cost * SQ_PERC) {
+#if SQ_NSQ_SIZE_BASED_REF
+             //(0) Area <= 8x8 
+             if (blk_geom->sq_size <= 8) {
+                 s_depth = -1;
+                 e_depth = 0;
+             } else 
+             // (1) 8x8 < Area <= 16x16
+             if (blk_geom->sq_size <= 16) {
+                 s_depth = -1;
+                 e_depth = 0;
+             }
+             else
+             // (2) 16x16 < Area <= 32x32
+             if (blk_geom->sq_size <= 32) {
+                 s_depth = 0;
+                 e_depth = 0;
+             }
+             else
+             // (3) 32x32 < Area <= 64x64
+             if (blk_geom->sq_size <= 64) {
+                 s_depth = 0;
+                 e_depth = 1;
+             }
+             else
+                 // (4) Area > 64x64
+             {
+                 s_depth = 0;
+                 e_depth = 1;
+             }
+#else
+             s_depth = 0; 
+             e_depth = 0; 
+#endif
+         } 
+         else 
+
+#endif
                         if (zero_coeff_present_flag) {
                             s_depth = 0;
                             e_depth = 0;

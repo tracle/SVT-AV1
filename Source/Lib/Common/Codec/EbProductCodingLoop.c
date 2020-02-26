@@ -10472,6 +10472,9 @@ void check_similar_block(const BlockGeom * blk_geom, ModeDecisionContext *contex
 *   performs CL (LCU)
 *******************************************/
 EbBool allowed_ns_cu(
+#if LESS_NSQ_SHAPES
+    PictureControlSet              *picture_control_set_ptr,
+#endif
 #if COMBINE_MDC_NSQ_TABLE
     uint8_t                            mdc_depth_level,
 #endif
@@ -10481,6 +10484,28 @@ EbBool allowed_ns_cu(
     uint8_t                            is_complete_sb){
     EbBool  ret = 1;
     UNUSED(is_complete_sb);
+
+
+#if LESS_NSQ_SHAPES
+    if (picture_control_set_ptr->slice_type != I_SLICE) {
+        // Apply the following NSQ restrictions in MD(we could later restrict ME as well) : For SQ_CU = 8x8, disable NSQ(i.e., disable H / V); For SQ_CU = 16x16, disable HA / HB / VA / VB / H4 / V4; For SQ_CU = 32x32, disable H4 / V4.
+        if (context_ptr->blk_geom->sq_size == 8) {
+            if (context_ptr->blk_geom->shape != PART_N) {
+                return 0;
+            }
+        }
+        else if (context_ptr->blk_geom->sq_size == 16) {
+            if (context_ptr->blk_geom->shape > PART_V) {
+                return 0;
+            }
+        }
+        else if (context_ptr->blk_geom->sq_size == 32) {
+            if (context_ptr->blk_geom->shape > PART_VB) {
+                return 0;
+            }
+        }
+    }
+#endif
 
 #if COMBINE_MDC_NSQ_TABLE
     if (is_nsq_table_used) {
@@ -12495,6 +12520,9 @@ void md_encode_block(
     uint8_t                            is_complete_sb = sequence_control_set_ptr->sb_geom[lcuAddr].is_complete_sb;
 
     if (allowed_ns_cu(
+#if LESS_NSQ_SHAPES
+        picture_control_set_ptr,
+#endif
 #if COMBINE_MDC_NSQ_TABLE
 #if MDC_ADAPTIVE_LEVEL
         picture_control_set_ptr->parent_pcs_ptr->enable_adaptive_ol_partitioning,

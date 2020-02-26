@@ -277,6 +277,14 @@ extern "C" {
 #define ENABLE_NEW_NN_SC             1 // SC ONLY
 
 /*****************************************/      
+
+#define SQ_NSQ_DEV_BASED_REF 0  // test (1)+(2) with SQ_PERC =1/5.
+#if SQ_NSQ_DEV_BASED_REF
+#define SQ_NSQ_SIZE_BASED_REF 0 // test (3)+(4) with SQ_PERC =1/5.
+#endif
+
+#define LESS_NSQ_SHAPES 0 // Test5: Apply the following NSQ restrictions in MD (we could later restrict ME as well): For SQ_CU=8x8, disable NSQ (i.e., disable H/V); For SQ_CU=16x16, disable HA/HB/VA/VB/H4/V4; For SQ_CU = 32x32, disable H4/V4.
+
 #define PME_OFF_PD1 0
 #define PME_MRP_BLIND 0
 #define PME_UP_TO_4_REF  0
