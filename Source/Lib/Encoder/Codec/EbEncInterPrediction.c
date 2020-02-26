@@ -3562,8 +3562,6 @@ EbErrorType av1_inter_prediction(
 
         if (sub8x8_inter) {
 
-            printf("sub8x8_inter\n");
-
             // block size
             const int32_t   b4_w        = block_size_wide[bsize] >> ss_x;
             const int32_t   b4_h        = block_size_high[bsize] >> ss_y;
@@ -3589,6 +3587,10 @@ EbErrorType av1_inter_prediction(
                     conv_params = get_conv_params_no_round(
                             0, 0, 0, tmp_dstCb, BLOCK_SIZE_64, is_compound, bit_depth);
                     conv_params.use_jnt_comp_avg = 0;
+
+                    av1_get_convolve_filter_params(interp_filters, &filter_params_x,
+                                                   &filter_params_y, blk_geom->bwidth_uv, blk_geom->bheight_uv);
+
                     uint8_t ref_idx = get_ref_frame_idx(this_mbmi->block_mi.ref_frame[0]);
                     assert(ref_idx < REF_LIST_MAX_DEPTH);
 
@@ -3633,47 +3635,137 @@ EbErrorType av1_inter_prediction(
                     dst_ptr += (x + y * prediction_ptr->stride_cb) << is16bit;
 
                     const MV mv = this_mbmi->block_mi.mv[0].as_mv;
-                    mv_q4       = clamp_mv_to_umv_border_sb(
-                            blk_ptr->av1xd, &mv, blk_geom->bwidth_uv, blk_geom->bheight_uv, 1, 1);
-                    subpel_x = mv_q4.col & SUBPEL_MASK;
-                    subpel_y = mv_q4.row & SUBPEL_MASK;
-                    src_ptr += ((mv_q4.row >> SUBPEL_BITS) * src_stride + (mv_q4.col >> SUBPEL_BITS)) << is16bit;
 
-                    av1_get_convolve_filter_params(interp_filters, &filter_params_x,
-                                                   &filter_params_y, blk_geom->bwidth_uv, blk_geom->bheight_uv);
+                    /*ScaleFactor*/
+                    ScaleFactors scale_factor_sub8x8;
 
-                    if (is16bit)
-                        convolveHbd[subpel_x != 0][subpel_y != 0][is_compound](
-                                (uint16_t *)src_ptr,
-                                src_stride,
-                                (uint16_t *)dst_ptr,
-                                dst_stride,
-                                b4_w,
-                                b4_h,
-                                &filter_params_x,
-                                &filter_params_y,
-                                subpel_x,
-                                subpel_y,
-                                &conv_params,
-                                bit_depth);
-                    else
-                        convolve[subpel_x != 0][subpel_y != 0][is_compound](
-                                src_ptr,
-                                src_stride,
-                                dst_ptr,
-                                dst_stride,
-                                b4_w,
-                                b4_h,
-                                &filter_params_x,
-                                &filter_params_y,
-                                subpel_x,
-                                subpel_y,
-                                &conv_params);
+                    av1_setup_scale_factors_for_frame(&scale_factor_sub8x8,
+                                                      ref_pic->width,
+                                                      ref_pic->height,
+                                                      picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr->width,
+                                                      picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr->height);
+
+                    const struct ScaleFactors *const sf = use_intrabc ? &sf_identity : &scale_factor_sub8x8;
+
+                    const int32_t is_scaled = av1_is_scaled(sf);
+
+                    if (is_scaled) {
+
+                        printf("sub_8x8 scaled\n");
+
+                        uint8_t *src_mod;
+                        SubpelParams subpel_params;
+
+                        int pu_origin_y_chroma = ((pu_origin_y >> 3) << 3)/2;
+                        int pu_origin_x_chroma = ((pu_origin_x >> 3) << 3)/2;
+                        int origin_x_chroma = ref_pic->origin_x / 2;
+                        int origin_y_chroma = ref_pic->origin_y / 2;
+
+                        int orig_pos_y = (pu_origin_y_chroma + 0) << SUBPEL_BITS;
+                        orig_pos_y += mv.row * (1 << (1 - ss_y));
+                        int orig_pos_x = (pu_origin_x_chroma + 0) << SUBPEL_BITS;
+                        orig_pos_x += mv.col * (1 << (1 - ss_x));
+                        int pos_y = sf->scale_value_y(orig_pos_y, sf);
+                        int pos_x = sf->scale_value_x(orig_pos_x, sf);
+                        pos_x += SCALE_EXTRA_OFF;
+                        pos_y += SCALE_EXTRA_OFF;
+
+                        const int top = -AOM_LEFT_TOP_MARGIN_SCALED(ss_y);
+                        const int left = -AOM_LEFT_TOP_MARGIN_SCALED(ss_x);
+                        const int bottom = ((ref_pic->height >> ss_y) + AOM_INTERP_EXTEND)
+                                << SCALE_SUBPEL_BITS;
+                        const int right = ((ref_pic->width >> ss_x) + AOM_INTERP_EXTEND)
+                                << SCALE_SUBPEL_BITS;
+
+                        pos_y = clamp(pos_y, top, bottom);
+                        pos_x = clamp(pos_x, left, right);
+
+                        subpel_params.subpel_x = pos_x & SCALE_SUBPEL_MASK;
+                        subpel_params.subpel_y = pos_y & SCALE_SUBPEL_MASK;
+                        subpel_params.xs = sf->x_step_q4;
+                        subpel_params.ys = sf->y_step_q4;
+
+                        pos_y = pos_y >> SCALE_SUBPEL_BITS;
+                        pos_x = pos_x >> SCALE_SUBPEL_BITS;
+
+                        src_mod = ref_pic->buffer_cb +
+                                  ((origin_x_chroma + pos_x +
+                                    (origin_y_chroma + pos_y) *
+                                    ref_pic->stride_cb) << is16bit);
+
+                        if (is16bit) {
+                            uint16_t *src16 = (uint16_t *) src_mod;
+                            svt_highbd_inter_predictor(src16,
+                                                       src_stride,
+                                                       (uint16_t *) dst_ptr,
+                                                       dst_stride,
+                                                       &subpel_params,
+                                                       sf,
+                                                       b4_w,
+                                                       b4_h,
+                                                       &conv_params,
+                                                       interp_filters,
+                                                       use_intrabc,
+                                                       bit_depth);
+                        } else {
+                            svt_inter_predictor(src_mod,
+                                                src_stride,
+                                                dst_ptr,
+                                                dst_stride,
+                                                &subpel_params,
+                                                sf,
+                                                b4_w,
+                                                b4_h,
+                                                &conv_params,
+                                                interp_filters,
+                                                use_intrabc);
+                        }
+
+                    } // if(scaled)
+                    else {
+
+                        mv_q4 = clamp_mv_to_umv_border_sb(
+                                blk_ptr->av1xd, &mv, blk_geom->bwidth_uv, blk_geom->bheight_uv, 1, 1);
+                        subpel_x = mv_q4.col & SUBPEL_MASK;
+                        subpel_y = mv_q4.row & SUBPEL_MASK;
+                        src_ptr += ((mv_q4.row >> SUBPEL_BITS) * src_stride + (mv_q4.col >> SUBPEL_BITS)) << is16bit;
+
+                        if (is16bit)
+                            convolveHbd[subpel_x != 0][subpel_y != 0][is_compound](
+                                    (uint16_t *) src_ptr,
+                                    src_stride,
+                                    (uint16_t *) dst_ptr,
+                                    dst_stride,
+                                    b4_w,
+                                    b4_h,
+                                    &filter_params_x,
+                                    &filter_params_y,
+                                    subpel_x,
+                                    subpel_y,
+                                    &conv_params,
+                                    bit_depth);
+                        else
+                            convolve[subpel_x != 0][subpel_y != 0][is_compound](
+                                    src_ptr,
+                                    src_stride,
+                                    dst_ptr,
+                                    dst_stride,
+                                    b4_w,
+                                    b4_h,
+                                    &filter_params_x,
+                                    &filter_params_y,
+                                    subpel_x,
+                                    subpel_y,
+                                    &conv_params);
+                    }
 
                     //Cr
                     conv_params = get_conv_params_no_round(
                             0, 0, 0, tmp_dstCr, BLOCK_SIZE_64, is_compound, bit_depth);
                     conv_params.use_jnt_comp_avg = 0;
+
+                    av1_get_convolve_filter_params(interp_filters, &filter_params_x,
+                                                   &filter_params_y, blk_geom->bwidth_uv, blk_geom->bheight_uv);
 
                     src_ptr = ref_pic->buffer_cr +
                               (((ref_pic->origin_x + ((pu_origin_x >> 3) << 3)) / 2 +
@@ -3688,42 +3780,113 @@ EbErrorType av1_inter_prediction(
                     src_ptr += (x + y * ref_pic->stride_cr) << is16bit;
                     dst_ptr += (x + y * prediction_ptr->stride_cr) << is16bit;
 
-                    mv_q4 = clamp_mv_to_umv_border_sb(
-                            blk_ptr->av1xd, &mv, blk_geom->bwidth_uv, blk_geom->bheight_uv, 1, 1);
-                    subpel_x = mv_q4.col & SUBPEL_MASK;
-                    subpel_y = mv_q4.row & SUBPEL_MASK;
-                    src_ptr += ((mv_q4.row >> SUBPEL_BITS) * src_stride + (mv_q4.col >> SUBPEL_BITS)) << is16bit;
+                    if (is_scaled) {
 
-                    av1_get_convolve_filter_params(interp_filters, &filter_params_x,
-                                                   &filter_params_y, blk_geom->bwidth_uv, blk_geom->bheight_uv);
+                        uint8_t *src_mod;
+                        SubpelParams subpel_params;
 
-                    if (is16bit)
-                        convolveHbd[subpel_x != 0][subpel_y != 0][is_compound](
-                                (uint16_t *)src_ptr,
-                                src_stride,
-                                (uint16_t *)dst_ptr,
-                                dst_stride,
-                                b4_w,
-                                b4_h,
-                                &filter_params_x,
-                                &filter_params_y,
-                                subpel_x,
-                                subpel_y,
-                                &conv_params,
-                                bit_depth);
-                    else
-                        convolve[subpel_x != 0][subpel_y != 0][is_compound](
-                                src_ptr,
-                                src_stride,
-                                dst_ptr,
-                                dst_stride,
-                                b4_w,
-                                b4_h,
-                                &filter_params_x,
-                                &filter_params_y,
-                                subpel_x,
-                                subpel_y,
-                                &conv_params);
+                        int pu_origin_y_chroma = ((pu_origin_y >> 3) << 3)/2;
+                        int pu_origin_x_chroma = ((pu_origin_x >> 3) << 3)/2;
+                        int origin_x_chroma = ref_pic->origin_x / 2;
+                        int origin_y_chroma = ref_pic->origin_y / 2;
+
+                        int orig_pos_y = (pu_origin_y_chroma + 0) << SUBPEL_BITS;
+                        orig_pos_y += mv.row * (1 << (1 - ss_y));
+                        int orig_pos_x = (pu_origin_x_chroma + 0) << SUBPEL_BITS;
+                        orig_pos_x += mv.col * (1 << (1 - ss_x));
+                        int pos_y = sf->scale_value_y(orig_pos_y, sf);
+                        int pos_x = sf->scale_value_x(orig_pos_x, sf);
+                        pos_x += SCALE_EXTRA_OFF;
+                        pos_y += SCALE_EXTRA_OFF;
+
+                        const int top = -AOM_LEFT_TOP_MARGIN_SCALED(ss_y);
+                        const int left = -AOM_LEFT_TOP_MARGIN_SCALED(ss_x);
+                        const int bottom = ((ref_pic->height >> ss_y) + AOM_INTERP_EXTEND)
+                                << SCALE_SUBPEL_BITS;
+                        const int right = ((ref_pic->width >> ss_x) + AOM_INTERP_EXTEND)
+                                << SCALE_SUBPEL_BITS;
+
+                        pos_y = clamp(pos_y, top, bottom);
+                        pos_x = clamp(pos_x, left, right);
+
+                        subpel_params.subpel_x = pos_x & SCALE_SUBPEL_MASK;
+                        subpel_params.subpel_y = pos_y & SCALE_SUBPEL_MASK;
+                        subpel_params.xs = sf->x_step_q4;
+                        subpel_params.ys = sf->y_step_q4;
+
+                        pos_y = pos_y >> SCALE_SUBPEL_BITS;
+                        pos_x = pos_x >> SCALE_SUBPEL_BITS;
+
+                        src_mod = ref_pic->buffer_cr +
+                                  ((origin_x_chroma + pos_x +
+                                    (origin_y_chroma + pos_y) *
+                                    ref_pic->stride_cr) << is16bit);
+
+                        if (is16bit) {
+                            uint16_t *src16 = (uint16_t *) src_mod;
+                            svt_highbd_inter_predictor(src16,
+                                                       src_stride,
+                                                       (uint16_t *) dst_ptr,
+                                                       dst_stride,
+                                                       &subpel_params,
+                                                       sf,
+                                                       b4_w,
+                                                       b4_h,
+                                                       &conv_params,
+                                                       interp_filters,
+                                                       use_intrabc,
+                                                       bit_depth);
+                        } else {
+                            svt_inter_predictor(src_mod,
+                                                src_stride,
+                                                dst_ptr,
+                                                dst_stride,
+                                                &subpel_params,
+                                                sf,
+                                                b4_w,
+                                                b4_h,
+                                                &conv_params,
+                                                interp_filters,
+                                                use_intrabc);
+                        }
+
+                    } // if(scaled)
+                    else {
+
+                        mv_q4 = clamp_mv_to_umv_border_sb(
+                                blk_ptr->av1xd, &mv, blk_geom->bwidth_uv, blk_geom->bheight_uv, 1, 1);
+                        subpel_x = mv_q4.col & SUBPEL_MASK;
+                        subpel_y = mv_q4.row & SUBPEL_MASK;
+                        src_ptr += ((mv_q4.row >> SUBPEL_BITS) * src_stride + (mv_q4.col >> SUBPEL_BITS)) << is16bit;
+
+                        if (is16bit)
+                            convolveHbd[subpel_x != 0][subpel_y != 0][is_compound](
+                                    (uint16_t *) src_ptr,
+                                    src_stride,
+                                    (uint16_t *) dst_ptr,
+                                    dst_stride,
+                                    b4_w,
+                                    b4_h,
+                                    &filter_params_x,
+                                    &filter_params_y,
+                                    subpel_x,
+                                    subpel_y,
+                                    &conv_params,
+                                    bit_depth);
+                        else
+                            convolve[subpel_x != 0][subpel_y != 0][is_compound](
+                                    src_ptr,
+                                    src_stride,
+                                    dst_ptr,
+                                    dst_stride,
+                                    b4_w,
+                                    b4_h,
+                                    &filter_params_x,
+                                    &filter_params_y,
+                                    subpel_x,
+                                    subpel_y,
+                                    &conv_params);
+                    }
 
                     ++col;
                 }
@@ -3771,6 +3934,9 @@ EbErrorType av1_inter_prediction(
         const int32_t is_scaled = picture_control_set_ptr != EB_NULL ? av1_is_scaled(sf) : EB_FALSE;
 
         if (is_scaled) {
+
+            printf("scaled prediction Y-list0, compond=%d, pu_origin_y=%d, pu_origin_x=%d, blk_width=%d, blk_height=%d\n",
+                   (int)is_compound, (int)pu_origin_y, (int)pu_origin_x, (int)bwidth, (int)bheight);
 
             int orig_pos_y = (pu_origin_y + 0) << SUBPEL_BITS;
             orig_pos_y += mv.row * (1 << (1 - ss_y));
