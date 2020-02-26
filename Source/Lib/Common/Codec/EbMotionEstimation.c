@@ -18120,19 +18120,19 @@ if (context_ptr->me_alt_ref == EB_FALSE) {
                     farthest_ref = (ref_index0 > 2) || (ref_index1 > 2) ? 1 : 0;
                 }
 
-                if (d1 && short_mv && !picture_control_set_ptr->is_used_as_reference_flag)
+                /*if (d1 && short_mv && !picture_control_set_ptr->is_used_as_reference_flag)
                     pa_me_th = 0;
                 else if (d1 && short_mv && picture_control_set_ptr->is_used_as_reference_flag)
                     pa_me_th = 15;
-                else if (d1)
-                    pa_me_th = 30;
-                else if (closest_ref)
-                    pa_me_th = 50;
-                else if(second_close_ref)
+                elseif (d1)
+                    pa_me_th = 100; 
+                else*/ 
+                if (closest_ref)
                     pa_me_th = 100;
+                else if(second_close_ref)
+                    pa_me_th = 10;
                 else if(farthest_ref)
-                    pa_me_th = 200;
-
+                    pa_me_th = 2;
                 best = candidateIndex == 0 ? me_candidate->distortion : best;
                 if ((me_candidate->distortion - best) * 100 > pa_me_th*best) {
                     adjusted_total_me_candidate_index--;
