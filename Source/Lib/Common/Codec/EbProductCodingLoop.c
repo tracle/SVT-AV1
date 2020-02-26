@@ -4563,8 +4563,10 @@ void predictive_me_search(
 #endif
     EbBool use_ssd = EB_TRUE;
 #if M0_FEB22_ADOPTIONS
+#if !MR_MODE
     if (picture_control_set_ptr->parent_pcs_ptr->sc_content_detected)
         use_ssd = EB_FALSE;
+#endif
 #endif
 #if HBD2_PME
     uint8_t hbd_mode_decision = context_ptr->hbd_mode_decision == EB_DUAL_BIT_MD ? EB_8_BIT_MD: context_ptr->hbd_mode_decision ;
@@ -9983,7 +9985,16 @@ void md_stage_2(
 #endif
 #if LOSSLESS_TX_TYPE_OPT || RDOQ_LIGHT_TX_TYPE_MD_STAGE_2
 #if M0_FEB22_ADOPTIONS
-            context_ptr->md_staging_tx_size_mode = (candidate_ptr->cand_class == CAND_CLASS_0 || candidate_ptr->cand_class == CAND_CLASS_6 || candidate_ptr->cand_class == CAND_CLASS_7) ? 1 : 0;
+#if MR_MODE
+            context_ptr->md_staging_tx_size_mode = EB_TRUE;
+#else
+            context_ptr->md_staging_tx_size_mode =
+                (candidate_ptr->cand_class == CAND_CLASS_0 ||
+                 candidate_ptr->cand_class == CAND_CLASS_6 ||
+                 candidate_ptr->cand_class == CAND_CLASS_7)
+                    ? 1
+                    : 0;
+#endif
 #else
             context_ptr->md_staging_tx_size_mode = !context_ptr->coeff_based_skip_atb;
 #endif
