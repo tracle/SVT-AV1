@@ -32,7 +32,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#define FROM_MASTER_GLB            1 // Adrien: do not take an I_SLICE as global motion reference
+#define TH_BASED_CHROMA_SEARCH             0
+#define FROM_MASTER_GLB                    1 // Adrien: do not take an I_SLICE as global motion reference
 #define FEB24_ADOPTIONS                    1
 #define MODULATE_ME_OUTPUT                 0
 #if MODULATE_ME_OUTPUT
