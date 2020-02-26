@@ -480,7 +480,5 @@ extern EbErrorType set_token_getopt(EbConfig *configs, uint32_t num_channels, in
 extern EbErrorType read_command_line_getopt(int32_t argc, char *const argv[], EbConfig **configs,
                                             uint32_t num_channels, EbErrorType *return_errors);
 extern void get_help_getopt();
-extern int getopt_long_only(int nargc, char *const *nargv, const char *options,
-                                    const struct option *long_options, int *idx);
 
 #endif //EbAppConfig_h
