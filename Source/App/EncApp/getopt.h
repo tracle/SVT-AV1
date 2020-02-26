@@ -79,7 +79,7 @@ enum                /* permitted values for its `has_arg' field...  */
 
 extern int getopt_long(int nargc, char * const *nargv, const char *options,
     const struct option *long_options, int *idx);
-extern int getopt_long_only(int nargc, char * const *nargv, const char *options,
+int getopt_long_only(int nargc, char * const *nargv, const char *options,
     const struct option *long_options, int *idx);
 /*
  * Previous MinGW implementation had...

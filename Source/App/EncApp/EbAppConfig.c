@@ -3269,6 +3269,7 @@ EbErrorType set_token_getopt(EbConfig *config, uint32_t num_channel, int32_t tok
         }
         return num_channel;
         */
+        break;
     case 'c':
         read_config_file(config, optarg, num_channel); // num_channel = index
         break;
