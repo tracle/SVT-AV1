@@ -1403,12 +1403,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else {
         if (context_ptr->tx_search_level == TX_SEARCH_ENC_DEC)
             context_ptr->tx_weight = MAX_MODE_COST;
+#if !MATCH_M0_M1
 #if FEB27_ADOPTIONS
         else if (pcs_ptr->parent_pcs_ptr->sc_content_detected && pcs_ptr->enc_mode <= ENC_M0)
             context_ptr->tx_weight = BLK_BASED_SKIP_TX_SR_TH;
 #endif
         else if (pcs_ptr->enc_mode <= ENC_M0)
             context_ptr->tx_weight = MAX_MODE_COST;
+#endif
         else if (pcs_ptr->enc_mode <= ENC_M1)
             context_ptr->tx_weight = FC_SKIP_TX_SR_TH025;
         else
@@ -1477,9 +1479,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (sequence_control_set_ptr->static_config.set_chroma_mode ==
         DEFAULT) {
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if !MATCH_M0_M1
             if (pcs_ptr->enc_mode <= ENC_M0)
                 context_ptr->chroma_level = CHROMA_MODE_0;
             else if (pcs_ptr->enc_mode <= ENC_M6)
+#else
+            if(pcs_ptr->enc_mode <= ENC_M6)
+#endif
                 context_ptr->chroma_level = CHROMA_MODE_1;
             else if (pcs_ptr->parent_pcs_ptr->temporal_layer_index ==
                 0)
@@ -1574,7 +1580,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
         if (sequence_control_set_ptr->static_config.new_nearest_comb_inject ==
             DEFAULT)
-
+#if MATCH_M0_M1
+            context_ptr->new_nearest_near_comb_injection = 0;
+#else
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
                 context_ptr->new_nearest_near_comb_injection = 0;
             else if (pcs_ptr->enc_mode <= ENC_M0)
@@ -1582,7 +1590,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 context_ptr->new_nearest_near_comb_injection = 1;
             else
                 context_ptr->new_nearest_near_comb_injection = 0;
-
+#endif
         else
             context_ptr->new_nearest_near_comb_injection =
             sequence_control_set_ptr->static_config.new_nearest_comb_inject;
@@ -1681,9 +1689,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                         context_ptr->predictive_me_level = 0;
                 else
 #if PME_UP_TO_4_REF
+#if MATCH_M0_M1
+                    if (pcs_ptr->enc_mode <= ENC_M3)
+#else
                     if (pcs_ptr->enc_mode <= ENC_M0)
                         context_ptr->predictive_me_level = 6;
                     else if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
 #else
                     if (pcs_ptr->enc_mode <= ENC_M3)
 #endif
@@ -1933,10 +1945,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         if (MR_MODE)
             context_ptr->md_exit_th = 0;
+#if !MATCH_M0_M1
         else if (pcs_ptr->enc_mode <= ENC_M0 &&
             pcs_ptr->parent_pcs_ptr->sc_content_detected)
 
             context_ptr->md_exit_th = 0;
+#endif
         else
             context_ptr->md_exit_th = 18;
     // md_stage_1_cand_prune_th (for single candidate removal per class)
@@ -2063,11 +2077,16 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         }
         else {
 #if FEB27_ADOPTIONS
+#if MATCH_M0_M1
+            context_ptr->pred_me_full_pel_search_width = MR_MODE ? PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_15 : PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_7;
+            context_ptr->pred_me_full_pel_search_height = MR_MODE ? PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_15 : PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_5;
+#else
             context_ptr->pred_me_full_pel_search_width = pcs_ptr->enc_mode <= ENC_M0 ? PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_15 : PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_7;
             context_ptr->pred_me_full_pel_search_height = pcs_ptr->enc_mode <= ENC_M0 ? PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_15 : PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_5;
+#endif
 #else
-            context_ptr->pred_me_full_pel_search_width = pcs_ptr->enc_mode <= ENC_M1 ? FULL_PEL_REF_WINDOW_WIDTH_15 : FULL_PEL_REF_WINDOW_WIDTH_7;
-            context_ptr->pred_me_full_pel_search_height = pcs_ptr->enc_mode <= ENC_M1 ? FULL_PEL_REF_WINDOW_HEIGHT_15 : FULL_PEL_REF_WINDOW_HEIGHT_5;
+            context_ptr->pred_me_full_pel_search_width = pcs_ptr->enc_mode <= ENC_M1 ? PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_15 : PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_7;
+            context_ptr->pred_me_full_pel_search_height = pcs_ptr->enc_mode <= ENC_M1 ? PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_15 : PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_5;
 #endif
         }
     }

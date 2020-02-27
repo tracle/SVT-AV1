@@ -1737,7 +1737,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
             }
 
             ////MULT
+#if MATCH_M0_M1
+            if (MR_MODE) {
+#else
             if (pcs_ptr->enc_mode <= ENC_M0) {
+#endif
                 uint8_t mult_factor_num   = 5;
                 uint8_t mult_factor_denum = 4;
                 for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
@@ -1840,7 +1844,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 }
             }
 #if FEB27_ADOPTIONS
+#if MATCH_M0_M1
+            if (!MR_MODE) {
+#else
             if (pcs_ptr->enc_mode > ENC_M0 || pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+#endif
                 uint8_t division_factor_num   = 1;
                 uint8_t division_factor_denum = 1;
                 if (context_ptr->blk_geom->bheight <= 8 && context_ptr->blk_geom->bwidth <= 8) {
@@ -8736,7 +8744,11 @@ void md_encode_block(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
                                 pcs_ptr->parent_pcs_ptr->nsq_search_level < NSQ_SEARCH_FULL)
                                    ? EB_TRUE
                                    : EB_FALSE;
+#if MATCH_M0_M1
+    is_nsq_table_used = (
+#else
     is_nsq_table_used = (pcs_ptr->enc_mode == ENC_M0 ||
+#endif
                          pcs_ptr->parent_pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_0 ||
                          pcs_ptr->parent_pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_1 ||
                          pcs_ptr->parent_pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_2 ||

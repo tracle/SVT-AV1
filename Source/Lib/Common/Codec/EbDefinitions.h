@@ -34,6 +34,7 @@
 extern "C" {
 #endif
 
+#define MATCH_M0_M1                         1 // Match enc-mode 0 to enc-mode 1
 #define PME_UP_TO_4_REF                     1 // add a new PME level to restrict PME to use 4 ref frames
 #define TH_BASED_CFL                        1 // disbale cfl based on relative inter/intra costs
 #define TH_BASED_CHROMA_SEARCH              1 // skip chroma search based on relative inter/intra costs
@@ -3270,7 +3271,7 @@ static const uint16_t hme_level0_total_search_area_width[SC_MAX_LEVEL][INPUT_SIZ
     {
         {  48,   48,   48,   48,   48,   48,   48,   48,   48,   48,   48,   48,   48 },
         {  96,   96,   96,   96,   96,   48,   48,   48,   48,   48,   48,   48,   48 },
-        { 112,  128,  128,  128,  128,   48,   48,   48,   48,   48,   48,   48,   48 },
+        { 112,  112,  128,  128,  128,   48,   48,   48,   48,   48,   48,   48,   48 },
         { 128,  128,  128,  128,  128,   96,   96,   96,   96,   96,   96,   96,   96 }
      } , {
         { 128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128 },

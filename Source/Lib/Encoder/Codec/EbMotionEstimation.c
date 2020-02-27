@@ -9962,7 +9962,11 @@ void integer_search_sb(
                                    ? EB_TRUE
                                    : EB_FALSE;
     is_nsq_table_used =
+#if MATCH_M0_M1
+        (pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_0 ||
+#else
         (pcs_ptr->enc_mode == ENC_M0 || pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_0 ||
+#endif
          pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_1 ||
          pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_2 ||
          pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_3)
@@ -10601,7 +10605,11 @@ void hme_sb(
                                    ? EB_TRUE
                                    : EB_FALSE;
     is_nsq_table_used =
+#if MATCH_M0_M1
+    (pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_0 ||
+#else
         (pcs_ptr->enc_mode == ENC_M0 || pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_0 ||
+#endif
          pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_1 ||
          pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_2 ||
          pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_3)
@@ -11255,7 +11263,11 @@ EbErrorType motion_estimate_sb(
                                    ? EB_TRUE
                                    : EB_FALSE;
     is_nsq_table_used =
+#if MATCH_M0_M1
+    (pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_0 ||
+#else
         (pcs_ptr->enc_mode == ENC_M0 || pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_0 ||
+#endif
          pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_1 ||
          pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_2 ||
          pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_3)

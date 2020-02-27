@@ -342,7 +342,11 @@ EbErrorType signal_derivation_me_kernel_oq(
     else
         context_ptr->me_context_ptr->use_subpel_flag = scs_ptr->static_config.enable_subpel;
 
+#if MATCH_M0_M1
+    if (MR_MODE) {
+#else
     if (enc_mode <= ENC_M0) {
+#endif
         context_ptr->me_context_ptr->half_pel_mode =
             pcs_ptr->sc_content_detected ? REFINEMENT_HP_MODE : EX_HP_MODE;
     }
@@ -720,10 +724,12 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
         pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
 
     uint8_t  hmeMeLevel = scs_ptr->use_output_stat_file ? pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
-
+#if MATCH_M0_M1
+    if (pcs_ptr->enc_mode == ENC_M0)
+        hmeMeLevel = ENC_M1;
+#endif
     if (hmeMeLevel <= ENC_M2 && pcs_ptr->sc_content_detected == 0)
         hmeMeLevel = ENC_M0;
-
     // Set ME/HME search regions
     tf_set_me_hme_params_oq(
         context_ptr->me_context_ptr,
@@ -766,7 +772,11 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
         context_ptr->me_context_ptr->use_subpel_flag = scs_ptr->static_config.enable_subpel;
 
         // adopt M2 setting in M1
+#if MATCH_M0_M1
+    if (MR_MODE) {
+#else
     if (enc_mode <= ENC_M0) {
+#endif
         context_ptr->me_context_ptr->half_pel_mode =
             pcs_ptr->sc_content_detected ? REFINEMENT_HP_MODE : EX_HP_MODE;
     }

@@ -807,6 +807,10 @@ EbErrorType signal_derivation_multi_processes_oq(
     uint8_t enc_mode_hme = scs_ptr->use_output_stat_file
         ? pcs_ptr->snd_pass_enc_mode
         : pcs_ptr->enc_mode;
+#if MATCH_M0_M1
+    if (pcs_ptr->enc_mode == ENC_M0)
+        enc_mode_hme = ENC_M1;
+#endif
     pcs_ptr->enable_hme_flag =
         enable_hme_flag[pcs_ptr->sc_content_detected]
         [scs_ptr->input_resolution][enc_mode_hme];
@@ -1216,7 +1220,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     // downsampling factor of 2 in each dimension GM_TRAN_ONLY Translation only
     // using ME MV.
 #if FEB27_ADOPTIONS
+#if MATCH_M0_M1
+    if (MR_MODE)
+#else
     if (pcs_ptr->enc_mode <= ENC_M0)
+#endif
 #else
     if (pcs_ptr->enc_mode <= ENC_M2)
 #endif
