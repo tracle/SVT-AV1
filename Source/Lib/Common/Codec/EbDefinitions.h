@@ -32,6 +32,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define PRED_ME_LEVELS                     0
 #define TH_BASED_CFL                       0
 #define TH_BASED_CHROMA_SEARCH             0
 #define FROM_MASTER_GLB                    1 // Adrien: do not take an I_SLICE as global motion reference

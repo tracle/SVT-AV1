@@ -4568,6 +4568,11 @@ void predictive_me_search(
         use_ssd = EB_FALSE;
 #endif
 #endif
+#if PRED_ME_LEVELS
+    uint8_t default_pred_me_level = context_ptr->predictive_me_level;
+    int16_t default_full_pel_ref_window_width_th = context_ptr->full_pel_ref_window_width_th;
+    int16_t default_full_pel_ref_window_height_th = context_ptr->full_pel_ref_window_height_th;
+#endif
 #if HBD2_PME
     uint8_t hbd_mode_decision = context_ptr->hbd_mode_decision == EB_DUAL_BIT_MD ? EB_8_BIT_MD: context_ptr->hbd_mode_decision ;
     input_picture_ptr =  hbd_mode_decision  ? picture_control_set_ptr->input_frame16bit : picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr;
@@ -4716,6 +4721,36 @@ void predictive_me_search(
             }
 #endif
 
+#if PRED_ME_LEVELS
+            {
+                uint8_t d1 = 0;
+                uint8_t short_mv = 0;
+                uint8_t closest_ref = 0;
+                uint8_t second_close_ref = 0;
+                uint8_t farthest_ref = 0;
+                uint16_t dist = ABS((int16_t)(picture_control_set_ptr->parent_pcs_ptr->picture_number - picture_control_set_ptr->parent_pcs_ptr->ref_pic_poc_array[list_idx][ref_idx]));    
+                d1 = dist > 1 ? 0 : 1;
+                //short_mv = (x_mv <= mv_th && y_mv <= mv_th) ? 1 : 0;    
+                closest_ref = (ref_idx == 0) ? 1 : 0;
+                second_close_ref = (ref_idx == 1) ? 1 : 0;
+                farthest_ref = (ref_idx > 2) ? 1 : 0;
+                if (d1) {
+                   context_ptr->predictive_me_level = 4;
+                }
+                else if (closest_ref)
+                    context_ptr->predictive_me_level = 3;
+                else if (second_close_ref) {
+                    context_ptr->predictive_me_level = 2;
+                    context_ptr->full_pel_ref_window_width_th = 5;
+                    context_ptr->full_pel_ref_window_height_th = 3;
+                }
+                else { //if(farthest_ref)
+                    context_ptr->predictive_me_level = 1;
+                    context_ptr->full_pel_ref_window_width_th = 5;
+                    context_ptr->full_pel_ref_window_height_th = 3;
+                }
+            }
+#endif
             if (pa_me_distortion != 0 || context_ptr->predictive_me_level >= 5) {
 
                 //NEAREST
@@ -5114,6 +5149,11 @@ void predictive_me_search(
             }
         }
     }
+#if PRED_ME_LEVELS
+    context_ptr->predictive_me_level = default_pred_me_level;
+    context_ptr->full_pel_ref_window_width_th = default_full_pel_ref_window_width_th;
+    context_ptr->full_pel_ref_window_height_th = default_full_pel_ref_window_height_th;
+#endif
 }
 void AV1CostCalcCfl(
     PictureControlSet                *picture_control_set_ptr,
