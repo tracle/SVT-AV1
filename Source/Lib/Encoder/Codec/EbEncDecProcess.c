@@ -2067,7 +2067,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
         }
     }
-    
+
     // comp_similar_mode
     // 0: OFF
     // 1: If previous similar block is not compound, do not inject compound

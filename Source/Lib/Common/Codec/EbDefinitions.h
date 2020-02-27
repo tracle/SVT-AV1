@@ -109,7 +109,7 @@ extern "C" {
 #define SKIP_ME_BASED_ON_HME     1 //Multi-Stage ME - Reduce SR based on HME distortion
 #define REDUCE_ME_FOR_LOW_M_SB   1 //Multi-Stage ME - Reduce SR based on HME distortion and HME MV
 #define SWITCHED_HALF_PEL_MODE   1 //Multi-Stage ME - Adapt half_pel mode based on fulpel distortion
-#define SC_HME_PRUNING          1
+#define SC_HME_PRUNING          0
 #endif
 #define MC_DYNAMIC_PAD              1
 #define DIST_BASED_ME_SEARCH_AREA       1 // Distance-based multiper for ME search region
