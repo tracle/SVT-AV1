@@ -5531,20 +5531,26 @@ EbErrorType inter_pu_prediction_av1(uint8_t hbd_mode_decision, ModeDecisionConte
                 md_context_ptr->blk_geom->bheight > capped_size) {
                 if (md_context_ptr->hbd_mode_decision == EB_DUAL_BIT_MD &&
                     hbd_mode_decision == EB_DUAL_BIT_MD) {
-                    if (ref_idx_l0 >= 0)
-                        // NOTE: references
+                    if (ref_idx_l0 >= 0){
                         ref_pic_list0 = ((EbReferenceObject *)picture_control_set_ptr
                                 ->ref_pic_ptr_array[list_idx0][ref_idx_l0]
                                 ->object_ptr)
                                 ->reference_picture;
-
-                    if (ref_idx_l1 >= 0)
-                        // NOTE: references
+                        use_scaled_rec_refs_if_needed(picture_control_set_ptr,
+                                                      picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr,
+                                                      (EbReferenceObject *)picture_control_set_ptr->ref_pic_ptr_array[list_idx0][ref_idx_l0]->object_ptr,
+                                                      &ref_pic_list0);
+                    }
+                    if (ref_idx_l1 >= 0){
                         ref_pic_list1 = ((EbReferenceObject *)picture_control_set_ptr
                                 ->ref_pic_ptr_array[list_idx1][ref_idx_l1]
                                 ->object_ptr)
                                 ->reference_picture;
-
+                        use_scaled_rec_refs_if_needed(picture_control_set_ptr,
+                                                      picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr,
+                                                      (EbReferenceObject *)picture_control_set_ptr->ref_pic_ptr_array[list_idx1][ref_idx_l1]->object_ptr,
+                                                      &ref_pic_list1);
+                    }
                 }
                 interpolation_filter_search(picture_control_set_ptr,
                                             candidate_buffer_ptr->prediction_ptr_temp,
@@ -5559,19 +5565,26 @@ EbErrorType inter_pu_prediction_av1(uint8_t hbd_mode_decision, ModeDecisionConte
                                             bit_depth);
                 if (md_context_ptr->hbd_mode_decision == EB_DUAL_BIT_MD &&
                     hbd_mode_decision == EB_DUAL_BIT_MD) {
-                    if (ref_idx_l0 >= 0)
-                        // NOTE: references
+                    if (ref_idx_l0 >= 0){
                         ref_pic_list0 = ((EbReferenceObject *)picture_control_set_ptr
                                 ->ref_pic_ptr_array[list_idx0][ref_idx_l0]
                                 ->object_ptr)
                                 ->reference_picture16bit;
-
-                    if (ref_idx_l1 >= 0)
-                        // NOTE: references
+                        use_scaled_rec_refs_if_needed(picture_control_set_ptr,
+                                                      picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr,
+                                                      (EbReferenceObject *)picture_control_set_ptr->ref_pic_ptr_array[list_idx0][ref_idx_l0]->object_ptr,
+                                                      &ref_pic_list0);
+                    }
+                    if (ref_idx_l1 >= 0){
                         ref_pic_list1 = ((EbReferenceObject *)picture_control_set_ptr
                                 ->ref_pic_ptr_array[list_idx1][ref_idx_l1]
                                 ->object_ptr)
                                 ->reference_picture16bit;
+                        use_scaled_rec_refs_if_needed(picture_control_set_ptr,
+                                                      picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr,
+                                                      (EbReferenceObject *)picture_control_set_ptr->ref_pic_ptr_array[list_idx1][ref_idx_l1]->object_ptr,
+                                                      &ref_pic_list1);
+                    }
                 }
             }
         }
