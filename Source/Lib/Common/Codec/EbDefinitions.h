@@ -94,7 +94,7 @@ extern "C" {
 #define INTRA_SIMILAR       1 //If previous similar block is intra, do not inject any inter
 #define OIS_MEM              1 //reduce memory consumption due to ois struct
 #define SB_SIZE_ADOPTION     1 // ENABLE_SB128_360P , SC_FEB4_ADOPTION
-#define MULTI_STAGE_ME       1
+#define MULTI_STAGE_ME       0
 #if MULTI_STAGE_ME
 #define MUS_ME               1 //MUlti-Stage ME - HME pruning
 #define SHUT_HME_L1_CHECK    1 //Remove usage of ME results for list=0 refIndex=0 to decide HME centre. Feature has wrong assumptions as: MRP OFF and list1 distance = list0 distance.

@@ -347,8 +347,12 @@ EbErrorType signal_derivation_me_kernel_oq(
             pcs_ptr->sc_content_detected ? REFINEMENT_HP_MODE : EX_HP_MODE;
     }
     else if (enc_mode <= ENC_M1) {
+#if SWITCHED_HALF_PEL_MODE
         context_ptr->me_context_ptr->half_pel_mode =
             pcs_ptr->sc_content_detected ? REFINEMENT_HP_MODE : SWITCHABLE_HP_MODE;
+#else
+        context_ptr->me_context_ptr->half_pel_mode = context_ptr->me_context_ptr->half_pel_mode;
+#endif
     }
     else {
         context_ptr->me_context_ptr->half_pel_mode =
@@ -771,8 +775,12 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
             pcs_ptr->sc_content_detected ? REFINEMENT_HP_MODE : EX_HP_MODE;
     }
     else if (enc_mode <= ENC_M1) {
+#if SWITCHED_HALF_PEL_MODE
         context_ptr->me_context_ptr->half_pel_mode =
             pcs_ptr->sc_content_detected ? REFINEMENT_HP_MODE : SWITCHABLE_HP_MODE;
+#else
+        context_ptr->me_context_ptr->half_pel_mode = context_ptr->me_context_ptr->half_pel_mode;
+#endif
     }
     else {
         context_ptr->me_context_ptr->half_pel_mode =
