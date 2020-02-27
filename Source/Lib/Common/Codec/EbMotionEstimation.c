@@ -17990,6 +17990,10 @@ if (context_ptr->me_alt_ref == EB_FALSE) {
 #if REDUCE_ME_OUTPUT || MODULATE_ME_OUTPUT
         uint8_t adjusted_total_me_candidate_index = total_me_candidate_index;
         uint64_t best =  MAX_CU_COST;
+        uint8_t cnt_d1 = 0;
+        uint8_t cnt_closest_ref = 0;
+        uint8_t cnt_second_close_ref = 0;
+        uint8_t cnt_farthest_ref = 0;
 #endif
         // Assining the ME candidates to the me Results buffer
         for (candidateIndex = 0; candidateIndex < total_me_candidate_index;
@@ -18065,7 +18069,10 @@ if (context_ptr->me_alt_ref == EB_FALSE) {
 #endif
 #if MODULATE_ME_OUTPUT_LEVELS
             {
-                uint64_t pa_me_th = 1000;
+                uint8_t pa_me_nic_d1 = 10;
+                uint8_t pa_me_nic_cl = 5;
+                uint8_t pa_me_nic_scl = 3;
+                uint8_t pa_me_nic_fst = 2;
                 uint8_t direction   = me_candidate->prediction_direction;
                 uint8_t ref_index0  = me_candidate->ref_index[0];
                 uint8_t ref_index1  = me_candidate->ref_index[1];
@@ -18120,24 +18127,28 @@ if (context_ptr->me_alt_ref == EB_FALSE) {
                     farthest_ref = (ref_index0 > 2) || (ref_index1 > 2) ? 1 : 0;
                 }
 
-                /*if (d1 && short_mv && !picture_control_set_ptr->is_used_as_reference_flag)
-                    pa_me_th = 0;
-                else if (d1 && short_mv && picture_control_set_ptr->is_used_as_reference_flag)
-                    pa_me_th = 15;
-                elseif (d1)
-                    pa_me_th = 100; 
-                else*/ 
-                if (closest_ref)
-                    pa_me_th = 100;
-                else if(second_close_ref)
-                    pa_me_th = 10;
-                else if(farthest_ref)
-                    pa_me_th = 2;
-                best = candidateIndex == 0 ? me_candidate->distortion : best;
-                if ((me_candidate->distortion - best) * 100 > pa_me_th*best) {
+                if (d1 && cnt_d1 > pa_me_nic_d1) {
+                    adjusted_total_me_candidate_index--;
+                    continue;
+                }else if (closest_ref && cnt_closest_ref > pa_me_nic_cl) {
+                    adjusted_total_me_candidate_index--;
+                    continue;
+                }else if (second_close_ref && cnt_second_close_ref > pa_me_nic_scl) {
+                    adjusted_total_me_candidate_index--;
+                    continue;
+                }else if (cnt_farthest_ref && cnt_farthest_ref > pa_me_nic_fst) {
                     adjusted_total_me_candidate_index--;
                     continue;
                 }
+
+                if (d1)
+                    cnt_d1 ++; 
+                else if (closest_ref)
+                    cnt_closest_ref ++;
+                else if(second_close_ref)
+                    cnt_second_close_ref ++;
+                else //if(farthest_ref)
+                    cnt_farthest_ref ++;
             }
 #endif
         }
