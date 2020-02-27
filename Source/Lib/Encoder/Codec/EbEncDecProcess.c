@@ -1504,13 +1504,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else // use specified level
         context_ptr->chroma_level =
         sequence_control_set_ptr->static_config.set_chroma_mode;
-
+#if CHROMA_SEARCH_OPT
     // Chroma independent modes search
     // Level                Settings
     // 0                    post first md_stage
     // 1                    post last md_stage
     context_ptr->chroma_at_last_md_stage =
         MR_MODE ? 0 : (context_ptr->chroma_level == CHROMA_MODE_0) ? 1 : 0;
+#endif
 
     // Set the full loop escape level
     // Level                Settings
