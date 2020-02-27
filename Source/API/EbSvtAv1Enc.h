@@ -431,7 +431,7 @@ typedef struct EbSvtAv1EncConfiguration {
 
     /* Flag to signal the content being a screen sharing content type
     *
-    * Default is 0. */
+    * Default is 2. */
     uint32_t screen_content_mode;
 
     /* Enable adaptive quantization within a frame using segmentation.
