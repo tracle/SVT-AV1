@@ -80,7 +80,7 @@ extern "C" {
 // Decoupled search / compensation @ ALTREF core, REGULAR @ search and SHARP @ compensation, and 1 / 2 Pel Ref and 1 / 4 Pel Ref @ only ALTREF core(15x15 search ~the ME Full - Pel MV).
 #define IMPROVED_TF_ME_INPUT 1
 
-#define CHROMA_SEARCH_OPT        1 // Move chroma search to be done on the best intra candidate survived from MD stage 2
+#define CHROMA_SEARCH_OPT        0 // Move chroma search to be done on the best intra candidate survived from MD stage 2
 #if CHROMA_SEARCH_OPT
 #define INFR_OPT                 1 // Lossless: Infrastructure work to allow the protability of the chroma search
 #define MOVE_OPT                 1 // Semi-lossless: Move the intra search to just before last md_stage
@@ -104,7 +104,7 @@ extern "C" {
 #define SKIP_ME_BASED_ON_HME     1 //Multi-Stage ME - Reduce SR based on HME distortion
 #define REDUCE_ME_FOR_LOW_M_SB   1 //Multi-Stage ME - Reduce SR based on HME distortion and HME MV
 #define SWITCHED_HALF_PEL_MODE   1 //Multi-Stage ME - Adapt half_pel mode based on fulpel distortion
-#define SC_HME_PRUNING          0
+#define SC_HME_PRUNING          1
 #endif
 #define MC_DYNAMIC_PAD              1
 #define DIST_BASED_ME_SEARCH_AREA       1 // Distance-based multiper for ME search region
