@@ -9972,8 +9972,8 @@ void integer_search_sb(
          pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_3)
             ? EB_FALSE
             : is_nsq_table_used;
-    if (context_ptr->me_alt_ref == EB_FALSE && is_nsq_table_used)
-        printf("NSQTBLE\n");
+    //if (context_ptr->me_alt_ref == EB_FALSE && is_nsq_table_used)
+    //    printf("NSQTBLE\n");
     if (context_ptr->me_alt_ref == EB_TRUE) num_of_list_to_search = 0;
 
     // Uni-Prediction motion estimation loop
@@ -10615,8 +10615,8 @@ void hme_sb(
          pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_3)
             ? EB_FALSE
             : is_nsq_table_used;
-    if (context_ptr->me_alt_ref == EB_FALSE && is_nsq_table_used)
-        printf("NSQTBLE\n");
+    //if (context_ptr->me_alt_ref == EB_FALSE && is_nsq_table_used)
+    //    printf("NSQTBLE\n");
     if (context_ptr->me_alt_ref == EB_TRUE) num_of_list_to_search = 0;
     // Uni-Prediction motion estimation loop
     // List Loop
