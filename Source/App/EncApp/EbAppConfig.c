@@ -67,11 +67,6 @@ enum /* permitted values for its `has_arg' field...  */
   optional_argument /* option may take an argument      */
 };
 
-extern int getopt_long_svtav1(int nargc, char *const *nargv, const char *options,
-                              const struct option *long_options, int *idx);
-extern int getopt_long_only_svtav1(int nargc, char *const *nargv, const char *options,
-                                   const struct option *long_options, int *idx);
-
 
 #define REPLACE_GETOPT 1 /* use this getopt as the system getopt(3) */
 
@@ -301,7 +296,7 @@ static int parse_long_options(char *const *nargv, const char *options,
  */
 static int getopt_internal(int nargc, char *const *nargv, const char *options,
                            const struct option *long_options, int *idx, int flags) {
-    char *     oli; /* option letter list index */
+    char *     oli = EMSG; /* option letter list index */
     int        optchar, short_too;
     static int posixly_correct = -1;
 
@@ -420,7 +415,16 @@ start:
         }
     }
 
+    //fprintf(stderr, "oli: %s", oli);
+    //fprintf(stderr, "optchar: %d\n", optchar);
+    //fprintf(stderr, "strchr: %s\n", strchr(options, optchar));
+    //if (strchr(options, optchar) == NULL)
+    //    oli = NULL;
+    //else
+    //    EB_STRCPY(oli, sizeof(5), strchr(options, optchar));
+    //fprintf(stderr, "oli: %s", oli);
     if ((optchar = (int)*place++) == (int)':' || (optchar == (int)'-' && *place != '\0') ||
+        //(oli == NULL)) {
         (oli = strchr(options, optchar)) == NULL) {
         /*
          * If the user specified "-" and  '-' isn't listed in
@@ -524,7 +528,7 @@ int getopt_long_only_svtav1(int nargc, char *const *nargv, const char *options,
 #define ONE_DASH_WARNING 500
 #define DOUBLE_DASH_ONLY 600
 
-static const char short_opts[] = "c:i:b:o:w:h:q:";
+static char short_opts[] = "c:i:b:o:w:h:q:";
 
 enum Arg_Tokens_e {
     ARG_HELP = MAX_ASCII_PLUS_ONE,
@@ -647,7 +651,7 @@ enum Arg_Tokens_e {
     ARG_LOOKAHEAD
 };
 
-static const struct option long_opts[] = {
+static struct option long_opts[] = {
     // Options:
     {"help", "help menu", NULL, 0, NULL, ARG_HELP, OPTIONS},
     {"input", "Input filename", "InputFile", 1, NULL, 'i', OPTIONS}, // long token
