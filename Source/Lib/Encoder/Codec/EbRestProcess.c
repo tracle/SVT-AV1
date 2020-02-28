@@ -549,7 +549,7 @@ void *rest_kernel(void *input_ptr) {
             );
 
             Yv12BufferConfig org_fts;
-            link_eb_to_aom_buffer_desc(context_ptr->org_rec_frame, &org_fts
+            link_eb_to_aom_buffer_desc(context_ptr->org_rec_frame, &org_fts,
                                        scs_ptr->max_input_pad_right,
                                        scs_ptr->max_input_pad_bottom
 

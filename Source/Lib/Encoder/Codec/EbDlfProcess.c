@@ -271,7 +271,10 @@ void *dlf_kernel(void *input_ptr) {
 #if ENCDEC_16BIT
             link_eb_to_aom_buffer_desc(recon_picture_ptr, cm->frame_to_show, scs_ptr->max_input_pad_right, scs_ptr->max_input_pad_bottom, is_16bit || scs_ptr->static_config.encoder_16bit_pipeline);
 #else
-            link_eb_to_aom_buffer_desc(recon_picture_ptr, cm->frame_to_show, scs_ptr->max_input_pad_right, scs_ptr->max_input_pad_bottom);
+            link_eb_to_aom_buffer_desc(recon_picture_ptr, cm->frame_to_show,
+                                       scs_ptr->max_input_pad_right,
+                                       scs_ptr->max_input_pad_bottom);
+
 #endif
             if (scs_ptr->seq_header.enable_restoration)
                 eb_av1_loop_restoration_save_boundary_lines(cm->frame_to_show, cm, 0);

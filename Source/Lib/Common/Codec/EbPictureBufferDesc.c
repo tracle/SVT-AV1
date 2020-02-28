@@ -231,9 +231,10 @@ void link_eb_to_aom_buffer_desc_8bit(EbPictureBufferDesc *picBuffDsc,
 
 void link_eb_to_aom_buffer_desc(EbPictureBufferDesc *picBuffDsc, Yv12BufferConfig *aomBuffDsc, uint16_t pad_right, uint16_t pad_bottom
 #if ENCDEC_16BIT
-    , EbBool is_16bit
+    ,EbBool is_16bit
 #endif
-) {
+    )
+{
     //NOTe:  Not all fileds are connected. add more connections as needed.
 #if ENCDEC_16BIT
     if (!is_16bit) {
