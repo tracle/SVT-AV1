@@ -75,9 +75,9 @@ enum                /* permitted values for its `has_arg' field...  */
     optional_argument       /* option may take an argument      */
 };
 
-extern int getopt_long(int nargc, char * const *nargv, const char *options,
+extern int getopt_long_svtav1(int nargc, char * const *nargv, const char *options,
     const struct option *long_options, int *idx);
-extern int getopt_long_only(int nargc, char * const *nargv, const char *options,
+extern int getopt_long_only_svtav1(int nargc, char * const *nargv, const char *options,
     const struct option *long_options, int *idx);
 /*
  * Previous MinGW implementation had...

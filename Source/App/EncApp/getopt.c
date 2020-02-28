@@ -536,7 +536,7 @@ getopt(int nargc, char * const *nargv, const char *options)
  * Parse argc/argv argument vector.
  */
 int
-getopt_long(int nargc, char * const *nargv, const char *options,
+getopt_long_svt_av1(int nargc, char * const *nargv, const char *options,
     const struct option *long_options, int *idx)
 {
 
@@ -549,7 +549,7 @@ getopt_long(int nargc, char * const *nargv, const char *options,
  * Parse argc/argv argument vector.`
  */
 int
-getopt_long_only(int nargc, char * const *nargv, const char *options,
+getopt_long_only_svtav1(int nargc, char * const *nargv, const char *options,
     const struct option *long_options, int *idx)
 {
 
