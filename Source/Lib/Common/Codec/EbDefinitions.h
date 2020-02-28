@@ -40,7 +40,7 @@ extern "C" {
 #define FEB19_PD0_TH                        1
 #define TUNE_SUBPEL_SEARCH                  1
 
-#define JAN6_PRESETS                        0
+#define JAN6_PRESETS                        1
 #if 1
 #define MRP1D_COMPOUND                      1
 #define PALETTE_TL                          1   // remove temporal layer check for palette SC
