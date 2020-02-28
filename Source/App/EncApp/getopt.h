@@ -16,32 +16,34 @@
 //#include <crtdefs.h>
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
 
 extern int optind;      /* index of first non-option in argv      */
 extern int optopt;      /* single option character, as parsed     */
 extern int opterr;      /* flag to enable built-in diagnostics... */
                 /* (user may set to zero, to suppress)    */
 
-char *optarg;        /* pointer to argument of current option  */
+extern char *optarg;        /* pointer to argument of current option  */
 
 extern int getopt(int nargc, char * const *nargv, const char *options);
 
-#ifdef _BSD_SOURCE
+
+//#ifdef _BSD_SOURCE
 /*
  * BSD adds the non-standard `optreset' feature, for reinitialisation
  * of `getopt' parsing.  We support this feature, for applications which
  * proclaim their BSD heritage, before including this header; however,
  * to maintain portability, developers are advised to avoid it.
  */
-# define optreset  __mingw_optreset
-extern int optreset;
-#endif
-#ifdef __cplusplus
-}
-#endif
+//# define optreset  __mingw_optreset
+//extern int optreset;
+//#endif
+//#ifdef __cplusplus
+//}
+//#endif
+
 /*
  * POSIX requires the `getopt' API to be specified in `unistd.h';
  * thus, `unistd.h' includes this header.  However, we do not want
@@ -51,12 +53,8 @@ extern int optreset;
  * specific block, only when *not* __UNISTD_H_SOURCED__, in which
  * to declare the extended API.
  */
-#if !defined(__UNISTD_H_SOURCED__) && !defined(__GETOPT_LONG_H__)
-#define __GETOPT_LONG_H__
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+//#if !defined(__UNISTD_H_SOURCED__) && !defined(__GETOPT_LONG_H__)
+//#define __GETOPT_LONG_H__
 
 struct option       /* specification for a long form option...  */
 {
@@ -84,17 +82,17 @@ extern int getopt_long_only(int nargc, char * const *nargv, const char *options,
 /*
  * Previous MinGW implementation had...
  */
-#ifndef HAVE_DECL_GETOPT
+//#ifndef HAVE_DECL_GETOPT
 /*
  * ...for the long form API only; keep this for compatibility.
  */
-# define HAVE_DECL_GETOPT   1
-#endif
+//# define HAVE_DECL_GETOPT   1
+//#endif
 
-#ifdef __cplusplus
-}
-#endif
+//#ifdef __cplusplus
+//}
+//#endif
 
-#endif /* !defined(__UNISTD_H_SOURCED__) && !defined(__GETOPT_LONG_H__) */
+//#endif /* !defined(__UNISTD_H_SOURCED__) && !defined(__GETOPT_LONG_H__) */
 
 #endif /* !defined(__GETOPT_H__) */

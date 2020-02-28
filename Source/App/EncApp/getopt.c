@@ -61,7 +61,7 @@
 #include <unistd.h>
 #endif
 
-#define REPLACE_GETOPT      /* use this getopt as the system getopt(3) */
+#define REPLACE_GETOPT 1     /* use this getopt as the system getopt(3) */
 
 #ifdef REPLACE_GETOPT
 int opterr = 1;     /* if error message should be printed */
@@ -70,7 +70,7 @@ int optopt = '?';       /* character checked for validity */
 #undef optreset        /* see getopt.h */
 #define optreset        __mingw_optreset
 int optreset;       /* reset getopt */
-//char    *optarg;        /* argument associated with option */
+char    *optarg;        /* argument associated with option */
 #endif
 
 #define PRINT_ERROR ((opterr) && (*options != ':'))
@@ -84,17 +84,9 @@ int optreset;       /* reset getopt */
 #define BADARG      ((*options == ':') ? (int)':' : (int)'?')
 #define INORDER     (int)1
 
-#ifndef __CYGWIN__
 #define __progname "SVT-AV1"
-#else
-extern char __declspec(dllimport) *__progname;
-#endif
 
-#ifdef __CYGWIN__
-static char EMSG[] = "";
-#else
 #define EMSG        ""
-#endif
 
 static int getopt_internal(int, char * const *, const char *,
                 const struct option *, int *, int);
