@@ -412,6 +412,11 @@ typedef struct ModeDecisionContext {
 
     // Signal to control initial and final pass PD setting(s)
     PdPass pd_pass;
+#if BLK_BASED_ADAPTIVE_FEATURE_LEVEL
+    uint8_t    cfl_level;
+    uint8_t    obmc_level;
+#endif
+
 } ModeDecisionContext;
 
 typedef void (*EbAv1LambdaAssignFunc)(uint32_t *fast_lambda, uint32_t *full_lambda,

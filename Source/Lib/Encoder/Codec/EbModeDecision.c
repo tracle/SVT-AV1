@@ -1803,6 +1803,9 @@ void inject_mvp_candidates_ii(struct ModeDecisionContext *context_ptr, PictureCo
             uint8_t is_obmc_allowed =
                 obmc_motion_mode_allowed(pcs_ptr, context_ptr, bsize, rf[0], rf[1], NEARESTMV) ==
                 OBMC_CAUSAL;
+#if BLK_BASED_ADAPTIVE_FEATURE_LEVEL
+            is_obmc_allowed = context_ptr->obmc_level ? is_obmc_allowed : EB_FALSE;
+#endif
             tot_inter_types = is_obmc_allowed ? tot_inter_types + 1 : tot_inter_types;
             for (inter_type = 0; inter_type < tot_inter_types; inter_type++) {
                 cand_array[cand_idx].type                    = INTER_MODE;
@@ -1909,6 +1912,9 @@ void inject_mvp_candidates_ii(struct ModeDecisionContext *context_ptr, PictureCo
                 uint8_t is_obmc_allowed =
                     obmc_motion_mode_allowed(pcs_ptr, context_ptr, bsize, rf[0], rf[1], NEARMV) ==
                     OBMC_CAUSAL;
+#if BLK_BASED_ADAPTIVE_FEATURE_LEVEL
+                is_obmc_allowed = context_ptr->obmc_level ? is_obmc_allowed : EB_FALSE;
+#endif
                 tot_inter_types = is_obmc_allowed ? tot_inter_types + 1 : tot_inter_types;
                 for (inter_type = 0; inter_type < tot_inter_types; inter_type++) {
                     cand_array[cand_idx].type                    = INTER_MODE;
@@ -3672,6 +3678,9 @@ void inject_new_candidates(const SequenceControlSet *  scs_ptr,
                 uint8_t is_obmc_allowed =
                     obmc_motion_mode_allowed(pcs_ptr, context_ptr, bsize, rf[0], rf[1], NEWMV) ==
                     OBMC_CAUSAL;
+#if BLK_BASED_ADAPTIVE_FEATURE_LEVEL
+                is_obmc_allowed = context_ptr->obmc_level ? is_obmc_allowed : EB_FALSE;
+#endif
                 tot_inter_types = is_obmc_allowed && context_ptr->md_pic_obmc_mode <= 2
                                       ? tot_inter_types + 1
                                       : tot_inter_types;
@@ -3821,6 +3830,9 @@ void inject_new_candidates(const SequenceControlSet *  scs_ptr,
                     tot_inter_types = is_obmc_allowed && pcs_ptr->parent_pcs_ptr->pic_obmc_mode <= 2
                                           ? tot_inter_types + 1
                                           : tot_inter_types;
+#if BLK_BASED_ADAPTIVE_FEATURE_LEVEL
+                    is_obmc_allowed = context_ptr->obmc_level ? is_obmc_allowed : EB_FALSE;
+#endif
 
                     for (inter_type = 0; inter_type < tot_inter_types; inter_type++) {
                         cand_array[cand_total_cnt].type                    = INTER_MODE;
@@ -4131,6 +4143,9 @@ void inject_predictive_me_candidates(
                         obmc_motion_mode_allowed(
                             pcs_ptr, context_ptr, bsize, rf[0], rf[1], NEWMV) == OBMC_CAUSAL;
                     tot_inter_types = is_obmc_allowed ? tot_inter_types + 1 : tot_inter_types;
+#if BLK_BASED_ADAPTIVE_FEATURE_LEVEL
+                    is_obmc_allowed = context_ptr->obmc_level ? is_obmc_allowed : EB_FALSE;
+#endif
                     for (inter_type = 0; inter_type < tot_inter_types; inter_type++) {
                         cand_array[cand_total_cnt].type                    = INTER_MODE;
                         cand_array[cand_total_cnt].distortion_ready        = 0;
@@ -4227,6 +4242,9 @@ void inject_predictive_me_candidates(
                         uint8_t is_obmc_allowed =
                             obmc_motion_mode_allowed(
                                 pcs_ptr, context_ptr, bsize, rf[0], rf[1], NEWMV) == OBMC_CAUSAL;
+#if BLK_BASED_ADAPTIVE_FEATURE_LEVEL
+                        is_obmc_allowed = context_ptr->obmc_level ? is_obmc_allowed : EB_FALSE;
+#endif
                         tot_inter_types = is_obmc_allowed ? tot_inter_types + 1 : tot_inter_types;
                         for (inter_type = 0; inter_type < tot_inter_types; inter_type++) {
                             cand_array[cand_total_cnt].type                    = INTER_MODE;
@@ -4472,6 +4490,9 @@ void inject_inter_candidates(PictureControlSet *pcs_ptr, ModeDecisionContext *co
         obmc_motion_mode_allowed(
             pcs_ptr, context_ptr, context_ptr->blk_geom->bsize, LAST_FRAME, -1, NEWMV) ==
         OBMC_CAUSAL;
+#if BLK_BASED_ADAPTIVE_FEATURE_LEVEL
+      is_obmc_allowed = context_ptr->obmc_level ? is_obmc_allowed : EB_FALSE;
+#endif
     if (is_obmc_allowed) precompute_obmc_data(pcs_ptr, context_ptr);
     /**************
          MVP
@@ -5091,6 +5112,9 @@ void inject_intra_candidates_ois(PictureControlSet *pcs_ptr, ModeDecisionContext
     EbBool                 disable_cfl_flag =
         (MAX(context_ptr->blk_geom->bheight, context_ptr->blk_geom->bwidth) > 32) ? EB_TRUE
                                                                                   : EB_FALSE;
+#if BLK_BASED_ADAPTIVE_FEATURE_LEVEL
+    disable_cfl_flag = context_ptr->cfl_level ? disable_cfl_flag : EB_TRUE;
+#endif
 
     OisSbResults *ois_sb_results_ptr = pcs_ptr->parent_pcs_ptr->ois_sb_results[sb_ptr->index];
     OisCandidate *ois_blk_ptr =
@@ -5561,6 +5585,9 @@ void  inject_intra_candidates(
     uint8_t                     angle_delta_candidate_count = use_angle_delta ? 7 : 1;
     ModeDecisionCandidate    *cand_array = context_ptr->fast_candidate_array;
     EbBool                      disable_cfl_flag = (MAX(context_ptr->blk_geom->bheight, context_ptr->blk_geom->bwidth) > 32) ? EB_TRUE : EB_FALSE;
+#if BLK_BASED_ADAPTIVE_FEATURE_LEVEL
+    disable_cfl_flag = context_ptr->cfl_level ? disable_cfl_flag : EB_TRUE;
+#endif
     uint8_t                     disable_z2_prediction;
     uint8_t                     disable_angle_refinement;
     uint8_t                     disable_angle_prediction;
@@ -5779,7 +5806,9 @@ void  inject_filter_intra_candidates(
     ModeDecisionCandidate      *cand_array = context_ptr->fast_candidate_array;
 
     EbBool                      disable_cfl_flag = (MAX(context_ptr->blk_geom->bheight, context_ptr->blk_geom->bwidth) > 32) ? EB_TRUE : EB_FALSE;
-
+#if BLK_BASED_ADAPTIVE_FEATURE_LEVEL
+    disable_cfl_flag = context_ptr->cfl_level ? disable_cfl_flag : EB_TRUE;
+#endif
     FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
 
     for (filter_intra_mode = intra_mode_start; filter_intra_mode < intra_mode_end ; ++filter_intra_mode) {
@@ -5871,6 +5900,9 @@ void  inject_palette_candidates(
     uint32_t                  can_total_cnt = *candidate_total_cnt;
     ModeDecisionCandidate    *cand_array = context_ptr->fast_candidate_array;
     EbBool                    disable_cfl_flag = (MAX(context_ptr->blk_geom->bheight, context_ptr->blk_geom->bwidth) > 32) ? EB_TRUE : EB_FALSE;
+#if BLK_BASED_ADAPTIVE_FEATURE_LEVEL
+    disable_cfl_flag = context_ptr->cfl_level ? disable_cfl_flag : EB_TRUE;
+#endif
     uint32_t cand_i;
     uint32_t tot_palette_cands = 0;
     PaletteInfo    *palette_cand_array = context_ptr->palette_cand_array;

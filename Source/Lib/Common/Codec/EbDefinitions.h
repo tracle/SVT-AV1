@@ -33,7 +33,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#define BLK_BASED_ADAPTIVE_FEATURE_LEVEL    0
 #define PME_UP_TO_4_REF                     1 // add a new PME level to restrict PME to use 4 ref frames
 #define TH_BASED_CFL                        1 // disbale cfl based on relative inter/intra costs
 #define TH_BASED_CHROMA_SEARCH              1 // skip chroma search based on relative inter/intra costs

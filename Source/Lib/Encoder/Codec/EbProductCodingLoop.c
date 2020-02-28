@@ -9550,6 +9550,15 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 #if SKIP_DEPTH
     uint8_t skip_next_depth = 0;
 #endif
+    // Copy defaul seetings
+#if BLK_BASED_ADAPTIVE_FEATURE_LEVEL
+    uint8_t sb_md_max_ref_count = context_ptr->md_max_ref_count;
+    uint8_t sb_cfl_level = context_ptr->cfl_level;
+    uint8_t sb_predictive_me_level = context_ptr->predictive_me_level;
+    uint8_t sb_compound_types_to_try = context_ptr->compound_types_to_try;
+    uint8_t sb_obmc_level = context_ptr->obmc_level;
+#endif
+
     do {
         blk_idx_mds = leaf_data_array[blk_index].mds_idx;
 
@@ -9570,6 +9579,23 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
         context_ptr->md_ep_pipe_sb[blk_idx_mds].merge_cost          = 0;
         context_ptr->md_ep_pipe_sb[blk_idx_mds].skip_cost           = 0;
         blk_ptr->av1xd->sb_type                                     = blk_geom->bsize;
+#if BLK_BASED_ADAPTIVE_FEATURE_LEVEL
+       // Update feature settings seetings
+        if (blk_geom->shape == PART_N) {
+            context_ptr->cfl_level = sb_cfl_level;
+            context_ptr->md_max_ref_count = sb_md_max_ref_count;
+            context_ptr->predictive_me_level = sb_predictive_me_level;
+            context_ptr->compound_types_to_try = sb_compound_types_to_try;
+            context_ptr->obmc_level = sb_obmc_level;
+        }
+        else {
+            context_ptr->cfl_level = 0 ; // Disable CFl
+            context_ptr->md_max_ref_count = 1; // Disable MRP
+            context_ptr->predictive_me_level = 0; // Disable pred_me
+            context_ptr->compound_types_to_try = MD_COMP_AVG; // Disable Compound
+            context_ptr->obmc_level = 0; // Disable obmc
+        }
+#endif
         blk_ptr->mds_idx                                            = blk_idx_mds;
         context_ptr->md_blk_arr_nsq[blk_idx_mds].mdc_split_flag =
             (uint16_t)leaf_data_ptr->split_flag;

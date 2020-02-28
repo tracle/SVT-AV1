@@ -2202,12 +2202,19 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             .allow_high_precision_mv);
 
     // Hsan: potential adoption(s)
-#if 0
+#if BLK_BASED_ADAPTIVE_FEATURE_LEVEL
     // Cfl level
     // 0: CFL OFF
     // 1: CFL is allowed
     context_ptr->cfl_level = 1;
-
+#endif
+#if BLK_BASED_ADAPTIVE_FEATURE_LEVEL
+    // OBMC level
+    // 0: CFL OFF
+    // 1: CFL is allowed
+     context_ptr->obmc_level =1;
+#endif
+#if 0
     // NSQ ON/OFF
     // 0: NSQ OFF
     // 1: NSQ is allowed
