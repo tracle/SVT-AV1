@@ -1,4 +1,4 @@
-#ifndef __GETOPT_H__
+//#ifndef __GETOPT_H__
 /**
  * DISCLAIMER
  * This file has no copyright assigned and is placed in the Public Domain.
@@ -10,7 +10,7 @@
  * warranties of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#define __GETOPT_H__
+//#define __GETOPT_H__
 
 /* All the headers include this file. */
 //#include <crtdefs.h>
@@ -95,4 +95,4 @@ extern int getopt_long_only(int nargc, char * const *nargv, const char *options,
 
 //#endif /* !defined(__UNISTD_H_SOURCED__) && !defined(__GETOPT_LONG_H__) */
 
-#endif /* !defined(__GETOPT_H__) */
+//#endif /* !defined(__GETOPT_H__) */
