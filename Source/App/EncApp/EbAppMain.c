@@ -93,7 +93,7 @@ int32_t main(int32_t argc, char *argv[]) {
 
     EbConfig *configs[MAX_CHANNEL_NUMBER]; // Encoder Configuration
 
-    uint32_t      num_channels = 0;
+    uint32_t      num_channels = 1;
     uint32_t      inst_cnt     = 0;
     EbAppContext *app_callbacks[MAX_CHANNEL_NUMBER]; // Instances App callback data
     signal(SIGINT, event_handler);
@@ -105,8 +105,11 @@ int32_t main(int32_t argc, char *argv[]) {
     if (!get_help(argc, argv)) {
 #endif
         // Get num_channels
-        num_channels = get_number_of_channels(argc, argv);
-        if (num_channels == 0) return EB_ErrorBadParameter;
+        //num_channels = get_number_of_channels(argc, argv);
+        if (num_channels == 0) {
+            fprintf(stderr, "num channels should be more than 0\n");
+            return EB_ErrorBadParameter;
+        }
         // Initialize config
         for (inst_cnt = 0; inst_cnt < num_channels; ++inst_cnt) {
             configs[inst_cnt] = (EbConfig *)malloc(sizeof(EbConfig));
