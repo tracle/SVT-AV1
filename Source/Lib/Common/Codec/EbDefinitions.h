@@ -40,7 +40,7 @@ extern "C" {
 #define FEB19_PD0_TH                        1
 #define TUNE_SUBPEL_SEARCH                  1
 
-#define JAN6_PRESETS                        1
+#define JAN6_PRESETS                        0
 #if 1
 #define MRP1D_COMPOUND                      1
 #define PALETTE_TL                          1   // remove temporal layer check for palette SC
@@ -60,7 +60,7 @@ extern "C" {
 #define SC_ADOPTION_FEB_19                  1
 #define FEB18_ADOPTIONS                     1
 #define MR_MODE_CLEAN_UP                    1
-#define M2_ADOPTIONS                        1
+#define M2_ADOPTIONS                        0
 #define ENABLE_HME_360P                     1
 #define MR_FEB4_ADOPTION                    1
 #define SPATIAL_DOMAIN_ONLY_LAST_STAGE      1
@@ -73,12 +73,12 @@ extern "C" {
 #define OPT_REC_SUBP            1 // Rect_block inherit Sub-pel MVs from sq_sq_blocks in ME
 #define SKIP_DEPTH              1 // Skip the child blocks whenthe SQ block is better than the NSQ
 
-#define REVERT_TF_SEETINGS 1 // TF settings.
-#define PLANE_WISE_TF 1 // plane wise temporal filtering.
-#define PLANE_WISE_TF_OPT 1 // Added intrinsic code for planewise filtering
+#define REVERT_TF_SEETINGS 0 // TF settings.
+#define PLANE_WISE_TF 0 // plane wise temporal filtering.
+#define PLANE_WISE_TF_OPT 0 // Added intrinsic code for planewise filtering
 // Added the ability to use 32x32 MVs, and the ability to switch between using 16x16 MVs or 32x32 MVs
 // Decoupled search / compensation @ ALTREF core, REGULAR @ search and SHARP @ compensation, and 1 / 2 Pel Ref and 1 / 4 Pel Ref @ only ALTREF core(15x15 search ~the ME Full - Pel MV).
-#define IMPROVED_TF_ME_INPUT 1
+#define IMPROVED_TF_ME_INPUT 0
 
 #define CHROMA_SEARCH_OPT        1 // Move chroma search to be done on the best intra candidate survived from MD stage 2
 #if CHROMA_SEARCH_OPT
@@ -102,7 +102,7 @@ extern "C" {
 #define SKIP_ME_BASED_ON_HME     1 //Multi-Stage ME - Reduce SR based on HME distortion
 #define REDUCE_ME_FOR_LOW_M_SB   1 //Multi-Stage ME - Reduce SR based on HME distortion and HME MV
 #define SWITCHED_HALF_PEL_MODE   1 //Multi-Stage ME - Adapt half_pel mode based on fulpel distortion
-#define SC_HME_PRUNING          1
+#define SC_HME_PRUNING          0
 #endif
 #define MC_DYNAMIC_PAD              1
 #define DIST_BASED_ME_SEARCH_AREA       1 // Distance-based multiper for ME search region
