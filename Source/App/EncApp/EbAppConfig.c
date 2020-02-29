@@ -1096,7 +1096,7 @@ ConfigEntry config_entry_specific[] = {
      // Annex A parameters
      {SINGLE_INPUT,
       FILM_GRAIN_TOKEN,
-      "Enable film grain(0: OFF[default], 1: ON)",
+     "Enable film grain(0: OFF[default], 1-50: ON, film-grain denoising strength)",
       set_cfg_film_grain},
      // HME
      {ARRAY_INPUT,
@@ -2477,7 +2477,8 @@ EbErrorType read_command_line(int32_t argc, char *const argv[], EbConfig **confi
                 if (*(config_entry[token_index].token + 2) != '\0' && // check for small token
                     *(config_entry[token_index].token + 1) != '-' && // check for --
                     result != EB_ErrorBadParameter) {
-                    char *str = " will be deprecated, please use -";
+                    char *str = " will be deprecated soon, please refer to the help "
+                                " menu to use the correct setting ";
                     EB_STRCPY(warning_str[warning_index],
                               WARNING_LENGTH,
                               config_entry[token_index].token); // add token
