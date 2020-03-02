@@ -38,6 +38,12 @@ extern "C" {
 #define NON_AVX512_SUPPORT
 #endif
 
+#define USE_8X8_ME_SR                     0
+#define DISABLE_HME                       0
+#define DISABLE_HME_DIST                  0
+#define DISABLE_HME_PRE_CHECK             0
+#define ENABLE_HME_AT_INC_SB              0
+
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
 #define SHUT_FILTERING 0 //1
 #define MAX_TILE_CNTS 128 // Annex A.3
@@ -2785,7 +2791,25 @@ static const int32_t global_motion_threshold[MAX_HIERARCHICAL_LEVEL][MAX_TEMPORA
     { 32, 16, 8, 4, 2 },    // Derived by analogy from 4-layer settings
     { 64, 32, 16, 8, 4, 2 }
 };
+#if DISABLE_HME_DIST
+static const int32_t hme_level_0_search_area_multiplier_x[MAX_HIERARCHICAL_LEVEL][MAX_TEMPORAL_LAYERS] = { // [Highest Temporal Layer] [Temporal Layer Index]
+    { 100 },
+    { 100, 100 },
+    { 100, 100, 100 },
+    { 100, 100, 100,  100 },
+    { 100, 100, 100, 100, 100 },
+    { 100, 100, 100, 100, 100, 100 }
+};
 
+static const int32_t hme_level_0_search_area_multiplier_y[MAX_HIERARCHICAL_LEVEL][MAX_TEMPORAL_LAYERS] = { // [Highest Temporal Layer] [Temporal Layer Index]
+    { 100 },
+    { 100, 100 },
+    { 100, 100, 100 },
+    { 100, 100, 100, 100 },
+    { 100, 100, 100, 100, 100 },
+    { 100, 100, 100, 100, 100, 100 }
+};
+#else
 static const int32_t hme_level_0_search_area_multiplier_x[MAX_HIERARCHICAL_LEVEL][MAX_TEMPORAL_LAYERS] = { // [Highest Temporal Layer] [Temporal Layer Index]
     { 100 },
     { 100, 100 },
@@ -2803,7 +2827,7 @@ static const int32_t hme_level_0_search_area_multiplier_y[MAX_HIERARCHICAL_LEVEL
     { 350, 200, 100, 100, 100 },
     { 525, 350, 200, 100, 100, 100 }
 };
-
+#endif
 typedef enum RasterScanCuIndex
 {
     // 2Nx2N [85 partitions]

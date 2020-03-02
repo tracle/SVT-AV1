@@ -9564,6 +9564,10 @@ void integer_search_sb(
                 search_area_width = (search_area_width + 7) & ~0x07;
             }
 
+#if USE_8X8_ME_SR
+             search_area_width = 8;
+             search_area_height = 8;
+#endif
             if ((x_search_center != 0 || y_search_center != 0) &&
                 (pcs_ptr->is_used_as_reference_flag == EB_TRUE)) {
                 check_00_center(ref_pic_ptr,
@@ -10068,6 +10072,11 @@ void hme_sb(
     EbBool enable_hme_level0_flag = context_ptr->enable_hme_level0_flag;
     EbBool enable_hme_level1_flag = context_ptr->enable_hme_level1_flag;
     EbBool enable_hme_level2_flag = context_ptr->enable_hme_level2_flag;
+#if DISABLE_HME
+    enable_hme_level0_flag = 0;
+    enable_hme_level1_flag = 0;
+    enable_hme_level2_flag = 0;
+#endif
     uint64_t best_cost = (uint64_t)~0;
     context_ptr->best_list_idx = 0;
     context_ptr->best_ref_idx = 0;
@@ -10115,6 +10124,10 @@ void hme_sb(
                     ? (EbPictureBufferDesc *)reference_object->sixteenth_filtered_picture_ptr
                     : (EbPictureBufferDesc *)reference_object->sixteenth_decimated_picture_ptr;
             if (pcs_ptr->temporal_layer_index > 0 || list_index == 0) {
+#if DISABLE_HME_PRE_CHECK
+                x_search_center = 0;
+                y_search_center = 0;
+#else
                 if (context_ptr->update_hme_search_center_flag)
                     hme_mv_center_check(ref_pic_ptr,
                                         context_ptr,
@@ -10129,7 +10142,12 @@ void hme_sb(
                     x_search_center = 0;
                     y_search_center = 0;
                 }
+#endif
+#if ENABLE_HME_AT_INC_SB
+                if (context_ptr->enable_hme_flag){
+#else
                 if (context_ptr->enable_hme_flag && sb_height == BLOCK_SIZE_64){
+#endif
                     while (search_region_number_in_height <
                            context_ptr->number_hme_search_region_in_height){
                         while (search_region_number_in_width <
