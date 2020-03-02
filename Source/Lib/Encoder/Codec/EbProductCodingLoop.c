@@ -4176,6 +4176,7 @@ EbErrorType av1_intra_luma_prediction(ModeDecisionContext *        md_context_pt
 
         mode = candidate_buffer_ptr->candidate_ptr->pred_mode;
         eb_av1_predict_intra_block_16bit(
+            EB_10BIT,
             &md_context_ptr->sb_ptr->tile_info,
             !ED_STAGE,
             md_context_ptr->blk_geom,

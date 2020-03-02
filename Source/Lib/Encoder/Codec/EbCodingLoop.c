@@ -773,7 +773,7 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
     //    EB_SLICE               slice_type = sb_ptr->pcs_ptr->slice_type;
     //    uint32_t                 temporal_layer_index = sb_ptr->pcs_ptr->temporal_layer_index;
     uint32_t qp = blk_ptr->qp;
-
+    uint32_t             bit_depth = context_ptr->bit_depth;
     EbPictureBufferDesc *input_samples16bit = context_ptr->input_sample16bit_buffer;
     EbPictureBufferDesc *pred_samples16bit  = pred_samples;
     uint32_t             round_origin_x = (origin_x >> 3) << 3; // for Chroma blocks with size of 4
@@ -808,13 +808,39 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
     const uint32_t pred_cr_offset =
         (((pred_samples16bit->origin_y + round_origin_y) >> 1) * pred_samples16bit->stride_cr) +
         ((pred_samples16bit->origin_x + round_origin_x) >> 1);
-    const uint32_t scratch_luma_offset =
-        context_ptr->blk_geom->origin_x + context_ptr->blk_geom->origin_y * SB_STRIDE_Y;
-    const uint32_t scratch_cb_offset = ROUND_UV(context_ptr->blk_geom->origin_x) / 2 +
-                                       ROUND_UV(context_ptr->blk_geom->origin_y) / 2 * SB_STRIDE_UV;
-    const uint32_t scratch_cr_offset = ROUND_UV(context_ptr->blk_geom->origin_x) / 2 +
-                                       ROUND_UV(context_ptr->blk_geom->origin_y) / 2 * SB_STRIDE_UV;
-    const uint32_t coeff1d_offset        = context_ptr->coded_area_sb;
+
+    uint32_t scratch_luma_offset, scratch_cb_offset, scratch_cr_offset;
+
+    if (bit_depth != EB_8BIT) {
+        scratch_luma_offset =
+            context_ptr->blk_geom->origin_x + context_ptr->blk_geom->origin_y * SB_STRIDE_Y;
+        scratch_cb_offset = ROUND_UV(context_ptr->blk_geom->origin_x) / 2 +
+            ROUND_UV(context_ptr->blk_geom->origin_y) / 2 * SB_STRIDE_UV;
+        scratch_cr_offset = ROUND_UV(context_ptr->blk_geom->origin_x) / 2 +
+            ROUND_UV(context_ptr->blk_geom->origin_y) / 2 * SB_STRIDE_UV;
+    }
+    else {
+        scratch_luma_offset =
+            context_ptr->blk_geom->tx_org_x[is_inter][blk_ptr->tx_depth][context_ptr->txb_itr] +
+            context_ptr->blk_geom->tx_org_y[is_inter][blk_ptr->tx_depth][context_ptr->txb_itr] *
+            SB_STRIDE_Y;
+        scratch_cb_offset =
+            ROUND_UV(context_ptr->blk_geom
+                ->tx_org_x[is_inter][blk_ptr->tx_depth][context_ptr->txb_itr]) /
+            2 +
+            ROUND_UV(context_ptr->blk_geom
+                ->tx_org_y[is_inter][blk_ptr->tx_depth][context_ptr->txb_itr]) /
+            2 * SB_STRIDE_UV;
+        scratch_cr_offset =
+            ROUND_UV(context_ptr->blk_geom
+                ->tx_org_x[is_inter][blk_ptr->tx_depth][context_ptr->txb_itr]) /
+            2 +
+            ROUND_UV(context_ptr->blk_geom
+                ->tx_org_y[is_inter][blk_ptr->tx_depth][context_ptr->txb_itr]) /
+            2 * SB_STRIDE_UV;
+        context_ptr->three_quad_energy = 0;
+    }
+    const uint32_t coeff1d_offset = context_ptr->coded_area_sb;
     const uint32_t coeff1d_offset_chroma = context_ptr->coded_area_sb_uv;
     UNUSED(coeff1d_offset_chroma);
 
@@ -839,18 +865,34 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                     : 1;
 
             if (!tx_search_skip_flag) {
-                encode_pass_tx_search_hbd(pcs_ptr,
-                                          context_ptr,
-                                          sb_ptr,
-                                          cb_qp,
-                                          coeff_samples_sb,
-                                          residual16bit,
-                                          transform16bit,
-                                          inverse_quant_buffer,
-                                          count_non_zero_coeffs,
-                                          component_mask,
-                                          eob,
-                                          candidate_plane);
+                if (context_ptr->is_16bit) {
+                    encode_pass_tx_search_hbd(pcs_ptr,
+                        context_ptr,
+                        sb_ptr,
+                        cb_qp,
+                        coeff_samples_sb,
+                        residual16bit,
+                        transform16bit,
+                        inverse_quant_buffer,
+                        count_non_zero_coeffs,
+                        component_mask,
+                        eob,
+                        candidate_plane);
+                }
+                else {
+                    encode_pass_tx_search(pcs_ptr,
+                        context_ptr,
+                        sb_ptr,
+                        cb_qp,
+                        coeff_samples_sb,
+                        residual16bit,
+                        transform16bit,
+                        inverse_quant_buffer,
+                        count_non_zero_coeffs,
+                        component_mask,
+                        eob,
+                        candidate_plane);
+                }
             }
 
             av1_estimate_transform(
@@ -860,7 +902,7 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                 NOT_USED_VALUE,
                 context_ptr->blk_geom->txsize[blk_ptr->tx_depth][context_ptr->txb_itr],
                 &context_ptr->three_quad_energy,
-                BIT_INCREMENT_10BIT,
+                (bit_depth == EB_10BIT) ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
                 txb_ptr->transform_type[PLANE_TYPE_Y],
                 PLANE_TYPE_Y,
                 DEFAULT_SHAPE);
@@ -885,7 +927,7 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                 &eob[0],
                 &(count_non_zero_coeffs[0]),
                 COMPONENT_LUMA,
-                BIT_INCREMENT_10BIT,
+                (bit_depth == EB_10BIT) ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
                 txb_ptr->transform_type[PLANE_TYPE_Y],
                 &(context_ptr->md_context->candidate_buffer_ptr_array[0][0]),
                 context_ptr->md_context->luma_txb_skip_context,
@@ -918,6 +960,8 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
 
             txb_ptr->nz_coef_count[0] = (uint16_t)count_non_zero_coeffs[0];
         }
+        if (component_mask == PICTURE_BUFFER_DESC_FULL_MASK ||
+            component_mask == PICTURE_BUFFER_DESC_CHROMA_MASK) {
 
         if (blk_ptr->prediction_mode_flag == INTRA_MODE &&
             blk_ptr->prediction_unit_array->intra_chroma_mode == UV_CFL_PRED) {
@@ -965,7 +1009,7 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                 ((uint16_t *)pred_samples16bit->buffer_cb) + pred_cb_offset,
                 pred_samples16bit->stride_cb,
                 alpha_q3,
-                10,
+                    context_ptr->is_16bit ? 10 : 8,
                 context_ptr->blk_geom->tx_width_uv[blk_ptr->tx_depth][context_ptr->txb_itr],
                 context_ptr->blk_geom->tx_height_uv[blk_ptr->tx_depth][context_ptr->txb_itr]);
 
@@ -982,13 +1026,11 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                 ((uint16_t *)pred_samples16bit->buffer_cr) + pred_cr_offset,
                 pred_samples16bit->stride_cr,
                 alpha_q3,
-                10,
+                    context_ptr->is_16bit ? 10 : 8,
                 context_ptr->blk_geom->tx_width_uv[blk_ptr->tx_depth][context_ptr->txb_itr],
                 context_ptr->blk_geom->tx_height_uv[blk_ptr->tx_depth][context_ptr->txb_itr]);
         }
 
-        if (component_mask == PICTURE_BUFFER_DESC_FULL_MASK ||
-            component_mask == PICTURE_BUFFER_DESC_CHROMA_MASK) {
             //**********************************
             // Cb
             //**********************************
@@ -1019,7 +1061,7 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                 NOT_USED_VALUE,
                 context_ptr->blk_geom->txsize_uv[blk_ptr->tx_depth][context_ptr->txb_itr],
                 &context_ptr->three_quad_energy,
-                BIT_INCREMENT_10BIT,
+                (bit_depth == EB_10BIT) ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
                 txb_ptr->transform_type[PLANE_TYPE_UV],
                 PLANE_TYPE_UV,
                 DEFAULT_SHAPE);
@@ -1044,7 +1086,7 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                 &eob[1],
                 &(count_non_zero_coeffs[1]),
                 COMPONENT_CHROMA_CB,
-                BIT_INCREMENT_10BIT,
+                (bit_depth == EB_10BIT) ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
                 txb_ptr->transform_type[PLANE_TYPE_UV],
                 &(context_ptr->md_context->candidate_buffer_ptr_array[0][0]),
                 context_ptr->md_context->cb_txb_skip_context,
@@ -1077,7 +1119,7 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                 NOT_USED_VALUE,
                 context_ptr->blk_geom->txsize_uv[blk_ptr->tx_depth][context_ptr->txb_itr],
                 &context_ptr->three_quad_energy,
-                BIT_INCREMENT_10BIT,
+                (bit_depth == EB_10BIT) ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
                 txb_ptr->transform_type[PLANE_TYPE_UV],
                 PLANE_TYPE_UV,
                 DEFAULT_SHAPE);
@@ -1097,7 +1139,7 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                 &eob[2],
                 &(count_non_zero_coeffs[2]),
                 COMPONENT_CHROMA_CR,
-                BIT_INCREMENT_10BIT,
+                (bit_depth == EB_10BIT) ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
                 txb_ptr->transform_type[PLANE_TYPE_UV],
                 &(context_ptr->md_context->candidate_buffer_ptr_array[0][0]),
                 context_ptr->md_context->cr_txb_skip_context,
@@ -1423,6 +1465,7 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
                                BlkStruct *blk_ptr, PredictionUnit *pu_ptr,
                                EncDecContext *context_ptr) {
     EbBool is_16bit = context_ptr->is_16bit;
+    uint32_t bit_depth = context_ptr->bit_depth;
     uint8_t is_inter = 0; // set to 0 b/c this is the intra path
     EbPictureBufferDesc *recon_buffer =
         is_16bit ? pcs_ptr->recon_picture16bit_ptr : pcs_ptr->recon_picture_ptr;
@@ -1526,6 +1569,7 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
             mode = blk_ptr->pred_mode;
 
             eb_av1_predict_intra_block_16bit(
+                bit_depth,
                 &sb_ptr->tile_info,
                 ED_STAGE,
                 context_ptr->blk_geom,
@@ -1819,6 +1863,7 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
                            : (PredictionMode)pu_ptr->intra_chroma_mode;
 
                 eb_av1_predict_intra_block_16bit(
+                    bit_depth,
                     &sb_ptr->tile_info,
                     ED_STAGE,
                     context_ptr->blk_geom,
