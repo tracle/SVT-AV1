@@ -453,9 +453,11 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
                eb_recon_picture_buffer_desc_ctor,
                (EbPtr)&input_pic_buf_desc_init_data);
     }
-    EB_NEW(object_ptr->recon_picture16bit_ptr,
-           eb_recon_picture_buffer_desc_ctor,
-           (EbPtr)&coeff_buffer_desc_init_data);
+    if (init_data_ptr->is_16bit_pipeline) {
+        EB_NEW(object_ptr->recon_picture16bit_ptr,
+            eb_recon_picture_buffer_desc_ctor,
+            (EbPtr)&coeff_buffer_desc_init_data);
+    }
     // Film Grain Picture Buffer
     if (init_data_ptr->film_grain_noise_level) {
         if (is_16bit) {
@@ -469,7 +471,7 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
         }
     }
 
-    {
+    if ((is_16bit) || (init_data_ptr->is_16bit_pipeline)) {
         EB_NEW(object_ptr->input_frame16bit,
                eb_picture_buffer_desc_ctor,
                (EbPtr)&coeff_buffer_desc_init_data);
@@ -1367,7 +1369,7 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
         return_error = create_neighbor_array_units(data, DIM(data));
         if (return_error == EB_ErrorInsufficientResources) return EB_ErrorInsufficientResources;
 
-        if (is_16bit) {
+        if ((is_16bit) || (init_data_ptr->is_16bit_pipeline)) {
             InitData data[] = {
                 {
                     &object_ptr->ep_luma_recon_neighbor_array16bit[tile_idx],

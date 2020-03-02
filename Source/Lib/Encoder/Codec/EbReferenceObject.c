@@ -173,6 +173,15 @@ EbErrorType eb_reference_object_ctor(EbReferenceObject *reference_object,
             reference_object,
             picture_buffer_desc_init_data_ptr,
             picture_buffer_desc_init_data_16bit_ptr.bit_depth);
+        if (picture_buffer_desc_init_data_ptr->is_16bit_pipeline)
+        {
+            picture_buffer_desc_init_data_16bit_ptr.split_mode = EB_FALSE;
+            picture_buffer_desc_init_data_16bit_ptr.bit_depth = EB_10BIT;
+            EB_NEW(reference_object->reference_picture16bit,
+                eb_picture_buffer_desc_ctor,
+                (EbPtr)&picture_buffer_desc_init_data_16bit_ptr);
+            reference_object->reference_picture16bit->bit_depth = EB_8BIT;
+        }
     }
     picture_buffer_desc_init_data_16bit_ptr.split_mode = EB_FALSE;
     picture_buffer_desc_init_data_16bit_ptr.bit_depth  = EB_10BIT;

@@ -284,6 +284,7 @@ typedef struct EbPictureBufferDescInitData {
     EbBool         split_mode; //ON: allocate 8bit data seperately from nbit data
     EbBool         down_sampled_filtered;
     uint8_t        mfmv;
+    EbBool         is_16bit_pipeline;
 } EbPictureBufferDescInitData;
 
 /**************************************

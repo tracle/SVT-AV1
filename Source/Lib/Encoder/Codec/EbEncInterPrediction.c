@@ -3324,7 +3324,305 @@ EbErrorType warped_motion_prediction(PictureControlSet *picture_control_set_ptr,
 
     return return_error;
 }
+EbErrorType warped_motion_prediction_16bit_pipeline(
+    PictureControlSet *picture_control_set_ptr, MvUnit *mv_unit, uint8_t ref_frame_type,
+    uint8_t compound_idx, InterInterCompoundData *interinter_comp, uint16_t pu_origin_x,
+    uint16_t pu_origin_y, BlkStruct *blk_ptr, const BlockGeom *blk_geom,
+    EbPictureBufferDesc *ref_pic_list0, EbPictureBufferDesc *ref_pic_list1,
+    EbPictureBufferDesc *prediction_ptr, uint16_t dst_origin_x, uint16_t dst_origin_y,
+    EbWarpedMotionParams *wm_params_l0, EbWarpedMotionParams *wm_params_l1, uint8_t bit_depth,
+    EbBool perform_chroma) {
+    EbErrorType return_error = EB_ErrorNone;
+    uint8_t     is_compound = (mv_unit->pred_direction == BI_PRED) ? 1 : 0;
 
+    SequenceControlSet *scs_ptr =
+        (SequenceControlSet *)picture_control_set_ptr->scs_wrapper_ptr->object_ptr;
+    EbBool is_16bit_pipeline = scs_ptr->static_config.encoder_16bit_pipeline;
+    EbBool is16bit = (EbBool)(bit_depth > EB_8BIT) || is_16bit_pipeline;
+
+    int32_t  src_stride;
+    int32_t  dst_stride;
+    uint16_t buf_width;
+    uint16_t buf_height;
+    uint8_t  ss_x = 1; // subsamplings
+    uint8_t  ss_y = 1;
+
+    MvReferenceFrame rf[2];
+    av1_set_ref_frame(rf, ref_frame_type);
+
+    uint8_t *src_ptr_l0, *src_ptr_l1;
+    uint8_t *dst_ptr;
+    if (mv_unit->pred_direction == UNI_PRED_LIST_0 || mv_unit->pred_direction == BI_PRED) {
+        // Y
+        src_ptr_l0 = ref_pic_list0->buffer_y +
+            (is16bit ? 2 : 1) * (ref_pic_list0->origin_x +
+                ref_pic_list0->origin_y * ref_pic_list0->stride_y);
+        src_ptr_l1 = is_compound ? ref_pic_list1->buffer_y +
+            (is16bit ? 2 : 1) *
+            (ref_pic_list1->origin_x +
+                ref_pic_list1->origin_y * ref_pic_list1->stride_y)
+            : NULL;
+        src_stride = ref_pic_list0->stride_y;
+        buf_width = ref_pic_list0->width;
+        buf_height = ref_pic_list0->height;
+    }
+    else { //UNI_PRED_LIST_1
+        src_ptr_l0 = ref_pic_list1->buffer_y +
+            (is16bit ? 2 : 1) * (ref_pic_list1->origin_x +
+                ref_pic_list1->origin_y * ref_pic_list1->stride_y);
+        src_ptr_l1 = NULL;
+        src_stride = ref_pic_list1->stride_y;
+        buf_width = ref_pic_list1->width;
+        buf_height = ref_pic_list1->height;
+    }
+    dst_ptr =
+        prediction_ptr->buffer_y +
+        (is16bit ? 2 : 1) * (prediction_ptr->origin_x + dst_origin_x +
+        (prediction_ptr->origin_y + dst_origin_y) * prediction_ptr->stride_y);
+    dst_stride = prediction_ptr->stride_y;
+
+    // Warp plane
+    plane_warped_motion_prediction(picture_control_set_ptr,
+        compound_idx,
+        interinter_comp,
+        pu_origin_x,
+        pu_origin_y,
+        blk_geom,
+        blk_geom->bwidth,
+        blk_geom->bheight,
+        wm_params_l0,
+        wm_params_l1,
+        is_compound,
+        bit_depth,
+        src_stride,
+        dst_stride,
+        buf_width,
+        buf_height,
+        0,
+        0,
+        src_ptr_l0,
+        src_ptr_l1,
+        dst_ptr,
+        0, // plane
+        rf,
+        is16bit);
+
+    if (!blk_geom->has_uv) return return_error;
+
+    if (perform_chroma) {
+        if (blk_geom->bwidth >= 16 && blk_geom->bheight >= 16) {
+            // Cb
+            if (mv_unit->pred_direction == UNI_PRED_LIST_0 || mv_unit->pred_direction == BI_PRED) {
+                src_ptr_l0 =
+                    ref_pic_list0->buffer_cb +
+                    (is16bit ? 2 : 1) * (ref_pic_list0->origin_x / 2 +
+                    (ref_pic_list0->origin_y / 2) * ref_pic_list0->stride_cb);
+                src_ptr_l1 = is_compound ? ref_pic_list1->buffer_cb +
+                    (is16bit ? 2 : 1) * (ref_pic_list1->origin_x / 2 +
+                    (ref_pic_list1->origin_y / 2) *
+                        ref_pic_list1->stride_cb)
+                    : NULL;
+                src_stride = ref_pic_list0->stride_cb;
+            }
+            else { //UNI_PRED_LIST_1
+                src_ptr_l0 =
+                    ref_pic_list1->buffer_cb +
+                    (is16bit ? 2 : 1) * (ref_pic_list1->origin_x / 2 +
+                    (ref_pic_list1->origin_y / 2) * ref_pic_list1->stride_cb);
+                src_ptr_l1 = NULL;
+                src_stride = ref_pic_list1->stride_cb;
+            }
+            dst_ptr =
+                prediction_ptr->buffer_cb +
+                (is16bit ? 2 : 1) * ((prediction_ptr->origin_x + ((dst_origin_x >> 3) << 3)) / 2 +
+                (prediction_ptr->origin_y + ((dst_origin_y >> 3) << 3)) / 2 *
+                    prediction_ptr->stride_cb);
+            dst_stride = prediction_ptr->stride_cb;
+
+            plane_warped_motion_prediction(picture_control_set_ptr,
+                compound_idx,
+                interinter_comp,
+                pu_origin_x >> ss_x,
+                pu_origin_y >> ss_y,
+                blk_geom,
+                blk_geom->bwidth_uv,
+                blk_geom->bheight_uv,
+                wm_params_l0,
+                wm_params_l1,
+                is_compound,
+                bit_depth,
+                src_stride,
+                dst_stride,
+                buf_width >> ss_x,
+                buf_height >> ss_y,
+                ss_x,
+                ss_y,
+                src_ptr_l0,
+                src_ptr_l1,
+                dst_ptr,
+                1, // plane
+                rf,
+                is16bit);
+
+            // Cr
+            if (mv_unit->pred_direction == UNI_PRED_LIST_0 || mv_unit->pred_direction == BI_PRED) {
+                src_ptr_l0 =
+                    ref_pic_list0->buffer_cr +
+                    (is16bit ? 2 : 1) * (ref_pic_list0->origin_x / 2 +
+                    (ref_pic_list0->origin_y / 2) * ref_pic_list0->stride_cr);
+                src_ptr_l1 = is_compound ? ref_pic_list1->buffer_cr +
+                    (is16bit ? 2 : 1) * (ref_pic_list1->origin_x / 2 +
+                    (ref_pic_list1->origin_y / 2) *
+                        ref_pic_list1->stride_cr)
+                    : NULL;
+                src_stride = ref_pic_list0->stride_cr;
+            }
+            else { //UNI_PRED_LIST_1
+                src_ptr_l0 =
+                    ref_pic_list1->buffer_cr +
+                    (is16bit ? 2 : 1) * (ref_pic_list1->origin_x / 2 +
+                    (ref_pic_list1->origin_y / 2) * ref_pic_list1->stride_cr);
+                src_ptr_l1 = NULL;
+                src_stride = ref_pic_list1->stride_cr;
+            }
+            dst_ptr =
+                prediction_ptr->buffer_cr +
+                (is16bit ? 2 : 1) * ((prediction_ptr->origin_x + ((dst_origin_x >> 3) << 3)) / 2 +
+                (prediction_ptr->origin_y + ((dst_origin_y >> 3) << 3)) / 2 *
+                    prediction_ptr->stride_cr);
+            dst_stride = prediction_ptr->stride_cr;
+
+            plane_warped_motion_prediction(picture_control_set_ptr,
+                compound_idx,
+                interinter_comp,
+                pu_origin_x >> ss_x,
+                pu_origin_y >> ss_y,
+                blk_geom,
+                blk_geom->bwidth_uv,
+                blk_geom->bheight_uv,
+                wm_params_l0,
+                wm_params_l1,
+                is_compound,
+                bit_depth,
+                src_stride,
+                dst_stride,
+                buf_width >> ss_x,
+                buf_height >> ss_y,
+                ss_x,
+                ss_y,
+                src_ptr_l0,
+                src_ptr_l1,
+                dst_ptr,
+                2, // plane
+                rf,
+                is16bit);
+
+        }
+        else { // Translation prediction when chroma block is smaller than 8x8
+
+         // Cb
+            if (mv_unit->pred_direction == UNI_PRED_LIST_0 || mv_unit->pred_direction == BI_PRED) {
+                src_ptr_l0 =
+                    ref_pic_list0->buffer_cb +
+                    (is16bit ? 2 : 1) * ((ref_pic_list0->origin_x + ((pu_origin_x >> 3) << 3)) / 2 +
+                    (ref_pic_list0->origin_y + ((pu_origin_y >> 3) << 3)) / 2 *
+                        ref_pic_list0->stride_cb);
+                src_ptr_l1 =
+                    is_compound
+                    ? ref_pic_list1->buffer_cb +
+                    (is16bit ? 2 : 1) *
+                    ((ref_pic_list1->origin_x + ((pu_origin_x >> 3) << 3)) / 2 +
+                    (ref_pic_list1->origin_y + ((pu_origin_y >> 3) << 3)) / 2 *
+                        ref_pic_list1->stride_cb)
+                    : NULL;
+                src_stride = ref_pic_list0->stride_cb;
+            }
+            else { //UNI_PRED_LIST_1
+                src_ptr_l0 =
+                    ref_pic_list1->buffer_cb +
+                    (is16bit ? 2 : 1) * ((ref_pic_list1->origin_x + ((pu_origin_x >> 3) << 3)) / 2 +
+                    (ref_pic_list1->origin_y + ((pu_origin_y >> 3) << 3)) / 2 *
+                        ref_pic_list1->stride_cb);
+                src_ptr_l1 = NULL;
+                src_stride = ref_pic_list1->stride_cb;
+            }
+            dst_ptr =
+                prediction_ptr->buffer_cb +
+                (is16bit ? 2 : 1) * ((prediction_ptr->origin_x + ((dst_origin_x >> 3) << 3)) / 2 +
+                (prediction_ptr->origin_y + ((dst_origin_y >> 3) << 3)) / 2 *
+                    prediction_ptr->stride_cb);
+            dst_stride = prediction_ptr->stride_cb;
+
+            chroma_plane_warped_motion_prediction_sub8x8(picture_control_set_ptr,
+                compound_idx,
+                blk_ptr,
+                blk_geom,
+                blk_geom->bwidth_uv,
+                blk_geom->bheight_uv,
+                is_compound,
+                bit_depth,
+                src_stride,
+                dst_stride,
+                src_ptr_l0,
+                src_ptr_l1,
+                dst_ptr,
+                rf,
+                mv_unit,
+                is16bit);
+            // Cr
+            if (mv_unit->pred_direction == UNI_PRED_LIST_0 || mv_unit->pred_direction == BI_PRED) {
+                src_ptr_l0 =
+                    ref_pic_list0->buffer_cr +
+                    (is16bit ? 2 : 1) * ((ref_pic_list0->origin_x + ((pu_origin_x >> 3) << 3)) / 2 +
+                    (ref_pic_list0->origin_y + ((pu_origin_y >> 3) << 3)) / 2 *
+                        ref_pic_list0->stride_cr);
+                src_ptr_l1 =
+                    is_compound
+                    ? ref_pic_list1->buffer_cr +
+                    (is16bit ? 2 : 1) *
+                    ((ref_pic_list1->origin_x + ((pu_origin_x >> 3) << 3)) / 2 +
+                    (ref_pic_list1->origin_y + ((pu_origin_y >> 3) << 3)) / 2 *
+                        ref_pic_list1->stride_cr)
+                    : NULL;
+                src_stride = ref_pic_list0->stride_cr;
+            }
+            else { //UNI_PRED_LIST_1
+                src_ptr_l0 =
+                    ref_pic_list1->buffer_cr +
+                    (is16bit ? 2 : 1) * ((ref_pic_list1->origin_x + ((pu_origin_x >> 3) << 3)) / 2 +
+                    (ref_pic_list1->origin_y + ((pu_origin_y >> 3) << 3)) / 2 *
+                        ref_pic_list1->stride_cr);
+                src_ptr_l1 = NULL;
+                src_stride = ref_pic_list1->stride_cr;
+            }
+            dst_ptr =
+                prediction_ptr->buffer_cr +
+                (is16bit ? 2 : 1) * ((prediction_ptr->origin_x + ((dst_origin_x >> 3) << 3)) / 2 +
+                (prediction_ptr->origin_y + ((dst_origin_y >> 3) << 3)) / 2 *
+                    prediction_ptr->stride_cb);
+            dst_stride = prediction_ptr->stride_cr;
+
+            chroma_plane_warped_motion_prediction_sub8x8(picture_control_set_ptr,
+                compound_idx,
+                blk_ptr,
+                blk_geom,
+                blk_geom->bwidth_uv,
+                blk_geom->bheight_uv,
+                is_compound,
+                bit_depth,
+                src_stride,
+                dst_stride,
+                src_ptr_l0,
+                src_ptr_l1,
+                dst_ptr,
+                rf,
+                mv_unit,
+                is16bit);
+        }
+    }
+
+    return return_error;
+}
 int32_t   is_inter_block(const BlockModeInfo *mbmi);
 
 
