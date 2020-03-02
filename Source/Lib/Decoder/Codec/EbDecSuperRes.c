@@ -24,7 +24,7 @@
 
 
 void av1_upscale_normative_rows(const Av1Common *cm, const uint8_t *src, int src_stride,
-                                uint8_t *dst, int dst_stride, int rows, int sub_x, int bd);
+                                uint8_t *dst, int dst_stride, int rows, int sub_x, int bd, EbBool use_16bit_pipeline);
 
 void av1_upscale_normative_and_extend_frame(struct Av1Common *cm, FrameHeader *frm_hdr,
                                             SeqHeader *seq_hdr, EbPictureBufferDesc *src,
@@ -47,7 +47,8 @@ void av1_upscale_normative_and_extend_frame(struct Av1Common *cm, FrameHeader *f
                                    dst_stride,
                                    frm_hdr->frame_size.frame_height >> sub_x,
                                    sub_x,
-                                   src->bit_depth);
+                                   src->bit_depth,
+                                   dst->use_16bit_pipeline);
     }
 }
 
