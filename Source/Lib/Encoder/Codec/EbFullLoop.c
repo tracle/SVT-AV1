@@ -1895,7 +1895,7 @@ int32_t av1_quantize_inv_quantize(
 #else
     if (perform_rdoq && !is_inter) {
 #endif
-        if (bit_increment) {
+        if (bit_increment || (is_encode_pass && scs_ptr->static_config.encoder_16bit_pipeline)) {
             eb_av1_highbd_quantize_fp_facade((TranLow *)coeff,
                                              n_coeffs,
                                              &candidate_plane,
@@ -1915,7 +1915,7 @@ int32_t av1_quantize_inv_quantize(
                                       &qparam);
         }
     } else {
-        if (bit_increment) {
+        if (bit_increment || (is_encode_pass && scs_ptr->static_config.encoder_16bit_pipeline)) {
             eb_av1_highbd_quantize_b_facade((TranLow *)coeff,
                                             n_coeffs,
                                             &candidate_plane,

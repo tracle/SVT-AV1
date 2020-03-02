@@ -601,6 +601,7 @@ void svt_make_masked_inter_predictor(PartitionInfo *part_info, int32_t ref, void
     InterInterCompoundData *comp_data = &part_info->mi->inter_inter_compound;
     const BlockSize         bsize     = part_info->mi->sb_type;
     int32_t                 bit_depth = ref_buf->ps_pic_buf->bit_depth;
+    EbBool                  is_16bit = (EbBool) (bit_depth > EB_8BIT) || ref_buf->ps_pic_buf->use_16bit_pipeline;
     //We come here when we have a prediction done using regular path for the ref0 stored in conv_param.dst.
     //use regular path to generate a prediction for ref1 into  a temporary buffer,
     //then  blend that temporary buffer with that from  the first reference.
@@ -662,7 +663,8 @@ void svt_make_masked_inter_predictor(PartitionInfo *part_info, int32_t ref, void
                                    bh,
                                    bw,
                                    conv_params,
-                                   (uint8_t)bit_depth);
+                                   (uint8_t)bit_depth,
+                                   is_16bit);
 }
 
 void av1_combine_interintra(PartitionInfo *part_info, BlockSize bsize, int plane,
