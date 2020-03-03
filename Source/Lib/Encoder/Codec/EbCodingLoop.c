@@ -1336,7 +1336,7 @@ static void av1_encode_generate_recon_16bit(EncDecContext *context_ptr, uint32_t
                     CONVERT_TO_BYTEPTR(pred_buffer),
                     pred_samples->stride_y,
                     context_ptr->blk_geom->txsize[blk_ptr->tx_depth][context_ptr->txb_itr],
-                    BIT_INCREMENT_10BIT,
+                    (context_ptr->bit_depth == EB_10BIT) ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
                     txb_ptr->transform_type[PLANE_TYPE_Y],
                     PLANE_TYPE_Y,
                     eob[0],
@@ -1372,7 +1372,7 @@ static void av1_encode_generate_recon_16bit(EncDecContext *context_ptr, uint32_t
                 CONVERT_TO_BYTEPTR(pred_buffer),
                 pred_samples->stride_cb,
                 context_ptr->blk_geom->txsize_uv[blk_ptr->tx_depth][context_ptr->txb_itr],
-                BIT_INCREMENT_10BIT,
+                (context_ptr->bit_depth == EB_10BIT) ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
                 txb_ptr->transform_type[PLANE_TYPE_UV],
                 PLANE_TYPE_UV,
                 eob[1],
@@ -1395,7 +1395,7 @@ static void av1_encode_generate_recon_16bit(EncDecContext *context_ptr, uint32_t
                 CONVERT_TO_BYTEPTR(pred_buffer),
                 pred_samples->stride_cr,
                 context_ptr->blk_geom->txsize_uv[blk_ptr->tx_depth][context_ptr->txb_itr],
-                BIT_INCREMENT_10BIT,
+                (context_ptr->bit_depth == EB_10BIT) ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
                 txb_ptr->transform_type[PLANE_TYPE_UV],
                 PLANE_TYPE_UV,
                 eob[2],
@@ -2280,7 +2280,7 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
     else // non ref pictures
         recon_buffer = is_16bit ? pcs_ptr->recon_picture16bit_ptr : pcs_ptr->recon_picture_ptr;
 
-    if (is_16bit) {
+    if (is_16bit && scs_ptr->static_config.encoder_bit_depth > EB_8BIT) {
         //SB128_TODO change 10bit SB creation
 
         if ((scs_ptr->static_config.ten_bit_format == 1) ||
@@ -2384,6 +2384,61 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                  sb_origin_y,
                                  sb_width,
                                  sb_height);
+    }
+
+    if (is_16bit && scs_ptr->static_config.encoder_bit_depth == EB_8BIT) {
+        const uint32_t input_luma_offset =
+            ((sb_origin_y + input_picture->origin_y) * input_picture->stride_y) +
+            (sb_origin_x + input_picture->origin_x);
+        const uint32_t input_cb_offset =
+            (((sb_origin_y + input_picture->origin_y) >> 1) * input_picture->stride_cb) +
+            ((sb_origin_x + input_picture->origin_x) >> 1);
+        const uint32_t input_cr_offset =
+            (((sb_origin_y + input_picture->origin_y) >> 1) * input_picture->stride_cr) +
+            ((sb_origin_x + input_picture->origin_x) >> 1);
+
+        sb_width =
+            ((sb_width < MIN_SB_SIZE) || ((sb_width > MIN_SB_SIZE) && (sb_width < MAX_SB_SIZE)))
+            ? MIN(scs_ptr->sb_size_pix,
+            (pcs_ptr->parent_pcs_ptr->aligned_width + scs_ptr->right_padding) -
+                sb_origin_x)
+            : sb_width;
+        sb_height =
+            ((sb_height < MIN_SB_SIZE) || ((sb_height > MIN_SB_SIZE) && (sb_height < MAX_SB_SIZE)))
+            ? MIN(scs_ptr->sb_size_pix,
+            (pcs_ptr->parent_pcs_ptr->aligned_height + scs_ptr->bot_padding) -
+                sb_origin_y)
+            : sb_height;
+
+        // PACK Y
+        uint16_t *buf_16bit = (uint16_t *)context_ptr->input_sample16bit_buffer->buffer_y;
+        uint8_t * buf_8bit = input_picture->buffer_y + input_luma_offset;
+        convert_8bit_to_16bit(buf_8bit,
+            input_picture->stride_y,
+            buf_16bit,
+            context_ptr->input_sample16bit_buffer->stride_y,
+            sb_width,
+            sb_height);
+
+        // PACK CB
+        buf_16bit = (uint16_t *)context_ptr->input_sample16bit_buffer->buffer_cb;
+        buf_8bit = input_picture->buffer_cb + input_cb_offset;
+        convert_8bit_to_16bit(buf_8bit,
+            input_picture->stride_cb,
+            buf_16bit,
+            context_ptr->input_sample16bit_buffer->stride_cb,
+            sb_width >> 1,
+            sb_height >> 1);
+
+        // PACK CR
+        buf_16bit = (uint16_t *)context_ptr->input_sample16bit_buffer->buffer_cr;
+        buf_8bit = input_picture->buffer_cr + input_cr_offset;
+        convert_8bit_to_16bit(buf_8bit,
+            input_picture->stride_cr,
+            buf_16bit,
+            context_ptr->input_sample16bit_buffer->stride_cr,
+            sb_width >> 1,
+            sb_height >> 1);
     }
     context_ptr->intra_coded_area_sb[sb_addr] = 0;
     context_ptr->coded_area_sb                = 0;
@@ -2670,6 +2725,39 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                              ->reference_picture_wrapper_ptr->object_ptr)
                                             ->reference_picture16bit;
 
+                                if (is_16bit) {
+                                    av1_inter_prediction_16bit_pipeline(
+                                        pcs_ptr,
+                                        blk_ptr->interp_filters,
+                                        blk_ptr,
+                                        blk_ptr->prediction_unit_array->ref_frame_type,
+                                        &context_ptr->mv_unit,
+                                        1, // use_intrabc,
+                                        SIMPLE_TRANSLATION,
+                                        0,
+                                        0,
+                                        1,
+                                        &blk_ptr->interinter_comp,
+                                        &sb_ptr->tile_info,
+                                        ep_luma_recon_neighbor_array,
+                                        ep_cb_recon_neighbor_array,
+                                        ep_cr_recon_neighbor_array,
+                                        blk_ptr->is_interintra_used,
+                                        blk_ptr->interintra_mode,
+                                        blk_ptr->use_wedge_interintra,
+                                        blk_ptr->interintra_wedge_index,
+                                        context_ptr->blk_origin_x,
+                                        context_ptr->blk_origin_y,
+                                        blk_geom->bwidth,
+                                        blk_geom->bheight,
+                                        ref_pic_list0,
+                                        0,
+                                        recon_buffer,
+                                        context_ptr->blk_origin_x,
+                                        context_ptr->blk_origin_y,
+                                        EB_TRUE,
+                                        (uint8_t)scs_ptr->static_config.encoder_bit_depth);
+                                } else {
                                 av1_inter_prediction(
                                     pcs_ptr,
                                     blk_ptr->interp_filters,
@@ -2701,6 +2789,7 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                     context_ptr->blk_origin_y,
                                     EB_TRUE,
                                     (uint8_t)scs_ptr->static_config.encoder_bit_depth);
+                            }
                             }
 #if TXS_DEPTH_2
                             // Initialize the Transform Loop
@@ -3177,25 +3266,27 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                     : (EbPictureBufferDesc *)EB_NULL;
                             }
 #endif
-                            warped_motion_prediction(
-                                pcs_ptr,
-                                &context_ptr->mv_unit,
-                                blk_ptr->prediction_unit_array[0].ref_frame_type,
-                                context_ptr->md_context->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].compound_idx,
-                                &context_ptr->md_context->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].interinter_comp,
-                                context_ptr->blk_origin_x,
-                                context_ptr->blk_origin_y,
-                                blk_ptr,
-                                blk_geom,
+                            if (is_16bit)
+                            {
+                                warped_motion_prediction_16bit_pipeline(
+                                    pcs_ptr,
+                                    &context_ptr->mv_unit,
+                                    blk_ptr->prediction_unit_array[0].ref_frame_type,
+                                    blk_ptr->prediction_unit_array[0].compound_idx,
+                                    &blk_ptr->prediction_unit_array[0].interinter_comp,
+                                    context_ptr->blk_origin_x,
+                                    context_ptr->blk_origin_y,
+                                    blk_ptr,
+                                    blk_geom,
 #if WARP_IMPROVEMENT
-                                ref_pic_list0,
-                                ref_pic_list1,
+                                    ref_pic_list0,
+                                    ref_pic_list1,
 #else
-                                is_16bit ? ref_obj_0->reference_picture16bit
-                                         : ref_obj_0->reference_picture,
-                                ref_idx_l1 >= 0 ? is_16bit ? ref_obj_1->reference_picture16bit
-                                                           : ref_obj_1->reference_picture
-                                                : NULL,
+                                    is_16bit ? ref_obj_0->reference_picture16bit
+                                    : ref_obj_0->reference_picture,
+                                    ref_idx_l1 >= 0 ? is_16bit ? ref_obj_1->reference_picture16bit
+                                    : ref_obj_1->reference_picture
+                                    : NULL,
 #endif
                                 recon_buffer,
                                 context_ptr->blk_origin_x,
@@ -3204,6 +3295,37 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                 &context_ptr->md_context->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].wm_params_l1,
                                 (uint8_t)scs_ptr->static_config.encoder_bit_depth,
                                 EB_TRUE);
+                            }
+                            else
+                            {
+                                warped_motion_prediction(
+                                    pcs_ptr,
+                                    &context_ptr->mv_unit,
+                                    blk_ptr->prediction_unit_array[0].ref_frame_type,
+                                    blk_ptr->prediction_unit_array[0].compound_idx,
+                                    &blk_ptr->prediction_unit_array[0].interinter_comp,
+                                    context_ptr->blk_origin_x,
+                                    context_ptr->blk_origin_y,
+                                    blk_ptr,
+                                    blk_geom,
+#if WARP_IMPROVEMENT
+                                    ref_pic_list0,
+                                    ref_pic_list1,
+#else
+                                    is_16bit ? ref_obj_0->reference_picture16bit
+                                    : ref_obj_0->reference_picture,
+                                    ref_idx_l1 >= 0 ? is_16bit ? ref_obj_1->reference_picture16bit
+                                    : ref_obj_1->reference_picture
+                                    : NULL,
+#endif
+                                    recon_buffer,
+                                    context_ptr->blk_origin_x,
+                                    context_ptr->blk_origin_y,
+                                &context_ptr->md_context->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].wm_params_l0,
+                                &context_ptr->md_context->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].wm_params_l1,
+                                    (uint8_t)scs_ptr->static_config.encoder_bit_depth,
+                                    EB_TRUE);
+                            }
                         }
 
                         if (pu_ptr->motion_mode != WARPED_CAUSAL) {
@@ -3230,6 +3352,39 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                     : (EbPictureBufferDesc *)EB_NULL;
                             }
 
+                                    if (is_16bit) {
+                                        av1_inter_prediction_16bit_pipeline(
+                                            pcs_ptr,
+                                            blk_ptr->interp_filters,
+                                            blk_ptr,
+                                            blk_ptr->prediction_unit_array->ref_frame_type,
+                                            &context_ptr->mv_unit,
+                                            0, //use_intrabc,
+                                            blk_ptr->prediction_unit_array->motion_mode,
+                                            0, //use_precomputed_obmc,
+                                            0,
+                                            blk_ptr->compound_idx,
+                                            &blk_ptr->interinter_comp,
+                                            &sb_ptr->tile_info,
+                                            ep_luma_recon_neighbor_array,
+                                            ep_cb_recon_neighbor_array,
+                                            ep_cr_recon_neighbor_array,
+                                            blk_ptr->is_interintra_used,
+                                            blk_ptr->interintra_mode,
+                                            blk_ptr->use_wedge_interintra,
+                                            blk_ptr->interintra_wedge_index,
+                                            context_ptr->blk_origin_x,
+                                            context_ptr->blk_origin_y,
+                                            blk_geom->bwidth,
+                                            blk_geom->bheight,
+                                            ref_pic_list0,
+                                            ref_pic_list1,
+                                            recon_buffer,
+                                            context_ptr->blk_origin_x,
+                                            context_ptr->blk_origin_y,
+                                            EB_TRUE,
+                                            (uint8_t)scs_ptr->static_config.encoder_bit_depth);
+                                    } else {
                             av1_inter_prediction(
                                 pcs_ptr,
                                 blk_ptr->interp_filters,
@@ -3264,7 +3419,7 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                 (uint8_t)scs_ptr->static_config.encoder_bit_depth);
                         }
                     }
-
+                            }
                     context_ptr->txb_itr = 0;
                     // Transform Loop
                     context_ptr->md_context->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].y_has_coeff[0] = EB_FALSE;

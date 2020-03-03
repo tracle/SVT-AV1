@@ -2203,7 +2203,8 @@ void copy_api_from_app(
     }
     scs_ptr->chroma_format_idc = (uint32_t)(scs_ptr->static_config.encoder_color_format);
     scs_ptr->encoder_bit_depth = (uint32_t)(scs_ptr->static_config.encoder_bit_depth);
-
+    //16bit pipeline
+    scs_ptr->static_config.encoder_16bit_pipeline = ((EbSvtAv1EncConfiguration*)config_struct)->encoder_16bit_pipeline;
     scs_ptr->subsampling_x = (scs_ptr->chroma_format_idc == EB_YUV444 ? 1 : 2) - 1;
     scs_ptr->subsampling_y = (scs_ptr->chroma_format_idc >= EB_YUV422 ? 1 : 2) - 1;
     scs_ptr->static_config.ten_bit_format = ((EbSvtAv1EncConfiguration*)config_struct)->ten_bit_format;

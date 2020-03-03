@@ -511,13 +511,14 @@ void *rest_kernel(void *input_ptr) {
             link_eb_to_aom_buffer_desc(scs_ptr->static_config.encoder_16bit_pipeline || is_16bit
                                        ? pcs_ptr->input_frame16bit
                                        : pcs_ptr->parent_pcs_ptr->enhanced_unscaled_picture_ptr,
-                                       &cpi_source);
+                                       &cpi_source,
+                                        scs_ptr->static_config.encoder_16bit_pipeline || is_16bit);
 
             Yv12BufferConfig trial_frame_rst;
-            link_eb_to_aom_buffer_desc(context_ptr->trial_frame_rst, &trial_frame_rst);
+            link_eb_to_aom_buffer_desc(context_ptr->trial_frame_rst, &trial_frame_rst, scs_ptr->static_config.encoder_16bit_pipeline || is_16bit);
 
             Yv12BufferConfig org_fts;
-            link_eb_to_aom_buffer_desc(context_ptr->org_rec_frame, &org_fts);
+            link_eb_to_aom_buffer_desc(context_ptr->org_rec_frame, &org_fts, scs_ptr->static_config.encoder_16bit_pipeline || is_16bit);
 
             restoration_seg_search(context_ptr->rst_tmpbuf,
                                    &org_fts,
