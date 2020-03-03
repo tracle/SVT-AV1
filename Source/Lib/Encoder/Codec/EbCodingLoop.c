@@ -4315,7 +4315,91 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                 } else {
                     CHECK_REPORT_ERROR_NC(encode_context_ptr->app_callback_ptr, EB_ENC_CL_ERROR2);
                 }
+                if (pcs_ptr->parent_pcs_ptr->frm_hdr.allow_intrabc && is_16bit && (context_ptr->bit_depth == EB_8BIT)) {
+                    EbPictureBufferDesc *recon_buffer_16bit;
+                    EbPictureBufferDesc *recon_buffer_8bit;
+                    if (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag == EB_TRUE)
+                        //get the 16bit form of the input SB
+                        recon_buffer_16bit = ((EbReferenceObject *)pcs_ptr->parent_pcs_ptr
+                            ->reference_picture_wrapper_ptr->object_ptr)
+                        ->reference_picture16bit;
+                    else // non ref pictures
+                        recon_buffer_16bit = pcs_ptr->recon_picture16bit_ptr;
 
+                    if (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag == EB_TRUE)
+                        //get the 16bit form of the input SB
+                        recon_buffer_8bit = ((EbReferenceObject *)pcs_ptr->parent_pcs_ptr
+                            ->reference_picture_wrapper_ptr->object_ptr)
+                        ->reference_picture;
+                    else // non ref pictures
+                        recon_buffer_8bit = pcs_ptr->recon_picture_ptr;
+
+                    uint32_t pred_buf_x_offest = context_ptr->blk_origin_x;
+                    uint32_t pred_buf_y_offest = context_ptr->blk_origin_y;
+
+                    uint16_t *dst_16bit = (uint16_t *)(recon_buffer_16bit->buffer_y) +
+                        pred_buf_x_offest + recon_buffer_16bit->origin_x +
+                        (pred_buf_y_offest + recon_buffer_16bit->origin_y) *
+                        recon_buffer_16bit->stride_y;
+                    int32_t dst_stride_16bit = recon_buffer_16bit->stride_y;
+
+                    uint8_t *dst;
+                    int32_t  dst_stride;
+
+                    dst = recon_buffer_8bit->buffer_y + pred_buf_x_offest + recon_buffer_8bit->origin_x +
+                        (pred_buf_y_offest + recon_buffer_8bit->origin_y) * recon_buffer_8bit->stride_y;
+                    dst_stride = recon_buffer_8bit->stride_y;
+
+                    convert_16bit_to_8bit(dst_16bit,
+                        dst_stride_16bit,
+                        dst,
+                        dst_stride,
+                        context_ptr->blk_geom->bwidth,
+                        context_ptr->blk_geom->bheight);
+
+                    //copy recon from 16bit to 8bit
+                    pred_buf_x_offest = ((context_ptr->blk_origin_x >> 3) << 3) >> 1;
+                    pred_buf_y_offest = ((context_ptr->blk_origin_y >> 3) << 3) >> 1;
+
+                    dst_16bit = (uint16_t *)(recon_buffer_16bit->buffer_cb) +
+                        pred_buf_x_offest + recon_buffer_16bit->origin_x / 2 +
+                        (pred_buf_y_offest + recon_buffer_16bit->origin_y / 2) *
+                        recon_buffer_16bit->stride_cb;
+                    dst_stride_16bit = recon_buffer_16bit->stride_cb;
+
+                    dst = recon_buffer_8bit->buffer_cb + pred_buf_x_offest +
+                        recon_buffer_8bit->origin_x / 2 +
+                        (pred_buf_y_offest + recon_buffer_8bit->origin_y / 2) *
+                        recon_buffer_8bit->stride_cb;
+                    dst_stride = recon_buffer_8bit->stride_cb;
+
+
+                    convert_16bit_to_8bit(dst_16bit,
+                        dst_stride_16bit,
+                        dst,
+                        dst_stride,
+                        context_ptr->blk_geom->bwidth_uv,
+                        context_ptr->blk_geom->bheight_uv);
+
+                    dst_16bit = (uint16_t *)(recon_buffer_16bit->buffer_cr) +
+                        (pred_buf_x_offest + recon_buffer_16bit->origin_x / 2 +
+                        (pred_buf_y_offest + recon_buffer_16bit->origin_y / 2) *
+                            recon_buffer_16bit->stride_cr);
+                    dst_stride_16bit = recon_buffer_16bit->stride_cr;
+                    dst = recon_buffer_8bit->buffer_cr + pred_buf_x_offest +
+                        recon_buffer_8bit->origin_x / 2 +
+                        (pred_buf_y_offest + recon_buffer_8bit->origin_y / 2) *
+                        recon_buffer_8bit->stride_cr;
+                    dst_stride = recon_buffer_8bit->stride_cr;
+
+
+                    convert_16bit_to_8bit(dst_16bit,
+                        dst_stride_16bit,
+                        dst,
+                        dst_stride,
+                        context_ptr->blk_geom->bwidth_uv,
+                        context_ptr->blk_geom->bheight_uv);
+                }
                 update_av1_mi_map(blk_ptr,
                                   context_ptr->blk_origin_x,
                                   context_ptr->blk_origin_y,

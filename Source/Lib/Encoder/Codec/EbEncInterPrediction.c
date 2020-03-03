@@ -2584,7 +2584,7 @@ static void chroma_plane_warped_motion_prediction_sub8x8(
                                    blk_geom->bwidth_uv,
                                    blk_geom->bheight_uv);
 
-    if (bit_depth == EB_8BIT)
+    if (!is16bit)
         convolve[subpel_x != 0][subpel_y != 0][is_compound](src_ptr_l0,
                                                             src_stride,
                                                             dst_ptr,
@@ -2642,7 +2642,7 @@ static void chroma_plane_warped_motion_prediction_sub8x8(
                                        blk_geom->bheight_uv);
 
         conv_params.do_average = 1;
-        if (bit_depth == EB_8BIT)
+        if (!is16bit)
             convolve[subpel_x != 0][subpel_y != 0][is_compound](
                     src_ptr_l1,
                     src_stride,

@@ -105,12 +105,13 @@ EbErrorType enc_dec_context_ctor(EbThreadContext *  thread_context_ptr,
         init_data.color_format       = color_format;
 
         context_ptr->input_sample16bit_buffer = (EbPictureBufferDesc *)EB_NULL;
-        if (is_16bit) {
+        if (is_16bit || static_config->encoder_16bit_pipeline) {
             init_data.bit_depth = EB_16BIT;
 
             EB_NEW(context_ptr->input_sample16bit_buffer,
                    eb_picture_buffer_desc_ctor,
                    (EbPtr)&init_data);
+            init_data.bit_depth = static_config->encoder_16bit_pipeline ? static_config->encoder_bit_depth : init_data.bit_depth;
         }
     }
 
