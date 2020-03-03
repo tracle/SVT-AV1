@@ -10178,6 +10178,26 @@ void hme_sb(
                         search_region_number_in_width = 0;
                         search_region_number_in_height++;
                     }
+#if NEW_HME_DISTANCE_ALGORITHM
+                    uint16_t dist = (context_ptr->me_alt_ref == EB_TRUE) ?
+                        ABS((int16_t)(context_ptr->tf_frame_index - context_ptr->tf_index_center)) :
+                        ABS((int16_t)(pcs_ptr->picture_number -
+                            pcs_ptr->ref_pic_poc_array[list_index][ref_pic_index]));
+                    int32_t hme_sr_factor_x, hme_sr_factor_y;
+
+                    // factor to scaledown the ME search region growth to MAX
+                    if (context_ptr->me_alt_ref == 0) {
+                        int8_t round_up = ((dist%8) == 0) ? 0 : 1;
+                        uint16_t exp = 5;
+                        dist = ((dist * exp) / 8) + round_up;
+                        hme_sr_factor_x = dist * 100;
+                        hme_sr_factor_y = dist * 100;
+                    }
+                    else {
+                        hme_sr_factor_x = 100;
+                        hme_sr_factor_y = 100;
+                    }
+#endif
                     // HME: Level0 search
                     if (enable_hme_level0_flag) {
                         if (one_quadrant_hme && !enable_hme_level1_flag &&
@@ -10200,10 +10220,16 @@ void hme_sb(
                                                              [search_region_number_in_height]),
                                 &(y_hme_level_0_search_center[search_region_number_in_width]
                                                              [search_region_number_in_height]),
+#if NEW_HME_DISTANCE_ALGORITHM
+                                hme_sr_factor_x,
+                                hme_sr_factor_y
+#else
                                 hme_level_0_search_area_multiplier_x[pcs_ptr->hierarchical_levels]
                                                                     [pcs_ptr->temporal_layer_index],
                                 hme_level_0_search_area_multiplier_y
-                                    [pcs_ptr->hierarchical_levels][pcs_ptr->temporal_layer_index]);
+                                    [pcs_ptr->hierarchical_levels][pcs_ptr->temporal_layer_index]
+#endif
+                            );
                         } else {
                             search_region_number_in_height = 0;
                             search_region_number_in_width  = 0;
@@ -10231,12 +10257,18 @@ void hme_sb(
                                         &(y_hme_level_0_search_center
                                         [search_region_number_in_width]
                                         [search_region_number_in_height]),
+#if NEW_HME_DISTANCE_ALGORITHM
+                                        hme_sr_factor_x,
+                                        hme_sr_factor_y
+#else
                                         hme_level_0_search_area_multiplier_x
                                         [pcs_ptr->hierarchical_levels]
                                         [pcs_ptr->temporal_layer_index],
                                         hme_level_0_search_area_multiplier_y
                                         [pcs_ptr->hierarchical_levels]
-                                        [pcs_ptr->temporal_layer_index]);
+                                        [pcs_ptr->temporal_layer_index]
+#endif
+                                        );
                                     search_region_number_in_width++;
                                 }
                                 search_region_number_in_width = 0;
