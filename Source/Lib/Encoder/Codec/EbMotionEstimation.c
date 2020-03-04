@@ -7427,6 +7427,11 @@ void hme_one_quadrant_level_0(
         ~0x0F);
     int16_t search_area_height = (int16_t)(
         ((context_ptr->hme_level0_total_search_area_height * searchAreaMultiplierY) / 100));
+
+#if NEW_HME_DISTANCE_ALGORITHM
+    search_area_width = MIN(search_area_width, 512);
+    search_area_height = MIN(search_area_height, 512);
+#endif
     x_search_region_distance = x_hme_search_center;
     y_search_region_distance = y_hme_search_center;
     pad_width                = (int16_t)(sixteenth_ref_pic_ptr->origin_x) - 1;
@@ -7623,7 +7628,10 @@ void hme_level_0(
         ((context_ptr->hme_level0_search_area_in_height_array[search_region_number_in_height] *
           searchAreaMultiplierY) /
          100));
-
+#if NEW_HME_DISTANCE_ALGORITHM
+    search_area_width = MIN(search_area_width, 512);
+    search_area_height = MIN(search_area_height, 512);
+#endif
     x_search_region_distance = x_hme_search_center;
     y_search_region_distance = y_hme_search_center;
     pad_width                = (int16_t)(sixteenth_ref_pic_ptr->origin_x) - 1;
@@ -10184,19 +10192,12 @@ void hme_sb(
                         ABS((int16_t)(pcs_ptr->picture_number -
                             pcs_ptr->ref_pic_poc_array[list_index][ref_pic_index]));
                     int32_t hme_sr_factor_x, hme_sr_factor_y;
-
                     // factor to scaledown the ME search region growth to MAX
-                    if (context_ptr->me_alt_ref == 0) {
-                        int8_t round_up = ((dist%8) == 0) ? 0 : 1;
-                        uint16_t exp = 5;
-                        dist = ((dist * exp) / 8) + round_up;
-                        hme_sr_factor_x = dist * 100;
-                        hme_sr_factor_y = dist * 100;
-                    }
-                    else {
-                        hme_sr_factor_x = 100;
-                        hme_sr_factor_y = 100;
-                    }
+                    int8_t round_up = ((dist%8) == 0) ? 0 : 1;
+                    uint16_t exp = 5;
+                    dist = ((dist * exp) / 8) + round_up;
+                    hme_sr_factor_x = dist * 100;
+                    hme_sr_factor_y = dist * 100;                
 #endif
                     // HME: Level0 search
                     if (enable_hme_level0_flag) {
