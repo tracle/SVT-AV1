@@ -44,6 +44,10 @@ extern "C" {
 #define DISABLE_HME_PRE_CHECK             0
 #define ENABLE_HME_AT_INC_SB              0
 #define NEW_HME_DISTANCE_ALGORITHM        0
+#define MULTI_STAGE_HME                   0
+#define PRUNE_HME_L0                      0
+#define PRUNE_HME_L1                      0
+#define DISABLE_HME_OF_SAME_POC           0
 
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
 #define SHUT_FILTERING 0 //1
