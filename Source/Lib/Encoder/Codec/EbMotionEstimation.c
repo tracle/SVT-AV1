@@ -11012,6 +11012,7 @@ void hme_sb(
                     int8_t round_up = ((dist%8) == 0) ? 0 : 1;
                     uint16_t exp = 5;
                     dist = ((dist * exp) / 8) + round_up;
+                    dist = MIN(7,dist);
                     hme_sr_factor_x = dist * 100;
                     hme_sr_factor_y = dist * 100;                
 #endif
