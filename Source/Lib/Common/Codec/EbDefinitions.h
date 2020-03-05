@@ -49,6 +49,19 @@ extern "C" {
 #define PRUNE_HME_L1                      0
 #define DISABLE_HME_OF_SAME_POC           0
 
+#define FORCE_HME                         0
+#if FORCE_HME
+#define HME_LEVEL_0_256x256               0
+#define HME_LEVEL_0_128x128               0
+#define HME_LEVEL_0_64x64                 1
+#define HME_LEVEL_1_128x128               0
+#define HME_LEVEL_1_64x64                 0
+#define HME_LEVEL_1_32x32                 1
+#define HME_LEVEL_2_64x64                 0
+#define HME_LEVEL_2_32x32                 0
+#define HME_LEVEL_2_16x16                 1
+#endif
+
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
 #define SHUT_FILTERING 0 //1
 #define MAX_TILE_CNTS 128 // Annex A.3

@@ -120,6 +120,64 @@ void* set_me_hme_params_oq(
         (scs_ptr->static_config.frame_rate >> 16) < 50 ? 1 : 0;
 
     // HME Level0
+#if FORCE_HME
+#if HME_LEVEL_0_256x256
+    me_context_ptr->hme_level0_total_search_area_width = 256;
+    me_context_ptr->hme_level0_total_search_area_height = 256;
+    me_context_ptr->hme_level0_search_area_in_width_array[0] = 128;
+    me_context_ptr->hme_level0_search_area_in_width_array[1] = 128;
+    me_context_ptr->hme_level0_search_area_in_height_array[0] = 128;
+    me_context_ptr->hme_level0_search_area_in_height_array[1] = 128;
+#elif  HME_LEVEL_0_128x128
+    me_context_ptr->hme_level0_total_search_area_width = 128;
+    me_context_ptr->hme_level0_total_search_area_height = 128;
+    me_context_ptr->hme_level0_search_area_in_width_array[0] = 64;
+    me_context_ptr->hme_level0_search_area_in_width_array[1] = 64;
+    me_context_ptr->hme_level0_search_area_in_height_array[0] = 64;
+    me_context_ptr->hme_level0_search_area_in_height_array[1] = 64;
+#elif HME_LEVEL_0_64x64
+    me_context_ptr->hme_level0_total_search_area_width = 64;
+    me_context_ptr->hme_level0_total_search_area_height = 64;
+    me_context_ptr->hme_level0_search_area_in_width_array[0] = 32;
+    me_context_ptr->hme_level0_search_area_in_width_array[1] = 32;
+    me_context_ptr->hme_level0_search_area_in_height_array[0] = 32;
+    me_context_ptr->hme_level0_search_area_in_height_array[1] = 32;
+#endif
+#if HME_LEVEL_1_128x128
+    me_context_ptr->hme_level1_search_area_in_width_array[0] = 64;
+    me_context_ptr->hme_level1_search_area_in_width_array[1] = 64;
+    me_context_ptr->hme_level1_search_area_in_height_array[0] = 64;
+    me_context_ptr->hme_level1_search_area_in_height_array[1] = 64;
+#elif HME_LEVEL_1_64x64
+    me_context_ptr->hme_level1_search_area_in_width_array[0] = 32;
+    me_context_ptr->hme_level1_search_area_in_width_array[1] = 32;
+    me_context_ptr->hme_level1_search_area_in_height_array[0] = 32;
+    me_context_ptr->hme_level1_search_area_in_height_array[1] = 32;
+#elif HME_LEVEL_1_32x32
+    me_context_ptr->hme_level1_search_area_in_width_array[0] = 16;
+    me_context_ptr->hme_level1_search_area_in_width_array[1] = 16;
+    me_context_ptr->hme_level1_search_area_in_height_array[0] = 16;
+    me_context_ptr->hme_level1_search_area_in_height_array[1] = 16;
+#endif
+
+#if HME_LEVEL_2_64x64
+    me_context_ptr->hme_level2_search_area_in_width_array[0] = 32;
+    me_context_ptr->hme_level2_search_area_in_width_array[1] = 32;
+    me_context_ptr->hme_level2_search_area_in_height_array[0] =32;
+    me_context_ptr->hme_level2_search_area_in_height_array[1] =32;
+#elif HME_LEVEL_2_32x32
+    me_context_ptr->hme_level2_search_area_in_width_array[0] = 16;
+    me_context_ptr->hme_level2_search_area_in_width_array[1] = 16;
+    me_context_ptr->hme_level2_search_area_in_height_array[0] =16;
+    me_context_ptr->hme_level2_search_area_in_height_array[1] =16;
+#elif HME_LEVEL_2_16x16
+    me_context_ptr->hme_level2_search_area_in_width_array[0] = 4;
+    me_context_ptr->hme_level2_search_area_in_width_array[1] = 4;
+    me_context_ptr->hme_level2_search_area_in_height_array[0] = 4;
+    me_context_ptr->hme_level2_search_area_in_height_array[1] = 4;
+#endif
+
+#else
     me_context_ptr->hme_level0_total_search_area_width =
         hme_level0_total_search_area_width[sc_content_detected][input_resolution][hmeMeLevel];
     me_context_ptr->hme_level0_total_search_area_height =
@@ -150,7 +208,7 @@ void* set_me_hme_params_oq(
         hme_level2_search_area_in_height_array_top[sc_content_detected][input_resolution][hmeMeLevel];
     me_context_ptr->hme_level2_search_area_in_height_array[1] =
         hme_level2_search_area_in_height_array_bottom[sc_content_detected][input_resolution][hmeMeLevel];
-
+#endif
     // ME
     if (low_frame_rate_flag) {
         me_context_ptr->search_area_width  =
