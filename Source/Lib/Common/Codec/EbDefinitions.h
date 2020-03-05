@@ -86,13 +86,6 @@ typedef enum SqWeightOffsets {
     AGGRESSIVE_OFFSET_1   = -10
 } SqWeightOffsets;
 
-typedef enum Qp {
-    QP_20 = 20,
-    QP_32 = 32,
-    QP_43 = 43,
-    QP_55 = 55,
-    QP_63 = 63
-} Qp;
 struct Buf2D {
     uint8_t *buf;
     uint8_t *buf0;
