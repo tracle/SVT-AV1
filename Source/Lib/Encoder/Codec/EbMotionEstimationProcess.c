@@ -121,7 +121,14 @@ void* set_me_hme_params_oq(
 
     // HME Level0
 #if FORCE_HME
-#if HME_LEVEL_0_256x256
+#if HME_LEVEL_0_512x512
+    me_context_ptr->hme_level0_total_search_area_width = 512;
+    me_context_ptr->hme_level0_total_search_area_height = 512;
+    me_context_ptr->hme_level0_search_area_in_width_array[0] = 256;
+    me_context_ptr->hme_level0_search_area_in_width_array[1] = 256;
+    me_context_ptr->hme_level0_search_area_in_height_array[0] = 256;
+    me_context_ptr->hme_level0_search_area_in_height_array[1] = 256;
+#elif HME_LEVEL_0_256x256
     me_context_ptr->hme_level0_total_search_area_width = 256;
     me_context_ptr->hme_level0_total_search_area_height = 256;
     me_context_ptr->hme_level0_search_area_in_width_array[0] = 128;
