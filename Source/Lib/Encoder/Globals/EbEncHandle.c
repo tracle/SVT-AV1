@@ -401,9 +401,12 @@ EbErrorType load_default_buffer_configuration_settings(
         core_count = lp_count;
 #endif
     int32_t return_ppcs = set_parent_pcs(&scs_ptr->static_config,
-                    core_count, scs_ptr->input_resolution);
+                    SINGLE_CORE_COUNT, scs_ptr->input_resolution);
     if (return_ppcs == -1)
         return EB_ErrorInsufficientResources;
+
+    core_count = SINGLE_CORE_COUNT ? SINGLE_CORE_COUNT : core_count<<1;
+
     uint32_t input_pic = (uint32_t)return_ppcs;
     scs_ptr->input_buffer_fifo_init_count = input_pic + SCD_LAD + scs_ptr->static_config.look_ahead_distance;
     scs_ptr->output_stream_buffer_fifo_init_count =
@@ -1644,9 +1647,9 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
     /************************************
     * Thread Handles
     ************************************/
-    EbSvtAv1EncConfiguration   *config_ptr = &enc_handle_ptr->scs_instance_array[0]->scs_ptr->static_config;
+    //EbSvtAv1EncConfiguration   *config_ptr = &enc_handle_ptr->scs_instance_array[0]->scs_ptr->static_config;
 
-    eb_set_thread_management_parameters(config_ptr);
+    //eb_set_thread_management_parameters(config_ptr);
 
     control_set_ptr = enc_handle_ptr->scs_instance_array[0]->scs_ptr;
 

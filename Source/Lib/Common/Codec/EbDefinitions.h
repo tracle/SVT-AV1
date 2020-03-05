@@ -37,6 +37,7 @@ extern "C" {
 #ifndef NON_AVX512_SUPPORT
 #define NON_AVX512_SUPPORT
 #endif
+#define GM_BUG_FIX                  1 //Port PR#1123: fixed gm_down bitstream corruption issue
 
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
 #define SHUT_FILTERING 0 //1
