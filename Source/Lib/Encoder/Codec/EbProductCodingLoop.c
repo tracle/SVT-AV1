@@ -1601,8 +1601,13 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
             }
 
             ////MULT
+#if MAR5_ADOPTIONS
+            if ((pcs_ptr->enc_mode <= ENC_M1 && !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) ||
+                (pcs_ptr->enc_mode <= ENC_M1 && context_ptr->blk_geom->shape == PART_N)) {
+#else
             if ((pcs_ptr->enc_mode <= ENC_M0 && !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) ||
                 ((pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->enc_mode <= ENC_M1 && pcs_ptr->parent_pcs_ptr->sc_content_detected)) && context_ptr->blk_geom->shape == PART_N)) {
+#endif
                 uint8_t mult_factor_num   = 5;
                 uint8_t mult_factor_denum = 4;
                 for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
@@ -1681,7 +1686,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 if (pcs_ptr->enc_mode <= ENC_M0) {
                     division_factor_num   = 1;
                     division_factor_denum = 1;
+#if MAR5_ADOPTIONS
+                } else if (pcs_ptr->enc_mode <= ENC_M3) {
+#else
                 } else if (pcs_ptr->enc_mode <= ENC_M1) {
+#endif
                     division_factor_num   = 1;
                     division_factor_denum = 1;
                 } else {
@@ -1702,7 +1711,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                     }
                 }
             }
+#if MAR5_ADOPTIONS
+            if (pcs_ptr->enc_mode > ENC_M1 || pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+#else
             if (pcs_ptr->enc_mode > ENC_M0 || pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+#endif
                 uint8_t division_factor_num   = 1;
                 uint8_t division_factor_denum = 1;
                 if (context_ptr->blk_geom->bheight <= 8 && context_ptr->blk_geom->bwidth <= 8) {

@@ -1104,7 +1104,11 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     if (scs_ptr->static_config.enable_obmc) {
 #if MAR4_M6_ADOPTIONS
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if MAR5_ADOPTIONS
+            if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M4)
+#else
             if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M3)
+#endif
                 pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 2;
             else
                 pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 0;
