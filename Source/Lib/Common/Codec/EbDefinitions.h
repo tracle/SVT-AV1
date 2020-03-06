@@ -41,13 +41,18 @@ extern "C" {
 #define USE_8X8_ME_SR                     0
 #define DISABLE_HME                       0
 #define DISABLE_HME_DIST                  0
-#define DISABLE_HME_PRE_CHECK             0
-#define ENABLE_HME_AT_INC_SB              0
-#define NEW_HME_DISTANCE_ALGORITHM        0
+#define DISABLE_HME_PRE_CHECK             1
+#define ENABLE_HME_AT_INC_SB              1
+#define NEW_HME_DISTANCE_ALGORITHM        1
+#define DISABLE_HME_OF_SAME_POC           1
+#define DISABLE_HME_L0_FOR_240P           1
+
 #define MULTI_STAGE_HME                   0
+#if MULTI_STAGE_HME
 #define PRUNE_HME_L0                      0
 #define PRUNE_HME_L1                      0
-#define DISABLE_HME_OF_SAME_POC           0
+#endif
+
 
 #define FORCE_HME                         0
 #if FORCE_HME

@@ -10052,6 +10052,9 @@ void hme_level0_sb(
     uint64_t ref1Poc = 0;
     // Configure HME level 0, level 1 and level 2 from static config parameters
     EbBool enable_hme_level0_flag = context_ptr->enable_hme_level0_flag;
+#if DISABLE_HME_L0_FOR_240P
+    enable_hme_level0_flag = input_ptr->height < 360 && input_ptr->width < 640 ? 0 : enable_hme_level0_flag;
+#endif
     num_of_list_to_search = (pcs_ptr->slice_type == P_SLICE)
         ? (uint32_t)REF_LIST_0
         : (uint32_t)REF_LIST_1;
@@ -10538,6 +10541,9 @@ void set_final_seach_centre_sb(
     // Configure HME level 0, level 1 and level 2 from static config parameters
     EbBool enable_hme_level0_flag =
         context_ptr->enable_hme_level0_flag;
+#if DISABLE_HME_L0_FOR_240P
+    enable_hme_level0_flag = input_ptr->height < 360 && input_ptr->width < 640 ? 0 : enable_hme_level0_flag;
+#endif
     EbBool enable_hme_level1_flag =
         context_ptr->enable_hme_level1_flag;
     EbBool enable_hme_level2_flag =
@@ -10783,12 +10789,12 @@ void prune_references_hme(
             for (ref_pic_index = 0; ref_pic_index < REF_LIST_MAX_DEPTH; ref_pic_index++) {
                 uint16_t  abs_mv_x = ABS(xHmeSearchCenter[list_index][ref_pic_index]);
                 uint16_t  abs_mv_y = ABS(yHmeSearchCenter[list_index][ref_pic_index]);
-                uint64_t  dist = hmeMvSad[list_index][ref_pic_index];
-                if (abs_mv_x == 0 && abs_mv_y == 0 && dist < 128 )
+                uint64_t  distortion = hmeMvSad[list_index][ref_pic_index];
+                if (abs_mv_x == 0 && abs_mv_y == 0 && distortion < 128 )
                     context_ptr->adjust_hme_l1_factor[list_index][ref_pic_index] = 50;
-                else if (abs_mv_x <= 4 && abs_mv_y <= 4 && dist < 256 )
+                else if (abs_mv_x <= 4 && abs_mv_y <= 4 && distortion < 256 )
                     context_ptr->adjust_hme_l1_factor[list_index][ref_pic_index] = 70;
-                else if (abs_mv_x >= 32 && abs_mv_y >= 32 && dist >= 1024 )
+                else if (abs_mv_x >= 32 && abs_mv_y >= 32 && distortion >= 1024 )
                     context_ptr->adjust_hme_l1_factor[list_index][ref_pic_index] = 150;
             }
         }
@@ -10797,13 +10803,13 @@ void prune_references_hme(
             for (ref_pic_index = 0; ref_pic_index < REF_LIST_MAX_DEPTH; ref_pic_index++) {
                 uint16_t  abs_mv_x = ABS(xHmeSearchCenter[list_index][ref_pic_index]);
                 uint16_t  abs_mv_y = ABS(yHmeSearchCenter[list_index][ref_pic_index]);
-                uint64_t  dist = hmeMvSad[list_index][ref_pic_index];
-                if (abs_mv_x == 0 && abs_mv_y == 0 && dist < 512 )
-                    context_ptr->adjust_hme_l1_factor[list_index][ref_pic_index] = 50;
-                else if (abs_mv_x <= 8 && abs_mv_y <= 8 && dist < 1024 )
-                    context_ptr->adjust_hme_l1_factor[list_index][ref_pic_index] = 70;
-                else if (abs_mv_x >= 64 && abs_mv_y >= 64 && dist >= 4096 )
-                    context_ptr->adjust_hme_l1_factor[list_index][ref_pic_index] = 150;
+                uint64_t  distortion = hmeMvSad[list_index][ref_pic_index];
+                if (abs_mv_x == 0 && abs_mv_y == 0 && distortion < 512 )
+                    context_ptr->adjust_hme_l2_factor[list_index][ref_pic_index] = 50;
+                else if (abs_mv_x <= 8 && abs_mv_y <= 8 && distortion < 1024 )
+                    context_ptr->adjust_hme_l2_factor[list_index][ref_pic_index] = 70;
+                else if (abs_mv_x >= 64 && abs_mv_y >= 64 && distortion >= 4096 )
+                    context_ptr->adjust_hme_l2_factor[list_index][ref_pic_index] = 150;
             }
         }
     }
@@ -10918,6 +10924,9 @@ void hme_sb(
     int16_t hme_level1_search_area_in_height;
     // Configure HME level 0, level 1 and level 2 from static config parameters
     EbBool enable_hme_level0_flag = context_ptr->enable_hme_level0_flag;
+#if DISABLE_HME_L0_FOR_240P
+    enable_hme_level0_flag = input_ptr->height < 360 && input_ptr->width < 640 ? 0 : enable_hme_level0_flag;
+#endif
     EbBool enable_hme_level1_flag = context_ptr->enable_hme_level1_flag;
     EbBool enable_hme_level2_flag = context_ptr->enable_hme_level2_flag;
 #if DISABLE_HME
