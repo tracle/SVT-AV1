@@ -1014,16 +1014,19 @@ void av1_setup_build_prediction_by_above_pred(MacroBlockD *xd, int rel_mi_col,
     uint8_t ref_idx_l0 = get_ref_frame_idx(above_mbmi->block_mi.ref_frame[0]);
     uint8_t list_idx0  = get_list_idx(above_mbmi->block_mi.ref_frame[0]);
 
+    EbReferenceObject * ref_obj = (EbReferenceObject *)ctxt->picture_control_set_ptr
+            ->ref_pic_ptr_array[list_idx0][ref_idx_l0]
+            ->object_ptr;
+
     if (is16bit)
-        ctxt->ref_pic_list0 = ((EbReferenceObject *)ctxt->picture_control_set_ptr
-                ->ref_pic_ptr_array[list_idx0][ref_idx_l0]
-                ->object_ptr)
-                ->reference_picture16bit;
+        ctxt->ref_pic_list0 = ref_obj->reference_picture16bit;
     else
-        ctxt->ref_pic_list0 = ((EbReferenceObject *)ctxt->picture_control_set_ptr
-                ->ref_pic_ptr_array[list_idx0][ref_idx_l0]
-                ->object_ptr)
-                ->reference_picture;
+        ctxt->ref_pic_list0 = ref_obj->reference_picture;
+
+    use_scaled_rec_refs_if_needed(ctxt->picture_control_set_ptr,
+                                  ctxt->picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr,
+                                  ref_obj,
+                                  &(ctxt->ref_pic_list0));
 
     xd->mb_to_left_edge = 8 * MI_SIZE * (-above_mi_col);
     xd->mb_to_right_edge =
@@ -1043,16 +1046,18 @@ void av1_setup_build_prediction_by_left_pred(MacroBlockD *xd, int rel_mi_row,
     uint8_t ref_idx_l0 = get_ref_frame_idx(left_mbmi->block_mi.ref_frame[0]);
     uint8_t list_idx0  = get_list_idx(left_mbmi->block_mi.ref_frame[0]);
 
+    EbReferenceObject *ref_obj = (EbReferenceObject *)ctxt->picture_control_set_ptr
+            ->ref_pic_ptr_array[list_idx0][ref_idx_l0]
+            ->object_ptr;
     if (is16bit)
-        ctxt->ref_pic_list0 = ((EbReferenceObject *)ctxt->picture_control_set_ptr
-                ->ref_pic_ptr_array[list_idx0][ref_idx_l0]
-                ->object_ptr)
-                ->reference_picture16bit;
+        ctxt->ref_pic_list0 = ref_obj->reference_picture16bit;
     else
-        ctxt->ref_pic_list0 = ((EbReferenceObject *)ctxt->picture_control_set_ptr
-                ->ref_pic_ptr_array[list_idx0][ref_idx_l0]
-                ->object_ptr)
-                ->reference_picture;
+        ctxt->ref_pic_list0 = ref_obj->reference_picture;
+
+    use_scaled_rec_refs_if_needed(ctxt->picture_control_set_ptr,
+                                  ctxt->picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr,
+                                  ref_obj,
+                                  &(ctxt->ref_pic_list0));
 
     xd->mb_to_top_edge = 8 * MI_SIZE * (-left_mi_row);
     xd->mb_to_bottom_edge =
