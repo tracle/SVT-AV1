@@ -3663,7 +3663,11 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
     EbBool                    use_ssd           = EB_TRUE;
 #if !MR_MODE
     if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if MAR6_M0_ADOPTIONS // removes MR diff
+        use_ssd = pcs_ptr->enc_mode <= ENC_M0 ? EB_TRUE : EB_FALSE;
+#else
         use_ssd = EB_FALSE;
+#endif
 #endif
     uint8_t                   hbd_mode_decision = context_ptr->hbd_mode_decision == EB_DUAL_BIT_MD
                                     ? EB_8_BIT_MD
@@ -6539,6 +6543,11 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
 #if MR_MODE
         context_ptr->md_staging_tx_size_mode = EB_TRUE;
 #else
+#if MAR6_M0_ADOPTIONS // removes MR diff
+        if (pcs_ptr->enc_mode <= ENC_M0)
+            context_ptr->md_staging_tx_size_mode = EB_TRUE;
+        else
+#endif
         context_ptr->md_staging_tx_size_mode = (candidate_ptr->cand_class == CAND_CLASS_0 || candidate_ptr->cand_class == CAND_CLASS_6 || candidate_ptr->cand_class == CAND_CLASS_7) ? 1 : 0;
 #endif
         context_ptr->md_staging_tx_search =

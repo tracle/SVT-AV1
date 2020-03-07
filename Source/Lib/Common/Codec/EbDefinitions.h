@@ -62,6 +62,7 @@ extern "C" {
 #define MAR4_M6_ADOPTIONS           1
 #define GM_BUG_FIX                  1 //Port PR#1123: fixed gm_down bitstream corruption issue
 #define MAR5_ADOPTIONS              1
+#define MAR6_M0_ADOPTIONS           1
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

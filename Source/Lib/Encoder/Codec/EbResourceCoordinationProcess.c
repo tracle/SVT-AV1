@@ -843,7 +843,11 @@ void *resource_coordination_kernel(void *input_ptr) {
                 scs_ptr->seq_header.enable_interintra_compound =
 #if MAR3_M2_ADOPTIONS
 #if MAR4_M3_ADOPTIONS
+#if MAR6_M0_ADOPTIONS
+                    scs_ptr->static_config.enc_mode <= ENC_M0 || (scs_ptr->static_config.enc_mode <= ENC_M3 &&
+#else
                     MR_MODE || (scs_ptr->static_config.enc_mode <= ENC_M3 &&
+#endif
 #else
                     MR_MODE || (scs_ptr->static_config.enc_mode <= ENC_M2 &&
 #endif

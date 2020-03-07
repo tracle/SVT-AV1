@@ -1497,7 +1497,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 0                    post first md_stage
     // 1                    post last md_stage
     context_ptr->chroma_at_last_md_stage =
+#if MAR6_M0_ADOPTIONS
+        pcs_ptr->enc_mode <= ENC_M0 ? 0 : (context_ptr->chroma_level == CHROMA_MODE_0 && !pcs_ptr->parent_pcs_ptr->sc_content_detected) ? 1 : 0;
+#else
         MR_MODE ? 0 : (context_ptr->chroma_level == CHROMA_MODE_0 && !pcs_ptr->parent_pcs_ptr->sc_content_detected) ? 1 : 0;
+#endif
 
     // Set the full loop escape level
     // Level                Settings
@@ -2087,7 +2091,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 0: OFF
     // 1: ON 10% + skip HA/HB/H4  or skip VA/VB/V4
     // 2: ON 10% + skip HA/HB  or skip VA/VB   ,  5% + skip H4  or skip V4
+#if MAR6_M0_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M0 || context_ptr->pd_pass < PD_PASS_2)
+#else
     if (MR_MODE || context_ptr->pd_pass < PD_PASS_2)
+#endif
         context_ptr->nsq_hv_level = 0;
 #if MAR4_M6_ADOPTIONS
     else if (pcs_ptr->enc_mode <= ENC_M5) {
