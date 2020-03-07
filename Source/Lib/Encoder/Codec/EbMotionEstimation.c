@@ -10169,7 +10169,7 @@ void hme_level0_sb(
                         int32_t hme_sr_factor_x, hme_sr_factor_y;
                         // factor to scaledown the ME search region growth to MAX
                         int8_t round_up = ((dist%8) == 0) ? 0 : 1;
-                        uint16_t exp = 5;
+                        uint16_t exp = pcs_ptr->sc_content_detected ? 4 : 5;
                         dist = ((dist * exp) / 8) + round_up;
                         dist = MIN(7,dist);
                         hme_sr_factor_x = dist * 100;
@@ -11043,7 +11043,7 @@ void hme_sb(
                     int32_t hme_sr_factor_x, hme_sr_factor_y;
                     // factor to scaledown the ME search region growth to MAX
                     int8_t round_up = ((dist%8) == 0) ? 0 : 1;
-                    uint16_t exp = 5;
+                    uint16_t exp = pcs_ptr->sc_content_detected ? 4 : 5;
                     dist = ((dist * exp) / 8) + round_up;
                     dist = MIN(7,dist);
                     hme_sr_factor_x = dist * 100;
