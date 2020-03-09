@@ -113,7 +113,8 @@ EbErrorType warped_motion_prediction(
         EbWarpedMotionParams                 *wm_params_l0,
         EbWarpedMotionParams                 *wm_params_l1,
         uint8_t                               bit_depth,
-        EbBool                                perform_chroma);
+        EbBool                                perform_chroma,
+        EbBool                                is_encode_pass);
 
 const uint8_t *av1_get_obmc_mask(int length);
 

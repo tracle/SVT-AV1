@@ -3400,10 +3400,13 @@ EbErrorType warped_motion_prediction(PictureControlSet *picture_control_set_ptr,
                                      EbPictureBufferDesc *prediction_ptr, uint16_t dst_origin_x,
                                      uint16_t dst_origin_y, EbWarpedMotionParams *wm_params_l0,
                                      EbWarpedMotionParams *wm_params_l1, uint8_t bit_depth,
-                                     EbBool perform_chroma) {
+                                     EbBool perform_chroma, EbBool is_encode_pass) {
     EbErrorType return_error = EB_ErrorNone;
     uint8_t     is_compound  = (mv_unit->pred_direction == BI_PRED) ? 1 : 0;
-    EbBool      is16bit      = (EbBool)(bit_depth > EB_8BIT);
+    SequenceControlSet *scs_ptr =
+        (SequenceControlSet *)picture_control_set_ptr->scs_wrapper_ptr->object_ptr;
+    EbBool is_16bit_pipeline = scs_ptr->static_config.encoder_16bit_pipeline;
+    EbBool      is16bit      = (EbBool)(bit_depth > EB_8BIT) || (is_encode_pass && is_16bit_pipeline);
 
     int32_t  src_stride;
     int32_t  dst_stride;
@@ -6423,7 +6426,8 @@ EbErrorType inter_pu_prediction_av1(uint8_t hbd_mode_decision, ModeDecisionConte
                                  &candidate_ptr->wm_params_l1,
                                  bit_depth,
                                  md_context_ptr->chroma_level <= CHROMA_MODE_1 &&
-                                 md_context_ptr->md_staging_skip_inter_chroma_pred == EB_FALSE);
+                                 md_context_ptr->md_staging_skip_inter_chroma_pred == EB_FALSE,
+                                 EB_FALSE);
 
         return return_error;
     }
