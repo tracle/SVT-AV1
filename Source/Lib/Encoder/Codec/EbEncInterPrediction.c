@@ -3765,6 +3765,7 @@ EbErrorType warped_motion_prediction_16bit_pipeline(
 
     uint8_t *src_ptr_l0, *src_ptr_l1;
     uint8_t *dst_ptr;
+#if WARP_IMPROVEMENT
     if (mv_unit->pred_direction == UNI_PRED_LIST_0 || mv_unit->pred_direction == BI_PRED) {
         // Y
         src_ptr_l0 = ref_pic_list0->buffer_y +
@@ -3788,6 +3789,22 @@ EbErrorType warped_motion_prediction_16bit_pipeline(
         buf_width = ref_pic_list1->width;
         buf_height = ref_pic_list1->height;
     }
+#else
+    assert(ref_pic_list0 != NULL);
+
+    // Y
+    src_ptr_l0 = ref_pic_list0->buffer_y +
+        (is16bit ? 2 : 1) *
+        (ref_pic_list0->origin_x + ref_pic_list0->origin_y * ref_pic_list0->stride_y);
+    src_ptr_l1 = is_compound
+        ? ref_pic_list1->buffer_y +
+        (is16bit ? 2 : 1) * (ref_pic_list1->origin_x +
+            ref_pic_list1->origin_y * ref_pic_list1->stride_y)
+        : NULL;
+    src_stride = ref_pic_list0->stride_y;
+    buf_width = ref_pic_list0->width;
+    buf_height = ref_pic_list0->height;
+#endif
     dst_ptr =
         prediction_ptr->buffer_y +
         (is16bit ? 2 : 1) * (prediction_ptr->origin_x + dst_origin_x +
@@ -3825,26 +3842,36 @@ EbErrorType warped_motion_prediction_16bit_pipeline(
     if (perform_chroma) {
         if (blk_geom->bwidth >= 16 && blk_geom->bheight >= 16) {
             // Cb
+#if WARP_IMPROVEMENT
             if (mv_unit->pred_direction == UNI_PRED_LIST_0 || mv_unit->pred_direction == BI_PRED) {
-                src_ptr_l0 =
-                    ref_pic_list0->buffer_cb +
-                    (is16bit ? 2 : 1) * (ref_pic_list0->origin_x / 2 +
-                    (ref_pic_list0->origin_y / 2) * ref_pic_list0->stride_cb);
-                src_ptr_l1 = is_compound ? ref_pic_list1->buffer_cb +
-                    (is16bit ? 2 : 1) * (ref_pic_list1->origin_x / 2 +
-                    (ref_pic_list1->origin_y / 2) *
-                        ref_pic_list1->stride_cb)
+                src_ptr_l0 = ref_pic_list0->buffer_cb + (is16bit ? 2 : 1)
+                    * (ref_pic_list0->origin_x / 2
+                        + (ref_pic_list0->origin_y / 2) * ref_pic_list0->stride_cb);
+                src_ptr_l1 = is_compound ? ref_pic_list1->buffer_cb + (is16bit ? 2 : 1)
+                    * (ref_pic_list1->origin_x / 2
+                        + (ref_pic_list1->origin_y / 2) * ref_pic_list1->stride_cb)
                     : NULL;
                 src_stride = ref_pic_list0->stride_cb;
             }
             else { //UNI_PRED_LIST_1
-                src_ptr_l0 =
-                    ref_pic_list1->buffer_cb +
-                    (is16bit ? 2 : 1) * (ref_pic_list1->origin_x / 2 +
-                    (ref_pic_list1->origin_y / 2) * ref_pic_list1->stride_cb);
+                src_ptr_l0 = ref_pic_list1->buffer_cb + (is16bit ? 2 : 1)
+                    * (ref_pic_list1->origin_x / 2
+                        + (ref_pic_list1->origin_y / 2) * ref_pic_list1->stride_cb);
                 src_ptr_l1 = NULL;
                 src_stride = ref_pic_list1->stride_cb;
             }
+#else
+            src_ptr_l0 =
+                ref_pic_list0->buffer_cb +
+                (is16bit ? 2 : 1) * (ref_pic_list0->origin_x / 2 +
+                (ref_pic_list0->origin_y / 2) * ref_pic_list0->stride_cb);
+            src_ptr_l1 = is_compound ? ref_pic_list1->buffer_cb +
+                (is16bit ? 2 : 1) * (ref_pic_list1->origin_x / 2 +
+                (ref_pic_list1->origin_y / 2) *
+                    ref_pic_list1->stride_cb)
+                : NULL;
+            src_stride = ref_pic_list0->stride_cb;
+#endif
             dst_ptr =
                 prediction_ptr->buffer_cb +
                 (is16bit ? 2 : 1) * ((prediction_ptr->origin_x + ((dst_origin_x >> 3) << 3)) / 2 +
@@ -3878,26 +3905,36 @@ EbErrorType warped_motion_prediction_16bit_pipeline(
                 is16bit);
 
             // Cr
+#if WARP_IMPROVEMENT
             if (mv_unit->pred_direction == UNI_PRED_LIST_0 || mv_unit->pred_direction == BI_PRED) {
-                src_ptr_l0 =
-                    ref_pic_list0->buffer_cr +
-                    (is16bit ? 2 : 1) * (ref_pic_list0->origin_x / 2 +
-                    (ref_pic_list0->origin_y / 2) * ref_pic_list0->stride_cr);
-                src_ptr_l1 = is_compound ? ref_pic_list1->buffer_cr +
-                    (is16bit ? 2 : 1) * (ref_pic_list1->origin_x / 2 +
-                    (ref_pic_list1->origin_y / 2) *
-                        ref_pic_list1->stride_cr)
+                src_ptr_l0 = ref_pic_list0->buffer_cr + (is16bit ? 2 : 1)
+                    * (ref_pic_list0->origin_x / 2
+                        + (ref_pic_list0->origin_y / 2) * ref_pic_list0->stride_cr);
+                src_ptr_l1 = is_compound ? ref_pic_list1->buffer_cr + (is16bit ? 2 : 1)
+                    * (ref_pic_list1->origin_x / 2
+                        + (ref_pic_list1->origin_y / 2) * ref_pic_list1->stride_cr)
                     : NULL;
                 src_stride = ref_pic_list0->stride_cr;
             }
             else { //UNI_PRED_LIST_1
-                src_ptr_l0 =
-                    ref_pic_list1->buffer_cr +
-                    (is16bit ? 2 : 1) * (ref_pic_list1->origin_x / 2 +
-                    (ref_pic_list1->origin_y / 2) * ref_pic_list1->stride_cr);
+                src_ptr_l0 = ref_pic_list1->buffer_cr + (is16bit ? 2 : 1)
+                    * (ref_pic_list1->origin_x / 2
+                        + (ref_pic_list1->origin_y / 2) * ref_pic_list1->stride_cr);
                 src_ptr_l1 = NULL;
                 src_stride = ref_pic_list1->stride_cr;
             }
+#else
+            src_ptr_l0 =
+                ref_pic_list0->buffer_cr +
+                (is16bit ? 2 : 1) * (ref_pic_list0->origin_x / 2 +
+                (ref_pic_list0->origin_y / 2) * ref_pic_list0->stride_cr);
+            src_ptr_l1 = is_compound ? ref_pic_list1->buffer_cr +
+                (is16bit ? 2 : 1) * (ref_pic_list1->origin_x / 2 +
+                (ref_pic_list1->origin_y / 2) *
+                    ref_pic_list1->stride_cr)
+                : NULL;
+            src_stride = ref_pic_list0->stride_cr;
+#endif
             dst_ptr =
                 prediction_ptr->buffer_cr +
                 (is16bit ? 2 : 1) * ((prediction_ptr->origin_x + ((dst_origin_x >> 3) << 3)) / 2 +
@@ -3934,31 +3971,39 @@ EbErrorType warped_motion_prediction_16bit_pipeline(
         else { // Translation prediction when chroma block is smaller than 8x8
 
          // Cb
+#if WARP_IMPROVEMENT
             if (mv_unit->pred_direction == UNI_PRED_LIST_0 || mv_unit->pred_direction == BI_PRED) {
-                src_ptr_l0 =
-                    ref_pic_list0->buffer_cb +
-                    (is16bit ? 2 : 1) * ((ref_pic_list0->origin_x + ((pu_origin_x >> 3) << 3)) / 2 +
-                    (ref_pic_list0->origin_y + ((pu_origin_y >> 3) << 3)) / 2 *
-                        ref_pic_list0->stride_cb);
-                src_ptr_l1 =
-                    is_compound
-                    ? ref_pic_list1->buffer_cb +
-                    (is16bit ? 2 : 1) *
-                    ((ref_pic_list1->origin_x + ((pu_origin_x >> 3) << 3)) / 2 +
-                    (ref_pic_list1->origin_y + ((pu_origin_y >> 3) << 3)) / 2 *
-                        ref_pic_list1->stride_cb)
+                src_ptr_l0 = ref_pic_list0->buffer_cb + (is16bit ? 2 : 1)
+                    * ((ref_pic_list0->origin_x + ((pu_origin_x >> 3) << 3)) / 2
+                        + (ref_pic_list0->origin_y + ((pu_origin_y >> 3) << 3)) / 2 * ref_pic_list0->stride_cb);
+                src_ptr_l1 = is_compound ? ref_pic_list1->buffer_cb + (is16bit ? 2 : 1)
+                    * ((ref_pic_list1->origin_x + ((pu_origin_x >> 3) << 3)) / 2
+                        + (ref_pic_list1->origin_y + ((pu_origin_y >> 3) << 3)) / 2 * ref_pic_list1->stride_cb)
                     : NULL;
                 src_stride = ref_pic_list0->stride_cb;
             }
             else { //UNI_PRED_LIST_1
-                src_ptr_l0 =
-                    ref_pic_list1->buffer_cb +
-                    (is16bit ? 2 : 1) * ((ref_pic_list1->origin_x + ((pu_origin_x >> 3) << 3)) / 2 +
-                    (ref_pic_list1->origin_y + ((pu_origin_y >> 3) << 3)) / 2 *
-                        ref_pic_list1->stride_cb);
+                src_ptr_l0 = ref_pic_list1->buffer_cb + (is16bit ? 2 : 1)
+                    * ((ref_pic_list1->origin_x + ((pu_origin_x >> 3) << 3)) / 2
+                        + (ref_pic_list1->origin_y + ((pu_origin_y >> 3) << 3)) / 2 * ref_pic_list1->stride_cb);
                 src_ptr_l1 = NULL;
                 src_stride = ref_pic_list1->stride_cb;
             }
+#else
+            src_ptr_l0 =
+                ref_pic_list0->buffer_cb +
+                (is16bit ? 2 : 1) * ((ref_pic_list0->origin_x + ((pu_origin_x >> 3) << 3)) / 2 +
+                (ref_pic_list0->origin_y + ((pu_origin_y >> 3) << 3)) / 2 *
+                    ref_pic_list0->stride_cb);
+            src_ptr_l1 = is_compound
+                ? ref_pic_list1->buffer_cb +
+                (is16bit ? 2 : 1) *
+                ((ref_pic_list1->origin_x + ((pu_origin_x >> 3) << 3)) / 2 +
+                (ref_pic_list1->origin_y + ((pu_origin_y >> 3) << 3)) / 2 *
+                    ref_pic_list1->stride_cb)
+                : NULL;
+            src_stride = ref_pic_list0->stride_cb;
+#endif
             dst_ptr =
                 prediction_ptr->buffer_cb +
                 (is16bit ? 2 : 1) * ((prediction_ptr->origin_x + ((dst_origin_x >> 3) << 3)) / 2 +
@@ -3983,31 +4028,39 @@ EbErrorType warped_motion_prediction_16bit_pipeline(
                 mv_unit,
                 is16bit);
             // Cr
+#if WARP_IMPROVEMENT
             if (mv_unit->pred_direction == UNI_PRED_LIST_0 || mv_unit->pred_direction == BI_PRED) {
-                src_ptr_l0 =
-                    ref_pic_list0->buffer_cr +
-                    (is16bit ? 2 : 1) * ((ref_pic_list0->origin_x + ((pu_origin_x >> 3) << 3)) / 2 +
-                    (ref_pic_list0->origin_y + ((pu_origin_y >> 3) << 3)) / 2 *
-                        ref_pic_list0->stride_cr);
-                src_ptr_l1 =
-                    is_compound
-                    ? ref_pic_list1->buffer_cr +
-                    (is16bit ? 2 : 1) *
-                    ((ref_pic_list1->origin_x + ((pu_origin_x >> 3) << 3)) / 2 +
-                    (ref_pic_list1->origin_y + ((pu_origin_y >> 3) << 3)) / 2 *
-                        ref_pic_list1->stride_cr)
+                src_ptr_l0 = ref_pic_list0->buffer_cr + (is16bit ? 2 : 1)
+                    * ((ref_pic_list0->origin_x + ((pu_origin_x >> 3) << 3)) / 2
+                        + (ref_pic_list0->origin_y + ((pu_origin_y >> 3) << 3)) / 2 * ref_pic_list0->stride_cr);
+                src_ptr_l1 = is_compound ? ref_pic_list1->buffer_cr + (is16bit ? 2 : 1)
+                    * ((ref_pic_list1->origin_x + ((pu_origin_x >> 3) << 3)) / 2
+                        + (ref_pic_list1->origin_y + ((pu_origin_y >> 3) << 3)) / 2 * ref_pic_list1->stride_cr)
                     : NULL;
                 src_stride = ref_pic_list0->stride_cr;
             }
             else { //UNI_PRED_LIST_1
-                src_ptr_l0 =
-                    ref_pic_list1->buffer_cr +
-                    (is16bit ? 2 : 1) * ((ref_pic_list1->origin_x + ((pu_origin_x >> 3) << 3)) / 2 +
-                    (ref_pic_list1->origin_y + ((pu_origin_y >> 3) << 3)) / 2 *
-                        ref_pic_list1->stride_cr);
+                src_ptr_l0 = ref_pic_list1->buffer_cr + (is16bit ? 2 : 1)
+                    * ((ref_pic_list1->origin_x + ((pu_origin_x >> 3) << 3)) / 2
+                        + (ref_pic_list1->origin_y + ((pu_origin_y >> 3) << 3)) / 2 * ref_pic_list1->stride_cr);
                 src_ptr_l1 = NULL;
                 src_stride = ref_pic_list1->stride_cr;
             }
+#else
+            src_ptr_l0 =
+                ref_pic_list0->buffer_cr +
+                (is16bit ? 2 : 1) * ((ref_pic_list0->origin_x + ((pu_origin_x >> 3) << 3)) / 2 +
+                (ref_pic_list0->origin_y + ((pu_origin_y >> 3) << 3)) / 2 *
+                    ref_pic_list0->stride_cr);
+            src_ptr_l1 = is_compound
+                ? ref_pic_list1->buffer_cr +
+                (is16bit ? 2 : 1) *
+                ((ref_pic_list1->origin_x + ((pu_origin_x >> 3) << 3)) / 2 +
+                (ref_pic_list1->origin_y + ((pu_origin_y >> 3) << 3)) / 2 *
+                    ref_pic_list1->stride_cr)
+                : NULL;
+            src_stride = ref_pic_list0->stride_cr;
+#endif
             dst_ptr =
                 prediction_ptr->buffer_cr +
                 (is16bit ? 2 : 1) * ((prediction_ptr->origin_x + ((dst_origin_x >> 3) << 3)) / 2 +
