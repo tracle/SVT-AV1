@@ -2627,6 +2627,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
 #endif
         }
 
+#if !MAR9_M8_ADOPTIONS
         if (pcs_ptr->enc_mode >= ENC_M8)
             context_ptr->md_stage_2_count[CAND_CLASS_0] =
                 (pcs_ptr->slice_type == I_SLICE)
@@ -2731,7 +2732,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                         context_ptr->md_stage_1_count[CAND_CLASS_3];
             }
         }
-
+#endif
         // Set md_stage_3 NICs
 
         context_ptr->md_stage_3_count[CAND_CLASS_0] =
