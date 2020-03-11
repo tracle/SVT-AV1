@@ -64,6 +64,7 @@ extern "C" {
 #define MAR5_ADOPTIONS              1
 #define MAR6_M0_ADOPTIONS           1
 #define MAR9_M8_ADOPTIONS           1
+#define MAR10_ADOPTIONS             1
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

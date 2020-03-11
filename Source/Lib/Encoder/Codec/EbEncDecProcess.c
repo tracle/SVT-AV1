@@ -1402,7 +1402,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (context_ptr->tx_search_level == TX_SEARCH_ENC_DEC)
         context_ptr->tx_search_reduced_set = 0;
 #if MAR4_M6_ADOPTIONS
+#if MAR10_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M8)
+#else
     else if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
 #else
     else if (pcs_ptr->enc_mode <= ENC_M3)
 #endif
@@ -1458,7 +1462,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         DEFAULT) {
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #if MAR2_M7_ADOPTIONS
+#if MAR10_ADOPTIONS
+            if (pcs_ptr->enc_mode <= ENC_M8)
+#else
             if (pcs_ptr->enc_mode <= ENC_M7)
+#endif
 #else
             if (pcs_ptr->enc_mode <= ENC_M6)
 #endif
@@ -1522,7 +1530,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             else
                 context_ptr->full_loop_escape = 2;
 #if MAR2_M7_ADOPTIONS
+#if MAR10_ADOPTIONS
+        else if (pcs_ptr->enc_mode <= ENC_M8)
+#else
         else if (pcs_ptr->enc_mode <= ENC_M7)
+#endif
 #else
         else if (pcs_ptr->enc_mode <= ENC_M5)
 #endif
@@ -1543,7 +1555,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
 #if MAR4_M6_ADOPTIONS
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if MAR10_ADOPTIONS
+                if (pcs_ptr->enc_mode <= ENC_M2)
+#else
                 if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
                     context_ptr->global_mv_injection = 1;
                 else
                     context_ptr->global_mv_injection = 0;
