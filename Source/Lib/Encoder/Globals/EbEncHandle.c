@@ -1966,7 +1966,11 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
 
     //0: NSQ absent
     //1: NSQ present
+#if MAR10_ADOPTIONS
+    scs_ptr->nsq_present = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M8) ? 1 : 0;
+#else
     scs_ptr->nsq_present = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M5) ? 1 : 0;
+#endif
 
     // Set down-sampling method     Settings
     // 0                            0: filtering
