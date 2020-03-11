@@ -1207,7 +1207,7 @@ EbErrorType get_single_prediction_for_obmc_chroma_hbd(
                                                                    subpel_x,
                                                                    subpel_y,
                                                                    &conv_params,
-                                                                   10);
+                                                                   bit_depth);
 
             //List0-Cr
             src_ptr = (uint16_t *)ref_pic_list0->buffer_cr +
@@ -1226,7 +1226,7 @@ EbErrorType get_single_prediction_for_obmc_chroma_hbd(
             subpel_y = mv_q4.row & SUBPEL_MASK;
             src_ptr =
                     src_ptr + (mv_q4.row >> SUBPEL_BITS) * src_stride + (mv_q4.col >> SUBPEL_BITS);
-            conv_params = get_conv_params_no_round(0, 0, 0, tmp_dstCr, 64, is_compound, EB_10BIT);
+            conv_params = get_conv_params_no_round(0, 0, 0, tmp_dstCr, 64, is_compound, bit_depth);
             av1_get_convolve_filter_params(
                     interp_filters, &filter_params_x, &filter_params_y, bwidth, bheight);
 
@@ -1241,7 +1241,7 @@ EbErrorType get_single_prediction_for_obmc_chroma_hbd(
                                                                    subpel_x,
                                                                    subpel_y,
                                                                    &conv_params,
-                                                                   10);
+                                                                   bit_depth);
         }
     }
 

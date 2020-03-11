@@ -2510,7 +2510,7 @@ void encode_pass_tx_search_hbd(
             NOT_USED_VALUE,
             context_ptr->blk_geom->txsize[blk_ptr->tx_depth][context_ptr->txb_itr],
             &context_ptr->three_quad_energy,
-            BIT_INCREMENT_10BIT,
+            (context_ptr->bit_depth == EB_10BIT) ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
             tx_type,
             PLANE_TYPE_Y,
             DEFAULT_SHAPE);
@@ -2534,7 +2534,7 @@ void encode_pass_tx_search_hbd(
             &eob[0],
             &y_count_non_zero_coeffs_temp,
             COMPONENT_LUMA,
-            BIT_INCREMENT_10BIT,
+            (context_ptr->bit_depth == EB_10BIT) ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
             tx_type,
             &(context_ptr->md_context->candidate_buffer_ptr_array[0][0]),
             0,
