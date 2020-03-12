@@ -46,7 +46,7 @@ void dec_loop_filter_row(EbDecHandle *dec_handle_ptr,
 void save_deblock_boundary_lines(uint8_t *src_buf, int32_t src_stride, int32_t src_width,
                                  int32_t src_height, const Av1Common *cm, int32_t plane,
                                  int32_t row, int32_t stripe, int32_t use_highbd, int32_t is_above,
-                                 RestorationStripeBoundaries *boundaries);
+                                 RestorationStripeBoundaries *boundaries, EbBool use_16bit_pipeline);
 void save_cdef_boundary_lines(uint8_t *src_buf, int32_t src_stride, int32_t src_width,
                               const Av1Common *cm, int32_t plane, int32_t row, int32_t stripe,
                               int32_t use_highbd, int32_t is_above,
@@ -391,8 +391,8 @@ EbErrorType dec_system_resource_init(EbDecHandle *dec_handle_ptr, TilesInfo *til
                 thread_ctxt_pa[i].dec_mod_ctxt = dec_mod_ctxt_arr[i];
                 EB_CREATE_SEMAPHORE(thread_ctxt_pa[i].thread_semaphore,
                     0, 100000);
-                int use_highbd =
-                    (dec_handle_ptr->seq_header.color_config.bit_depth > 8);
+                int use_highbd = (dec_handle_ptr->seq_header.color_config.bit_depth > EB_8BIT ||
+                    dec_handle_ptr->decoder_16bit_pipeline);
                 EB_MALLOC_DEC(uint8_t *,
                               thread_ctxt_pa[i].dst,
                               (MAX_SB_SIZE + 8) * RESTORATION_PROC_UNIT_SIZE *
@@ -645,7 +645,8 @@ static INLINE void dec_save_lf_boundary_lines_sb_row(EbDecHandle *  dec_handle,
     FrameSize *frame_size = &dec_handle->frame_header.frame_size;
     EbBool     sb_128     = dec_handle->seq_header.sb_size == BLOCK_128X128;
     int32_t    num64s     = sb_128 ? 1 : 0;
-    const int  use_highbd = (dec_handle->seq_header.color_config.bit_depth > 8);
+    const int use_highbd = (dec_handle->seq_header.color_config.bit_depth > EB_8BIT ||
+        dec_handle->decoder_16bit_pipeline);
     LrCtxt *   lr_ctxt    = (LrCtxt *)dec_handle->pv_lr_ctxt;
     int32_t frame_stripe /* 64 strip */, plane_height;
     for (int32_t p = 0; p < num_planes; ++p) {
@@ -688,7 +689,8 @@ static INLINE void dec_save_lf_boundary_lines_sb_row(EbDecHandle *  dec_handle,
                                             frame_stripe,
                                             use_highbd,
                                             1,
-                                            boundaries);
+                                            boundaries,
+                                            dec_handle->decoder_16bit_pipeline);
             }
             if (use_deblock_below) {
                 save_deblock_boundary_lines(src[p],
@@ -701,7 +703,8 @@ static INLINE void dec_save_lf_boundary_lines_sb_row(EbDecHandle *  dec_handle,
                                             frame_stripe,
                                             use_highbd,
                                             0,
-                                            boundaries);
+                                            boundaries,
+                                            dec_handle->decoder_16bit_pipeline);
             }
         }
     }
@@ -714,8 +717,8 @@ static INLINE void dec_save_CDEF_boundary_lines_SB_row(
 {
     Av1Common *     cm         = &dec_handle->cm;
     FrameSize *     frame_size = &dec_handle->frame_header.frame_size;
-    const int       use_highbd =
-        (dec_handle->seq_header.color_config.bit_depth > 8);
+    const int use_highbd = (dec_handle->seq_header.color_config.bit_depth > EB_8BIT ||
+        dec_handle->decoder_16bit_pipeline);
     LrCtxt *        lr_ctxt    = (LrCtxt *)dec_handle->pv_lr_ctxt;
     int32_t         frame_stripe /* 64 strip */;
     DecMtFrameData *dec_mt_frame_data =

@@ -148,6 +148,7 @@ void decode_block(DecModCtxt *dec_mod_ctxt, BlockModeInfo *mode_info, int32_t mi
 
     bool inter_block = is_inter_block(mode_info);
 
+    EbBool is16b = dec_handle->decoder_16bit_pipeline;
 #if MODE_INFO_DBG
     assert(mode_info->mi_row == mi_row);
     assert(mode_info->mi_col == mi_col);

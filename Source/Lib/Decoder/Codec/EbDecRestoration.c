@@ -27,7 +27,7 @@
 void save_tile_row_boundary_lines(uint8_t *src, int32_t src_stride, int32_t src_width,
                                   int32_t src_height, int32_t use_highbd, int32_t plane,
                                   Av1Common *cm, int32_t after_cdef,
-                                  RestorationStripeBoundaries *boundaries);
+                                  RestorationStripeBoundaries *boundaries, EbBool use_16bit_pipeline);
 
 void lr_generate_padding(
     EbByte   src_pic, //output paramter, pointer to the source picture(0,0).
@@ -277,7 +277,8 @@ void dec_av1_loop_restoration_filter_row(EbDecHandle *dec_handle, int32_t sb_row
     const int32_t num_planes = av1_num_planes(&dec_handle->seq_header.
         color_config);
     int bit_depth = dec_handle->seq_header.color_config.bit_depth;
-    int use_highbd = bit_depth > 8;
+    int use_highbd = (bit_depth > EB_8BIT ||
+        dec_handle->decoder_16bit_pipeline);
     int w_y = 0, tile_stripe0 = 0;
     int tile_w_y = tile_rect[AOM_PLANE_Y].right - tile_rect[AOM_PLANE_Y].left;
     int tile_h_y = tile_rect[AOM_PLANE_Y].bottom - tile_rect[AOM_PLANE_Y].top;
@@ -510,7 +511,8 @@ void dec_av1_loop_restoration_filter_frame(EbDecHandle *dec_handle, int optimize
 void dec_av1_loop_restoration_save_boundary_lines(EbDecHandle *dec_handle,
                                                   int after_cdef) {
     const int num_planes = av1_num_planes(&dec_handle->seq_header.color_config);
-    const int use_highbd = (dec_handle->seq_header.color_config.bit_depth > 8);
+    const int use_highbd = (dec_handle->seq_header.color_config.bit_depth > EB_8BIT ||
+        dec_handle->decoder_16bit_pipeline);
 
     for (int p = 0; p < num_planes; ++p) {
         LrCtxt *   lr_ctxt    = (LrCtxt *)dec_handle->pv_lr_ctxt;
@@ -539,6 +541,7 @@ void dec_av1_loop_restoration_save_boundary_lines(EbDecHandle *dec_handle,
                                      p,
                                      &dec_handle->cm,
                                      after_cdef,
-                                     boundaries);
+                                     boundaries,
+                                     dec_handle->decoder_16bit_pipeline);
     }
 }

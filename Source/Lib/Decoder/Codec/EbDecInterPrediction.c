@@ -713,6 +713,8 @@ void av1_build_intra_predictors_for_interintra(DecModCtxt *dec_mod_ctxt, Partiti
                                                void *pv_blk_recon_buf, int32_t recon_stride,
                                                BlockSize bsize, int32_t plane, uint8_t *dst,
                                                int dst_stride, EbBitDepthEnum bit_depth) {
+    EbDecHandle *dec_handle = (EbDecHandle *)dec_mod_ctxt->dec_handle_ptr;
+    EbBool is16b = dec_handle->decoder_16bit_pipeline;
     BlockModeInfo *mi          = part_info->mi;
     int32_t        sub_x       = (plane > 0) ? part_info->subsampling_x : 0;
     int32_t        sub_y       = (plane > 0) ? part_info->subsampling_y : 0;
@@ -726,7 +728,7 @@ void av1_build_intra_predictors_for_interintra(DecModCtxt *dec_mod_ctxt, Partiti
 
     void *pv_top_neighbor_array, *pv_left_neighbor_array;
 
-    if (bit_depth == EB_8BIT) {
+    if (bit_depth == EB_8BIT && !is16b) {
         EbByte buf = (EbByte)pv_blk_recon_buf;
 
         pv_top_neighbor_array  = (void *)(buf - recon_stride);
@@ -808,7 +810,8 @@ void svtav1_predict_inter_block_plane(DecModCtxt *dec_mod_ctx, EbDecHandle *dec_
     //temporary buffer for joint compound, move this to context if stack does not hold.
     DECLARE_ALIGNED(32, uint16_t, tmp_dst[128 * 128]);
 
-    int32_t highbd = bit_depth > EB_8BIT;
+    EbBool is16b = dec_hdl->decoder_16bit_pipeline;
+    int32_t highbd = bit_depth > EB_8BIT || is16b;
 
     const BlockSize bsize     = mi->sb_type;
     const int32_t   ss_x      = plane ? part_info->subsampling_x : 0;
@@ -1004,7 +1007,7 @@ void svtav1_predict_inter_block(DecModCtxt *dec_mod_ctxt, EbDecHandle *dec_hdl,
                                             recon_stride,
                                             plane,
                                             bsize,
-                                            recon_picture_buf->bit_depth);
+                                            dec_hdl->decoder_16bit_pipeline);
         }
     }
     if (part_info->mi->motion_mode == OBMC_CAUSAL) {

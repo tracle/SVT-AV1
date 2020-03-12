@@ -797,10 +797,12 @@ void svt_av1_predict_intra(DecModCtxt *dec_mod_ctxt, PartitionInfo *part_info, i
                            int32_t blk_mi_row_off) {
     void *pv_top_neighbor_array, *pv_left_neighbor_array;
 
+    EbDecHandle *dec_handle = (EbDecHandle *)dec_mod_ctxt->dec_handle_ptr;
+    EbBool is16b = dec_handle->decoder_16bit_pipeline;
     const PredictionMode mode =
         (plane == AOM_PLANE_Y) ? part_info->mi->mode : get_uv_mode(part_info->mi->uv_mode);
 
-    if (bit_depth == EB_8BIT) {
+    if (bit_depth == EB_8BIT && !is16b) {
         EbByte buf             = (EbByte)pv_blk_recon_buf;
         pv_top_neighbor_array  = (void *)(buf - recon_stride);
         pv_left_neighbor_array = (void *)(buf - 1);

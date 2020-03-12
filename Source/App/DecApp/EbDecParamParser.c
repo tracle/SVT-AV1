@@ -30,6 +30,14 @@ static void set_limit_frame(const char *value, EbSvtAv1DecConfiguration *cfg) {
 static void set_bit_depth(const char *value, EbSvtAv1DecConfiguration *cfg) {
     cfg->max_bit_depth = strtoul(value, NULL, 0);
 };
+static void set_decoder_16bit_pipeline(const char *value, EbSvtAv1DecConfiguration *cfg) {
+    cfg->decoder_16bit_pipeline = (EbBool)strtoul(value, NULL, 0);
+    if (cfg->decoder_16bit_pipeline != 1 && cfg->decoder_16bit_pipeline != 0) {
+        fprintf(stderr,
+            "Warning : Invalid value for decoder_16bit_pipeline, setting value to 0. \n");
+        cfg->decoder_16bit_pipeline = 0;
+    }
+};
 static void set_pic_width(const char *value, EbSvtAv1DecConfiguration *cfg) {
     cfg->max_picture_width = strtoul(value, NULL, 0);
 };

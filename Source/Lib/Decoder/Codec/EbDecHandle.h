@@ -253,6 +253,8 @@ typedef struct EbDecHandle {
     EbBool                start_thread_process;
     EbHandle              thread_semaphore;
     struct DecThreadCtxt *thread_ctxt_pa;
+    /* Decoder internal bit-depth is set to 16b even if the bitstream is 8b */
+    EbBool decoder_16bit_pipeline;
 } EbDecHandle;
 
 /* Thread level context data */
