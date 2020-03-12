@@ -1833,9 +1833,9 @@ void save_tile_row_boundary_lines(uint8_t *src, int32_t src_stride, int32_t src_
 // lines to be used as boundary in the loop restoration process. The
 // lines are saved in rst_internal.stripe_boundary_lines
 void eb_av1_loop_restoration_save_boundary_lines(const Yv12BufferConfig *frame, Av1Common *cm,
-                                                 int32_t after_cdef) {
+                                                 int32_t after_cdef, EbBool is_16bit_pipeline) {
     const int32_t num_planes = 3; // av1_num_planes(cm);
-    const int32_t use_highbd = cm->use_highbitdepth;
+    const int32_t use_highbd = cm->use_highbitdepth || is_16bit_pipeline;
 
     for (int32_t p = 0; p < num_planes; ++p) {
         const int32_t                is_uv       = p > 0;
@@ -1853,7 +1853,8 @@ void eb_av1_loop_restoration_save_boundary_lines(const Yv12BufferConfig *frame, 
                                      p,
                                      cm,
                                      after_cdef,
-                                     boundaries, 0);//TTK
+                                     boundaries,
+                                     is_16bit_pipeline);
     }
 }
 

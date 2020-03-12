@@ -449,7 +449,7 @@ void eb_av1_superres_upscale_frame(struct Av1Common *cm,
 
         av1_upscale_normative_rows(cm, (const uint8_t *) src_buf, src_stride, dst_buf,
                                    dst_stride, src->height >> sub_x,
-                                   sub_x, src->bit_depth,0);// TTK
+                                   sub_x, src->bit_depth,dst->use_16bit_pipeline);
     }
 
     // free the memory

@@ -26,7 +26,7 @@
 #include "aom_dsp_rtcd.h"
 
 void eb_av1_loop_restoration_save_boundary_lines(const Yv12BufferConfig *frame, Av1Common *cm,
-                                                 int32_t after_cdef);
+                                                 int32_t after_cdef, EbBool is_16bit_pipeline);
 
 static void dlf_context_dctor(EbPtr p) {
     EbThreadContext *thread_context_ptr = (EbThreadContext *)p;
@@ -268,7 +268,7 @@ void *dlf_kernel(void *input_ptr) {
             }
             link_eb_to_aom_buffer_desc(recon_picture_ptr, cm->frame_to_show, is_16bit || scs_ptr->static_config.encoder_16bit_pipeline);
             if (scs_ptr->seq_header.enable_restoration)
-                eb_av1_loop_restoration_save_boundary_lines(cm->frame_to_show, cm, 0);
+                eb_av1_loop_restoration_save_boundary_lines(cm->frame_to_show, cm, 0, scs_ptr->static_config.encoder_16bit_pipeline);
             if (scs_ptr->seq_header.enable_cdef && pcs_ptr->parent_pcs_ptr->cdef_filter_mode) {
                 if (scs_ptr->static_config.encoder_16bit_pipeline || is_16bit) {
                     pcs_ptr->src[0] = (uint16_t *)recon_picture_ptr->buffer_y +
