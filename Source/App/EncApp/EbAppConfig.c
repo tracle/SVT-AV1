@@ -576,10 +576,10 @@ static void set_enable_hbd_mode_decision(const char *value, EbConfig *cfg) {
     cfg->enable_hbd_mode_decision = (uint8_t)strtoul(value, NULL, 0);
 };
 static void set_enable_palette(const char *value, EbConfig *cfg) {
-    cfg->enable_palette = (int32_t)strtoul(value, NULL, 0);
+    cfg->enable_palette = (int32_t)strtol(value, NULL, 0);
 };
 static void set_enable_olpd_refinement(const char *value, EbConfig *cfg) {
-    cfg->olpd_refinement = (int32_t)strtoul(value, NULL, 0);
+    cfg->olpd_refinement = (int32_t)strtol(value, NULL, 0);
 };
 static void set_high_dynamic_range_input(const char *value, EbConfig *cfg) {
     cfg->high_dynamic_range_input = strtol(value, NULL, 0);
@@ -938,7 +938,7 @@ ConfigEntry config_entry_specific[] = {
     {SINGLE_INPUT, CHROMA_MODE_TOKEN, "Select chroma mode([0-3], -1: DEFAULT)", set_chroma_mode},
     {SINGLE_INPUT,
      DISABLE_CFL_NEW_TOKEN,
-     "Set chroma from luma (CFL) flag (0: OFF, 1: ON, -1: DEFAULT)",
+     "Disable chroma from luma (CFL) flag (0: OFF (do not disable), 1: ON (disable), -1: DEFAULT)",
      set_disable_cfl_flag},
 
     // LOCAL WARPED MOTION
@@ -962,6 +962,11 @@ ConfigEntry config_entry_specific[] = {
      EDGE_SKIP_ANGLE_INTRA_NEW_TOKEN,
      "Enable intra edge filtering (0: OFF, 1: ON (default))",
      set_edge_skip_angle_intra_flag},
+    // INTRA ANGLE DELTA
+    {SINGLE_INPUT,
+        INTRA_ANGLE_DELTA_TOKEN,
+        "Enable intra angle delta filtering filtering (0: OFF, 1: ON, -1: DEFAULT)",
+        set_intra_angle_delta_flag},
     // INTER INTRA COMPOUND
     {SINGLE_INPUT,
      INTER_INTRA_COMPOUND_NEW_TOKEN,
@@ -1195,9 +1200,9 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, OUTPUT_RECON_TOKEN, "ReconFile", set_cfg_recon_file},
     {SINGLE_INPUT, QP_FILE_TOKEN, "QpFile", set_cfg_qp_file},
     {SINGLE_INPUT, STAT_FILE_TOKEN, "StatFile", set_cfg_stat_file},
-    {SINGLE_INPUT, INPUT_STAT_FILE_TOKEN, "input_stat_file", set_input_stat_file},
-    {SINGLE_INPUT, OUTPUT_STAT_FILE_TOKEN, "output_stat_file", set_output_stat_file},
-    {SINGLE_INPUT, INPUT_PREDSTRUCT_FILE_TOKEN, "pred_struct_file", set_pred_struct_file},
+    {SINGLE_INPUT, INPUT_STAT_FILE_TOKEN, "InputStatFile", set_input_stat_file},
+    {SINGLE_INPUT, OUTPUT_STAT_FILE_TOKEN, "OutputStatFile", set_output_stat_file},
+    {SINGLE_INPUT, INPUT_PREDSTRUCT_FILE_TOKEN, "PredStructFile", set_pred_struct_file},
     // Picture Dimensions
     {SINGLE_INPUT, WIDTH_TOKEN, "SourceWidth", set_cfg_source_width},
     {SINGLE_INPUT, HEIGHT_TOKEN, "SourceHeight", set_cfg_source_height},

@@ -2817,8 +2817,8 @@ static EbErrorType verify_settings(
     }
 
     // mdc refinement
-    if (config->olpd_refinement < (int32_t)(-1) || config->olpd_refinement > 1) {
-        SVT_LOG("Error instance %u: Invalid OLPD Refinement Mode [0 .. 1], your input: %i\n", channel_number + 1, config->olpd_refinement);
+    if (config->olpd_refinement < -1 || config->olpd_refinement > 1) {
+        SVT_LOG("Error instance %u: Invalid OLPD Refinement Mode [0/1, -1 for auto], your input: %i\n", channel_number + 1, config->olpd_refinement);
         return_error = EB_ErrorBadParameter;
     }
     else if (config->olpd_refinement == 1 && config->enc_mode >= ENC_M1) {
