@@ -62,7 +62,7 @@ extern "C" {
 #define MOVE_OPT                 1 // Semi-lossless: Move the intra search to just before last md_stage
 #define COMP_OPT                 1 // Speed optimisation by restricting the search only when at least 1 intra candidate survives to the last md_stage
 #endif
-#define SHUT_FILTERING  0
+
 #define NICS_CLEANUP        1
 #define COMP_SIMILAR        1 //use previously coded similar blocks to prune compound modes
 #define INTRA_SIMILAR       1 //If previous similar block is intra, do not inject any inter
