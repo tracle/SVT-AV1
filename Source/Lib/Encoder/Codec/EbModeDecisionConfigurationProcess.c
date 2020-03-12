@@ -1110,7 +1110,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     // Warped
     EbBool enable_wm;
 #if MAR2_M7_ADOPTIONS
-#if M5_ON_M6
+#if M5_ON_M6 && !UNDO_M5_ON_M6
     enable_wm = (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M3 ||
         (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M6 &&
             pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0) ||

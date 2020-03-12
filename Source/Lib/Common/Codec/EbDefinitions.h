@@ -77,6 +77,7 @@ extern "C" {
 #define RATE_MEM_OPT                      1 //lossless memory optimization of rate estimation
 
 #define M5_ON_M6                          1 // apply some M5 settings on M6
+#define UNDO_M5_ON_M6                     1 // undo applying certain M5 settings to M6 to identify cause of unit test failure
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

@@ -1424,7 +1424,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
         context_ptr->interpolation_search_level = IT_SEARCH_OFF;
 #if MAR4_M6_ADOPTIONS
-#if M5_ON_M6
+#if M5_ON_M6 && !UNDO_M5_ON_M6
     else if (pcs_ptr->enc_mode <= ENC_M6)
 #else
     else if (pcs_ptr->enc_mode <= ENC_M5)
@@ -1514,7 +1514,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
 
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
-#if M5_ON_M6
+#if M5_ON_M6 && !UNDO_M5_ON_M6
             if (pcs_ptr->enc_mode <= ENC_M6)
 #else
             if (pcs_ptr->enc_mode <= ENC_M5)
@@ -1817,7 +1817,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     }
     else
 #if MAR4_M6_ADOPTIONS
-#if M5_ON_M6
+#if M5_ON_M6 && !UNDO_M5_ON_M6
         if (pcs_ptr->enc_mode <= ENC_M6)
 #else
         if (pcs_ptr->enc_mode <= ENC_M5)

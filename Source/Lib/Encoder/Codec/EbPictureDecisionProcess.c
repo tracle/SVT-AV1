@@ -1103,7 +1103,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         else
             cm->wn_filter_mode = 0;
     else
-#if M5_ON_M6
+#if M5_ON_M6 && !UNDO_M5_ON_M6
         if (pcs_ptr->enc_mode <= ENC_M6)
 #else
         if (pcs_ptr->enc_mode <= ENC_M5)

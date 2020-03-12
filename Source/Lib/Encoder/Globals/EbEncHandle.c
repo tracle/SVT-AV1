@@ -1993,7 +1993,7 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
     // 0                            0: not allowed
     // 1                            1: allowed
     if (scs_ptr->static_config.over_bndry_blk == DEFAULT)
-#if M5_ON_M6
+#if M5_ON_M6 && !UNDO_M5_ON_M6
         if (scs_ptr->static_config.enc_mode <= ENC_M6)
 #else
         if (scs_ptr->static_config.enc_mode <= ENC_M5)
