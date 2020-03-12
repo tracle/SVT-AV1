@@ -1103,7 +1103,11 @@ EbErrorType signal_derivation_multi_processes_oq(
         else
             cm->wn_filter_mode = 0;
     else
+#if M5_ON_M6
+        if (pcs_ptr->enc_mode <= ENC_M6)
+#else
         if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
             cm->wn_filter_mode = 3;
         else if (pcs_ptr->enc_mode <= ENC_M7)
             cm->wn_filter_mode = 2;
@@ -1251,7 +1255,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 
     if (scs_ptr->static_config.prune_unipred_me == DEFAULT)
 #if MAR4_M6_ADOPTIONS
+#if M5_ON_M6
+        if (pcs_ptr->enc_mode <= ENC_M6)
+#else
         if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
             pcs_ptr->prune_unipred_at_me = 1;
         else
             pcs_ptr->prune_unipred_at_me = 0;

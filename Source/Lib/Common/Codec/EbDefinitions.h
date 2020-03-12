@@ -76,7 +76,7 @@ extern "C" {
 #define HME_PRUNE_BUG_FIX                 1
 #define RATE_MEM_OPT                      1 //lossless memory optimization of rate estimation
 
-
+#define M5_ON_M6                          1 // apply some M5 settings on M6
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

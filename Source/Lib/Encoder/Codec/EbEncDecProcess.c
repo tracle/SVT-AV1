@@ -1375,7 +1375,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->tx_search_reduced_set = 0;
     else if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if M5_ON_M6
+        if (pcs_ptr->enc_mode <= ENC_M6)
+#else
         if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
             context_ptr->tx_search_reduced_set = 0;
         else if (pcs_ptr->enc_mode <= ENC_M6)
             if (context_ptr->tx_search_level == TX_SEARCH_ENC_DEC)
@@ -1394,7 +1398,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (context_ptr->tx_search_level == TX_SEARCH_ENC_DEC)
         context_ptr->tx_search_reduced_set = 0;
 #if MAR4_M6_ADOPTIONS
+#if M5_ON_M6
+    else if (pcs_ptr->enc_mode <= ENC_M6)
+#else
     else if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
 #else
     else if (pcs_ptr->enc_mode <= ENC_M3)
 #endif
@@ -1416,7 +1424,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
         context_ptr->interpolation_search_level = IT_SEARCH_OFF;
 #if MAR4_M6_ADOPTIONS
+#if M5_ON_M6
+    else if (pcs_ptr->enc_mode <= ENC_M6)
+#else
     else if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
 #else
     else if (pcs_ptr->enc_mode <= ENC_M3)
 #endif
@@ -1458,11 +1470,19 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 : CHROMA_MODE_3;
         else if (pcs_ptr->enc_mode <= ENC_M3)
             context_ptr->chroma_level = CHROMA_MODE_0;
+#if M5_ON_M6
+        else if (pcs_ptr->enc_mode <= ENC_M6 &&
+            pcs_ptr->temporal_layer_index == 0)
+            context_ptr->chroma_level = CHROMA_MODE_0;
+        else if (pcs_ptr->enc_mode <= ENC_M6)
+            context_ptr->chroma_level = CHROMA_MODE_1;
+#else
         else if (pcs_ptr->enc_mode <= ENC_M5 &&
             pcs_ptr->temporal_layer_index == 0)
             context_ptr->chroma_level = CHROMA_MODE_0;
         else if (pcs_ptr->enc_mode <= ENC_M5)
             context_ptr->chroma_level = CHROMA_MODE_1;
+#endif
         else
             context_ptr->chroma_level =
             (sequence_control_set_ptr->encoder_bit_depth == EB_8BIT)
@@ -1494,8 +1514,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
 
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
-
+#if M5_ON_M6
+            if (pcs_ptr->enc_mode <= ENC_M6)
+#else
             if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
                 context_ptr->full_loop_escape = 0;
             else
                 context_ptr->full_loop_escape = 2;
@@ -1658,7 +1681,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
                 if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #if MAR4_M6_ADOPTIONS
+#if M5_ON_M6
+                    if (pcs_ptr->enc_mode <= ENC_M6)
+#else
                     if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
 #else
                     if (pcs_ptr->enc_mode <= ENC_M3)
 #endif
@@ -1671,7 +1698,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                     if (pcs_ptr->enc_mode <= ENC_M0)
                         context_ptr->predictive_me_level = 6;
 #if MAR4_M6_ADOPTIONS
+#if M5_ON_M6
+                    else if (pcs_ptr->enc_mode <= ENC_M6)
+#else
                     else if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
 #else
                     else if (pcs_ptr->enc_mode <= ENC_M3)
 #endif
@@ -1786,7 +1817,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     }
     else
 #if MAR4_M6_ADOPTIONS
+#if M5_ON_M6
+        if (pcs_ptr->enc_mode <= ENC_M6)
+#else
         if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
 #else
         if (pcs_ptr->enc_mode <= ENC_M4)
 #endif
