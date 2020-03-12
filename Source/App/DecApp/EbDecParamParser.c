@@ -69,6 +69,7 @@ ConfigEntry config_entry[] = {
     {LIMIT_FRAME_TOKEN, "LimitFrame", 1, set_limit_frame},
     // Picture properties
     {BIT_DEPTH_TOKEN, "InputBitDepth", 1, set_bit_depth},
+    {DECODER_16BIT_PIPELINE, "Decoder16BitPipeline", 1, set_decoder_16bit_pipeline},
     {PIC_WIDTH_TOKEN, "PictureWidth", 1, set_pic_width},
     {PIC_HEIGHT_TOKEN, "PictureHeight", 1, set_pic_height},
     {COLOUR_SPACE_TOKEN, "InputColourSpace", 1, set_colour_space},
@@ -95,6 +96,7 @@ static void show_help() {
     H0( " -fps-frm                  Show fps after each frame decoded\n");
     H0( " -fps-summary              Show fps summary");
     H0( " -skip-film-grain          Disable Film Grain");
+    H0( " -16bit-pipeline           Enable 16b pipeline. [1 - enable, 0 - disable]");
 
     exit(1);
 }

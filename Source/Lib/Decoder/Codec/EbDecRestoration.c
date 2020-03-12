@@ -127,7 +127,8 @@ void lr_pad_pic(EbPictureBufferDesc *recon_picture_buf, FrameHeader *frame_hdr,
     uint8_t    sx         = color_cfg->subsampling_x;
     uint8_t    sy         = color_cfg->subsampling_y;
 
-    if (recon_picture_buf->bit_depth == EB_8BIT) {
+    if (recon_picture_buf->bit_depth == EB_8BIT &&
+        (!recon_picture_buf->use_16bit_pipeline)) {
         // Y samples
         lr_generate_padding(recon_picture_buf->buffer_y + recon_picture_buf->origin_x +
                                 recon_picture_buf->stride_y * recon_picture_buf->origin_y,

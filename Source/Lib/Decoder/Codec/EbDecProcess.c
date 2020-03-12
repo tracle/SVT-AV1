@@ -1222,7 +1222,8 @@ void dec_av1_loop_restoration_filter_frame_mt(
     uint32_t pad_height = recon_picture_buf->origin_y;
 
     int32_t shift = 0;
-    if (recon_picture_buf->bit_depth != EB_8BIT) shift = 1;
+    if ((recon_picture_buf->bit_depth != EB_8BIT) ||
+        recon_picture_buf->use_16bit_pipeline) shift = 1;
 
     int32_t recon_stride[MAX_MB_PLANE];
     recon_stride[AOM_PLANE_Y] = recon_picture_buf->stride_y << shift;

@@ -47,9 +47,11 @@ EbErrorType dec_eb_recon_picture_buffer_desc_ctor(
     EbPictureBufferDesc          *picture_buffer_desc_ptr;
     EbPictureBufferDescInitData  *picture_buffer_desc_init_data_ptr = (EbPictureBufferDescInitData*)object_init_data_ptr;
 
-    uint32_t bytes_per_pixel = (picture_buffer_desc_init_data_ptr->bit_depth == EB_8BIT) ? 1 : 2;
-
     EB_MALLOC_DEC(EbPictureBufferDesc*, picture_buffer_desc_ptr, sizeof(EbPictureBufferDesc), EB_N_PTR);
+
+    uint32_t bytes_per_pixel = (picture_buffer_desc_init_data_ptr->bit_depth > EB_8BIT ||
+        is_16bit_pipeline) ? 2 : 1;
+    picture_buffer_desc_ptr->use_16bit_pipeline = is_16bit_pipeline;
 
     // Allocate the PictureBufferDesc Object
     *object_dbl_ptr = (EbPtr)picture_buffer_desc_ptr;
