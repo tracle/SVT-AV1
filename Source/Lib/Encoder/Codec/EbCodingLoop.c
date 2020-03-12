@@ -2544,9 +2544,7 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                 context_ptr->evaluate_cfl_ep =
                     (disable_cfl_flag == EB_FALSE &&
                      context_ptr->md_context->chroma_level == CHROMA_MODE_2);
-#if SHUT_CFL_EP
-                context_ptr->evaluate_cfl_ep = 0;
-#endif
+
                 // for now, segmentation independent of sharpness/delta QP.
                 if (pcs_ptr->parent_pcs_ptr->frm_hdr.segmentation_params.segmentation_enabled) {
                     apply_segmentation_based_quantization(blk_geom, pcs_ptr, sb_ptr, blk_ptr);
