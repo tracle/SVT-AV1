@@ -162,6 +162,7 @@ typedef struct EbConfig {
     FILE *        input_stat_file;
     FILE *        output_stat_file;
     FILE *        input_pred_struct_file;
+    char *        input_pred_struct_filename;
     EbBool        use_input_stat_file;
     EbBool        use_output_stat_file;
     EbBool        y4m_input;
