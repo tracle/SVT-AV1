@@ -297,7 +297,8 @@ EbErrorType signal_derivation_me_kernel_oq(SequenceControlSet *       scs_ptr,
     else
         context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;
 
-    if (scs_ptr->static_config.enable_global_motion == EB_TRUE) {
+    if (scs_ptr->static_config.enable_global_motion == EB_TRUE &&
+        pcs_ptr->frame_superres_enabled == EB_FALSE) {
         if (enc_mode <= ENC_M1)
             context_ptr->me_context_ptr->compute_global_motion = EB_TRUE;
         else
