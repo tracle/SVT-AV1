@@ -5614,6 +5614,8 @@ EbErrorType av1_inter_prediction_16bit_pipeline(
         av1_get_convolve_filter_params(
             interp_filters, &filter_params_x, &filter_params_y, bwidth, bheight);
 
+        DECLARE_ALIGNED(16, uint8_t, seg_mask[2 * MAX_SB_SQUARE]);
+
         //the luma data is applied to chroma below
         av1_dist_wtd_comp_weight_assign(
             &picture_control_set_ptr->parent_pcs_ptr->scs_ptr->seq_header,
@@ -5648,7 +5650,8 @@ EbErrorType av1_inter_prediction_16bit_pipeline(
                 interinter_comp,
                 bit_depth,
                 0, //plane=Luma  seg_mask is computed based on luma and used for chroma
-                EB_TRUE);
+                EB_TRUE,
+                seg_mask);
 
         }
         else {
@@ -5733,7 +5736,8 @@ EbErrorType av1_inter_prediction_16bit_pipeline(
                     interinter_comp,
                     bit_depth,
                     1, //plane=cb  seg_mask is computed based on luma and used for chroma
-                    EB_TRUE);
+                    EB_TRUE,
+                    seg_mask);
 
             }
             else {
@@ -5810,7 +5814,8 @@ EbErrorType av1_inter_prediction_16bit_pipeline(
                     interinter_comp,
                     bit_depth,
                     1, //plane=Cr  seg_mask is computed based on luma and used for chroma
-                    EB_TRUE);
+                    EB_TRUE,
+                    seg_mask);
 
             }
             else {
