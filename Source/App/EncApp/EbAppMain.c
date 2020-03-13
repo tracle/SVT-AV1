@@ -131,8 +131,14 @@ int32_t main(int32_t argc, char *argv[]) {
             channel_active[inst_cnt]   = EB_FALSE;
         }
 
+        //  setup warning array
+        //char  warning_arr[MAX_NUM_TOKENS][WARNING_LENGTH];
+        char *warning[MAX_NUM_TOKENS];
+        for (int token_id = 0; token_id < MAX_NUM_TOKENS; token_id++) {
+            warning[token_id] = (char *)malloc(sizeof(WARNING_LENGTH));
+        }
         // Read all configuration files.
-        return_error = read_command_line(argc, argv, configs, num_channels, return_errors);
+        return_error = read_command_line(argc, argv, configs, num_channels, return_errors, warning);
 
         // Process any command line options, including the configuration file
 
@@ -184,6 +190,13 @@ int32_t main(int32_t argc, char *argv[]) {
                     EB_APP_MEMORY();
 #endif
                 }
+                for (uint32_t warning_id = 0; ;warning_id++) {
+                    if (*warning[warning_id] == '-')
+                        fprintf(stderr, "warning: %s\n", warning[warning_id]);
+                    else if (*warning[warning_id] != '-' && *warning[warning_id+1] != '-')
+                        break;
+                }
+                free(warning[WARNING_LENGTH]);
                 fprintf(stderr, "Encoding          ");
                 fflush(stdout);
 
