@@ -39,6 +39,8 @@ typedef void *EbPtr;
 */
 #define EB_NULL ((void *)0)
 
+#define WARNING_LENGTH 100
+
 // memory map to be removed and replaced by malloc / free
 typedef enum EbPtrType {
     EB_N_PTR     = 0, // malloc'd pointer
@@ -103,7 +105,7 @@ extern uint32_t          app_malloc_count;
     fprintf(stderr, "Total App Memory: %.2lf KB\n\n", *total_app_memory / (double)1024);
 
 #define MAX_CHANNEL_NUMBER 6
-#define MAX_NUM_TOKENS 200
+#define MAX_NUM_TOKENS 210
 
 #ifdef _WIN32
 #define FOPEN(f, s, m) fopen_s(&f, s, m)
@@ -356,6 +358,11 @@ typedef struct EbConfig {
     int enable_intra_edge_filter;
 
     /****************************************
+     * Picture based rate estimation
+     ****************************************/
+    int pic_based_rate_est;
+
+    /****************************************
      * ME Tools
      ****************************************/
     EbBool use_default_me_hme;
@@ -418,7 +425,6 @@ typedef struct EbConfig {
      ****************************************/
 
     uint32_t screen_content_mode;
-    int intrabc_mode;
     uint32_t high_dynamic_range_input;
     EbBool   unrestricted_motion_vector;
 
@@ -473,10 +479,10 @@ typedef struct EbConfig {
     /****************************************
      * Super-resolution related Parameters
      ****************************************/
-    SUPERRES_MODE           superres_mode;
-    uint8_t                 superres_denom;
-    uint8_t                 superres_kf_denom;
-    uint8_t                 superres_qthres;
+    SUPERRES_MODE superres_mode;
+    uint8_t       superres_denom;
+    uint8_t       superres_kf_denom;
+    uint8_t       superres_qthres;
 
     // square cost weighting for deciding if a/b shapes could be skipped
     uint32_t sq_weight;
@@ -489,15 +495,16 @@ typedef struct EbConfig {
 
     // prediction structure
     PredictionStructureConfigEntry pred_struct[1 << (MAX_HIERARCHICAL_LEVEL - 1)];
-    EbBool enable_manual_pred_struct;
-    int32_t manual_pred_struct_entry_num;
+    EbBool                         enable_manual_pred_struct;
+    int32_t                        manual_pred_struct_entry_num;
 } EbConfig;
 
 extern void eb_config_ctor(EbConfig *config_ptr);
 extern void eb_config_dtor(EbConfig *config_ptr);
 
 extern EbErrorType read_command_line(int32_t argc, char *const argv[], EbConfig **config,
-                                     uint32_t num_channels, EbErrorType *return_errors);
+                                     uint32_t num_channels, EbErrorType *return_errors,
+                                     char *warning_str[WARNING_LENGTH]);
 extern uint32_t    get_help(int32_t argc, char *const argv[]);
 extern uint32_t    get_number_of_channels(int32_t argc, char *const argv[]);
 
