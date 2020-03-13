@@ -214,6 +214,9 @@ void detect_global_motion(PictureParentControlSet *pcs_ptr) {
                                                : list_index == REF_LIST_0
                                                      ? pcs_ptr->ref_list0_count
                                                      : pcs_ptr->ref_list1_count;
+#if FIX_ME_TO_UESE_2REF
+            num_of_ref_pic_to_search = MIN(num_of_ref_pic_to_search, 1);
+#endif
 
             // Ref Picture Loop
             for (uint32_t ref_pic_index = 0; ref_pic_index < num_of_ref_pic_to_search;

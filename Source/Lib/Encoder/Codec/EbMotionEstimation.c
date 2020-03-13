@@ -9527,7 +9527,9 @@ void integer_search_sb(
                                            : (list_index == REF_LIST_0) ? pcs_ptr->ref_list0_count
                                                                         : pcs_ptr->ref_list1_count;
 #endif
-
+#if FIX_ME_TO_UESE_2REF
+            num_of_ref_pic_to_search = MIN(num_of_ref_pic_to_search, 1);
+#endif
             reference_object =
                 (EbPaReferenceObject *)pcs_ptr->ref_pa_pic_ptr_array[0][0]->object_ptr;
         }
@@ -9984,6 +9986,9 @@ void prune_references_fp(
                 ? pcs_ptr->ref_list0_count
                 : pcs_ptr->ref_list1_count;
 #endif
+#if FIX_ME_TO_UESE_2REF
+            num_of_ref_pic_to_search = MIN(num_of_ref_pic_to_search, 1);
+#endif
         }
         // Ref Picture Loop
         for (ref_pic_index = 0; ref_pic_index < num_of_ref_pic_to_search; ++ref_pic_index) {
@@ -10096,7 +10101,9 @@ void hme_level0_sb(
                 : (list_index == REF_LIST_0)
                 ? pcs_ptr->ref_list0_count
                 : pcs_ptr->ref_list1_count;
-
+#if FIX_ME_TO_UESE_2REF
+            num_of_ref_pic_to_search = MIN(num_of_ref_pic_to_search, 1);
+#endif
             referenceObject = (EbPaReferenceObject *)pcs_ptr->ref_pa_pic_ptr_array[0][0]->object_ptr;
             ref0Poc = pcs_ptr->ref_pic_poc_array[0][0];
         }
@@ -10435,7 +10442,9 @@ void hme_level2_sb(
                 : (list_index == REF_LIST_0)
                 ? pcs_ptr->ref_list0_count
                 : pcs_ptr->ref_list1_count;
-
+#if FIX_ME_TO_UESE_2REF
+            num_of_ref_pic_to_search = MIN(num_of_ref_pic_to_search, 1);
+#endif
             referenceObject = (EbPaReferenceObject *)pcs_ptr->ref_pa_pic_ptr_array[0][0]->object_ptr;
             ref0Poc = pcs_ptr->ref_pic_poc_array[0][0];
         }
@@ -10603,7 +10612,9 @@ void set_final_seach_centre_sb(
                 : (list_index == REF_LIST_0)
                 ? pcs_ptr->ref_list0_count
                 : pcs_ptr->ref_list1_count;
-
+#if FIX_ME_TO_UESE_2REF
+            num_of_ref_pic_to_search = MIN(num_of_ref_pic_to_search, 1);
+#endif
             referenceObject = (EbPaReferenceObject *)pcs_ptr->ref_pa_pic_ptr_array[0][0]->object_ptr;
             ref0Poc = pcs_ptr->ref_pic_poc_array[0][0];
         }
@@ -11620,7 +11631,9 @@ EbErrorType motion_estimate_sb(
                                            : (list_index == REF_LIST_0) ? pcs_ptr->ref_list0_count
                                                                         : pcs_ptr->ref_list1_count;
 #endif
-
+#if FIX_ME_TO_UESE_2REF
+            num_of_ref_pic_to_search = MIN(num_of_ref_pic_to_search, 1);
+#endif
             reference_object =
                 (EbPaReferenceObject *)pcs_ptr->ref_pa_pic_ptr_array[0][0]->object_ptr;
         }
@@ -12059,6 +12072,9 @@ EbErrorType motion_estimate_sb(
                     : (list_index == REF_LIST_0)
                     ? pcs_ptr->ref_list0_count_try
                     : pcs_ptr->ref_list1_count_try;
+#if FIX_ME_TO_UESE_2REF
+            num_of_ref_pic_to_search = MIN(num_of_ref_pic_to_search, 1);
+#endif
 #else
                 num_of_ref_pic_to_search = (pcs_ptr->slice_type == P_SLICE)
                                                ? pcs_ptr->ref_list0_count
@@ -12122,8 +12138,13 @@ EbErrorType motion_estimate_sb(
                                         pu_index,
                                         cand_index,
 #if MRP_CTRL
+#if FIX_ME_TO_UESE_2REF
+                                        MIN(1,pcs_ptr->ref_list0_count_try),
+                                        MIN(1,pcs_ptr->ref_list1_count_try),
+#else
                                         pcs_ptr->ref_list0_count_try,
                                         pcs_ptr->ref_list1_count_try,
+#endif
 #else
                                         pcs_ptr->ref_list0_count,
                                         pcs_ptr->ref_list1_count,
@@ -12153,6 +12174,10 @@ EbErrorType motion_estimate_sb(
 
             me_pu_result->total_me_candidate_index[pu_index] =
                 MIN(total_me_candidate_index, ME_RES_CAND_MRP_MODE_0);
+#if REDUCE_ME_OUTPUT
+            me_pu_result->total_me_candidate_index[pu_index] =
+             MIN(total_me_candidate_index, MRP_ME_MAX_COUNT);
+#endif
             // Assining the ME candidates to the me Results buffer
             for (cand_index = 0; cand_index < total_me_candidate_index; ++cand_index) {
                 me_candidate = &(context_ptr->me_candidate[cand_index].pu[pu_index]);
@@ -12179,6 +12204,9 @@ EbErrorType motion_estimate_sb(
                     : (list_index == REF_LIST_0)
                     ? pcs_ptr->ref_list0_count_try
                     : pcs_ptr->ref_list1_count_try;
+#if FIX_ME_TO_UESE_2REF
+            num_of_ref_pic_to_search = MIN(num_of_ref_pic_to_search, 1);
+#endif
 #else
                 num_of_ref_pic_to_search = (pcs_ptr->slice_type == P_SLICE)
                                                ? pcs_ptr->ref_list0_count

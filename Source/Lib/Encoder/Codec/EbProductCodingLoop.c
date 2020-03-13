@@ -3709,8 +3709,13 @@ void md_sub_pel_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context_
 
 void    av1_set_ref_frame(MvReferenceFrame *rf, int8_t ref_frame_type);
 uint8_t get_max_drl_index(uint8_t refmvCnt, PredictionMode mode);
+#if REDUCE_ME_OUTPUT
+uint8_t is_me_data_present(struct ModeDecisionContext *context_ptr,const MeSbResults *me_results,
+                           uint32_t *me_cand_idx,uint8_t list_idx, uint8_t ref_idx);
+#else
 uint8_t is_me_data_present(struct ModeDecisionContext *context_ptr,const MeSbResults *me_results,
                            uint8_t list_idx, uint8_t ref_idx);
+#endif
 // Derive me_sb_addr and me_block_offset used to access ME_MV
 void derive_me_offsets(const SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
     ModeDecisionContext *context_ptr) {
@@ -3794,7 +3799,17 @@ void read_refine_me_mvs(PictureControlSet *pcs_ptr, ModeDecisionContext *context
     input_origin_index =
         (context_ptr->blk_origin_y + input_picture_ptr->origin_y) * input_picture_ptr->stride_y +
         (context_ptr->blk_origin_x + input_picture_ptr->origin_x);
-
+#if REDUCE_ME_OUTPUT
+    uint8_t ref_count = 0;
+    uint8_t best_ref_count = 0;
+#endif
+#if REDUCE_ME_OUTPUT
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 4; j++) {
+            context_ptr->sb_me_ref[context_ptr->blk_geom->blkidx_mds][i][j] = pcs_ptr->temporal_layer_index == 0 ? 1 : 0;
+        }
+    }
+#endif
     for (uint32_t ref_it = 0; ref_it < pcs_ptr->parent_pcs_ptr->tot_ref_frame_types; ++ref_it) {
         MvReferenceFrame ref_pair = pcs_ptr->parent_pcs_ptr->ref_frame_type_arr[ref_it];
 
@@ -3809,7 +3824,12 @@ void read_refine_me_mvs(PictureControlSet *pcs_ptr, ModeDecisionContext *context
             // Get the ME MV
             const MeSbResults *me_results =
                 pcs_ptr->parent_pcs_ptr->me_results[context_ptr->me_sb_addr];
+#if REDUCE_ME_OUTPUT
+            uint32_t me_cand_idx;
+            if (is_me_data_present(context_ptr, me_results, &me_cand_idx, list_idx, ref_idx))
+#else
             if (is_me_data_present(context_ptr, me_results, list_idx, ref_idx))
+#endif
             {
                 int16_t me_mv_x;
                 int16_t me_mv_y;
@@ -3866,9 +3886,27 @@ void read_refine_me_mvs(PictureControlSet *pcs_ptr, ModeDecisionContext *context
                     me_mv_x;
                 context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][list_idx][ref_idx][1] =
                     me_mv_y;
+#if REDUCE_ME_OUTPUT
+                if (me_cand_idx < MRP_MD_MAX_COUNT) {
+                    context_ptr->sb_me_ref[context_ptr->blk_geom->blkidx_mds][list_idx][ref_idx] = 1;
+                    best_ref_count++;
+                }
+                ref_count++;
+#endif
             }
         }
     }
+#if 0 //REDUCE_ME_OUTPUT
+    uint8_t pic_cnt = 0;
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 4; j++) {
+            if (pic_cnt == 0)
+                pic_cnt += context_ptr->sb_me_ref[context_ptr->blk_geom->blkidx_mds][i][j] != 0 ? 1 : 0;
+        }
+    }
+       if(pic_cnt > 0)
+           printf("ref_count = %d,%d,%d\n", ref_count,best_ref_count,pic_cnt);
+#endif
 }
 void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
                              EbPictureBufferDesc *input_picture_ptr, uint32_t input_origin_index,
@@ -3923,7 +3961,16 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
             const MeSbResults *me_results =
                 pcs_ptr->parent_pcs_ptr->me_results[context_ptr->me_sb_addr];
             uint32_t pa_me_distortion = ~0;//any non zero value
+#if REDUCE_ME_OUTPUT
+            uint8_t pme_allow_search = context_ptr->sb_me_ref[context_ptr->blk_geom->blkidx_mds][list_idx][ref_idx] == 0 ? 0 : 1;
+            if (!pme_allow_search)
+                continue;
+
+            uint32_t best_me_index;
+            if (is_me_data_present(context_ptr, me_results,&best_me_index, list_idx, ref_idx)) {
+#else
             if (is_me_data_present(context_ptr, me_results, list_idx, ref_idx)) {
+#endif
                 int16_t me_mv_x;
                 int16_t me_mv_y;
                 if (list_idx == 0) {
@@ -7793,6 +7840,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
         mvp_bypass_init(pcs_ptr, context_ptr);
     }
     // Read and (if needed) perform 1/8 Pel ME MVs refinement
+    if(pcs_ptr->slice_type != I_SLICE)
     read_refine_me_mvs(
         pcs_ptr, context_ptr, input_picture_ptr, input_origin_index, blk_origin_index);
     // Perform ME search around the best MVP

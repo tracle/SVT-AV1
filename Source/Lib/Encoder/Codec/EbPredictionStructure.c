@@ -2012,6 +2012,9 @@ EbErrorType prediction_structure_group_ctor(PredictionStructureGroup *pred_struc
 #endif
 #endif
 
+#if ENABLE_MRP_FOR_M8
+    ref_count_used = MAX_REF_IDX;
+#endif
     // Insert manual prediction structure into array
     if (config->enable_manual_pred_struct) {
         prediction_structure_config_array[config->hierarchical_levels].entry_count = config->manual_pred_struct_entry_num;

@@ -1414,7 +1414,101 @@ static void set_all_ref_frame_type(SequenceControlSet *scs_ptr, PictureParentCon
 {
     MvReferenceFrame rf[2];
     *tot_ref_frames = 0;
+#if FIX_MD_TO_UESE_2REF
+        //SVT_LOG("POC %i  totRef L0:%i   totRef L1: %i\n", parent_pcs_ptr->picture_number, parent_pcs_ptr->ref_list0_count, parent_pcs_ptr->ref_list1_count);
+#if MRP_CTRL
+     //single ref - List0
+    for (uint8_t ref_idx0 = 0; ref_idx0 < 1; ++ref_idx0) {
+        rf[0] = svt_get_ref_frame_type(REF_LIST_0, ref_idx0);
+        ref_frame_arr[(*tot_ref_frames)++] = rf[0];
+    }
 
+    //single ref - List1
+    for (uint8_t ref_idx1 = 0; ref_idx1 < 1; ++ref_idx1) {
+        rf[1] = svt_get_ref_frame_type(REF_LIST_1, ref_idx1);
+        ref_frame_arr[(*tot_ref_frames)++] = rf[1];
+    }
+
+    //compound Bi-Dir
+    for (uint8_t ref_idx0 = 0; ref_idx0 < 1; ++ref_idx0) {
+        for (uint8_t ref_idx1 = 0; ref_idx1 < 1; ++ref_idx1) {
+            rf[0] = svt_get_ref_frame_type(REF_LIST_0, ref_idx0);
+            rf[1] = svt_get_ref_frame_type(REF_LIST_1, ref_idx1);
+            ref_frame_arr[(*tot_ref_frames)++] = av1_ref_frame_type(rf);
+        }
+    }
+
+    if (scs_ptr->mrp_mode == 0 && parent_pcs_ptr->slice_type == B_SLICE)
+    {
+
+        //compound Uni-Dir
+        if (1 > 1) {
+            rf[0] = LAST_FRAME;
+            rf[1] = LAST2_FRAME;
+            ref_frame_arr[(*tot_ref_frames)++] = av1_ref_frame_type(rf);
+            if (1 > 2) {
+                rf[1] = LAST3_FRAME;
+                ref_frame_arr[(*tot_ref_frames)++] = av1_ref_frame_type(rf);
+                if (1 > 3) {
+                    rf[1] = GOLDEN_FRAME;
+                    ref_frame_arr[(*tot_ref_frames)++] = av1_ref_frame_type(rf);
+                }
+            }
+        }
+        if (1> 2) {
+            rf[0] = BWDREF_FRAME;
+            rf[1] = ALTREF_FRAME;
+            ref_frame_arr[(*tot_ref_frames)++] = av1_ref_frame_type(rf);
+        }
+    }
+
+#else
+    //single ref - List0
+    for (uint8_t ref_idx0 = 0; ref_idx0 < parent_pcs_ptr->ref_list0_count; ++ref_idx0) {
+        rf[0] = svt_get_ref_frame_type(REF_LIST_0, ref_idx0);
+        ref_frame_arr[(*tot_ref_frames)++] = rf[0];
+    }
+
+    //single ref - List1
+    for (uint8_t ref_idx1 = 0; ref_idx1 < parent_pcs_ptr->ref_list1_count; ++ref_idx1) {
+        rf[1] = svt_get_ref_frame_type(REF_LIST_1, ref_idx1);
+        ref_frame_arr[(*tot_ref_frames)++] = rf[1];
+    }
+
+    //compound Bi-Dir
+    for (uint8_t ref_idx0 = 0; ref_idx0 < parent_pcs_ptr->ref_list0_count; ++ref_idx0) {
+        for (uint8_t ref_idx1 = 0; ref_idx1 < parent_pcs_ptr->ref_list1_count; ++ref_idx1) {
+            rf[0] = svt_get_ref_frame_type(REF_LIST_0, ref_idx0);
+            rf[1] = svt_get_ref_frame_type(REF_LIST_1, ref_idx1);
+            ref_frame_arr[(*tot_ref_frames)++] = av1_ref_frame_type(rf);
+        }
+    }
+
+    if (scs_ptr->mrp_mode == 0 && parent_pcs_ptr->slice_type == B_SLICE)
+    {
+
+        //compound Uni-Dir
+        if (parent_pcs_ptr->ref_list0_count > 1) {
+            rf[0] = LAST_FRAME;
+            rf[1] = LAST2_FRAME;
+            ref_frame_arr[(*tot_ref_frames)++] = av1_ref_frame_type(rf);
+            if (parent_pcs_ptr->ref_list0_count > 2) {
+                rf[1] = LAST3_FRAME;
+                ref_frame_arr[(*tot_ref_frames)++] = av1_ref_frame_type(rf);
+                if (parent_pcs_ptr->ref_list0_count > 3) {
+                    rf[1] = GOLDEN_FRAME;
+                    ref_frame_arr[(*tot_ref_frames)++] = av1_ref_frame_type(rf);
+                }
+            }
+        }
+        if (parent_pcs_ptr->ref_list1_count > 2) {
+            rf[0] = BWDREF_FRAME;
+            rf[1] = ALTREF_FRAME;
+            ref_frame_arr[(*tot_ref_frames)++] = av1_ref_frame_type(rf);
+        }
+    }
+#endif
+#else
     //SVT_LOG("POC %i  totRef L0:%i   totRef L1: %i\n", parent_pcs_ptr->picture_number, parent_pcs_ptr->ref_list0_count, parent_pcs_ptr->ref_list1_count);
 #if MRP_CTRL
      //single ref - List0
@@ -1507,6 +1601,7 @@ static void set_all_ref_frame_type(SequenceControlSet *scs_ptr, PictureParentCon
             ref_frame_arr[(*tot_ref_frames)++] = av1_ref_frame_type(rf);
         }
     }
+#endif
 #endif
 }
 
@@ -5029,6 +5124,10 @@ void* picture_decision_kernel(void *input_ptr)
 
 #if MRP_CTRL
                                 //set the number of references to try in ME/MD.Note: PicMgr will still use the original values to sync the references.
+#if MRP_1_REF
+                                pcs_ptr->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 1);
+                                pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 1);
+#else
                                 if (pcs_ptr->sc_content_detected){
                                     pcs_ptr->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 4);
                                     pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 3);
@@ -5036,6 +5135,7 @@ void* picture_decision_kernel(void *input_ptr)
                                     pcs_ptr->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 4);
                                     pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 3);
                                 }
+#endif
                                 assert(pcs_ptr->ref_list0_count_try <= pcs_ptr->ref_list0_count);
                                 assert(pcs_ptr->ref_list1_count_try <= pcs_ptr->ref_list1_count);
 #endif

@@ -101,6 +101,16 @@ extern "C" {
 #define ADD_ME_SIGNAL_FOR_PRUNING_TH    1 // Add signals for mode-dependent ME thresholds
 #define ADD_HME_MIN_MAX_MULTIPLIER_SIGNAL   1 // Add ME signal for the max HME search area multiplier
 #define MAR12_M8_ADOPTIONS                  1
+
+#define ENABLE_MRP_FOR_M8                 0 //
+#define MRP_1_REF                         0 //
+#define REDUCE_ME_OUTPUT                  0 //
+#define MRP_ME_MAX_COUNT                  0 //
+#define MRP_MD_MAX_COUNT                  0 //
+#define FIX_ME_TO_UESE_2REF               0
+#define FIX_MD_TO_UESE_2REF               0
+#define USE_MAX_REF                       0
+
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

@@ -317,6 +317,9 @@ typedef struct ModeDecisionContext {
     EbBool               blk_skip_decision;
     EbBool               enable_rdoq;
     int16_t              sb_me_mv[BLOCK_MAX_COUNT_SB_128][2][4][2];
+#if REDUCE_ME_OUTPUT
+    int16_t              sb_me_ref[BLOCK_MAX_COUNT_SB_128][2][4];
+#endif
     int16_t              best_spatial_pred_mv[2][4][2];
     int8_t               valid_refined_mv[2][4];
     EbPictureBufferDesc *input_sample16bit_buffer;
