@@ -1506,7 +1506,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else // use specified level
         context_ptr->chroma_level =
         sequence_control_set_ptr->static_config.set_chroma_mode;
-
+#if ENABLE_FULL_CHROMA
+    if (context_ptr->pd_pass == PD_PASS_2)
+        context_ptr->chroma_level = CHROMA_MODE_0;
+#endif
     // Chroma independent modes search
     // Level                Settings
     // 0                    post first md_stage

@@ -8029,7 +8029,10 @@ void md_encode_block(PictureControlSet *pcs_ptr,
             }
         }
     }
-
+#if ENABLE_FULL_CHROMA_AT_MD_STAGE2
+    uint8_t default_chroma_level = context_ptr->chroma_level;
+    context_ptr->chroma_level = CHROMA_MODE_0;
+#endif
     // 3rd Full-Loop
     context_ptr->md_stage = MD_STAGE_3;
     md_stage_3(pcs_ptr,
@@ -8325,7 +8328,9 @@ void md_encode_block(PictureControlSet *pcs_ptr,
         }
     }
 #endif
-
+#if ENABLE_FULL_CHROMA_AT_MD_STAGE2
+    context_ptr->chroma_level = default_chroma_level;
+#endif
     context_ptr->md_local_blk_unit[blk_ptr->mds_idx].avail_blk_flag = EB_TRUE;
 #if DEPTH_PART_CLEAN_UP
     } else {
