@@ -5320,8 +5320,8 @@ EbErrorType av1_inter_prediction(
                         uint8_t *src_mod;
                         SubpelParams subpel_params;
 
-                        int pu_origin_y_chroma = ((pu_origin_y >> 3) << 3)/2;
-                        int pu_origin_x_chroma = ((pu_origin_x >> 3) << 3)/2;
+                        int pu_origin_y_chroma = ((pu_origin_y >> 3) << 3)/2 + y;
+                        int pu_origin_x_chroma = ((pu_origin_x >> 3) << 3)/2 + x;
                         int origin_x_chroma = ref_pic->origin_x / 2;
                         int origin_y_chroma = ref_pic->origin_y / 2;
 
@@ -5453,8 +5453,8 @@ EbErrorType av1_inter_prediction(
                         uint8_t *src_mod;
                         SubpelParams subpel_params;
 
-                        int pu_origin_y_chroma = ((pu_origin_y >> 3) << 3)/2;
-                        int pu_origin_x_chroma = ((pu_origin_x >> 3) << 3)/2;
+                        int pu_origin_y_chroma = ((pu_origin_y >> 3) << 3)/2 + y;
+                        int pu_origin_x_chroma = ((pu_origin_x >> 3) << 3)/2 + x;
                         int origin_x_chroma = ref_pic->origin_x / 2;
                         int origin_y_chroma = ref_pic->origin_y / 2;
 
