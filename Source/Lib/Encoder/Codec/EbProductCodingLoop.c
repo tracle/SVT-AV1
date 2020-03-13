@@ -3345,6 +3345,9 @@ void md_stage_0(
                 &fast_candidate_array[fast_loop_cand_index];
             // Initialize tx_depth
             candidate_buffer->candidate_ptr->tx_depth = 0;
+#if IMPROVE_CHROMA
+            candidate_buffer->candidate_ptr->updated_chroma_mode = 0;
+#endif
             if (!candidate_ptr->distortion_ready ||
                 fast_loop_cand_index == best_first_fast_cost_search_candidate_index) {
                 // Prediction
@@ -6590,10 +6593,24 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
         }
 
         // Check independant chroma vs. cfl
+#if IMPROVE_CHROMA
+        uint8_t perform_check = 0;
+        if (!is_inter) {
+            if (context_ptr->blk_geom->has_uv && context_ptr->chroma_level == CHROMA_MODE_0) {
+                if (candidate_buffer->candidate_ptr->intra_chroma_mode == UV_CFL_PRED ||
+                    candidate_buffer->candidate_ptr->intra_chroma_mode == UV_DC_PRED)
+                    perform_check = 1;
+                if (context_ptr->chroma_at_last_md_stage)
+                    perform_check = candidate_buffer->candidate_ptr->updated_chroma_mode == 1 ? 1 : perform_check;
+            }
+        }   
+        if(perform_check)
+#else
         if (!is_inter)
             if (context_ptr->blk_geom->has_uv && context_ptr->chroma_level == CHROMA_MODE_0)
                 if (candidate_buffer->candidate_ptr->intra_chroma_mode == UV_CFL_PRED ||
                     candidate_buffer->candidate_ptr->intra_chroma_mode == UV_DC_PRED)
+#endif
                     check_best_indepedant_cfl(pcs_ptr,
                                               input_picture_ptr,
                                               context_ptr,
@@ -6847,6 +6864,10 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
                                                candidate_ptr->angle_delta[PLANE_TYPE_Y]]))
                                     : 0;
                         }
+#if IMPROVE_CHROMA
+                        candidate_buffer->candidate_ptr->updated_chroma_mode = (candidate_ptr->intra_chroma_mode != intra_chroma_mode ||
+                          candidate_ptr->angle_delta[PLANE_TYPE_UV] != angle_delta)  ? 1 : 0;
+#endif
                         candidate_ptr->intra_chroma_mode = intra_chroma_mode;
                         candidate_ptr->angle_delta[PLANE_TYPE_UV] = angle_delta;
                         candidate_ptr->is_directional_chroma_mode_flag = is_directional_chroma_mode_flag;

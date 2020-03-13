@@ -104,9 +104,10 @@ extern "C" {
 #define MAR12_ADOPTIONS                     1 // Adoptions for all modes
 #define REMOVED_MEM_OPT_CDF                 1
 #define M8_CAP_NUMBER_OF_REF_IN_MD             1 // CAP the number of used reference in MD
-#define ENABLE_FULL_CHROMA                  0 
+#define ENABLE_FULL_CHROMA                  0
 #define ENABLE_FULL_CHROMA_AT_MD_STAGE2     0 
-#define DISABLE_CFL                         0 
+#define DISABLE_CFL                         0
+#define IMPROVE_CHROMA                      0
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
