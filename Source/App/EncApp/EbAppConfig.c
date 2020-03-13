@@ -580,9 +580,6 @@ static void set_enable_hbd_mode_decision(const char *value, EbConfig *cfg) {
 static void set_enable_palette(const char *value, EbConfig *cfg) {
     cfg->enable_palette = (int32_t)strtol(value, NULL, 0);
 };
-static void set_enable_olpd_refinement(const char *value, EbConfig *cfg) {
-    cfg->olpd_refinement = (int32_t)strtol(value, NULL, 0);
-};
 static void set_high_dynamic_range_input(const char *value, EbConfig *cfg) {
     cfg->high_dynamic_range_input = strtol(value, NULL, 0);
 };
@@ -1356,7 +1353,6 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, INTRABC_MODE_TOKEN, "IntraBCMode", set_intrabc_mode},
     {SINGLE_INPUT, HBD_MD_ENABLE_TOKEN, "HighBitDepthModeDecision", set_enable_hbd_mode_decision},
     {SINGLE_INPUT, PALETTE_TOKEN, "PaletteMode", set_enable_palette},
-    {SINGLE_INPUT, OLPD_REFINEMENT_TOKEN, "OlpdRefinement", set_enable_olpd_refinement},
     // Thread Management
     {SINGLE_INPUT, THREAD_MGMNT, "LogicalProcessors", set_logical_processors},
     {SINGLE_INPUT, UNPIN_LP1_TOKEN, "UnpinSingleCoreExecution", set_unpin_single_core_execution},
@@ -1589,7 +1585,6 @@ void eb_config_ctor(EbConfig *config_ptr) {
     config_ptr->enable_hbd_mode_decision                  = 2;
     config_ptr->intrabc_mode                              = DEFAULT;
     config_ptr->enable_palette                            = -1;
-    config_ptr->olpd_refinement                           = -1;
     config_ptr->injector_frame_rate                       = 60 << 16;
 
     // ASM Type
