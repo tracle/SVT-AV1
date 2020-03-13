@@ -4648,7 +4648,9 @@ void inject_intra_candidates_ois(PictureControlSet *pcs_ptr, ModeDecisionContext
     if (scs_ptr->static_config.disable_cfl_flag != DEFAULT && !disable_cfl_flag)
         // if disable_cfl_flag == 1 then it doesn't matter what cli says otherwise change it to cli
         disable_cfl_flag = (EbBool)scs_ptr->static_config.disable_cfl_flag;
-
+#if DISABLE_CFL
+    disable_cfl_flag = EB_TRUE;
+#endif
     OisSbResults *ois_sb_results_ptr = pcs_ptr->parent_pcs_ptr->ois_sb_results[sb_ptr->index];
     OisCandidate *ois_blk_ptr =
         ois_sb_results_ptr
@@ -5135,7 +5137,9 @@ void  inject_intra_candidates(
     if (scs_ptr->static_config.disable_cfl_flag != DEFAULT && !disable_cfl_flag)
         // if disable_cfl_flag == 1 then it doesn't matter what cli says otherwise change it to cli
         disable_cfl_flag = (EbBool)scs_ptr->static_config.disable_cfl_flag;
-
+#if DISABLE_CFL
+    disable_cfl_flag = EB_TRUE;
+#endif
     if (context_ptr->edge_based_skip_angle_intra && use_angle_delta)
     {
         EbPictureBufferDesc   *src_pic = pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr;
@@ -5355,7 +5359,9 @@ void  inject_filter_intra_candidates(
     if (scs_ptr->static_config.disable_cfl_flag != DEFAULT && !disable_cfl_flag)
         // if disable_cfl_flag == 1 then it doesn't matter what cli says otherwise change it to cli
         disable_cfl_flag = (EbBool)scs_ptr->static_config.disable_cfl_flag;
-
+#if DISABLE_CFL
+    disable_cfl_flag = EB_TRUE;
+#endif
     FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
 
     for (filter_intra_mode = intra_mode_start; filter_intra_mode < intra_mode_end ; ++filter_intra_mode) {
@@ -5458,7 +5464,9 @@ void  inject_palette_candidates(
     if (scs_ptr->static_config.disable_cfl_flag != DEFAULT && !disable_cfl_flag)
         // if disable_cfl_flag == 1 then it doesn't matter what cli says otherwise change it to cli
         disable_cfl_flag = (EbBool)scs_ptr->static_config.disable_cfl_flag;
-
+#if DISABLE_CFL
+    disable_cfl_flag = EB_TRUE;
+#endif
     search_palette_luma(
         pcs_ptr,
         context_ptr,
