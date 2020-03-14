@@ -1275,7 +1275,7 @@ void scale_source_references(SequenceControlSet *scs_ptr,
                            0,
                            0);
 #endif
-            
+
             // if the size of the reference pic is different than the size of the input pic, then scale references
             if (ref_pic_ptr->width != input_picture_ptr->width){
 

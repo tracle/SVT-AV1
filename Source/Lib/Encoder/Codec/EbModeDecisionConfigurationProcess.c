@@ -109,7 +109,7 @@ int32_t budget_per_sb_boost[MAX_SUPPORTED_MODES] = {55, 55, 55, 55, 55, 55, 5, 5
 void scale_rec_references(PictureControlSet *pcs_ptr,
                           EbPictureBufferDesc *input_picture_ptr,
                           uint8_t hbd_mode_decision);
-                          
+
 static INLINE int32_t aom_get_qmlevel(int32_t qindex, int32_t first, int32_t last) {
     return first + (qindex * (last + 1 - first)) / QINDEX_RANGE;
 }
