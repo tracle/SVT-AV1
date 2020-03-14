@@ -34,6 +34,8 @@
 #define S8 8 * 8
 #define S4 4 * 4
 
+#define DEBUG_MODES_BITSTREAM 0
+
 #if TILES_PARALLEL
 static void mem_put_varsize(uint8_t *const dst, const int sz, const int val) {
     switch (sz) {
@@ -5725,6 +5727,12 @@ EbErrorType write_modes_b(PictureControlSet *pcs_ptr, EntropyCodingContext *cont
     else
         blk_ptr->av1xd->left_mbmi = NULL;
     blk_ptr->av1xd->tile_ctx = frame_context;
+
+#if DEBUG_MODES_BITSTREAM
+    if(pcs_ptr->picture_number == 2)
+        printf("range:%i  %i,%i %ix%i\n", ec_writer->ec.rng, mi_row, mi_col, blk_geom->bwidth, blk_geom->bheight);
+#endif
+
     if (pcs_ptr->slice_type == I_SLICE) {
         //const int32_t skip = write_skip(cm, xd, mbmi->segment_id, mi, w)
 
@@ -6350,6 +6358,24 @@ EbErrorType write_modes_b(PictureControlSet *pcs_ptr, EntropyCodingContext *cont
         free(blk_ptr->palette_info.color_idx_map);
         blk_ptr->palette_info.color_idx_map = NULL;
     }
+
+#if DEBUG_MODES_BITSTREAM
+    if (pcs_ptr->picture_number == 2) {
+        printf(
+                "=== ENCODER ===: "
+                "Frame=%d, (mi_row,mi_col)=(%d,%d), skip_mode=%d, mode=%d, bsize=%d, "
+                //"show_frame=%d, mv[0]=(%d,%d), mv[1]=(%d,%d), ref[0]=%d, "
+                //"ref[1]=%d, "
+                "motion_mode=%d\n",
+                (int)pcs_ptr->picture_number, mi_row, mi_col, blk_ptr->skip_flag,
+                blk_ptr->prediction_unit_array[0].inter_mode, blk_ptr->av1xd->mi[0]->mbmi.block_mi.sb_type,
+                //0,
+                //mv[0].as_mv.row, mv[0].as_mv.col, mv[1].as_mv.row, mv[1].as_mv.col,
+                //mbmi->ref_frame[0],
+                //mbmi->ref_frame[1],
+                blk_ptr->prediction_unit_array[0].motion_mode);
+    }
+#endif
 
     return return_error;
 }
