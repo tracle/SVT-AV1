@@ -4125,29 +4125,67 @@ EbErrorType av1_inter_prediction(
                                                 &sf_identity :
                                                 &ref1_scale_factors;
 
-        enc_make_inter_predictor(src_ptr,
-                                 dst_ptr,
-                                 (int16_t)pu_origin_y,
-                                 (int16_t)pu_origin_x,
-                                 mv,
-                                 sf,
-                                 &conv_params,
-                                 interp_filters,
-                                 interinter_comp,
-                                 ref_pic_list1->width,
-                                 ref_pic_list1->height,
-                                 (uint16_t)bwidth,
-                                 (uint16_t)bheight,
-                                 blk_geom->bsize,
-                                 blk_ptr->av1xd,
-                                 src_stride,
-                                 dst_stride,
-                                 0,
-                                 ss_y,
-                                 ss_x,
-                                 bit_depth,
-                                 use_intrabc,
-                                 is_compound && is_masked_compound_type(interinter_comp->type));
+        if (is_compound && is_masked_compound_type(interinter_comp->type)) {
+            src_ptr = ref_pic_list1->buffer_y +
+                      ((ref_pic_list1->origin_x + pu_origin_x +
+                        (ref_pic_list1->origin_y + pu_origin_y) *
+                        ref_pic_list1->stride_y) << is16bit);
+
+            mv_q4 = clamp_mv_to_umv_border_sb(
+                    blk_ptr->av1xd,
+                    &mv,
+                    bwidth,
+                    bheight,
+                    0,
+                    0); //mv_q4 has 1 extra bit for fractionnal to accomodate chroma when accessing filter coeffs.
+            subpel_x = mv_q4.col & SUBPEL_MASK;
+            subpel_y = mv_q4.row & SUBPEL_MASK;
+
+            src_ptr += ((mv_q4.row >> SUBPEL_BITS) * src_stride + (mv_q4.col >> SUBPEL_BITS)) << is16bit;
+
+            conv_params.do_average = 0;
+            av1_make_masked_inter_predictor(
+                    src_ptr,
+                    src_stride,
+                    dst_ptr,
+                    dst_stride,
+                    blk_geom,
+                    bwidth,
+                    bheight,
+                    &filter_params_x,
+                    &filter_params_y,
+                    subpel_x,
+                    subpel_y,
+                    &conv_params,
+                    interinter_comp,
+                    bit_depth,
+                    0//plane=Luma  seg_mask is computed based on luma and used for chroma
+            );
+        }else{
+            enc_make_inter_predictor(src_ptr,
+                                     dst_ptr,
+                                     (int16_t)pu_origin_y,
+                                     (int16_t)pu_origin_x,
+                                     mv,
+                                     sf,
+                                     &conv_params,
+                                     interp_filters,
+                                     interinter_comp,
+                                     ref_pic_list1->width,
+                                     ref_pic_list1->height,
+                                     (uint16_t)bwidth,
+                                     (uint16_t)bheight,
+                                     blk_geom->bsize,
+                                     blk_ptr->av1xd,
+                                     src_stride,
+                                     dst_stride,
+                                     0,
+                                     ss_y,
+                                     ss_x,
+                                     bit_depth,
+                                     use_intrabc,
+                                     is_compound && is_masked_compound_type(interinter_comp->type));
+        }
 
         if (perform_chroma && blk_geom->has_uv && sub8x8_inter == 0) {
 
@@ -4194,29 +4232,60 @@ EbErrorType av1_inter_prediction(
             ss_x = 1;
             ss_y = 1;
 
-            enc_make_inter_predictor(src_ptr,
-                                     dst_ptr,
-                                     (int16_t)pu_origin_y_chroma,
-                                     (int16_t)pu_origin_x_chroma,
-                                     mv,
-                                     sf,
-                                     &conv_params,
-                                     interp_filters,
-                                     interinter_comp,
-                                     ref_pic_list1->width,
-                                     ref_pic_list1->height,
-                                     (uint16_t)blk_geom->bwidth_uv,
-                                     (uint16_t)blk_geom->bheight_uv,
-                                     blk_geom->bsize,
-                                     blk_ptr->av1xd,
-                                     src_stride,
-                                     dst_stride,
-                                     1,
-                                     ss_y,
-                                     ss_x,
-                                     bit_depth,
-                                     use_intrabc,
-                                     is_compound && is_masked_compound_type(interinter_comp->type));
+            if (is_compound && is_masked_compound_type(interinter_comp->type)) {
+                src_ptr = ref_pic_list1->buffer_cb +
+                          (((ref_pic_list1->origin_x + ((pu_origin_x >> 3) << 3)) / 2 +
+                            (ref_pic_list1->origin_y + ((pu_origin_y >> 3) << 3)) / 2 *
+                            ref_pic_list1->stride_cb) << is16bit);
+
+                mv_q4 = clamp_mv_to_umv_border_sb(
+                        blk_ptr->av1xd, &mv, blk_geom->bwidth_uv, blk_geom->bheight_uv, 1, 1);
+                subpel_x = mv_q4.col & SUBPEL_MASK;
+                subpel_y = mv_q4.row & SUBPEL_MASK;
+                src_ptr += ((mv_q4.row >> SUBPEL_BITS) * src_stride + (mv_q4.col >> SUBPEL_BITS)) << is16bit;
+                conv_params.do_average = 0;
+                av1_make_masked_inter_predictor(
+                        src_ptr,
+                        src_stride,
+                        dst_ptr,
+                        dst_stride,
+                        blk_geom,
+                        blk_geom->bwidth_uv,
+                        blk_geom->bheight_uv,
+                        &filter_params_x,
+                        &filter_params_y,
+                        subpel_x,
+                        subpel_y,
+                        &conv_params,
+                        interinter_comp,
+                        bit_depth,
+                        1 //plane=cb  seg_mask is computed based on luma and used for chroma
+                );
+            }else{
+                enc_make_inter_predictor(src_ptr,
+                                         dst_ptr,
+                                         (int16_t)pu_origin_y_chroma,
+                                         (int16_t)pu_origin_x_chroma,
+                                         mv,
+                                         sf,
+                                         &conv_params,
+                                         interp_filters,
+                                         interinter_comp,
+                                         ref_pic_list1->width,
+                                         ref_pic_list1->height,
+                                         (uint16_t)blk_geom->bwidth_uv,
+                                         (uint16_t)blk_geom->bheight_uv,
+                                         blk_geom->bsize,
+                                         blk_ptr->av1xd,
+                                         src_stride,
+                                         dst_stride,
+                                         1,
+                                         ss_y,
+                                         ss_x,
+                                         bit_depth,
+                                         use_intrabc,
+                                         is_compound && is_masked_compound_type(interinter_comp->type));
+            }
 
             // List1-Cr
             src_ptr = ref_pic_list1->buffer_cr +
@@ -4248,29 +4317,62 @@ EbErrorType av1_inter_prediction(
 
             conv_params.use_jnt_comp_avg = conv_params.use_dist_wtd_comp_avg;
 
-            enc_make_inter_predictor(src_ptr,
-                                     dst_ptr,
-                                     (int16_t)pu_origin_y_chroma,
-                                     (int16_t)pu_origin_x_chroma,
-                                     mv,
-                                     sf,
-                                     &conv_params,
-                                     interp_filters,
-                                     interinter_comp,
-                                     ref_pic_list1->width,
-                                     ref_pic_list1->height,
-                                     (uint16_t)blk_geom->bwidth_uv,
-                                     (uint16_t)blk_geom->bheight_uv,
-                                     blk_geom->bsize,
-                                     blk_ptr->av1xd,
-                                     src_stride,
-                                     dst_stride,
-                                     2,
-                                     ss_y,
-                                     ss_x,
-                                     bit_depth,
-                                     use_intrabc,
-                                     is_compound && is_masked_compound_type(interinter_comp->type));
+            if (is_compound && is_masked_compound_type(interinter_comp->type)) {
+                src_ptr = ref_pic_list1->buffer_cr +
+                          (((ref_pic_list1->origin_x + ((pu_origin_x >> 3) << 3)) / 2 +
+                            (ref_pic_list1->origin_y + ((pu_origin_y >> 3) << 3)) / 2 *
+                            ref_pic_list1->stride_cr) << is16bit);
+                src_stride = ref_pic_list1->stride_cr;
+
+                mv_q4 = clamp_mv_to_umv_border_sb(
+                        blk_ptr->av1xd, &mv, blk_geom->bwidth_uv, blk_geom->bheight_uv, 1, 1);
+                subpel_x = mv_q4.col & SUBPEL_MASK;
+                subpel_y = mv_q4.row & SUBPEL_MASK;
+                src_ptr += ((mv_q4.row >> SUBPEL_BITS) * src_stride + (mv_q4.col >> SUBPEL_BITS)) << is16bit;
+
+                conv_params.do_average = 0;
+                av1_make_masked_inter_predictor(
+                        src_ptr,
+                        src_stride,
+                        dst_ptr,
+                        dst_stride,
+                        blk_geom,
+                        blk_geom->bwidth_uv,
+                        blk_geom->bheight_uv,
+                        &filter_params_x,
+                        &filter_params_y,
+                        subpel_x,
+                        subpel_y,
+                        &conv_params,
+                        interinter_comp,
+                        bit_depth,
+                        1 //plane=Cr  seg_mask is computed based on luma and used for chroma
+                );
+            }else{
+                enc_make_inter_predictor(src_ptr,
+                                         dst_ptr,
+                                         (int16_t)pu_origin_y_chroma,
+                                         (int16_t)pu_origin_x_chroma,
+                                         mv,
+                                         sf,
+                                         &conv_params,
+                                         interp_filters,
+                                         interinter_comp,
+                                         ref_pic_list1->width,
+                                         ref_pic_list1->height,
+                                         (uint16_t)blk_geom->bwidth_uv,
+                                         (uint16_t)blk_geom->bheight_uv,
+                                         blk_geom->bsize,
+                                         blk_ptr->av1xd,
+                                         src_stride,
+                                         dst_stride,
+                                         2,
+                                         ss_y,
+                                         ss_x,
+                                         bit_depth,
+                                         use_intrabc,
+                                         is_compound && is_masked_compound_type(interinter_comp->type));
+            }
         }
     }
 
