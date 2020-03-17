@@ -2016,7 +2016,6 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
             scs_ptr->mfmv_enabled = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M1) ? 1 : 0;
     else
         scs_ptr->mfmv_enabled = scs_ptr->static_config.enable_mfmv;
-    scs_ptr->over_boundary_block_mode = 0;
     // Set hbd_mode_decision OFF for high encode modes or bitdepth < 10
     if (scs_ptr->static_config.encoder_bit_depth < 10)
         scs_ptr->static_config.enable_hbd_mode_decision = 0;
