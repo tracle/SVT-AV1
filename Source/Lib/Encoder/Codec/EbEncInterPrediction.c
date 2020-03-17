@@ -854,27 +854,6 @@ extern void eb_av1_predict_intra_block_16bit(
         uint32_t bl_org_x_pict, uint32_t bl_org_y_pict, uint32_t bl_org_x_mb, uint32_t bl_org_y_mb,
         ModeInfo **mi_grid_base, SeqHeader *seq_header_ptr);
 
-struct build_prediction_hbd_ctxt {
-    const AV1_COMMON *cm;
-    int               mi_row;
-    int               mi_col;
-    uint16_t **       tmp_buf;
-    int *             tmp_width;
-    int *             tmp_height;
-    int *             tmp_stride;
-    int               mb_to_far_edge;
-
-    PictureControlSet *  picture_control_set_ptr;
-    MvUnit               mv_unit;
-    uint16_t             pu_origin_x;
-    uint16_t             pu_origin_y;
-    EbPictureBufferDesc *ref_pic_list0;
-    EbPictureBufferDesc  prediction_ptr;
-    uint16_t             dst_origin_x;
-    uint16_t             dst_origin_y;
-    EbBool               perform_chroma;
-};
-
 struct build_prediction_ctxt {
     const AV1_COMMON *cm;
     int               mi_row;
@@ -1767,7 +1746,7 @@ static void build_prediction_by_above_preds(EbBool perform_chroma, BlockSize bsi
 static void build_prediction_by_above_preds_hbd(EbBool perform_chroma, BlockSize bsize,
     PictureControlSet *picture_control_set_ptr,
     MacroBlockD *xd, int mi_row, int mi_col,
-    uint16_t *tmp_buf[MAX_MB_PLANE],
+    uint8_t *tmp_buf[MAX_MB_PLANE],
     int      tmp_stride[MAX_MB_PLANE],
     uint8_t  bit_depth)
 {
@@ -1779,7 +1758,7 @@ static void build_prediction_by_above_preds_hbd(EbBool perform_chroma, BlockSize
     int pred_height = AOMMIN(this_height / 2, 32);
     xd->mb_to_bottom_edge += (this_height - pred_height) * 8;
 
-    struct build_prediction_hbd_ctxt ctxt;
+    struct build_prediction_ctxt ctxt;
 
     ctxt.cm = picture_control_set_ptr->parent_pcs_ptr->av1_cm;
     ctxt.mi_row = mi_row;
@@ -1852,7 +1831,7 @@ static void build_prediction_by_left_preds(EbBool perform_chroma, BlockSize bsiz
 static void build_prediction_by_left_preds_hbd(EbBool perform_chroma, BlockSize bsize,
     PictureControlSet *picture_control_set_ptr,
     MacroBlockD *xd, int mi_row, int mi_col,
-    uint16_t *tmp_buf[MAX_MB_PLANE],
+    uint8_t *tmp_buf[MAX_MB_PLANE],
     int      tmp_stride[MAX_MB_PLANE],
     uint8_t bit_depth)
 {
@@ -1865,7 +1844,7 @@ static void build_prediction_by_left_preds_hbd(EbBool perform_chroma, BlockSize 
     int pred_width = AOMMIN(this_width / 2, 32);
     xd->mb_to_right_edge += (this_width - pred_width) * 8;
 
-    struct build_prediction_hbd_ctxt ctxt;
+    struct build_prediction_ctxt ctxt;
 
     ctxt.cm = picture_control_set_ptr->parent_pcs_ptr->av1_cm;
     ctxt.mi_row = mi_row;
@@ -5991,36 +5970,35 @@ EbErrorType av1_inter_prediction_16bit_pipeline(
     }
 
     if (motion_mode == OBMC_CAUSAL) {
-        uint16_t *tmp_obmc_bufs[2];
+        uint8_t *tmp_obmc_bufs[2];
 
-        DECLARE_ALIGNED(16, uint16_t, obmc_buff_0[2 * MAX_MB_PLANE * MAX_SB_SQUARE]);
-        DECLARE_ALIGNED(16, uint16_t, obmc_buff_1[2 * MAX_MB_PLANE * MAX_SB_SQUARE]);
-        tmp_obmc_bufs[0] = (uint16_t *)obmc_buff_0;
-        tmp_obmc_bufs[1] = (uint16_t *)obmc_buff_1;
+        DECLARE_ALIGNED(16, uint8_t, obmc_buff_0[2 * MAX_MB_PLANE * MAX_SB_SQUARE]);
+        DECLARE_ALIGNED(16, uint8_t, obmc_buff_1[2 * MAX_MB_PLANE * MAX_SB_SQUARE]);
+        tmp_obmc_bufs[0] = obmc_buff_0;
+        tmp_obmc_bufs[1] = obmc_buff_1;
 
-        uint16_t *dst_buf1[MAX_MB_PLANE], *dst_buf2[MAX_MB_PLANE];
-        int       dst_stride1[MAX_MB_PLANE] = { MAX_SB_SIZE, MAX_SB_SIZE, MAX_SB_SIZE };
-        int       dst_stride2[MAX_MB_PLANE] = { MAX_SB_SIZE, MAX_SB_SIZE, MAX_SB_SIZE };
+        uint8_t *dst_buf1[MAX_MB_PLANE], *dst_buf2[MAX_MB_PLANE];
+        int      dst_stride1[MAX_MB_PLANE] = { MAX_SB_SIZE, MAX_SB_SIZE, MAX_SB_SIZE };
+        int      dst_stride2[MAX_MB_PLANE] = { MAX_SB_SIZE, MAX_SB_SIZE, MAX_SB_SIZE };
 
-        {
-            dst_buf1[0] = (uint16_t *)tmp_obmc_bufs[0];
-            dst_buf1[1] = (uint16_t *)tmp_obmc_bufs[0] + MAX_SB_SQUARE;
-            dst_buf1[2] = (uint16_t *)tmp_obmc_bufs[0] + MAX_SB_SQUARE * 2;
-            dst_buf2[0] = (uint16_t *)tmp_obmc_bufs[1];
-            dst_buf2[1] = (uint16_t *)tmp_obmc_bufs[1] + MAX_SB_SQUARE;
-            dst_buf2[2] = (uint16_t *)tmp_obmc_bufs[1] + MAX_SB_SQUARE * 2;
-        }
+        uint8_t shift = (bit_depth > EB_8BIT) ? 1 : 0;
+        dst_buf1[0] = tmp_obmc_bufs[0];
+        dst_buf1[1] = tmp_obmc_bufs[0] + (MAX_SB_SQUARE << shift);
+        dst_buf1[2] = tmp_obmc_bufs[0] + (MAX_SB_SQUARE * 2 << shift);
+        dst_buf2[0] = tmp_obmc_bufs[1];
+        dst_buf2[1] = tmp_obmc_bufs[1] + (MAX_SB_SQUARE << shift);
+        dst_buf2[2] = tmp_obmc_bufs[1] + (MAX_SB_SQUARE * 2 << shift);
 
         int mi_row = pu_origin_y >> 2;
         int mi_col = pu_origin_x >> 2;
-        //use_precomputed_obmc=0;
+
         if (use_precomputed_obmc) {
-            dst_buf1[0] = (uint16_t *)md_context->obmc_buff_0;
-            dst_buf1[1] = (uint16_t *)md_context->obmc_buff_0 + MAX_SB_SQUARE;
-            dst_buf1[2] = (uint16_t *)md_context->obmc_buff_0 + MAX_SB_SQUARE * 2;
-            dst_buf2[0] = (uint16_t *)md_context->obmc_buff_1;
-            dst_buf2[1] = (uint16_t *)md_context->obmc_buff_1 + MAX_SB_SQUARE;
-            dst_buf2[2] = (uint16_t *)md_context->obmc_buff_1 + MAX_SB_SQUARE * 2;
+            dst_buf1[0] = md_context->obmc_buff_0;
+            dst_buf1[1] = md_context->obmc_buff_0 + (MAX_SB_SQUARE << shift);
+            dst_buf1[2] = md_context->obmc_buff_0 + (MAX_SB_SQUARE * 2 << shift);
+            dst_buf2[0] = md_context->obmc_buff_1;
+            dst_buf2[1] = md_context->obmc_buff_1 + (MAX_SB_SQUARE << shift);
+            dst_buf2[2] = md_context->obmc_buff_1 + (MAX_SB_SQUARE * 2 << shift);
         }
         else {
             build_prediction_by_above_preds_hbd(perform_chroma,
