@@ -4525,9 +4525,13 @@ void av1_cost_calc_cfl(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *
     (plane == CFL_PRED_U ? a * CFL_SIGNS + b - 1 : b * CFL_SIGNS + a - 1)
 /*************************Pick the best alpha for cfl mode  or Choose DC******************************************************/
 void cfl_rd_pick_alpha(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *candidate_buffer,
-                       SuperBlock *sb_ptr, ModeDecisionContext *context_ptr,
-                       EbPictureBufferDesc *input_picture_ptr, uint32_t input_cb_origin_in_index,
-                       uint32_t blk_chroma_origin_index) {
+    SuperBlock *sb_ptr, ModeDecisionContext *context_ptr,
+    EbPictureBufferDesc *input_picture_ptr, uint32_t input_cb_origin_in_index,
+    uint32_t blk_chroma_origin_index
+#if CFL_REDUCED_ALPHA || CFL_REDUCED_SIGN
+    ,uint8_t enc_dec
+#endif
+) {
     int64_t  best_rd = INT64_MAX;
     uint64_t full_distortion[DIST_CALC_TOTAL];
     uint64_t coeff_bits;
@@ -4592,10 +4596,19 @@ void cfl_rd_pick_alpha(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *
             int32_t progress = 0;
             for (int32_t c = 0; c < CFL_ALPHABET_SIZE; c++) {
                 int32_t flag = 0;
+#if CFL_REDUCED_ALPHA
+                uint8_t c_th = enc_dec ? 2 : 1;
+                if (c > c_th && progress < c) break;
+#else
                 if (c > 2 && progress < c) break;
+#endif
                 coeff_bits                          = 0;
                 full_distortion[DIST_CALC_RESIDUAL] = 0;
                 for (int32_t i = 0; i < CFL_SIGNS; i++) {
+#if CFL_REDUCED_SIGN
+                    if(!enc_dec)
+                        if (pn_sign > 1 || i > 1) continue;
+#endif
                     const int32_t joint_sign = PLANE_SIGN_TO_JOINT_SIGN(plane, pn_sign, i);
                     if (i == 0) {
                         candidate_buffer->candidate_ptr->cfl_alpha_idx =
@@ -4627,8 +4640,11 @@ void cfl_rd_pick_alpha(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *
                     if (this_rd >= best_rd_uv[joint_sign][plane]) continue;
                     best_rd_uv[joint_sign][plane] = this_rd;
                     best_c[joint_sign][plane]     = c;
-
+#if CFL_REDUCED_ALPHA
+                    flag = enc_dec ? 2 : 1;
+#else
                     flag = 2;
+#endif
                     if (best_rd_uv[joint_sign][!plane] == INT64_MAX) continue;
                     this_rd += mode_rd + best_rd_uv[joint_sign][!plane];
                     if (this_rd >= best_rd) continue;
@@ -4747,7 +4763,11 @@ static void cfl_prediction(PictureControlSet *          pcs_ptr,
                           context_ptr,
                           input_picture_ptr,
                           input_cb_origin_in_index,
-                          blk_chroma_origin_index);
+                          blk_chroma_origin_index
+#if CFL_REDUCED_ALPHA || CFL_REDUCED_SIGN
+                                  ,0
+#endif
+        );
 
         if (candidate_buffer->candidate_ptr->intra_chroma_mode == UV_CFL_PRED) {
             // 4: Recalculate the prediction and the residual
@@ -6904,8 +6924,11 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
                         candidate_ptr->angle_delta[PLANE_TYPE_UV] = angle_delta;
                         candidate_ptr->is_directional_chroma_mode_flag = is_directional_chroma_mode_flag;
 #if FIX_CHROMA
+                        uint8_t defualt_uv_search_path = context_ptr->uv_search_path;
+                        context_ptr->uv_search_path = 1;
                         product_prediction_fun_table[candidate_ptr->type](
                             context_ptr->hbd_mode_decision, context_ptr, pcs_ptr, candidate_buffer);
+                        context_ptr->uv_search_path = defualt_uv_search_path;
 #endif
 
                     }
@@ -7550,7 +7573,7 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
     if (pcs_ptr->slice_type == I_SLICE)
         uv_mode_nfl_count = uv_mode_total_count;
     else
-        uv_mode_nfl_count = 6;
+        uv_mode_nfl_count = 4;
 #else
     if (pcs_ptr->temporal_layer_index == 0)
         uv_mode_nfl_count = uv_mode_total_count;

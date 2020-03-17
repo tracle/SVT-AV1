@@ -601,7 +601,11 @@ static void av1_encode_loop(PictureControlSet *pcs_ptr, EncDecContext *context_p
                                   context_ptr->md_context,
                                   input_samples,
                                   input_cb_offset,
-                                  scratch_cb_offset);
+                                  scratch_cb_offset
+#if CFL_REDUCED_ALPHA || CFL_REDUCED_SIGN
+                                  ,1
+#endif
+                );
 
                 // Output(s)
                 if (candidate_buffer->candidate_ptr->intra_chroma_mode == UV_CFL_PRED) {

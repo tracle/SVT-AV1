@@ -110,6 +110,8 @@ extern "C" {
 #define OBMC_FAST       1 //faster obmc mode (3). cleaner obmc signalling.
 #define REMOVE_MD_EXIT 1 // remove md_exit
 #define MAR16_M8_ADOPTIONS  1 // M8 adoption for TH value
+#define FIX_CHROMA             0
+#define BUG_FIX                0
 #define ADDED_CFL_OFF              0
 #define ADOPT_CHROMA_MODE1_CFL_OFF 0
 #define USE_LUMA_SHORTCUTS_IN  0
@@ -117,8 +119,8 @@ extern "C" {
 #define MOVE_CHROMA_SEARCH     0
 #define RDOQ_FOR_CHROMA        0
 #define USE_FULL_CHROMA        0
-#define FIX_CHROMA             0
-#define BUG_FIX 0
+#define CFL_REDUCED_SIGN       0
+#define CFL_REDUCED_ALPHA      0
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

@@ -496,7 +496,11 @@ extern void cfl_rd_pick_alpha(PictureControlSet *          pcs_ptr,
                               ModeDecisionCandidateBuffer *candidate_buffer, SuperBlock *sb_ptr,
                               ModeDecisionContext *context_ptr,
                               EbPictureBufferDesc *input_picture_ptr,
-                              uint32_t input_cb_origin_in_index, uint32_t blk_chroma_origin_index);
+                              uint32_t input_cb_origin_in_index, uint32_t blk_chroma_origin_index
+#if CFL_REDUCED_ALPHA || CFL_REDUCED_SIGN
+    ,uint8_t enc_dec
+#endif
+);
 
 #ifdef __cplusplus
 }
