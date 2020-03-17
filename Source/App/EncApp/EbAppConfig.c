@@ -219,6 +219,46 @@
 /**********************************
  * Set Cfg Functions
  **********************************/
+static void set_all_tokens(const char *token, const char *value, EbConfig *cfg) {
+    fprintf(stderr, "I am here\n");
+    if (EB_STRCMP(token, INPUT_FILE_TOKEN) == 0) {
+        if (cfg->input_file && !cfg->input_file_is_fifo) fclose(cfg->input_file);
+
+        if (!value) {
+            cfg->input_file = NULL;
+            return;
+        }
+
+        if (!strcmp(value, "stdin"))
+            cfg->input_file = stdin;
+        else
+            FOPEN(cfg->input_file, value, "rb");
+
+        if (cfg->input_file == NULL) { return; }
+
+#ifdef _WIN32
+        HANDLE handle = (HANDLE)_get_osfhandle(_fileno(cfg->input_file));
+        if (handle == INVALID_HANDLE_VALUE) return;
+        cfg->input_file_is_fifo = GetFileType(handle) == FILE_TYPE_PIPE;
+#else
+        int         fd = fileno(cfg->input_file);
+        struct stat statbuf;
+        fstat(fd, &statbuf);
+        cfg->input_file_is_fifo = S_ISFIFO(statbuf.st_mode);
+#endif
+
+        cfg->y4m_input = check_if_y4m(cfg);
+    }
+    if (EB_STRCMP(token, ENCMODE_TOKEN) == 0) cfg->enc_mode = (uint8_t)strtoul(value, NULL, 0);
+    if (EB_STRCMP(token, WIDTH_TOKEN) == 0) cfg->source_width = strtoul(value, NULL, 0);
+    if (EB_STRCMP(token, HEIGHT_TOKEN) == 0) cfg->source_height = strtoul(value, NULL, 0);
+    if (EB_STRCMP(token, OUTPUT_BITSTREAM_TOKEN) == 0) {
+        if (cfg->bitstream_file) { fclose(cfg->bitstream_file); }
+        FOPEN(cfg->bitstream_file, value, "wb");
+    }
+}
+
+
 static void set_cfg_input_file(const char *filename, EbConfig *cfg) {
     if (cfg->input_file && !cfg->input_file_is_fifo) fclose(cfg->input_file);
 
@@ -710,7 +750,7 @@ typedef struct config_entry_s {
     const char * name;
     const char * description;
     int          opt;
-    void (*scf)(const char *, EbConfig *);
+    void (*scf)(const char*, const char *, EbConfig *);
 } ConfigEntry;
 
 /**********************************
@@ -1424,7 +1464,7 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, HELP_TOKEN, "help", "Show usage options and exit", -1, NULL},
     // File I/O
     {SINGLE_INPUT, INPUT_FILE_LONG_TOKEN, "InputFile", "Input filename", option, set_cfg_input_file},
-    {SINGLE_INPUT, INPUT_FILE_TOKEN, "InputFile", NULL, no_print_in_help_menu, set_cfg_input_file},
+    {SINGLE_INPUT, INPUT_FILE_TOKEN, "InputFile", NULL, no_print_in_help_menu, set_all_tokens},
 
     {SINGLE_INPUT, OUTPUT_BITSTREAM_LONG_TOKEN, "StreamFile", "Output filename", option, set_cfg_stream_file},
     {SINGLE_INPUT,
@@ -1432,7 +1472,7 @@ ConfigEntry config_entry[] = {
      "StreamFile",
      NULL,
      no_print_in_help_menu,
-     set_cfg_stream_file},
+     set_all_tokens},
 
     {SINGLE_INPUT, ERROR_FILE_TOKEN, "ErrorFile", "Error filename", option, set_cfg_error_file},
     {SINGLE_INPUT, OUTPUT_RECON_LONG_TOKEN, "ReconFile", "Recon filename", option, set_cfg_recon_file},
@@ -1442,10 +1482,10 @@ ConfigEntry config_entry[] = {
     /***** Global options *****/
     // Picture Dimensions
     {SINGLE_INPUT, WIDTH_LONG_TOKEN, "SourceWidth", "Frame width", global_option, set_cfg_source_width},
-    {SINGLE_INPUT, WIDTH_TOKEN, "SourceWidth", NULL, no_print_in_help_menu, set_cfg_source_width},
+    {SINGLE_INPUT, WIDTH_TOKEN, "SourceWidth", NULL, no_print_in_help_menu, set_all_tokens},
 
     {SINGLE_INPUT, HEIGHT_LONG_TOKEN, "SourceHeight", "Frame height", global_option, set_cfg_source_height},
-    {SINGLE_INPUT, HEIGHT_TOKEN, "SourceHeight", NULL, no_print_in_help_menu, set_cfg_source_height},
+    {SINGLE_INPUT, HEIGHT_TOKEN, "SourceHeight", NULL, no_print_in_help_menu, set_all_tokens},
 
     // Prediction Structure
     {SINGLE_INPUT,
@@ -2331,7 +2371,7 @@ static void set_config_value(EbConfig *config, const char *name, const char *val
 
     while (config_entry[i].name != NULL) {
         if (EB_STRCMP(config_entry[i].name, name) == 0)
-            (*config_entry[i].scf)((const char *)value, config);
+            //(*config_entry[i].scf)((const char *)value, config);
         ++i;
     }
 
@@ -3225,7 +3265,8 @@ EbErrorType read_command_line(int32_t argc, char *const argv[], EbConfig **confi
                 // Fill up the values corresponding to each channel
                 for (index = 0; index < num_channels; ++index) {
                     if (EB_STRCMP(config_strings[index], " "))
-                        (*config_entry[token_index].scf)(config_strings[index], configs[index]);
+                        (*config_entry[token_index].scf)(
+                            config_entry[token_index].token, config_strings[index], configs[index]);
                     else
                         break;
                 }
@@ -3246,7 +3287,8 @@ EbErrorType read_command_line(int32_t argc, char *const argv[], EbConfig **confi
                 // Fill up the values corresponding to each channel
                 for (index = 0; index < num_channels; ++index) {
                     if (EB_STRCMP(config_strings[index], " "))
-                        (*config_entry[token_index].scf)(config_strings[index], configs[index]);
+                        (*config_entry[token_index].scf)(
+                            config_entry[token_index].token, config_strings[index], configs[index]);
                     else
                         break;
                 }
