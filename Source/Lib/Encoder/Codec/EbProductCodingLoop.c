@@ -7340,7 +7340,6 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
     uint8_t                     disable_angle_refinement;
     uint8_t                     disable_angle_prediction;
     uint8_t directional_mode_skip_mask[INTRA_MODES] = { 0 };
-    uint8_t valid_chroma_mask[INTRA_MODES][7] = { { 0 }, { 0 }};
     if (context_ptr->edge_based_skip_angle_intra && use_angle_delta)
     {
         EbPictureBufferDesc   *src_pic = pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr;
@@ -7409,8 +7408,8 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
             (use_angle_delta && av1_is_directional_mode((PredictionMode)uv_mode)) ? 7 : 1;
         uint8_t uv_angle_delta_shift = 1;
 #if USE_LUMA_SHORTCUTS_IN
-        if (!disable_angle_prediction &&
-            directional_mode_skip_mask[(PredictionMode)uv_mode] == 0) {
+        if (!av1_is_directional_mode((PredictionMode)uv_mode) || (!disable_angle_prediction && 
+            directional_mode_skip_mask[(PredictionMode)uv_mode] == 0)) {
 #endif
             for (uint8_t uv_angle_delta_counter = 0;
                 uv_angle_delta_counter < uv_angle_delta_candidate_count;
@@ -7425,7 +7424,6 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
 #if USE_LUMA_SHORTCUTS_IN
                 int32_t  p_angle = mode_to_angle_map[(PredictionMode)uv_mode] + uv_angle_delta * ANGLE_STEP;
                 if (!disable_z2_prediction || (p_angle <= 90 || p_angle >= 180)) {
-                    valid_chroma_mask[uv_mode][uv_angle_delta] = 1;
 #endif
                     candidate_array[uv_mode_total_count].type = INTRA_MODE;
                     candidate_array[uv_mode_total_count].distortion_ready = 0;
@@ -7465,6 +7463,8 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
         }
 #endif
     }
+    //if (uv_mode_total_count == start_fast_buffer_index)
+    //    printf("");
     uv_mode_total_count = uv_mode_total_count - start_fast_buffer_index;
     // Fast-loop search uv_mode
     for (uint8_t uv_mode_count = 0; uv_mode_count < uv_mode_total_count; uv_mode_count++) {
