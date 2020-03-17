@@ -7467,7 +7467,8 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
                         MAX_ANGLE_DELTA);
 #if USE_LUMA_SHORTCUTS_IN
                 int32_t  p_angle = mode_to_angle_map[(PredictionMode)uv_mode] + uv_angle_delta * ANGLE_STEP;
-                if (!disable_z2_prediction || (p_angle <= 90 || p_angle >= 180)) {
+                //if (!disable_z2_prediction || (p_angle <= 90 || p_angle >= 180)) {
+                if (!disable_z2_prediction || (uv_angle_delta <= 1 && p_angle >= -1)) {
 #endif
                     candidate_array[uv_mode_total_count].type = INTRA_MODE;
                     candidate_array[uv_mode_total_count].distortion_ready = 0;
