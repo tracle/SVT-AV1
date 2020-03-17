@@ -4605,12 +4605,18 @@ void cfl_rd_pick_alpha(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *
                 coeff_bits                          = 0;
                 full_distortion[DIST_CALC_RESIDUAL] = 0;
                 for (int32_t i = 0; i < CFL_SIGNS; i++) {
-#if CFL_REDUCED_SIGN
+#if 0//CFL_REDUCED_SIGN
                     if(!enc_dec)
-                        if (pn_sign > 1 || i > 1) continue;
+                        if (pn_sign > 1) continue;
 #endif
                     const int32_t joint_sign = PLANE_SIGN_TO_JOINT_SIGN(plane, pn_sign, i);
+#if CFL_REDUCED_SIGN
+                    uint8_t calc_cost = enc_dec ? (i == 0) : (i == 0) && (pn_sign == CFL_SIGN_NEG);
+                    if (calc_cost) {
+#else
+                    
                     if (i == 0) {
+#endif
                         candidate_buffer->candidate_ptr->cfl_alpha_idx =
                             (c << CFL_ALPHABET_SIZE_LOG2) + c;
                         candidate_buffer->candidate_ptr->cfl_alpha_signs = joint_sign;
