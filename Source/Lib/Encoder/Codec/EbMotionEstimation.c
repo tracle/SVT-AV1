@@ -7632,6 +7632,11 @@ void hme_level_0(
         ((context_ptr->hme_level0_search_area_in_height_array[search_region_number_in_height] *
           searchAreaMultiplierY) /
          100));
+
+#if BUG_FIX
+    search_area_width = MIN(search_area_width, sixteenth_ref_pic_ptr->width);
+    search_area_height = MIN(search_area_width, sixteenth_ref_pic_ptr->height);
+#endif
     x_search_region_distance = x_hme_search_center;
     y_search_region_distance = y_hme_search_center;
     pad_width                = (int16_t)(sixteenth_ref_pic_ptr->origin_x) - 1;

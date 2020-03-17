@@ -6840,10 +6840,20 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
             }
         }
 #if !MOVE_CHROMA_SEARCH
+#if FIX_CHROMA
+        int32_t is_inter = (candidate_buffer->candidate_ptr->type == INTER_MODE ||
+                            candidate_buffer->candidate_ptr->use_intrabc)
+                               ? EB_TRUE
+                               : EB_FALSE;
+#endif
         if (context_ptr->chroma_at_last_md_stage) {
             if (context_ptr->blk_geom->sq_size < 128) {
                 if (context_ptr->blk_geom->has_uv) {
+#if FIX_CHROMA
+                    if (!is_inter) {
+#else
                     if (candidate_ptr->type == INTRA_MODE) {
+#endif
                         uint64_t cfl_th = 30;
                         uint32_t intra_chroma_mode;
                         int32_t  angle_delta;
@@ -6893,6 +6903,11 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
                         candidate_ptr->intra_chroma_mode = intra_chroma_mode;
                         candidate_ptr->angle_delta[PLANE_TYPE_UV] = angle_delta;
                         candidate_ptr->is_directional_chroma_mode_flag = is_directional_chroma_mode_flag;
+#if FIX_CHROMA
+                        product_prediction_fun_table[candidate_ptr->type](
+                            context_ptr->hbd_mode_decision, context_ptr, pcs_ptr, candidate_buffer);
+#endif
+
                     }
                 }
             }

@@ -117,6 +117,8 @@ extern "C" {
 #define MOVE_CHROMA_SEARCH     0
 #define RDOQ_FOR_CHROMA        0
 #define USE_FULL_CHROMA        0
+#define FIX_CHROMA             0
+#define BUG_FIX 0
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
