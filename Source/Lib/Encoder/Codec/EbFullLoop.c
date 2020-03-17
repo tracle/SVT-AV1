@@ -1794,10 +1794,19 @@ int32_t av1_quantize_inv_quantize(
                                      &qparam);
         }
     }
+#if RDOQ_FOR_CHROMA
+    uint8_t updated_perform_rdoq = perform_rdoq;
+    if (component_type == COMPONENT_LUMA)
+        updated_perform_rdoq = perform_rdoq && *eob != 0 ? 1 : 0;
+    else
+        updated_perform_rdoq = perform_rdoq ? 1 : 0;
 
+    if (updated_perform_rdoq) {
+#else
     if (perform_rdoq && *eob != 0) {
+#endif
         // Perform rdoq
-        if (*eob != 0) {
+        /*if (*eob != 0)*/ {
             eb_av1_optimize_b(md_context,
                               txb_skip_context,
                               dc_sign_context,

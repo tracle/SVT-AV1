@@ -272,6 +272,15 @@ struct CodingLoopContext_s;
 uint8_t                 get_ref_frame_idx(uint8_t ref_type);
 extern MvReferenceFrame svt_get_ref_frame_type(uint8_t list, uint8_t ref_idx);
 uint8_t                 get_list_idx(uint8_t ref_type);
+#if USE_LUMA_SHORTCUTS_IN
+ void angle_estimation(
+    const uint8_t *src,
+    int src_stride,
+    int rows,
+    int cols,
+    //BLOCK_SIZE bsize,
+    uint8_t *directional_mode_skip_mask);
+#endif
 #ifdef __cplusplus
 }
 #endif

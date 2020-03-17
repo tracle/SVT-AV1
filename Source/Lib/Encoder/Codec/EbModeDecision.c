@@ -5111,7 +5111,11 @@ void av1_get_gradient_hist_c(const uint8_t *src, int src_stride, int rows,
         src += src_stride;
     }
 }
+#if USE_LUMA_SHORTCUTS_IN
+ void angle_estimation(
+#else
 static void angle_estimation(
+#endif
     const uint8_t *src,
     int src_stride,
     int rows,
@@ -6131,3 +6135,245 @@ uint32_t product_full_mode_decision(
     UNUSED(cu_size_log2);
     return lowest_cost_index;
 }
+#if MOVE_CHROMA_SEARCH
+/***************************************
+* Update best block
+***************************************/
+void update_block_info(
+    struct ModeDecisionContext   *context_ptr,
+    BlkStruct                    *blk_ptr,
+    ModeDecisionCandidateBuffer **buffer_ptr_array,
+    uint32_t                     lowest_cost_index)
+{
+
+    PredictionUnit       *pu_ptr;
+    ModeDecisionCandidate       *candidate_ptr;
+
+    candidate_ptr = buffer_ptr_array[lowest_cost_index]->candidate_ptr;
+
+    context_ptr->md_local_blk_unit[blk_ptr->mds_idx].cost = *(buffer_ptr_array[lowest_cost_index]->full_cost_ptr);
+    context_ptr->md_local_blk_unit[blk_ptr->mds_idx].default_cost = *(buffer_ptr_array[lowest_cost_index]->full_cost_ptr);
+    context_ptr->md_local_blk_unit[blk_ptr->mds_idx].cost = (context_ptr->md_local_blk_unit[blk_ptr->mds_idx].cost - buffer_ptr_array[lowest_cost_index]->candidate_ptr->chroma_distortion) + buffer_ptr_array[lowest_cost_index]->candidate_ptr->chroma_distortion_inter_depth;
+    context_ptr->md_ep_pipe_sb[blk_ptr->mds_idx].merge_cost = *buffer_ptr_array[lowest_cost_index]->full_cost_merge_ptr;
+    context_ptr->md_ep_pipe_sb[blk_ptr->mds_idx].skip_cost = *buffer_ptr_array[lowest_cost_index]->full_cost_skip_ptr;
+
+    if (candidate_ptr->type == INTER_MODE && candidate_ptr->merge_flag == EB_TRUE)
+        context_ptr->md_ep_pipe_sb[blk_ptr->mds_idx].chroma_distortion = buffer_ptr_array[lowest_cost_index]->candidate_ptr->chroma_distortion;
+    context_ptr->md_local_blk_unit[blk_ptr->mds_idx].full_distortion = buffer_ptr_array[lowest_cost_index]->candidate_ptr->full_distortion;
+    context_ptr->md_local_blk_unit[blk_ptr->mds_idx].chroma_distortion = (uint32_t)buffer_ptr_array[lowest_cost_index]->candidate_ptr->chroma_distortion;
+    context_ptr->md_local_blk_unit[blk_ptr->mds_idx].chroma_distortion_inter_depth = (uint32_t)buffer_ptr_array[lowest_cost_index]->candidate_ptr->chroma_distortion_inter_depth;
+
+    blk_ptr->prediction_mode_flag = candidate_ptr->type;
+    blk_ptr->tx_depth = candidate_ptr->tx_depth;
+    blk_ptr->skip_flag = candidate_ptr->skip_flag; // note, the skip flag is re-checked in the ENCDEC process
+    blk_ptr->block_has_coeff = ((candidate_ptr->block_has_coeff) > 0) ? EB_TRUE : EB_FALSE;
+#if CLEAN_UP_SB_DATA_4
+    context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].quantized_dc[1][0] = buffer_ptr_array[lowest_cost_index]->candidate_ptr->quantized_dc[1][0];
+    context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].quantized_dc[2][0] = buffer_ptr_array[lowest_cost_index]->candidate_ptr->quantized_dc[2][0];
+#else
+    blk_ptr->quantized_dc[1][0] = buffer_ptr_array[lowest_cost_index]->candidate_ptr->quantized_dc[1][0];
+    blk_ptr->quantized_dc[2][0] = buffer_ptr_array[lowest_cost_index]->candidate_ptr->quantized_dc[2][0];
+#endif
+    context_ptr->md_local_blk_unit[blk_ptr->mds_idx].count_non_zero_coeffs = candidate_ptr->count_non_zero_coeffs;
+
+    blk_ptr->av1xd->use_intrabc = candidate_ptr->use_intrabc;
+    if (blk_ptr->prediction_mode_flag == INTER_MODE && candidate_ptr->is_compound)
+    {
+        blk_ptr->interinter_comp.type = candidate_ptr->interinter_comp.type;
+        blk_ptr->interinter_comp.mask_type = candidate_ptr->interinter_comp.mask_type;
+        blk_ptr->interinter_comp.wedge_index = candidate_ptr->interinter_comp.wedge_index;
+        blk_ptr->interinter_comp.wedge_sign = candidate_ptr->interinter_comp.wedge_sign;
+        blk_ptr->compound_idx = candidate_ptr->compound_idx;
+        blk_ptr->comp_group_idx = candidate_ptr->comp_group_idx;
+        if (blk_ptr->interinter_comp.type == COMPOUND_AVERAGE){
+            if (blk_ptr->comp_group_idx != 0 || blk_ptr->compound_idx != 1)
+                SVT_LOG("Error: Compound combination not allowed\n");
+        }
+    }
+    blk_ptr->is_interintra_used          = candidate_ptr->is_interintra_used;
+    blk_ptr->interintra_mode             = candidate_ptr->interintra_mode;
+    blk_ptr->use_wedge_interintra        = candidate_ptr->use_wedge_interintra;
+    blk_ptr->interintra_wedge_index      = candidate_ptr->interintra_wedge_index;
+#if !CLEAN_UP_SB_DATA_5
+    blk_ptr->ii_wedge_sign               = candidate_ptr->ii_wedge_sign;
+#endif
+    // Set the PU level variables
+    blk_ptr->interp_filters = candidate_ptr->interp_filters;
+    {
+        pu_ptr = blk_ptr->prediction_unit_array;
+        // Intra Prediction
+#if !CLEAN_UP_SB_DATA_7
+        pu_ptr->intra_luma_mode = 0x1F;
+#endif
+        if (blk_ptr->prediction_mode_flag == INTRA_MODE)
+        {
+            blk_ptr->filter_intra_mode= candidate_ptr->filter_intra_mode;
+#if !CLEAN_UP_SB_DATA_7
+            pu_ptr->intra_luma_mode = candidate_ptr->intra_luma_mode;
+#endif
+            pu_ptr->is_directional_mode_flag = candidate_ptr->is_directional_mode_flag;
+            pu_ptr->angle_delta[PLANE_TYPE_Y] = candidate_ptr->angle_delta[PLANE_TYPE_Y];
+
+            pu_ptr->cfl_alpha_idx = candidate_ptr->cfl_alpha_idx;
+            pu_ptr->cfl_alpha_signs = candidate_ptr->cfl_alpha_signs;
+
+            pu_ptr->intra_chroma_mode = candidate_ptr->intra_chroma_mode;
+            pu_ptr->is_directional_chroma_mode_flag = candidate_ptr->is_directional_chroma_mode_flag;
+            pu_ptr->angle_delta[PLANE_TYPE_UV] = candidate_ptr->angle_delta[PLANE_TYPE_UV];
+        }
+        if (blk_ptr->prediction_mode_flag == INTRA_MODE)
+        {
+            memcpy(&blk_ptr->palette_info.pmi, &candidate_ptr->palette_info.pmi, sizeof(PaletteModeInfo));
+            if(svt_av1_allow_palette(context_ptr->sb_ptr->pcs_ptr->parent_pcs_ptr->palette_mode, context_ptr->blk_geom->bsize))
+               memcpy(blk_ptr->palette_info.color_idx_map, candidate_ptr->palette_info.color_idx_map, MAX_PALETTE_SQUARE);
+        }
+        else {
+            blk_ptr->palette_info.pmi.palette_size[0] = blk_ptr->palette_info.pmi.palette_size[1] = 0;
+        }
+        // Inter Prediction
+        pu_ptr->inter_pred_direction_index = candidate_ptr->prediction_direction[0];
+#if CLEAN_UP_SB_DATA_7
+        context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].merge_flag = candidate_ptr->merge_flag;
+#else
+        pu_ptr->merge_flag = candidate_ptr->merge_flag;
+#endif
+        if (blk_ptr->prediction_mode_flag != INTER_MODE && blk_ptr->av1xd->use_intrabc == 0)
+        {
+            pu_ptr->inter_pred_direction_index = 0x03;
+#if CLEAN_UP_SB_DATA_7
+            context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].merge_flag = EB_FALSE;
+#else
+            pu_ptr->merge_flag = EB_FALSE;
+#endif
+        }
+        pu_ptr->mv[REF_LIST_0].x = 0;
+        pu_ptr->mv[REF_LIST_0].y = 0;
+
+        pu_ptr->mv[REF_LIST_1].x = 0;
+        pu_ptr->mv[REF_LIST_1].y = 0;
+
+        blk_ptr->pred_mode = candidate_ptr->pred_mode;
+        blk_ptr->drl_index = candidate_ptr->drl_index;
+
+        pu_ptr->inter_mode = candidate_ptr->inter_mode;
+        pu_ptr->is_compound = candidate_ptr->is_compound;
+#if CLEAN_UP_SB_DATA_10
+        context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].compound_idx = candidate_ptr->compound_idx;
+        context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].interinter_comp = candidate_ptr->interinter_comp;
+#else
+        pu_ptr->compound_idx = candidate_ptr->compound_idx;
+        pu_ptr->interinter_comp = candidate_ptr->interinter_comp;
+#endif
+#if !CLEAN_UP_SB_DATA_7
+        pu_ptr->pred_mv_weight = candidate_ptr->pred_mv_weight;
+#endif
+        pu_ptr->ref_frame_type = candidate_ptr->ref_frame_type;
+#if CLEAN_UP_SB_DATA_10
+        context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].ref_frame_index_l0 = candidate_ptr->ref_frame_index_l0;
+        context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].ref_frame_index_l1 = candidate_ptr->ref_frame_index_l1;
+#else
+        pu_ptr->ref_frame_index_l0 = candidate_ptr->ref_frame_index_l0;
+        pu_ptr->ref_frame_index_l1 = candidate_ptr->ref_frame_index_l1;
+#endif
+#if !CLEAN_UP_SB_DATA_7
+        pu_ptr->ref_mv_index = candidate_ptr->ref_mv_index;
+        pu_ptr->is_new_mv = candidate_ptr->is_new_mv;
+        pu_ptr->is_zero_mv = candidate_ptr->is_zero_mv;
+#endif
+
+        if (pu_ptr->inter_pred_direction_index == UNI_PRED_LIST_0)
+        {
+            //EB_MEMCPY(&pu_ptr->mv[REF_LIST_0].x,&candidate_ptr->mvs_l0,4);
+            pu_ptr->mv[REF_LIST_0].x = candidate_ptr->motion_vector_xl0;
+            pu_ptr->mv[REF_LIST_0].y = candidate_ptr->motion_vector_yl0;
+        }
+
+        if (pu_ptr->inter_pred_direction_index == UNI_PRED_LIST_1)
+        {
+            //EB_MEMCPY(&pu_ptr->mv[REF_LIST_1].x,&candidate_ptr->mvs_l1,4);
+            pu_ptr->mv[REF_LIST_1].x = candidate_ptr->motion_vector_xl1;
+            pu_ptr->mv[REF_LIST_1].y = candidate_ptr->motion_vector_yl1;
+        }
+
+        if (pu_ptr->inter_pred_direction_index == BI_PRED)
+        {
+            //EB_MEMCPY(&pu_ptr->mv[REF_LIST_0].x,&candidate_ptr->mvs,8);
+            pu_ptr->mv[REF_LIST_0].x = candidate_ptr->motion_vector_xl0;
+            pu_ptr->mv[REF_LIST_0].y = candidate_ptr->motion_vector_yl0;
+            pu_ptr->mv[REF_LIST_1].x = candidate_ptr->motion_vector_xl1;
+            pu_ptr->mv[REF_LIST_1].y = candidate_ptr->motion_vector_yl1;
+        }
+        if (pu_ptr->inter_pred_direction_index == UNI_PRED_LIST_0) {
+            blk_ptr->predmv[0].as_mv.col = candidate_ptr->motion_vector_pred_x[REF_LIST_0];
+            blk_ptr->predmv[0].as_mv.row = candidate_ptr->motion_vector_pred_y[REF_LIST_0];
+        }
+        else if (pu_ptr->inter_pred_direction_index == UNI_PRED_LIST_1) {
+            blk_ptr->predmv[0].as_mv.col = candidate_ptr->motion_vector_pred_x[REF_LIST_1];
+            blk_ptr->predmv[0].as_mv.row = candidate_ptr->motion_vector_pred_y[REF_LIST_1];
+        }
+        else if (pu_ptr->inter_pred_direction_index == BI_PRED) {
+            blk_ptr->predmv[0].as_mv.col = candidate_ptr->motion_vector_pred_x[REF_LIST_0];
+            blk_ptr->predmv[0].as_mv.row = candidate_ptr->motion_vector_pred_y[REF_LIST_0];
+            blk_ptr->predmv[1].as_mv.col = candidate_ptr->motion_vector_pred_x[REF_LIST_1];
+            blk_ptr->predmv[1].as_mv.row = candidate_ptr->motion_vector_pred_y[REF_LIST_1];
+        }
+#if !CLEAN_UP_SB_DATA_7
+        // The MV prediction indicies are recalcated by the EncDec.
+        pu_ptr->mvd[REF_LIST_0].pred_idx = 0;
+        pu_ptr->mvd[REF_LIST_1].pred_idx = 0;
+#endif
+        pu_ptr->overlappable_neighbors[0] = context_ptr->blk_ptr->prediction_unit_array[0].overlappable_neighbors[0];
+        pu_ptr->overlappable_neighbors[1] = context_ptr->blk_ptr->prediction_unit_array[0].overlappable_neighbors[1];
+        pu_ptr->motion_mode = candidate_ptr->motion_mode;
+        pu_ptr->num_proj_ref = candidate_ptr->num_proj_ref;
+#if CLEAN_UP_SB_DATA_10
+        if (pu_ptr->motion_mode == WARPED_CAUSAL) {
+            EB_MEMCPY(&context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].wm_params_l0, &candidate_ptr->wm_params_l0, sizeof(EbWarpedMotionParams));
+            EB_MEMCPY(&context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].wm_params_l1, &candidate_ptr->wm_params_l1, sizeof(EbWarpedMotionParams));
+        }
+#else
+        if (pu_ptr->motion_mode == WARPED_CAUSAL) {
+            EB_MEMCPY(&pu_ptr->wm_params_l0, &candidate_ptr->wm_params_l0, sizeof(EbWarpedMotionParams));
+            EB_MEMCPY(&pu_ptr->wm_params_l1, &candidate_ptr->wm_params_l1, sizeof(EbWarpedMotionParams));
+        }
+#endif
+    }
+
+    TransformUnit *txb_ptr;
+    uint32_t txb_itr;
+    uint32_t txb_index;
+    uint32_t tu_total_count;
+    uint32_t cu_size_log2 = context_ptr->cu_size_log2;
+    tu_total_count = context_ptr->blk_geom->txb_count[blk_ptr->tx_depth];
+    txb_index = 0;
+    txb_itr = 0;
+
+    //blk_ptr->forceSmallTu = candidate_ptr->forceSmallTu;
+
+    // Set TU
+    do {
+        txb_ptr = &blk_ptr->txb_array[txb_index];
+#if !CLEAN_UP_SB_DATA_7
+        txb_ptr->split_flag = EB_FALSE;
+#endif
+#if CLEAN_UP_SB_DATA_8
+        context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].y_has_coeff[txb_index] = (EbBool)(((candidate_ptr->y_has_coeff)  & (1 << txb_index)) > 0);
+        context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].u_has_coeff[txb_index] = (EbBool)(((candidate_ptr->u_has_coeff) & (1 << (txb_index))) > 0);
+        context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].v_has_coeff[txb_index] = (EbBool)(((candidate_ptr->v_has_coeff) & (1 << (txb_index))) > 0);
+#else
+        txb_ptr->y_has_coeff = (EbBool)(((candidate_ptr->y_has_coeff)  & (1 << txb_index)) > 0);
+        txb_ptr->u_has_coeff = (EbBool)(((candidate_ptr->u_has_coeff) & (1 << (txb_index))) > 0);
+        txb_ptr->v_has_coeff = (EbBool)(((candidate_ptr->v_has_coeff) & (1 << (txb_index))) > 0);
+#endif
+        txb_ptr->transform_type[PLANE_TYPE_Y] = candidate_ptr->transform_type[txb_index];
+        txb_ptr->transform_type[PLANE_TYPE_UV] = candidate_ptr->transform_type_uv;
+#if CLEAN_UP_SB_DATA_4
+        context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].quantized_dc[0][txb_index] = candidate_ptr->quantized_dc[0][txb_index];
+#else
+        blk_ptr->quantized_dc[0][txb_index] = candidate_ptr->quantized_dc[0][txb_index];
+#endif
+        ++txb_index;
+        ++txb_itr;
+    } while (txb_itr < tu_total_count);
+}
+#endif
