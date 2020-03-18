@@ -4030,6 +4030,12 @@ void perform_ref_masking(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
     }
 
     // Tag ref: do_red or not
+#if 1
+    for (uint32_t i = 0; i < num_of_cand_to_sort - 1; ++i) {
+        if(i >= 2)
+            context_ptr->ref_filtering_res[i]->do_ref = 0;
+    }
+#else
     uint64_t best = context_ptr->ref_filtering_res[0][0].dist;
     for (uint32_t li = 0; li < MAX_NUM_OF_REF_PIC_LIST; li++) {
         for (uint32_t ri = 0; ri < REF_LIST_MAX_DEPTH; ri++) {
@@ -4038,6 +4044,7 @@ void perform_ref_masking(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 context_ptr->ref_filtering_res[li][ri].do_ref = 0;
         }
     }
+#endif
 }
 #endif
 void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,

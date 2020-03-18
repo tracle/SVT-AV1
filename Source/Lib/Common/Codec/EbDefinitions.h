@@ -119,20 +119,21 @@ extern "C" {
 #define M5_CHROMA_NICS             1
 
 /*************************/
+/*Modified M5 Ref*/
 #define SHUT_ME_PRUNING 1
 #define SHUT_PRED_ME_REF_CAPPING 1
+/*Modified M5 Mod*/
+#define SHUT_MD_MRP 0
 /*************************/
-#define MD_REFERENCE_MASKING 1
+#define MD_REFERENCE_MASKING 0
 #if MD_REFERENCE_MASKING
 #define NEW_MV_REF_MASKING 1
-#define UNIPRED_3x3_REF_MASKING 0
-#define BIPRED_3x3_REF_MASKING 0
-#define NEAREST_NEAR_REF_MASKING 0
-#define NEW_NEAREST_NEW_NEAR_REF_MASKING 0
-#define WARP_REF_MASKING 0
-#define PRED_ME_REF_MASKING 0
-#define GLOBAL_REF_MASKING 0
-
+#define UNIPRED_3x3_REF_MASKING 1
+#define BIPRED_3x3_REF_MASKING 1
+#define NEAREST_NEAR_REF_MASKING 1
+#define NEW_NEAREST_NEW_NEAR_REF_MASKING 1
+#define WARP_REF_MASKING 1
+#define PRED_ME_REF_MASKING 1
 #endif
 #endif
 

@@ -2547,7 +2547,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         context_ptr->md_max_ref_count = 4;
 #endif
-
+#if SHUT_MD_MRP
+    context_ptr->md_max_ref_count = 1;
+#endif
     // Set md_skip_mvp_generation (and use (0,0) as MVP instead)
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->md_skip_mvp_generation = EB_TRUE;
