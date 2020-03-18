@@ -136,7 +136,7 @@ struct ModeDecisionCandidate;
 struct ModeDecisionCandidateBuffer;
 struct InterPredictionContext;
 
-#if PME_SORT_REF
+#if PME_SORT_REF || MD_REFERENCE_MASKING
 typedef struct RefResults {
     uint8_t  list_i;   // list index of this ref
     uint8_t  ref_i;    // ref list index of this ref
@@ -152,6 +152,12 @@ typedef struct  ObmcControls {
     uint8_t mvp_ref_count; //closest references allowed in mvp 0:4
     uint8_t near_count;    //how many near to consider injecting obmc 0..3
 }ObmcControls;
+#endif
+#if MD_REFERENCE_MASKING
+typedef struct RefMaskingControls {
+    uint8_t enabled;
+    uint32_t to_do_ref_th;     
+}RefMaskingControls;
 #endif
 typedef struct ModeDecisionContext {
     EbDctor  dctor;
@@ -432,6 +438,9 @@ typedef struct ModeDecisionContext {
     uint8_t      md_enable_inter_intra;
     uint8_t      md_filter_intra_mode;
     uint8_t      md_intra_angle_delta;
+#if MD_REFERENCE_MASKING
+    uint8_t      md_ref_masking_mode;
+#endif
     uint8_t      md_max_ref_count;
     EbBool       md_skip_mvp_generation;
     int16_t      pred_me_full_pel_search_width;
@@ -442,6 +451,10 @@ typedef struct ModeDecisionContext {
 #endif
 #if OBMC_FAST
     ObmcControls obmc_ctrls;
+#endif
+#if MD_REFERENCE_MASKING
+    RefResults ref_filtering_res[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
+    RefMaskingControls ref_masking_ctrls;
 #endif
     // Signal to control initial and final pass PD setting(s)
     PdPass pd_pass;

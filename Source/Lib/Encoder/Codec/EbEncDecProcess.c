@@ -1339,6 +1339,27 @@ void set_obmc_controls(ModeDecisionContext *mdctxt, uint8_t obmc_mode) {
 
 }
 #endif
+#if MD_REFERENCE_MASKING
+void set_md_ref_masking_controls(ModeDecisionContext *mdctxt, uint8_t md_ref_masking_mode) {
+
+    RefMaskingControls *ref_masking_ctrls = &mdctxt->ref_masking_ctrls;
+
+    switch (md_ref_masking_mode)
+    {
+    case 0:
+        ref_masking_ctrls->enabled = 0;
+        ref_masking_ctrls->to_do_ref_th = (uint32_t) ~0;
+        break;
+    case 1:
+        ref_masking_ctrls->enabled = 1;
+        ref_masking_ctrls->to_do_ref_th = 25;
+        break;
+    default:
+        assert(0);
+        break;
+    }
+}
+#endif
 /******************************************************
 * Derive EncDec Settings for OQ
 Input   : encoder mode and pd pass
@@ -2487,6 +2508,16 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 0: OFF
     // 1: If previous similar block is intra, do not inject any inter
     context_ptr->intra_similar_mode = 1;
+#if MD_REFERENCE_MASKING
+    // Set md_filter_ref_frame @ MD
+    if (context_ptr->pd_pass == PD_PASS_0)
+        context_ptr->md_ref_masking_mode = 0;
+    else if (context_ptr->pd_pass == PD_PASS_1)
+        context_ptr->md_ref_masking_mode = 0;
+    else
+        context_ptr->md_ref_masking_mode = 1;
+    set_md_ref_masking_controls(context_ptr, context_ptr->md_ref_masking_mode);
+#endif
 
     // Set max_ref_count @ MD
     if (context_ptr->pd_pass == PD_PASS_0)

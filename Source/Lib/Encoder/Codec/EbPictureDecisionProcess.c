@@ -1552,6 +1552,9 @@ EbErrorType signal_derivation_multi_processes_oq(
     else
         pcs_ptr->prune_ref_based_me = 1;
 
+#if SHUT_ME_PRUNING
+    pcs_ptr->prune_ref_based_me = 0;
+#endif
     return return_error;
 }
 int8_t av1_ref_frame_type(const MvReferenceFrame *const rf);
