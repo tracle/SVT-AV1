@@ -117,6 +117,16 @@ extern "C" {
 #define ADD_SAD_AT_PME_SIGNAL      1 // Add signal for using SAD at PME
 #define MAR17_ADOPTIONS            1 // Push features with bad slope to M8 & beyond.
 #define M5_CHROMA_NICS             1
+#define MD_CFL                     0
+#if MD_CFL
+#define CFL_REDUCED_ALPHA          0
+#define CFL_REMOVE_SHORT_CUT0      0
+#define CFL_TH_ALGORITHM           0
+#if CFL_TH_ALGORITHM
+#define CFL_TH_ABS                 100
+#define CFL_TH_PERCENTAGE          5
+#endif
+#endif
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

@@ -503,6 +503,13 @@ extern void cfl_rd_pick_alpha(PictureControlSet *          pcs_ptr,
                               ModeDecisionContext *context_ptr,
                               EbPictureBufferDesc *input_picture_ptr,
                               uint32_t input_cb_origin_in_index, uint32_t blk_chroma_origin_index);
+#if MD_CFL
+extern void md_cfl_rd_pick_alpha(PictureControlSet *          pcs_ptr,
+                              ModeDecisionCandidateBuffer *candidate_buffer, SuperBlock *sb_ptr,
+                              ModeDecisionContext *context_ptr,
+                              EbPictureBufferDesc *input_picture_ptr,
+                              uint32_t input_cb_origin_in_index, uint32_t blk_chroma_origin_index);
+#endif
 
 #ifdef __cplusplus
 }
