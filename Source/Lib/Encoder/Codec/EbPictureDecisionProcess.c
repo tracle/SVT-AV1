@@ -983,7 +983,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     }
     else
         pcs_ptr->loop_filter_mode = 0;
-
+    pcs_ptr->loop_filter_mode = 0;
     // CDEF Level                                   Settings
     // 0                                            OFF
     // 1                                            1 step refinement
@@ -1008,6 +1008,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     }
     else
         pcs_ptr->cdef_filter_mode = 0;
+    pcs_ptr->cdef_filter_mode = 0;
 
     // SG Level                                    Settings
     // 0                                            OFF
@@ -1033,6 +1034,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     else
         cm->sg_filter_mode = scs_ptr->static_config.sg_filter_mode;
 
+    cm->sg_filter_mode = 0;
     // WN Level                                     Settings
     // 0                                            OFF
     // 1                                            3-Tap luma/ 3-Tap chroma
@@ -1054,7 +1056,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     }
     else
         cm->wn_filter_mode = scs_ptr->static_config.wn_filter_mode;
-
+    cm->wn_filter_mode = 0;
     // Intra prediction modes                       Settings
     // 0                                            FULL
     // 1                                            LIGHT per block : disable_z2_prediction && disable_angle_refinement  for 64/32/4
