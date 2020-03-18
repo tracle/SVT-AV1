@@ -4707,7 +4707,7 @@ void md_cfl_rd_pick_alpha(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffe
 #if CFL_TH_ABS
     }
     else {
-    best_rd = INT64_MAX;
+        best_rd = INT64_MAX;
     }
 #endif
 #else
@@ -4855,7 +4855,26 @@ void md_cfl_rd_pick_alpha(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffe
 
     dc_rd += dc_mode_rd;
 #endif
-    if (dc_rd <= best_rd) {
+
+#if 0 //TEST_3
+    if (dc_rd <= best_rd || best_rd == INT64_MAX) {
+        candidate_buffer->candidate_ptr->intra_chroma_mode = UV_CFL_PRED;
+        candidate_buffer->candidate_ptr->cfl_alpha_idx     = 0;
+        candidate_buffer->candidate_ptr->cfl_alpha_signs   = 0;
+    } else {
+        candidate_buffer->candidate_ptr->intra_chroma_mode = UV_CFL_PRED;
+        int32_t ind                                        = 0;
+        if (best_joint_sign >= 0) {
+            const int32_t u = best_c[best_joint_sign][CFL_PRED_U];
+            const int32_t v = best_c[best_joint_sign][CFL_PRED_V];
+            ind             = (u << CFL_ALPHABET_SIZE_LOG2) + v;
+        } else
+            best_joint_sign = 0;
+        candidate_buffer->candidate_ptr->cfl_alpha_idx   = ind;
+        candidate_buffer->candidate_ptr->cfl_alpha_signs = best_joint_sign;
+    }
+#else
+    if (dc_rd <= best_rd || best_rd == INT64_MAX) {
         candidate_buffer->candidate_ptr->intra_chroma_mode = UV_DC_PRED;
         candidate_buffer->candidate_ptr->cfl_alpha_idx     = 0;
         candidate_buffer->candidate_ptr->cfl_alpha_signs   = 0;
@@ -4871,6 +4890,7 @@ void md_cfl_rd_pick_alpha(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffe
         candidate_buffer->candidate_ptr->cfl_alpha_idx   = ind;
         candidate_buffer->candidate_ptr->cfl_alpha_signs = best_joint_sign;
     }
+#endif
 }
 #endif
 void cfl_rd_pick_alpha(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *candidate_buffer,
@@ -7678,55 +7698,135 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
     }
     UvPredictionMode uv_mode_end = context_ptr->md_enable_paeth ? UV_PAETH_PRED :
                                    context_ptr->md_enable_smooth ? UV_SMOOTH_H_PRED : UV_D67_PRED;
-
+#if UV_SEARCH_MODE_INJCECTION
+    uint8_t                     angle_delta_candidate_count = use_angle_delta ? 7 : 1;
+    uint8_t                     uv_mode_start = UV_DC_PRED;
+    uint8_t                     disable_z2_prediction;
+    uint8_t                     disable_angle_refinement;
+    uint8_t                     disable_angle_prediction;
+    uint8_t directional_mode_skip_mask[INTRA_MODES] = { 0 };
+    if (context_ptr->edge_based_skip_angle_intra && use_angle_delta)
+    {
+        EbPictureBufferDesc   *src_pic = pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr;
+        uint8_t               *src_buf = src_pic->buffer_y + (context_ptr->blk_origin_x + src_pic->origin_x) + (context_ptr->blk_origin_y + src_pic->origin_y) * src_pic->stride_y;
+        const int rows = block_size_high[context_ptr->blk_geom->bsize];
+        const int cols = block_size_wide[context_ptr->blk_geom->bsize];
+        angle_estimation(src_buf, src_pic->stride_y, rows, cols, /*context_ptr->blk_geom->bsize,*/directional_mode_skip_mask);
+    }
+    uint8_t     angle_delta_shift = 1;
+    if (context_ptr->disable_angle_z2_intra_flag) {
+        disable_angle_prediction = 1;
+        angle_delta_candidate_count = 1;
+        angle_delta_shift = 1;
+        disable_z2_prediction = 1;
+    }
+    else
+    if (pcs_ptr->parent_pcs_ptr->intra_pred_mode == 4) {
+        if (pcs_ptr->slice_type == I_SLICE) {
+            uv_mode_end = context_ptr->md_enable_paeth ? PAETH_PRED :
+                             context_ptr->md_enable_smooth ? SMOOTH_H_PRED : D67_PRED;
+            angle_delta_candidate_count = use_angle_delta ? 5 : 1;
+            disable_angle_prediction = 0;
+            angle_delta_shift = 2;
+            disable_z2_prediction = 0;
+        }
+        else {
+            uv_mode_end = DC_PRED;
+            disable_angle_prediction = 1;
+            angle_delta_candidate_count = 1;
+            angle_delta_shift = 1;
+            disable_z2_prediction = 0;
+        }
+    }else
+    if (pcs_ptr->parent_pcs_ptr->intra_pred_mode == 3){
+        disable_z2_prediction       = 0;
+        disable_angle_refinement    = 0;
+        disable_angle_prediction    = 1;
+        angle_delta_candidate_count = disable_angle_refinement ? 1: angle_delta_candidate_count;
+    } else if (pcs_ptr->parent_pcs_ptr->intra_pred_mode == 2) {
+        disable_z2_prediction       = 0;
+        disable_angle_refinement    = 0 ;
+        disable_angle_prediction    = (context_ptr->blk_geom->sq_size > 16 ||
+                                       context_ptr->blk_geom->bwidth == 4 ||
+                                       context_ptr->blk_geom->bheight == 4) ? 1 : 0;
+        angle_delta_candidate_count = disable_angle_refinement ? 1: angle_delta_candidate_count;
+    } else if (pcs_ptr->parent_pcs_ptr->intra_pred_mode == 1) {
+        disable_z2_prediction       = (context_ptr->blk_geom->sq_size > 16 ||
+                                       context_ptr->blk_geom->bwidth == 4 ||
+                                       context_ptr->blk_geom->bheight == 4) ? 1 : 0;
+        disable_angle_refinement    = (context_ptr->blk_geom->sq_size > 16 ||
+                                       context_ptr->blk_geom->bwidth == 4 ||
+                                       context_ptr->blk_geom->bheight == 4) ? 1 : 0;
+        disable_angle_prediction    = 0;
+        angle_delta_candidate_count = disable_angle_refinement ? 1: angle_delta_candidate_count;
+    } else {
+        disable_z2_prediction       = 0;
+        disable_angle_refinement    = 0;
+        disable_angle_prediction    = 0;
+        angle_delta_candidate_count = disable_angle_refinement ? 1: angle_delta_candidate_count;
+    }
+    for (uv_mode = uv_mode_start; uv_mode <= uv_mode_end; uv_mode++) {
+#else
     for (uv_mode = UV_DC_PRED; uv_mode <= uv_mode_end; uv_mode++) {
+#endif
         uint8_t uv_angle_delta_candidate_count =
             (use_angle_delta && av1_is_directional_mode((PredictionMode)uv_mode)) ? 7 : 1;
         uint8_t uv_angle_delta_shift = 1;
+#if UV_SEARCH_MODE_INJCECTION
+        if (!av1_is_directional_mode((PredictionMode)uv_mode) || (!disable_angle_prediction && 
+            directional_mode_skip_mask[(PredictionMode)uv_mode] == 0)) {
+#endif
+            for (uint8_t uv_angle_delta_counter = 0;
+                uv_angle_delta_counter < uv_angle_delta_candidate_count;
+                ++uv_angle_delta_counter) {
+                int32_t uv_angle_delta =
+                    CLIP(uv_angle_delta_shift *
+                    (uv_angle_delta_candidate_count == 1
+                        ? 0
+                        : uv_angle_delta_counter - (uv_angle_delta_candidate_count >> 1)),
+                        -MAX_ANGLE_DELTA,
+                        MAX_ANGLE_DELTA);
+#if UV_SEARCH_MODE_INJCECTION
+                int32_t  p_angle = mode_to_angle_map[(PredictionMode)uv_mode] + uv_angle_delta * ANGLE_STEP;
+                //if (!disable_z2_prediction || (p_angle <= 90 || p_angle >= 180)) {
+                if (!disable_z2_prediction || (uv_angle_delta <= 1 && p_angle >= -1)) {
+#endif
+                    candidate_array[uv_mode_total_count].type = INTRA_MODE;
+                    candidate_array[uv_mode_total_count].distortion_ready = 0;
+                    candidate_array[uv_mode_total_count].use_intrabc = 0;
+                    candidate_array[uv_mode_total_count].angle_delta[PLANE_TYPE_UV] = 0;
+                    candidate_array[uv_mode_total_count].pred_mode = DC_PRED;
+                    candidate_array[uv_mode_total_count].intra_chroma_mode = uv_mode;
+                    candidate_array[uv_mode_total_count].is_directional_chroma_mode_flag =
+                        (uint8_t)av1_is_directional_mode((PredictionMode)uv_mode);
+                    candidate_array[uv_mode_total_count].angle_delta[PLANE_TYPE_UV] = uv_angle_delta;
+                    candidate_array[uv_mode_total_count].tx_depth = 0;
+                    candidate_array[uv_mode_total_count].palette_info.pmi.palette_size[0] = 0;
+                    candidate_array[uv_mode_total_count].palette_info.pmi.palette_size[1] = 0;
+                    candidate_array[uv_mode_total_count].filter_intra_mode = FILTER_INTRA_MODES;
+                    candidate_array[uv_mode_total_count].cfl_alpha_signs = 0;
+                    candidate_array[uv_mode_total_count].cfl_alpha_idx = 0;
+                    candidate_array[uv_mode_total_count].transform_type[0] = DCT_DCT;
+                    candidate_array[uv_mode_total_count].ref_frame_type = INTRA_FRAME;
+                    candidate_array[uv_mode_total_count].motion_mode = SIMPLE_TRANSLATION;
 
-        for (uint8_t uv_angle_delta_counter = 0;
-             uv_angle_delta_counter < uv_angle_delta_candidate_count;
-             ++uv_angle_delta_counter) {
-            int32_t uv_angle_delta =
-                CLIP(uv_angle_delta_shift *
-                         (uv_angle_delta_candidate_count == 1
-                              ? 0
-                              : uv_angle_delta_counter - (uv_angle_delta_candidate_count >> 1)),
-                     -MAX_ANGLE_DELTA,
-                     MAX_ANGLE_DELTA);
+                    candidate_array[uv_mode_total_count].transform_type_uv =
+                        av1_get_tx_type(context_ptr->blk_geom->bsize,
+                            0,
+                            (PredictionMode)NULL,
+                            (UvPredictionMode)uv_mode,
+                            PLANE_TYPE_UV,
+                            0,
+                            0,
+                            0,
+                            context_ptr->blk_geom->txsize_uv[0][0],
+                            frm_hdr->reduced_tx_set);
 
-            candidate_array[uv_mode_total_count].type                       = INTRA_MODE;
-            candidate_array[uv_mode_total_count].distortion_ready           = 0;
-            candidate_array[uv_mode_total_count].use_intrabc                = 0;
-            candidate_array[uv_mode_total_count].angle_delta[PLANE_TYPE_UV] = 0;
-            candidate_array[uv_mode_total_count].pred_mode                  = DC_PRED;
-            candidate_array[uv_mode_total_count].intra_chroma_mode          = uv_mode;
-            candidate_array[uv_mode_total_count].is_directional_chroma_mode_flag =
-                (uint8_t)av1_is_directional_mode((PredictionMode)uv_mode);
-            candidate_array[uv_mode_total_count].angle_delta[PLANE_TYPE_UV]       = uv_angle_delta;
-            candidate_array[uv_mode_total_count].tx_depth                         = 0;
-            candidate_array[uv_mode_total_count].palette_info.pmi.palette_size[0] = 0;
-            candidate_array[uv_mode_total_count].palette_info.pmi.palette_size[1] = 0;
-            candidate_array[uv_mode_total_count].filter_intra_mode = FILTER_INTRA_MODES;
-            candidate_array[uv_mode_total_count].cfl_alpha_signs   = 0;
-            candidate_array[uv_mode_total_count].cfl_alpha_idx     = 0;
-            candidate_array[uv_mode_total_count].transform_type[0] = DCT_DCT;
-            candidate_array[uv_mode_total_count].ref_frame_type    = INTRA_FRAME;
-            candidate_array[uv_mode_total_count].motion_mode       = SIMPLE_TRANSLATION;
-
-            candidate_array[uv_mode_total_count].transform_type_uv =
-                av1_get_tx_type(context_ptr->blk_geom->bsize,
-                                0,
-                                (PredictionMode)NULL,
-                                (UvPredictionMode)uv_mode,
-                                PLANE_TYPE_UV,
-                                0,
-                                0,
-                                0,
-                                context_ptr->blk_geom->txsize_uv[0][0],
-                                frm_hdr->reduced_tx_set);
-
-            uv_mode_total_count++;
+                    uv_mode_total_count++;
+#if UV_SEARCH_MODE_INJCECTION
+                }
+            }
+#endif
         }
     }
     uv_mode_total_count = uv_mode_total_count - start_fast_buffer_index;
