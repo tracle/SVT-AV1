@@ -19,7 +19,7 @@
 #include "EbPictureAnalysisResults.h"
 #include "EbMcp.h"
 #include "EbReferenceObject.h"
-#include "EbComputeMean_SSE2.h"
+//#include "EbComputeMean_SSE2.h"
 #include "EbUtility.h"
 #include "EbMotionEstimationContext.h"
 #include "EbPictureOperators.h"

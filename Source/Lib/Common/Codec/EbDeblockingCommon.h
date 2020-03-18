@@ -14,7 +14,7 @@
 * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
 */
 
-#include "EbDeblockingFilter_SSE2.h"
+
 #include "EbDefinitions.h"
 #include "EbAv1Structs.h"
 

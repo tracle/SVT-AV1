@@ -30,11 +30,6 @@ extern void zero_out_coeff32x32_sse2(int16_t *coeff_buffer, uint32_t coeff_strid
                                      uint32_t coeff_origin_index, uint32_t area_width,
                                      uint32_t area_height);
 
-extern void residual_kernel16bit_sse2_intrin(uint16_t *input, uint32_t input_stride, uint16_t *pred,
-                                             uint32_t pred_stride, int16_t *residual,
-                                             uint32_t residual_stride, uint32_t area_width,
-                                             uint32_t area_height);
-
 static INLINE int32_t hadd32_sse2_intrin(const __m128i src) {
     const __m128i dst0 = _mm_add_epi32(src, _mm_srli_si128(src, 8));
     const __m128i dst1 = _mm_add_epi32(dst0, _mm_srli_si128(dst0, 4));

@@ -17,21 +17,11 @@
 #define RTCD_C
 #include "aom_dsp_rtcd.h"
 #include "EbComputeSAD_C.h"
-#include "EbComputeSAD_SSE4_1.h"
-#include "EbComputeSAD_AVX2.h"
 #include "EbPictureAnalysisProcess.h"
 #include "EbTemporalFiltering.h"
-#include "EbTemporalFiltering_sse4.h"
-#if ENHANCED_TF
-#include "EbTemporalFiltering_AVX2.h"
-#endif
 #include "EbComputeSAD.h"
 #include "EbMotionEstimation.h"
 #include "EbPictureOperators.h"
-#include "EbMcp_SSE2.h"
-#include "EbAvcStyleMcp_SSSE3.h"
-#include "EbComputeMean_SSE2.h"
-#include "EbCombinedAveragingSAD_Intrinsic_AVX2.h"
 #include "EbComputeMean.h"
 #include "EbMeSadCalculation.h"
 #include "EbAvcStyleMcp.h"

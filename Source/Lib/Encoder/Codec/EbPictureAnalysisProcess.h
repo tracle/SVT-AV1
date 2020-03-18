@@ -7,7 +7,7 @@
 #define EbPictureAnalysis_h
 
 #include "EbDefinitions.h"
-#include "EbNoiseExtractAVX2.h"
+
 #include "EbPictureControlSet.h"
 
 /***************************************

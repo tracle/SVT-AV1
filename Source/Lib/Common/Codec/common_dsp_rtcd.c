@@ -18,10 +18,6 @@
 #include "common_dsp_rtcd.h"
 #include "EbPictureOperators.h"
 #include "EbPackUnPack_C.h"
-#include "EbPackUnPack_SSE2.h"
-#include "EbPackUnPack_AVX2.h"
-#include "EbMcp_SSE2.h"
-#include "EbAvcStyleMcp_SSSE3.h"
 #include "EbAvcStyleMcp.h"
 
 /*
