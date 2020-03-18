@@ -3896,6 +3896,7 @@ void perform_ref_masking(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
     EbPictureBufferDesc *input_picture_ptr, uint32_t input_origin_index,
     uint32_t blk_origin_index) {
 
+    uint32_t pa_me_distortion_array[MAX_NUM_OF_REF_PIC_LIST * REF_LIST_MAX_DEPTH] ;
 
 
     // Reset ref_filtering_res
@@ -3905,6 +3906,7 @@ void perform_ref_masking(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
             context_ptr->ref_filtering_res[li][ri].ref_i = ri;
             context_ptr->ref_filtering_res[li][ri].dist = (uint32_t)~0;
             context_ptr->ref_filtering_res[li][ri].do_ref = 1;
+            pa_me_distortion_array[li * REF_LIST_MAX_DEPTH + ri] = (uint32_t)~0;
         }
     }
 
@@ -4009,6 +4011,7 @@ void perform_ref_masking(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 }
 
                 context_ptr->ref_filtering_res[list_idx][ref_idx].dist = pa_me_distortion;
+                pa_me_distortion_array[list_idx * REF_LIST_MAX_DEPTH + ref_idx] = pa_me_distortion;
             }
             else {
                 printf("invalid PA_ME MVs");
@@ -4016,24 +4019,30 @@ void perform_ref_masking(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
         }
     }
 
-    // Sort ref
-    uint32_t    num_of_cand_to_sort = MAX_NUM_OF_REF_PIC_LIST * REF_LIST_MAX_DEPTH;
-    RefResults *res_p               = context_ptr->ref_filtering_res[0];
+    // Sort pa_me_distortion_array
+    uint32_t    num_of_cand_to_sort = MAX_NUM_OF_REF_PIC_LIST * REF_LIST_MAX_DEPTH;   
     for (uint32_t i = 0; i < num_of_cand_to_sort - 1; ++i) {
         for (uint32_t j = i + 1; j < num_of_cand_to_sort; ++j) {
-            if (res_p[j].dist < res_p[i].dist) {
-                RefResults temp = res_p[i];
-                res_p[i]        = res_p[j];
-                res_p[j]        = temp;
+            if (pa_me_distortion_array[j] < pa_me_distortion_array[i]) {
+                uint32_t temp = pa_me_distortion_array[i];
+                pa_me_distortion_array[i] = pa_me_distortion_array[j];
+                pa_me_distortion_array[j] = temp;
             }
         }
     }
-
+#if 1
     // Tag ref: do_red or not
 #if 1
-    for (uint32_t i = 0; i < num_of_cand_to_sort - 1; ++i) {
-        if(i >= 2)
-            context_ptr->ref_filtering_res[i]->do_ref = 0;
+    // tag to_do the best ?
+    uint8_t max_ref_to_tag = 1;
+    uint8_t total_tagged_ref = 0;
+    RefResults *res_p = context_ptr->ref_filtering_res[0];
+    for (uint32_t i = 0; i < MAX_NUM_OF_REF_PIC_LIST * REF_LIST_MAX_DEPTH; ++i) {
+        res_p[i].do_ref = 0;
+        if (res_p[i].dist <= pa_me_distortion_array[max_ref_to_tag - 1] && total_tagged_ref < max_ref_to_tag) {
+            res_p[i].do_ref = 1;
+            total_tagged_ref++;
+        }
     }
 #else
     uint64_t best = context_ptr->ref_filtering_res[0][0].dist;
@@ -4044,6 +4053,7 @@ void perform_ref_masking(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 context_ptr->ref_filtering_res[li][ri].do_ref = 0;
         }
     }
+#endif
 #endif
 }
 #endif
