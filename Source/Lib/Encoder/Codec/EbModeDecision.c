@@ -3281,7 +3281,8 @@ void inject_new_candidates(const SequenceControlSet *  scs_ptr,
         ************* */
         if (inter_direction == 0) {
 #if NEW_MV_REF_MASKING
-            if (!context_ptr->ref_filtering_res[REF_LIST_0][list0_ref_index].do_ref) continue;
+            if (!context_ptr->ref_filtering_res[REF_LIST_0][list0_ref_index].do_ref) 
+                continue;
 #endif
             if (list0_ref_index > context_ptr->md_max_ref_count - 1) continue;
             int16_t to_inject_mv_x =
@@ -3431,7 +3432,8 @@ void inject_new_candidates(const SequenceControlSet *  scs_ptr,
            ************* */
             if (inter_direction == 1) {
 #if NEW_MV_REF_MASKING
-                if (!context_ptr->ref_filtering_res[REF_LIST_1][list1_ref_index].do_ref) continue;
+                if (!context_ptr->ref_filtering_res[REF_LIST_1][list1_ref_index].do_ref) 
+                    continue;
 #endif
                 if (list1_ref_index > context_ptr->md_max_ref_count - 1) continue;
                 int16_t to_inject_mv_x = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds]
@@ -3573,7 +3575,8 @@ void inject_new_candidates(const SequenceControlSet *  scs_ptr,
             ************* */
             if (allow_bipred) {
 #if NEW_MV_REF_MASKING
-                if (!context_ptr->ref_filtering_res[me_block_results_ptr->ref0_list][list0_ref_index].do_ref || !context_ptr->ref_filtering_res[me_block_results_ptr->ref1_list][list1_ref_index].do_ref) continue;
+                if (!context_ptr->ref_filtering_res[me_block_results_ptr->ref0_list][list0_ref_index].do_ref || !context_ptr->ref_filtering_res[me_block_results_ptr->ref1_list][list1_ref_index].do_ref)
+                    continue;
 #endif
                 if (list0_ref_index > context_ptr->md_max_ref_count - 1 ||
                     list1_ref_index > context_ptr->md_max_ref_count - 1)

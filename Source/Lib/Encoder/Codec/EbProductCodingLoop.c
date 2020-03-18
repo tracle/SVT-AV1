@@ -3896,6 +3896,21 @@ void perform_ref_masking(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
     EbPictureBufferDesc *input_picture_ptr, uint32_t input_origin_index,
     uint32_t blk_origin_index) {
 
+
+
+    // Reset ref_filtering_res
+    for (uint32_t li = 0; li < MAX_NUM_OF_REF_PIC_LIST; li++) {
+        for (uint32_t ri = 0; ri < REF_LIST_MAX_DEPTH; ri++) {
+            context_ptr->ref_filtering_res[li][ri].list_i = li;
+            context_ptr->ref_filtering_res[li][ri].ref_i = ri;
+            context_ptr->ref_filtering_res[li][ri].dist = (uint32_t)~0;
+            context_ptr->ref_filtering_res[li][ri].do_ref = 1;
+        }
+    }
+
+    if (!context_ptr->ref_masking_ctrls.enabled)
+        return;
+
     // Distortion measure 
     EbBool use_ssd = EB_FALSE;
 
@@ -3911,15 +3926,6 @@ void perform_ref_masking(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
         (context_ptr->blk_origin_y + input_picture_ptr->origin_y) * input_picture_ptr->stride_y +
         (context_ptr->blk_origin_x + input_picture_ptr->origin_x);
 
-    // Reset ref_filtering_res
-    for (uint32_t li = 0; li < MAX_NUM_OF_REF_PIC_LIST; li++) {
-        for (uint32_t ri = 0; ri < REF_LIST_MAX_DEPTH; ri++) {
-            context_ptr->ref_filtering_res[li][ri].list_i = li;
-            context_ptr->ref_filtering_res[li][ri].ref_i  = ri;
-            context_ptr->ref_filtering_res[li][ri].dist   = (uint32_t) ~0;
-            context_ptr->ref_filtering_res[li][ri].do_ref = 0;
-        }
-    }
 
     for (uint32_t ref_it = 0; ref_it < pcs_ptr->parent_pcs_ptr->tot_ref_frame_types; ++ref_it) {
         MvReferenceFrame ref_pair = pcs_ptr->parent_pcs_ptr->ref_frame_type_arr[ref_it];
@@ -4027,18 +4033,9 @@ void perform_ref_masking(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
     uint64_t best = context_ptr->ref_filtering_res[0][0].dist;
     for (uint32_t li = 0; li < MAX_NUM_OF_REF_PIC_LIST; li++) {
         for (uint32_t ri = 0; ri < REF_LIST_MAX_DEPTH; ri++) {
-
             if ((context_ptr->ref_filtering_res[li][ri].dist - best) * 100 >
                 context_ptr->ref_masking_ctrls.to_do_ref_th * best)
-                context_ptr
-                    ->ref_filtering_res[context_ptr->ref_filtering_res[li][ri].list_i]
-                                       [context_ptr->ref_filtering_res[li][ri].ref_i]
-                    .do_ref = 0;
-            else
-                context_ptr
-                    ->ref_filtering_res[context_ptr->ref_filtering_res[li][ri].list_i]
-                                       [context_ptr->ref_filtering_res[li][ri].ref_i]
-                    .do_ref = 1;
+                context_ptr->ref_filtering_res[li][ri].do_ref = 0;
         }
     }
 }
@@ -8052,7 +8049,6 @@ void md_encode_block(PictureControlSet *pcs_ptr,
 #endif
 
 #if MD_REFERENCE_MASKING 
-    if(context_ptr->ref_masking_ctrls.enabled)
         perform_ref_masking(
             pcs_ptr, context_ptr, input_picture_ptr, input_origin_index, blk_origin_index);
 #endif

@@ -1354,6 +1354,10 @@ void set_md_ref_masking_controls(ModeDecisionContext *mdctxt, uint8_t md_ref_mas
         ref_masking_ctrls->enabled = 1;
         ref_masking_ctrls->to_do_ref_th = 25;
         break;
+    case 2:
+        ref_masking_ctrls->enabled = 1;
+        ref_masking_ctrls->to_do_ref_th = 50;
+        break;
     default:
         assert(0);
         break;
@@ -2510,12 +2514,18 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     context_ptr->intra_similar_mode = 1;
 #if MD_REFERENCE_MASKING
     // Set md_filter_ref_frame @ MD
-    if (context_ptr->pd_pass == PD_PASS_0)
+    if (pcs_ptr->slice_type != I_SLICE) {
+        if (context_ptr->pd_pass == PD_PASS_0)
+            context_ptr->md_ref_masking_mode = 0;
+        else if (context_ptr->pd_pass == PD_PASS_1)
+            context_ptr->md_ref_masking_mode = 0;
+        else
+            context_ptr->md_ref_masking_mode = 2;
+        
+    }
+    else {
         context_ptr->md_ref_masking_mode = 0;
-    else if (context_ptr->pd_pass == PD_PASS_1)
-        context_ptr->md_ref_masking_mode = 0;
-    else
-        context_ptr->md_ref_masking_mode = 1;
+    }
     set_md_ref_masking_controls(context_ptr, context_ptr->md_ref_masking_mode);
 #endif
 
