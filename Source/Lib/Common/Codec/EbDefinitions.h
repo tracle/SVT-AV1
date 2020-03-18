@@ -125,7 +125,7 @@ extern "C" {
 /*Modified M5 Mod*/
 #define SHUT_MD_MRP 0
 /*************************/
-#define MD_REFERENCE_MASKING 0
+#define MD_REFERENCE_MASKING 1
 #if MD_REFERENCE_MASKING
 #define NEW_MV_REF_MASKING 1
 #define UNIPRED_3x3_REF_MASKING 1
@@ -135,6 +135,8 @@ extern "C" {
 #define WARP_REF_MASKING 1
 #define PRED_ME_REF_MASKING 1
 #endif
+
+#define TAG_PER_LIST 1
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
