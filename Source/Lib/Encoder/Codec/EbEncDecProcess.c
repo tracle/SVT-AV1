@@ -1356,7 +1356,11 @@ void set_md_ref_masking_controls(ModeDecisionContext *mdctxt, uint8_t md_ref_mas
         break;
     case 2:
         ref_masking_ctrls->enabled = 1;
-        ref_masking_ctrls->to_do_ref_th = 50;
+        ref_masking_ctrls->to_do_ref_th = 10;
+        break;
+    case 3:
+        ref_masking_ctrls->enabled = 1;
+        ref_masking_ctrls->to_do_ref_th = 5;
         break;
     default:
         assert(0);
