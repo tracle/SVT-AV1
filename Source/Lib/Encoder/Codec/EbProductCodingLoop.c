@@ -4194,7 +4194,10 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
             if (ref_idx > 1 && context_ptr->predictive_me_level <= 5) continue;
 #endif
 #if PRED_ME_REF_MASKING
-            if (!context_ptr->ref_filtering_res[list_idx][ref_idx].do_ref) continue;
+            //
+            //if (!context_ptr->ref_filtering_res[list_idx][ref_idx].do_ref) continue;
+            if(context_ptr->pd_pass == PD_PASS_2)
+            if (ref_idx > 0) continue;
 #endif
             if (ref_idx > context_ptr->md_max_ref_count - 1) continue;
             // Get the ME MV
