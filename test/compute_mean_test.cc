@@ -22,7 +22,7 @@
 #include "gtest/gtest.h"
 #include "EbComputeMean.h"
 #include "random.h"
-
+#include "aom_dsp_rtcd.h"
 /**
  * @brief Unit test for compute mean function:
  * - compute_mean8x8_sse2_intrin

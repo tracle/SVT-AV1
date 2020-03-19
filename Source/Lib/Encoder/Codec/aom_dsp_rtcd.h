@@ -1051,28 +1051,6 @@ extern "C" {
     void av1_calc_indices_dim2_avx2(const int* data, const int* centroids, uint8_t* indices, int n, int k);
     RTCD_EXTERN void(*av1_calc_indices_dim2)(const int* data, const int* centroids, uint8_t* indices, int n, int k);
 
-    RTCD_EXTERN void(*noise_extract_luma_weak)(EbPictureBufferDesc *input_picture_ptr, EbPictureBufferDesc *denoised_picture_ptr, EbPictureBufferDesc *noise_picture_ptr, uint32_t sb_origin_y, uint32_t sb_origin_x);
-    void noise_extract_luma_weak_avx2_intrin(EbPictureBufferDesc *input_picture_ptr,
-        EbPictureBufferDesc *denoised_picture_ptr,
-        EbPictureBufferDesc *noise_picture_ptr,
-        uint32_t sb_origin_y, uint32_t sb_origin_x);
-    RTCD_EXTERN void(*noise_extract_luma_weak_sb)(EbPictureBufferDesc *input_picture_ptr, EbPictureBufferDesc *denoised_picture_ptr, EbPictureBufferDesc *noise_picture_ptr, uint32_t sb_origin_y, uint32_t sb_origin_x);
-    void noise_extract_luma_weak_sb_avx2_intrin(EbPictureBufferDesc *input_picture_ptr,
-        EbPictureBufferDesc *denoised_picture_ptr,
-        EbPictureBufferDesc *noise_picture_ptr,
-        uint32_t sb_origin_y, uint32_t sb_origin_x);
-    RTCD_EXTERN void(*noise_extract_luma_strong)(EbPictureBufferDesc *input_picture_ptr, EbPictureBufferDesc *denoised_picture_ptr, uint32_t sb_origin_y, uint32_t sb_origin_x);
-    void noise_extract_luma_strong_avx2_intrin(EbPictureBufferDesc *input_picture_ptr,
-        EbPictureBufferDesc *denoised_picture_ptr,
-        uint32_t sb_origin_y, uint32_t sb_origin_x);
-    RTCD_EXTERN void(*noise_extract_chroma_strong)(EbPictureBufferDesc *input_picture_ptr, EbPictureBufferDesc *denoised_picture_ptr, uint32_t sb_origin_y, uint32_t sb_origin_x);
-    void noise_extract_chroma_strong_avx2_intrin(EbPictureBufferDesc *input_picture_ptr,
-        EbPictureBufferDesc *denoised_picture_ptr,
-        uint32_t sb_origin_y, uint32_t sb_origin_x);
-    RTCD_EXTERN void(*noise_extract_chroma_weak)(EbPictureBufferDesc *input_picture_ptr, EbPictureBufferDesc *denoised_picture_ptr, uint32_t sb_origin_y, uint32_t sb_origin_x);
-    void noise_extract_chroma_weak_avx2_intrin(EbPictureBufferDesc *input_picture_ptr,
-        EbPictureBufferDesc *denoised_picture_ptr,
-        uint32_t sb_origin_y, uint32_t sb_origin_x);
     RTCD_EXTERN void(*svt_av1_apply_filtering)(const uint8_t *y_src, int y_src_stride, const uint8_t *y_pre, int y_pre_stride, const uint8_t *u_src, const uint8_t *v_src, int uv_src_stride, const uint8_t *u_pre, const uint8_t *v_pre, int uv_pre_stride, unsigned int block_width, unsigned int block_height, int ss_x, int ss_y, int strength, const int *blk_fw, int use_whole_blk, uint32_t *y_accum, uint16_t *y_count, uint32_t *u_accum, uint16_t *u_count, uint32_t *v_accum, uint16_t *v_count);
     void svt_av1_apply_temporal_filter_sse4_1(
         const uint8_t *y_src, int y_src_stride, const uint8_t *y_pre, int y_pre_stride,
@@ -1207,6 +1185,9 @@ extern "C" {
         uint32_t input_stride, // input parameter, input stride
         uint32_t input_area_width, // input parameter, input area width
         uint32_t input_area_height); // input parameter, input area height
+    uint64_t compute_subd_mean_of_squared_values8x8_sse2_intrin(
+        uint8_t* input_samples, // input parameter, input samples Ptr
+        uint16_t input_stride);
     RTCD_EXTERN void(*compute_interm_var_four8x8)(uint8_t *input_samples, uint16_t input_stride, uint64_t *mean_of8x8_blocks, uint64_t *mean_of_squared8x8_blocks);
     void compute_interm_var_four8x8_helper_sse2(uint8_t* input_samples, uint16_t input_stride,
         uint64_t* mean_of8x8_blocks, // mean of four  8x8

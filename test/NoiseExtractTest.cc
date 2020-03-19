@@ -11,6 +11,7 @@
  * @author Cidana-Wenyao
  *
  ******************************************************************************/
+
 #include "gtest/gtest.h"
 #include <stdlib.h>
 // workaround to eliminate the compiling warning on linux
@@ -28,7 +29,7 @@ extern "C" {
 #include "EbPictureBufferDesc.h"
 #include "EbPictureAnalysisProcess.h"
 }
-
+#if 0
 static void eb_picture_buffer_desc_dctor(EbPtr p) {
     EbPictureBufferDesc *obj = (EbPictureBufferDesc *)p;
     if (obj->buffer_enable_mask & PICTURE_BUFFER_DESC_Y_FLAG) {
@@ -346,3 +347,4 @@ TEST_F(ExtractFilterTest, ChromaWeakNoiseTest) {
 TEST_F(ExtractFilterTest, ChromaStrongNoiseTest) {
     run_chroma_strong_test();
 }
+#endif

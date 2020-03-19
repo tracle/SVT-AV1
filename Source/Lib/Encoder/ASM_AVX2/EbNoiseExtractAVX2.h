@@ -13,10 +13,6 @@
 extern "C" {
 #endif
 
-/*******************************************
-    * noise_extract_luma_weak
-    *  weak filter Luma and store noise.
-    *******************************************/
 #ifdef __cplusplus
 }
 #endif

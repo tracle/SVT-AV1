@@ -44,7 +44,7 @@
 #include "EbUtility.h"
 #include "random.h"
 #include "util.h"
-
+#include "common_dsp_rtcd.h"
 using svt_av1_test_tool::SVTRandom;  // to generate the random
 
 namespace {
