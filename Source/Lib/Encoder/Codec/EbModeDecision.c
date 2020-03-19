@@ -1632,7 +1632,10 @@ void inject_mvp_candidates_ii(struct ModeDecisionContext *context_ptr, PictureCo
         uint8_t          list_idx   = get_list_idx(rf[0]);
         uint8_t          ref_idx    = get_ref_frame_idx(rf[0]);
 #if NEAREST_NEAR_REF_MASKING
-        if (!context_ptr->ref_filtering_res[list_idx][ref_idx].do_ref) return;
+        //if (!context_ptr->ref_filtering_res[list_idx][ref_idx].do_ref) return;
+
+        if (context_ptr->pd_pass == PD_PASS_2) 
+            if (ref_idx > 0) return;
 #endif
         if (ref_idx > context_ptr->md_max_ref_count - 1) return;
         //NEAREST
@@ -1871,9 +1874,14 @@ void inject_mvp_candidates_ii(struct ModeDecisionContext *context_ptr, PictureCo
         uint8_t ref_idx_0 = get_ref_frame_idx(rf[0]);
         uint8_t ref_idx_1 = get_ref_frame_idx(rf[1]);
 #if NEAREST_NEAR_REF_MASKING
-        uint8_t list_idx_0 = get_list_idx(rf[0]);
-        uint8_t list_idx_1 = get_list_idx(rf[1]);
-        if (!context_ptr->ref_filtering_res[list_idx_0][ref_idx_0].do_ref || !context_ptr->ref_filtering_res[list_idx_1][ref_idx_1].do_ref) return;
+        //uint8_t list_idx_0 = get_list_idx(rf[0]);
+        //uint8_t list_idx_1 = get_list_idx(rf[1]);
+        //if (!context_ptr->ref_filtering_res[list_idx_0][ref_idx_0].do_ref || !context_ptr->ref_filtering_res[list_idx_1][ref_idx_1].do_ref) return;
+        if (context_ptr->pd_pass == PD_PASS_2)
+        if (ref_idx_0 > 0 ||
+            ref_idx_1 > 0)
+            return;
+
 #endif
         if (ref_idx_0 > context_ptr->md_max_ref_count - 1 ||
             ref_idx_1 > context_ptr->md_max_ref_count - 1)
