@@ -4066,40 +4066,55 @@ void perform_ref_masking(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
 #if 1
     // Tag ref: do_red or not
 #if TAG_PER_LIST
-    // Tag to_do the best ?
-    RefResults *res_p;
-
     // Tag best l0
     uint8_t max_l0_ref_to_tag = 1;
     uint8_t total_tagged_l0_ref = 0;
-    res_p = context_ptr->ref_filtering_res[0];
     for (uint32_t i = 0; i < REF_LIST_MAX_DEPTH; ++i) {
-        res_p[i].do_ref = 0;
+        context_ptr->ref_filtering_res[0][i].do_ref = 0;
+#if 0 // sanity check test
         if(i == 0)
-            res_p[i].do_ref = 1;
-        //if (res_p[i].dist <= pa_l0_me_distortion_array[max_l0_ref_to_tag - 1] && total_tagged_l0_ref < max_l0_ref_to_tag) {
-        //    res_p[i].do_ref = 1;
-        //    total_tagged_l0_ref++;
-        //}
+            context_ptr->ref_filtering_res[0][i].do_ref = 1;
+#else
+        if (context_ptr->ref_filtering_res[0][i].dist <= pa_l0_me_distortion_array[max_l0_ref_to_tag - 1] && total_tagged_l0_ref < max_l0_ref_to_tag) {
+            context_ptr->ref_filtering_res[0][i].do_ref = 1;
+            total_tagged_l0_ref++;
+        }
+#endif
     }
 
     // Tag best l1
     uint8_t max_l1_ref_to_tag = 1;
     uint8_t total_tagged_l1_ref = 0;
-    res_p = context_ptr->ref_filtering_res[REF_LIST_MAX_DEPTH];
     for (uint32_t i = 0; i < REF_LIST_MAX_DEPTH; ++i) {
-        res_p[i].do_ref = 0;
+
+        context_ptr->ref_filtering_res[1][i].do_ref = 0;
+#if 0 // sanity check test
         if (i == 0)
-            res_p[i].do_ref = 1;
-        //if (res_p[i].dist <= pa_l1_me_distortion_array[max_l1_ref_to_tag - 1] && total_tagged_l1_ref < max_l1_ref_to_tag) {
-        //    res_p[i].do_ref = 1;
-        //    total_tagged_l1_ref++;
-        //}
+            context_ptr->ref_filtering_res[1][i].do_ref = 1;
+#else
+        if (context_ptr->ref_filtering_res[1][i].dist <= pa_l1_me_distortion_array[max_l1_ref_to_tag - 1] && total_tagged_l1_ref < max_l1_ref_to_tag) {
+            context_ptr->ref_filtering_res[1][i].do_ref = 1;
+            total_tagged_l1_ref++;
+        }
+#endif
     }
 #else
     // tag to_do the best ?
     uint8_t max_ref_to_tag = 2;
     uint8_t total_tagged_ref = 0;
+
+#if 1
+    // Reset ref_filtering_res
+    for (uint32_t li = 0; li < MAX_NUM_OF_REF_PIC_LIST; li++) {
+        for (uint32_t ri = 0; ri < REF_LIST_MAX_DEPTH; ri++) {
+            context_ptr->ref_filtering_res[li][ri].do_ref = 0;
+            if (context_ptr->ref_filtering_res[li][ri].dist <= pa_me_distortion_array[max_ref_to_tag - 1] && total_tagged_ref < max_ref_to_tag) {
+                context_ptr->ref_filtering_res[li][ri].do_ref = 1;
+                total_tagged_ref++;
+            }
+        }
+    }
+#else
     RefResults *res_p = context_ptr->ref_filtering_res[0];
     for (uint32_t i = 0; i < MAX_NUM_OF_REF_PIC_LIST * REF_LIST_MAX_DEPTH; ++i) {
         res_p[i].do_ref = 0;
@@ -4108,6 +4123,7 @@ void perform_ref_masking(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
             total_tagged_ref++;
         }
     }
+#endif
 #endif
 #else
     uint64_t best = context_ptr->ref_filtering_res[0][0].dist;

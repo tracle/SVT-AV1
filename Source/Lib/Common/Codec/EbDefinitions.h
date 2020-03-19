@@ -136,7 +136,7 @@ extern "C" {
 #define PRED_ME_REF_MASKING 1
 #endif
 
-#define TAG_PER_LIST 1
+#define TAG_PER_LIST 0
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
