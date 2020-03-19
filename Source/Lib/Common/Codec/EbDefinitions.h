@@ -150,6 +150,12 @@ extern "C" {
 #endif
 #define MAR25_ADOPTIONS            1 // Adoptions for all modes. Adopt uniform HME/ME sizes (non-TF)
 #define MAR26_ADOPTIONS            1 // Adoptions for all modes. Adopt uniform TF HME/ME sizes
+
+#define TWO_LEVEL_HME              0 // Skip hmel0 and use the equivalante SR in hmel1
+#if TWO_LEVEL_HME
+#define HME_L1_DISTANCE_ALGORITHM   0
+#define ALIGN_HME_L1_SR_WITH_HEM_L0 0 
+#endif
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
