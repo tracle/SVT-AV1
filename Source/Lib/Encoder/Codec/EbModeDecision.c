@@ -2645,8 +2645,8 @@ void inject_warped_motion_candidates(
             MvReferenceFrame frame_type = rf[0];
             uint8_t list_idx = get_list_idx(rf[0]);
             uint8_t ref_idx = get_ref_frame_idx(rf[0]);
-#if NEAREST_NEAR_REF_MASKING
-            if (!context_ptr->ref_filtering_res[list_idx][ref_idx].do_ref) return;
+#if WARP_REF_MASKING
+            if (!context_ptr->ref_filtering_res[list_idx][ref_idx].do_ref) continue;
 #endif
             if (ref_idx > context_ptr->md_max_ref_count - 1)
                 continue;
@@ -2809,7 +2809,7 @@ void inject_warped_motion_candidates(
         ************* */
         if (inter_direction == 0) {
 #if WARP_REF_MASKING
-            if (!context_ptr->ref_filtering_res[REF_LIST_0][list0_ref_index].do_ref) return;
+            if (!context_ptr->ref_filtering_res[REF_LIST_0][list0_ref_index].do_ref) continue;
 #endif
             if (list0_ref_index > context_ptr->md_max_ref_count - 1)
                 continue;
@@ -2908,7 +2908,7 @@ void inject_warped_motion_candidates(
        ************* */
         if (inter_direction == 1) {
 #if WARP_REF_MASKING
-            if (!context_ptr->ref_filtering_res[REF_LIST_1][list1_ref_index].do_ref) return;
+            if (!context_ptr->ref_filtering_res[REF_LIST_1][list1_ref_index].do_ref) continue;
 #endif
             if (list1_ref_index > context_ptr->md_max_ref_count - 1)
                 continue;
