@@ -127,7 +127,8 @@ extern "C" {
 #define CFL_TH_PERCENTAGE          5
 #endif
 #endif
-#define UV_SEARCH_MODE_INJCECTION      0
+#define UV_SEARCH_MODE_INJCECTION   0
+#define FIX_MD_UV                   0
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

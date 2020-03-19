@@ -4527,7 +4527,7 @@ void av1_cost_calc_cfl(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *
     (plane == CFL_PRED_U ? a * CFL_SIGNS + b - 1 : b * CFL_SIGNS + a - 1)
 /*************************Pick the best alpha for cfl mode  or Choose DC******************************************************/
 #if MD_CFL
-void md_cfl_rd_pick_alpha(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *candidate_buffer,
+uint8_t md_cfl_rd_pick_alpha(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *candidate_buffer,
                        SuperBlock *sb_ptr, ModeDecisionContext *context_ptr,
                        EbPictureBufferDesc *input_picture_ptr, uint32_t input_cb_origin_in_index,
                        uint32_t blk_chroma_origin_index) {
@@ -4550,6 +4550,7 @@ void md_cfl_rd_pick_alpha(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffe
     int32_t best_c[CFL_JOINT_SIGNS][CFL_PRED_PLANES];
 
 #if CFL_TH_ALGORITHM
+    uint8_t last_is_best = 0;
     int32_t best_joint_sign = -1;
     // Compare with DC Chroma
     coeff_bits                          = 0;
@@ -4585,131 +4586,131 @@ void md_cfl_rd_pick_alpha(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffe
     uint32_t width = context_ptr->blk_geom->bwidth_uv;
     uint32_t height = context_ptr->blk_geom->bheight_uv;
     uint64_t dist_sum = (width * height * CFL_TH_ABS);
-    uint64_t cfl_th = RDCOST(full_lambda, 16, dist_sum);
+    int64_t cfl_th = RDCOST(full_lambda, 16, dist_sum);
     uint8_t perform_cfl = (dc_rd > cfl_th) ? 1 : 0;
-    if (perform_cfl) {
+    if (!perform_cfl) {
+        candidate_buffer->candidate_ptr->intra_chroma_mode = UV_DC_PRED;
+        candidate_buffer->candidate_ptr->cfl_alpha_idx     = 0;
+        candidate_buffer->candidate_ptr->cfl_alpha_signs   = 0;
+        last_is_best = 1;
+        return last_is_best;
+    }
 #endif
-        for (int32_t plane = 0; plane < CFL_PRED_PLANES; plane++) {
-            coeff_bits = 0;
-            full_distortion[DIST_CALC_RESIDUAL] = 0;
-            for (int32_t joint_sign = 0; joint_sign < CFL_JOINT_SIGNS; joint_sign++) {
-                best_rd_uv[joint_sign][plane] = INT64_MAX;
-                best_c[joint_sign][plane] = 0;
-            }
-            // Collect RD stats for an alpha value of zero in this plane.
-            // Skip i == CFL_SIGN_ZERO as (0, 0) is invalid.
-            for (int32_t i = CFL_SIGN_NEG; i < CFL_SIGNS; i++) {
-                const int32_t joint_sign = PLANE_SIGN_TO_JOINT_SIGN(plane, CFL_SIGN_ZERO, i);
-#if CFL_REMOVE_SHORT_CUT0
-                if (1) {
-#else
-                if (i == CFL_SIGN_NEG) {
-#endif
-                    candidate_buffer->candidate_ptr->cfl_alpha_idx = 0;
-                    candidate_buffer->candidate_ptr->cfl_alpha_signs = joint_sign;
-
-                    av1_cost_calc_cfl(pcs_ptr,
-                        candidate_buffer,
-                        sb_ptr,
-                        context_ptr,
-                        (plane == 0) ? COMPONENT_CHROMA_CB : COMPONENT_CHROMA_CR,
-                        input_picture_ptr,
-                        input_cb_origin_in_index,
-                        blk_chroma_origin_index,
-                        full_distortion,
-                        &coeff_bits,
-                        0);
-
-                    if (coeff_bits == INT64_MAX) break;
-                }
-
-                const int32_t alpha_rate = candidate_buffer->candidate_ptr->md_rate_estimation_ptr
-                    ->cfl_alpha_fac_bits[joint_sign][plane][0];
-
-                best_rd_uv[joint_sign][plane] = RDCOST(full_lambda,
-                    coeff_bits + alpha_rate,
-                    full_distortion[DIST_CALC_RESIDUAL]);
-            }
+    for (int32_t plane = 0; plane < CFL_PRED_PLANES; plane++) {
+        coeff_bits = 0;
+        full_distortion[DIST_CALC_RESIDUAL] = 0;
+        for (int32_t joint_sign = 0; joint_sign < CFL_JOINT_SIGNS; joint_sign++) {
+            best_rd_uv[joint_sign][plane] = INT64_MAX;
+            best_c[joint_sign][plane] = 0;
         }
+        // Collect RD stats for an alpha value of zero in this plane.
+        // Skip i == CFL_SIGN_ZERO as (0, 0) is invalid.
+        for (int32_t i = CFL_SIGN_NEG; i < CFL_SIGNS; i++) {
+            const int32_t joint_sign = PLANE_SIGN_TO_JOINT_SIGN(plane, CFL_SIGN_ZERO, i);
+#if CFL_REMOVE_SHORT_CUT0
+            if (1) {
+#else
+            if (i == CFL_SIGN_NEG) {
+#endif
+                candidate_buffer->candidate_ptr->cfl_alpha_idx = 0;
+                candidate_buffer->candidate_ptr->cfl_alpha_signs = joint_sign;
+
+                av1_cost_calc_cfl(pcs_ptr,
+                    candidate_buffer,
+                    sb_ptr,
+                    context_ptr,
+                    (plane == 0) ? COMPONENT_CHROMA_CB : COMPONENT_CHROMA_CR,
+                    input_picture_ptr,
+                    input_cb_origin_in_index,
+                    blk_chroma_origin_index,
+                    full_distortion,
+                    &coeff_bits,
+                    0);
+
+                if (coeff_bits == INT64_MAX) break;
+            }
+
+            const int32_t alpha_rate = candidate_buffer->candidate_ptr->md_rate_estimation_ptr
+                ->cfl_alpha_fac_bits[joint_sign][plane][0];
+
+            best_rd_uv[joint_sign][plane] = RDCOST(full_lambda,
+                coeff_bits + alpha_rate,
+                full_distortion[DIST_CALC_RESIDUAL]);
+        }
+    }
 
 
-        best_joint_sign = -1;
+    best_joint_sign = -1;
 
-        for (int32_t plane = 0; plane < CFL_PRED_PLANES; plane++) {
-            for (int32_t pn_sign = CFL_SIGN_NEG; pn_sign < CFL_SIGNS; pn_sign++) {
-                int32_t progress = 0;
-                for (int32_t c = 0; c < CFL_ALPHABET_SIZE; c++) {
-                    int32_t flag = 0;
+    for (int32_t plane = 0; plane < CFL_PRED_PLANES; plane++) {
+        for (int32_t pn_sign = CFL_SIGN_NEG; pn_sign < CFL_SIGNS; pn_sign++) {
+            int32_t progress = 0;
+            for (int32_t c = 0; c < CFL_ALPHABET_SIZE; c++) {
+                int32_t flag = 0;
 #if !CFL_REMOVE_SHORT_CUT1
 #if CFL_REDUCED_ALPHA
-                    uint8_t c_th = 1;
-                    if (c > c_th && progress < c) break;
+                uint8_t c_th = 1;
+                if (c > c_th && progress < c) break;
 #else
-                    if (c > 2 && progress < c) break;
+                if (c > 2 && progress < c) break;
 #endif
 #endif
-                    coeff_bits = 0;
-                    full_distortion[DIST_CALC_RESIDUAL] = 0;
-                    for (int32_t i = 0; i < CFL_SIGNS; i++) {
-                        const int32_t joint_sign = PLANE_SIGN_TO_JOINT_SIGN(plane, pn_sign, i);
+                coeff_bits = 0;
+                full_distortion[DIST_CALC_RESIDUAL] = 0;
+                for (int32_t i = 0; i < CFL_SIGNS; i++) {
+                    const int32_t joint_sign = PLANE_SIGN_TO_JOINT_SIGN(plane, pn_sign, i);
 #if CFL_TH_PERCENTAGE
-                        if ((best_rd_uv[joint_sign][plane] - dc_rd) * 100 > dc_rd * CFL_TH_PERCENTAGE) continue;
+                    if ((best_rd_uv[joint_sign][plane] - dc_rd) * 100 > dc_rd * CFL_TH_PERCENTAGE) continue;
 #endif
 #if CFL_REMOVE_SHORT_CUT0
-                        if (1) {
+                    if (1) {
 #else
-                        if (i == 0) {
+                    if (i == 0) {
 #endif
-                            candidate_buffer->candidate_ptr->cfl_alpha_idx =
-                                (c << CFL_ALPHABET_SIZE_LOG2) + c;
-                            candidate_buffer->candidate_ptr->cfl_alpha_signs = joint_sign;
+                        candidate_buffer->candidate_ptr->cfl_alpha_idx =
+                            (c << CFL_ALPHABET_SIZE_LOG2) + c;
+                        candidate_buffer->candidate_ptr->cfl_alpha_signs = joint_sign;
 
-                            av1_cost_calc_cfl(pcs_ptr,
-                                candidate_buffer,
-                                sb_ptr,
-                                context_ptr,
-                                (plane == 0) ? COMPONENT_CHROMA_CB : COMPONENT_CHROMA_CR,
-                                input_picture_ptr,
-                                input_cb_origin_in_index,
-                                blk_chroma_origin_index,
-                                full_distortion,
-                                &coeff_bits,
-                                0);
+                        av1_cost_calc_cfl(pcs_ptr,
+                            candidate_buffer,
+                            sb_ptr,
+                            context_ptr,
+                            (plane == 0) ? COMPONENT_CHROMA_CB : COMPONENT_CHROMA_CR,
+                            input_picture_ptr,
+                            input_cb_origin_in_index,
+                            blk_chroma_origin_index,
+                            full_distortion,
+                            &coeff_bits,
+                            0);
 
-                            if (coeff_bits == INT64_MAX) break;
-                        }
-
-                        const int32_t alpha_rate =
-                            candidate_buffer->candidate_ptr->md_rate_estimation_ptr
-                            ->cfl_alpha_fac_bits[joint_sign][plane][c];
-
-                        int64_t this_rd = RDCOST(full_lambda,
-                            coeff_bits + alpha_rate,
-                            full_distortion[DIST_CALC_RESIDUAL]);
-                        if (this_rd >= best_rd_uv[joint_sign][plane]) continue;
-                        best_rd_uv[joint_sign][plane] = this_rd;
-                        best_c[joint_sign][plane] = c;
-#if CFL_REDUCED_ALPHA
-                        flag = 1;
-#else
-                        flag = 2;
-#endif
-                        if (best_rd_uv[joint_sign][!plane] == INT64_MAX) continue;
-                        this_rd += mode_rd + best_rd_uv[joint_sign][!plane];
-                        if (this_rd >= best_rd) continue;
-                        best_rd = this_rd;
-                        best_joint_sign = joint_sign;
+                        if (coeff_bits == INT64_MAX) break;
                     }
-                    progress += flag;
+
+                    const int32_t alpha_rate =
+                        candidate_buffer->candidate_ptr->md_rate_estimation_ptr
+                        ->cfl_alpha_fac_bits[joint_sign][plane][c];
+
+                    int64_t this_rd = RDCOST(full_lambda,
+                        coeff_bits + alpha_rate,
+                        full_distortion[DIST_CALC_RESIDUAL]);
+                    if (this_rd >= best_rd_uv[joint_sign][plane]) continue;
+                    best_rd_uv[joint_sign][plane] = this_rd;
+                    best_c[joint_sign][plane] = c;
+#if CFL_REDUCED_ALPHA
+                    flag = 1;
+#else
+                    flag = 2;
+#endif
+                    if (best_rd_uv[joint_sign][!plane] == INT64_MAX) continue;
+                    this_rd += mode_rd + best_rd_uv[joint_sign][!plane];
+                    if (this_rd >= best_rd) continue;
+                    best_rd = this_rd;
+                    best_joint_sign = joint_sign;
                 }
+                progress += flag;
             }
         }
-#if CFL_TH_ABS
     }
-    else {
-        best_rd = INT64_MAX;
-    }
-#endif
 #else
 
     for (int32_t plane = 0; plane < CFL_PRED_PLANES; plane++) {
@@ -4855,25 +4856,6 @@ void md_cfl_rd_pick_alpha(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffe
 
     dc_rd += dc_mode_rd;
 #endif
-
-#if 0 //TEST_3
-    if (dc_rd <= best_rd || best_rd == INT64_MAX) {
-        candidate_buffer->candidate_ptr->intra_chroma_mode = UV_CFL_PRED;
-        candidate_buffer->candidate_ptr->cfl_alpha_idx     = 0;
-        candidate_buffer->candidate_ptr->cfl_alpha_signs   = 0;
-    } else {
-        candidate_buffer->candidate_ptr->intra_chroma_mode = UV_CFL_PRED;
-        int32_t ind                                        = 0;
-        if (best_joint_sign >= 0) {
-            const int32_t u = best_c[best_joint_sign][CFL_PRED_U];
-            const int32_t v = best_c[best_joint_sign][CFL_PRED_V];
-            ind             = (u << CFL_ALPHABET_SIZE_LOG2) + v;
-        } else
-            best_joint_sign = 0;
-        candidate_buffer->candidate_ptr->cfl_alpha_idx   = ind;
-        candidate_buffer->candidate_ptr->cfl_alpha_signs = best_joint_sign;
-    }
-#else
     if (dc_rd <= best_rd || best_rd == INT64_MAX) {
         candidate_buffer->candidate_ptr->intra_chroma_mode = UV_DC_PRED;
         candidate_buffer->candidate_ptr->cfl_alpha_idx     = 0;
@@ -4890,7 +4872,7 @@ void md_cfl_rd_pick_alpha(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffe
         candidate_buffer->candidate_ptr->cfl_alpha_idx   = ind;
         candidate_buffer->candidate_ptr->cfl_alpha_signs = best_joint_sign;
     }
-#endif
+    return last_is_best;
 }
 #endif
 void cfl_rd_pick_alpha(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *candidate_buffer,
@@ -5111,7 +5093,11 @@ static void cfl_prediction(PictureControlSet *          pcs_ptr,
 
         // 3: Loop over alphas and find the best or choose DC
 #if MD_CFL
+#if CFL_TH_ALGORITHM
+        uint8_t last_is_best = md_cfl_rd_pick_alpha(pcs_ptr,
+#else
         md_cfl_rd_pick_alpha(pcs_ptr,
+#endif
 #else
         cfl_rd_pick_alpha(pcs_ptr,
 #endif
@@ -5121,66 +5107,76 @@ static void cfl_prediction(PictureControlSet *          pcs_ptr,
                           input_picture_ptr,
                           input_cb_origin_in_index,
                           blk_chroma_origin_index);
-
+        //  Redo if best independent is not DC
+#if CFL_TH_ALGORITHM
+        if(!last_is_best){
+#else
         if (candidate_buffer->candidate_ptr->intra_chroma_mode == UV_CFL_PRED) {
-            // 4: Recalculate the prediction and the residual
-            int32_t alpha_q3_cb = cfl_idx_to_alpha(candidate_buffer->candidate_ptr->cfl_alpha_idx,
-                                                   candidate_buffer->candidate_ptr->cfl_alpha_signs,
-                                                   CFL_PRED_U);
-            int32_t alpha_q3_cr = cfl_idx_to_alpha(candidate_buffer->candidate_ptr->cfl_alpha_idx,
-                                                   candidate_buffer->candidate_ptr->cfl_alpha_signs,
-                                                   CFL_PRED_V);
+#endif
+#if CFL_TH_ALGORITHM
+            if (candidate_buffer->candidate_ptr->intra_chroma_mode == UV_CFL_PRED) {
+#endif
+                // 4: Recalculate the prediction and the residual
+                int32_t alpha_q3_cb = cfl_idx_to_alpha(candidate_buffer->candidate_ptr->cfl_alpha_idx,
+                    candidate_buffer->candidate_ptr->cfl_alpha_signs,
+                    CFL_PRED_U);
+                int32_t alpha_q3_cr = cfl_idx_to_alpha(candidate_buffer->candidate_ptr->cfl_alpha_idx,
+                    candidate_buffer->candidate_ptr->cfl_alpha_signs,
+                    CFL_PRED_V);
 
-            assert(chroma_height * CFL_BUF_LINE + chroma_width <= CFL_BUF_SQUARE);
+                assert(chroma_height * CFL_BUF_LINE + chroma_width <= CFL_BUF_SQUARE);
 
-            if (!context_ptr->hbd_mode_decision) {
-                eb_cfl_predict_lbd(
-                    context_ptr->pred_buf_q3,
-                    &(candidate_buffer->prediction_ptr->buffer_cb[blk_chroma_origin_index]),
-                    candidate_buffer->prediction_ptr->stride_cb,
-                    &(candidate_buffer->prediction_ptr->buffer_cb[blk_chroma_origin_index]),
-                    candidate_buffer->prediction_ptr->stride_cb,
-                    alpha_q3_cb,
-                    8,
-                    chroma_width,
-                    chroma_height);
+                if (!context_ptr->hbd_mode_decision) {
+                    eb_cfl_predict_lbd(
+                        context_ptr->pred_buf_q3,
+                        &(candidate_buffer->prediction_ptr->buffer_cb[blk_chroma_origin_index]),
+                        candidate_buffer->prediction_ptr->stride_cb,
+                        &(candidate_buffer->prediction_ptr->buffer_cb[blk_chroma_origin_index]),
+                        candidate_buffer->prediction_ptr->stride_cb,
+                        alpha_q3_cb,
+                        8,
+                        chroma_width,
+                        chroma_height);
 
-                eb_cfl_predict_lbd(
-                    context_ptr->pred_buf_q3,
-                    &(candidate_buffer->prediction_ptr->buffer_cr[blk_chroma_origin_index]),
-                    candidate_buffer->prediction_ptr->stride_cr,
-                    &(candidate_buffer->prediction_ptr->buffer_cr[blk_chroma_origin_index]),
-                    candidate_buffer->prediction_ptr->stride_cr,
-                    alpha_q3_cr,
-                    8,
-                    chroma_width,
-                    chroma_height);
-            } else {
-                eb_cfl_predict_hbd(context_ptr->pred_buf_q3,
-                                   ((uint16_t *)candidate_buffer->prediction_ptr->buffer_cb) +
-                                       blk_chroma_origin_index,
-                                   candidate_buffer->prediction_ptr->stride_cb,
-                                   ((uint16_t *)candidate_buffer->prediction_ptr->buffer_cb) +
-                                       blk_chroma_origin_index,
-                                   candidate_buffer->prediction_ptr->stride_cb,
-                                   alpha_q3_cb,
-                                   10,
-                                   chroma_width,
-                                   chroma_height);
+                    eb_cfl_predict_lbd(
+                        context_ptr->pred_buf_q3,
+                        &(candidate_buffer->prediction_ptr->buffer_cr[blk_chroma_origin_index]),
+                        candidate_buffer->prediction_ptr->stride_cr,
+                        &(candidate_buffer->prediction_ptr->buffer_cr[blk_chroma_origin_index]),
+                        candidate_buffer->prediction_ptr->stride_cr,
+                        alpha_q3_cr,
+                        8,
+                        chroma_width,
+                        chroma_height);
+                }
+                else {
+                    eb_cfl_predict_hbd(context_ptr->pred_buf_q3,
+                        ((uint16_t *)candidate_buffer->prediction_ptr->buffer_cb) +
+                        blk_chroma_origin_index,
+                        candidate_buffer->prediction_ptr->stride_cb,
+                        ((uint16_t *)candidate_buffer->prediction_ptr->buffer_cb) +
+                        blk_chroma_origin_index,
+                        candidate_buffer->prediction_ptr->stride_cb,
+                        alpha_q3_cb,
+                        10,
+                        chroma_width,
+                        chroma_height);
 
-                eb_cfl_predict_hbd(context_ptr->pred_buf_q3,
-                                   ((uint16_t *)candidate_buffer->prediction_ptr->buffer_cr) +
-                                       blk_chroma_origin_index,
-                                   candidate_buffer->prediction_ptr->stride_cr,
-                                   ((uint16_t *)candidate_buffer->prediction_ptr->buffer_cr) +
-                                       blk_chroma_origin_index,
-                                   candidate_buffer->prediction_ptr->stride_cr,
-                                   alpha_q3_cr,
-                                   10,
-                                   chroma_width,
-                                   chroma_height);
+                    eb_cfl_predict_hbd(context_ptr->pred_buf_q3,
+                        ((uint16_t *)candidate_buffer->prediction_ptr->buffer_cr) +
+                        blk_chroma_origin_index,
+                        candidate_buffer->prediction_ptr->stride_cr,
+                        ((uint16_t *)candidate_buffer->prediction_ptr->buffer_cr) +
+                        blk_chroma_origin_index,
+                        candidate_buffer->prediction_ptr->stride_cr,
+                        alpha_q3_cr,
+                        10,
+                        chroma_width,
+                        chroma_height);
+                }
+#if CFL_TH_ALGORITHM
             }
-
+#endif
             // Cb Residual
             residual_kernel(input_picture_ptr->buffer_cb,
                             input_cb_origin_in_index,
@@ -7215,50 +7211,67 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
                         int32_t  angle_delta;
                         uint8_t  is_directional_chroma_mode_flag;
                         if (((context_ptr->best_inter_cost * (100 + cfl_th)) <
-                             (context_ptr->best_intra_cost * 100)) &&
+                            (context_ptr->best_intra_cost * 100)) &&
                             !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) {
                             intra_chroma_mode =
                                 context_ptr->best_uv_mode[candidate_ptr->intra_luma_mode]
-                                                         [MAX_ANGLE_DELTA +
-                                                          candidate_ptr->angle_delta[PLANE_TYPE_Y]];
+                                [MAX_ANGLE_DELTA +
+                                candidate_ptr->angle_delta[PLANE_TYPE_Y]];
                             angle_delta =
                                 context_ptr
-                                    ->best_uv_angle[candidate_ptr->intra_luma_mode]
-                                                   [MAX_ANGLE_DELTA +
-                                                    candidate_ptr->angle_delta[PLANE_TYPE_Y]];
+                                ->best_uv_angle[candidate_ptr->intra_luma_mode]
+                                [MAX_ANGLE_DELTA +
+                                candidate_ptr->angle_delta[PLANE_TYPE_Y]];
                             is_directional_chroma_mode_flag =
                                 (uint8_t)av1_is_directional_mode((PredictionMode)(
                                     context_ptr
-                                        ->best_uv_mode[candidate_ptr->intra_luma_mode]
-                                                      [MAX_ANGLE_DELTA +
-                                                       candidate_ptr->angle_delta[PLANE_TYPE_Y]]));
-                        } else {
+                                    ->best_uv_mode[candidate_ptr->intra_luma_mode]
+                                    [MAX_ANGLE_DELTA +
+                                    candidate_ptr->angle_delta[PLANE_TYPE_Y]]));
+                        }
+                        else {
                             intra_chroma_mode =
                                 candidate_ptr->intra_chroma_mode != UV_CFL_PRED
-                                    ? context_ptr
-                                          ->best_uv_mode[candidate_ptr->intra_luma_mode]
-                                                        [MAX_ANGLE_DELTA +
-                                                         candidate_ptr->angle_delta[PLANE_TYPE_Y]]
-                                    : UV_CFL_PRED;
+                                ? context_ptr
+                                ->best_uv_mode[candidate_ptr->intra_luma_mode]
+                                [MAX_ANGLE_DELTA +
+                                candidate_ptr->angle_delta[PLANE_TYPE_Y]]
+                            : UV_CFL_PRED;
                             angle_delta =
                                 candidate_ptr->intra_chroma_mode != UV_CFL_PRED
-                                    ? context_ptr
-                                          ->best_uv_angle[candidate_ptr->intra_luma_mode]
-                                                         [MAX_ANGLE_DELTA +
-                                                          candidate_ptr->angle_delta[PLANE_TYPE_Y]]
-                                    : 0;
+                                ? context_ptr
+                                ->best_uv_angle[candidate_ptr->intra_luma_mode]
+                                [MAX_ANGLE_DELTA +
+                                candidate_ptr->angle_delta[PLANE_TYPE_Y]]
+                            : 0;
                             is_directional_chroma_mode_flag =
                                 candidate_ptr->intra_chroma_mode != UV_CFL_PRED
-                                    ? (uint8_t)av1_is_directional_mode((PredictionMode)(
-                                          context_ptr->best_uv_mode
-                                              [candidate_ptr->intra_luma_mode]
-                                              [MAX_ANGLE_DELTA +
-                                               candidate_ptr->angle_delta[PLANE_TYPE_Y]]))
-                                    : 0;
+                                ? (uint8_t)av1_is_directional_mode((PredictionMode)(
+                                    context_ptr->best_uv_mode
+                                    [candidate_ptr->intra_luma_mode]
+                            [MAX_ANGLE_DELTA +
+                                candidate_ptr->angle_delta[PLANE_TYPE_Y]]))
+                                : 0;
                         }
-                        candidate_ptr->intra_chroma_mode = intra_chroma_mode;
-                        candidate_ptr->angle_delta[PLANE_TYPE_UV] = angle_delta;
-                        candidate_ptr->is_directional_chroma_mode_flag = is_directional_chroma_mode_flag;
+                        
+#if FIX_MD_UV
+                        if (candidate_ptr->intra_chroma_mode != intra_chroma_mode) {
+                            //printf("Nader intra_chroma_mode \n");
+                            uint8_t default_uv_search_path = context_ptr->uv_search_path;
+                            context_ptr->uv_search_path = 1;
+                            candidate_ptr->intra_chroma_mode = intra_chroma_mode;
+                            candidate_ptr->angle_delta[PLANE_TYPE_UV] = angle_delta;
+                            candidate_ptr->is_directional_chroma_mode_flag = is_directional_chroma_mode_flag;
+                            // REDO PRED IF intra_chroma_mode was updated.
+                            product_prediction_fun_table[candidate_ptr->type](
+                                context_ptr->hbd_mode_decision, context_ptr, pcs_ptr, candidate_buffer);
+                            context_ptr->uv_search_path = default_uv_search_path;
+                        }
+#else
+                            candidate_ptr->intra_chroma_mode = intra_chroma_mode;
+                            candidate_ptr->angle_delta[PLANE_TYPE_UV] = angle_delta;
+                            candidate_ptr->is_directional_chroma_mode_flag = is_directional_chroma_mode_flag;
+#endif 
                     }
                 }
             }
