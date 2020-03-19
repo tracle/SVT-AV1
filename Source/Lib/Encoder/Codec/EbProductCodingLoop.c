@@ -4100,7 +4100,7 @@ void perform_ref_masking(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
     }
 #else
     // tag to_do the best ?
-    uint8_t max_ref_to_tag = 2;
+    uint8_t max_ref_to_tag = 1;
     uint8_t total_tagged_ref = 0;
 
 #if 1
