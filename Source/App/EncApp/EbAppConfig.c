@@ -2366,9 +2366,6 @@ static int32_t read_pred_struct_file(EbConfig *config, char *PredStructPath,
                                      uint32_t instance_idx) {
     int32_t return_error = 0;
 
-    // Open the config file - it's already open, at the time of parsing command line or the config file
-    // BUT the file is closed below so if we have multiple calls to read_pred_struct_file it will only work the first time/channel
-    // solution => keep the file path in config and open the file here
     FOPEN(config->input_pred_struct_file, PredStructPath, "rb");
 
     if (config->input_pred_struct_file != (FILE *)NULL) {
@@ -2614,28 +2611,8 @@ EbErrorType read_command_line(int32_t argc, char *const argv[], EbConfig **confi
     /***************************************************************************************************/
     for (index = 0; index < num_channels; ++index) {
         if ((configs[index])->enable_manual_pred_struct == EB_TRUE) {
-            // TODO: this only reads the prediction structure if specified on cmd line, not if it's in the config file
-            // if enable_manual_pred_struct is set, the cmd line or config file token was already processed
-            // in the case of the config file the part commented out below doesn't work, it passes the config file name to the reader
-            // solution => storing filename at cli/config file parsing time and passing it to read_pred_struct_file below
-            // alternatively? => do not close it below, only at the end of reading, need to rewind each time
             return_errors[index] = (EbErrorType)read_pred_struct_file(configs[index], configs[index]->input_pred_struct_filename, index);
-
             return_error = (EbErrorType)(return_error & return_errors[index]);
-
-//            if (find_token_multiple_inputs(
-//                    argc, argv, INPUT_PREDSTRUCT_FILE_TOKEN, config_strings) == 0) {
-//                mark_token_as_read(INPUT_PREDSTRUCT_FILE_TOKEN, cmd_copy, &cmd_token_cnt);
-//                return_errors[index] = (EbErrorType)read_pred_struct_file(
-//                    configs[index], config_strings[index], index);
-//                return_error = (EbErrorType)(return_error & return_errors[index]);
-//            } else {
-//                if (find_token(argc, argv, INPUT_PREDSTRUCT_FILE_TOKEN, config_string) == 0) {
-//                    fprintf(stderr, "Error: Manual Prediction Structure File Token Not Found\n");
-//                    return EB_ErrorBadParameter;
-//                } else
-//                    return_error = EB_ErrorNone;
-//            }
         }
     }
 
