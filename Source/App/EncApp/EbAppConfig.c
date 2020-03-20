@@ -253,7 +253,7 @@ static void set_pred_struct_file(const char *value, EbConfig *cfg) {
     if (cfg->input_pred_struct_file) { fclose(cfg->input_pred_struct_file); }
     FOPEN(cfg->input_pred_struct_file, value, "rb");
     cfg->input_pred_struct_filename = (char *)malloc(strlen(value) + 1); // TODO free the memory
-    strcpy(cfg->input_pred_struct_filename, value);
+    EB_STRCPY(cfg->input_pred_struct_filename, strlen(value) + 1, value);
     cfg->enable_manual_pred_struct = EB_TRUE;
 };
 
