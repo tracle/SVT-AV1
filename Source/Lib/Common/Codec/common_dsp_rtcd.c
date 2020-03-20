@@ -127,11 +127,11 @@ static int32_t can_use_intel_avx512() {
     CPUID.(EAX=07H, ECX=0):EBX[bit 30] AVX512BW
     CPUID.(EAX=07H, ECX=0):EBX[bit 31] AVX512VL */
 
-    uint32_t avx512_ebx_mask = (1 << 16) // AVX-512F
-                             | (1 << 17) // AVX-512DQ
-                             | (1 << 28) // AVX-512CD
-                             | (1 << 30) // AVX-512BW
-                             | (1 << 31); // AVX-512VL
+    uint32_t avx512_ebx_mask = (1u << 16) // AVX-512F
+                             | (1u << 17) // AVX-512DQ
+                             | (1u << 28) // AVX-512CD
+                             | (1u << 30) // AVX-512BW
+                             | (1u << 31); // AVX-512VL
 
     if (!check_4thgen_intel_core_features()) return 0;
 
