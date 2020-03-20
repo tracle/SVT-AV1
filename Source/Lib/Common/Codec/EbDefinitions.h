@@ -151,14 +151,19 @@ extern "C" {
 #define MAR25_ADOPTIONS            1 // Adoptions for all modes. Adopt uniform HME/ME sizes (non-TF)
 #define MAR26_ADOPTIONS            1 // Adoptions for all modes. Adopt uniform TF HME/ME sizes
 
-#define TWO_LEVEL_HME              0 // Skip hmel0 and use the equivalante SR in hmel1
+#define TWO_LEVEL_HME              0 // Skip hmel0 and use the equivalent SR in hmel1
 #if TWO_LEVEL_HME
-#define HME_L1_DISTANCE_ALGORITHM   0
-#define ALIGN_HME_L1_SR_WITH_HEM_L0 0 
+#define HME_L1_DISTANCE_ALGORITHM   1
+#define ALIGN_HME_L1_SR_WITH_HEM_L0 1 
 #endif
 #define ADAPTIVE_ME_SR_SHAPE        0
 #if ADAPTIVE_ME_SR_SHAPE
 #define ME_SR_SAHPE                 3
+#endif
+#define ONE_LEVEL_HME              0 // Skip hmel0 and hmel1 and use the equivalent SR in hmel2
+#if ONE_LEVEL_HME
+#define HME_L2_DISTANCE_ALGORITHM   1
+#define ALIGN_HME_L2_SR_WITH_HEM_L0 1 
 #endif
 #endif
 
