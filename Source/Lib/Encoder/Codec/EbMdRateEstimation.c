@@ -783,7 +783,7 @@ static AOM_INLINE void sum_intra_stats(PictureControlSet *pcs_ptr, BlkStruct *bl
     const BlockSize         bsize    = mbmi->block_mi.sb_type;
     assert(bsize < BlockSizeS_ALL);
     assert(y_mode < 13);
-    
+
     if (intraonly) {
         update_cdf(get_y_mode_cdf(fc, above_mi, left_mi), y_mode, INTRA_MODES);
     } else {
