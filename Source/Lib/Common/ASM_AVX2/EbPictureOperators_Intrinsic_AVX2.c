@@ -1420,13 +1420,6 @@ void residual_kernel8bit_avx2(uint8_t *input, uint32_t input_stride, uint8_t *pr
     }
 }
 
-static INLINE void spatial_full_distortion_kernel_64_avx2_intrin(const uint8_t *const input,
-                                                                 const uint8_t *const recon,
-                                                                 __m256i *const       sum) {
-    spatial_full_distortion_kernel32_avx2_intrin(input + 0 * 32, recon + 0 * 32, sum);
-    spatial_full_distortion_kernel32_avx2_intrin(input + 1 * 32, recon + 1 * 32, sum);
-}
-
 uint64_t spatial_full_distortion_kernel_avx2(uint8_t *input, uint32_t input_offset,
                                              uint32_t input_stride, uint8_t *recon,
                                              int32_t recon_offset, uint32_t recon_stride,

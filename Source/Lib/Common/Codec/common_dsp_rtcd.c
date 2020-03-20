@@ -1031,7 +1031,22 @@ void setup_common_rtcd_internal(CPU_FLAGS flags) {
     eb_av1_warp_affine = eb_av1_warp_affine_c;
     if (flags & HAS_AVX2) eb_av1_warp_affine = eb_av1_warp_affine_avx2;
 
-
+    SET_SSE2(aom_highbd_lpf_horizontal_14, aom_highbd_lpf_horizontal_14_c, aom_highbd_lpf_horizontal_14_sse2);
+    SET_SSE2(aom_highbd_lpf_horizontal_4, aom_highbd_lpf_horizontal_4_c, aom_highbd_lpf_horizontal_4_sse2);
+    SET_SSE2(aom_highbd_lpf_horizontal_6, aom_highbd_lpf_horizontal_6_c, aom_highbd_lpf_horizontal_6_sse2);
+    SET_SSE2(aom_highbd_lpf_horizontal_8, aom_highbd_lpf_horizontal_8_c, aom_highbd_lpf_horizontal_8_sse2);
+    SET_SSE2(aom_highbd_lpf_vertical_14, aom_highbd_lpf_vertical_14_c, aom_highbd_lpf_vertical_14_sse2);
+    SET_SSE2(aom_highbd_lpf_vertical_4, aom_highbd_lpf_vertical_4_c, aom_highbd_lpf_vertical_4_sse2);
+    SET_SSE2(aom_highbd_lpf_vertical_6, aom_highbd_lpf_vertical_6_c, aom_highbd_lpf_vertical_6_sse2);
+    SET_SSE2(aom_highbd_lpf_vertical_8, aom_highbd_lpf_vertical_8_c, aom_highbd_lpf_vertical_8_sse2);
+    SET_SSE2(aom_lpf_horizontal_14, aom_lpf_horizontal_14_c, aom_lpf_horizontal_14_sse2);
+    SET_SSE2(aom_lpf_horizontal_4, aom_lpf_horizontal_4_c, aom_lpf_horizontal_4_sse2);
+    SET_SSE2(aom_lpf_horizontal_6, aom_lpf_horizontal_6_c, aom_lpf_horizontal_6_sse2);
+    SET_SSE2(aom_lpf_horizontal_8, aom_lpf_horizontal_8_c, aom_lpf_horizontal_8_sse2);
+    SET_SSE2(aom_lpf_vertical_14, aom_lpf_vertical_14_c, aom_lpf_vertical_14_sse2);
+    SET_SSE2(aom_lpf_vertical_4, aom_lpf_vertical_4_c, aom_lpf_vertical_4_sse2);
+    SET_SSE2(aom_lpf_vertical_6, aom_lpf_vertical_6_c, aom_lpf_vertical_6_sse2);
+    SET_SSE2(aom_lpf_vertical_8, aom_lpf_vertical_8_c, aom_lpf_vertical_8_sse2);
 
     // eb_aom_highbd_v_predictor
     eb_aom_highbd_v_predictor_16x16 = eb_aom_highbd_v_predictor_16x16_c;

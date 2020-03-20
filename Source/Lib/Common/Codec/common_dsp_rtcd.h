@@ -2131,6 +2131,69 @@ extern "C" {
     void eb_av1_warp_affine_avx2(const int32_t *mat, const uint8_t *ref, int width, int height, int stride, uint8_t *pred, int p_col, int p_row, int p_width, int p_height, int p_stride, int subsampling_x, int subsampling_y, ConvolveParams *conv_params, int16_t alpha, int16_t beta, int16_t gamma, int16_t delta);
     RTCD_EXTERN void(*eb_av1_warp_affine)(const int32_t *mat, const uint8_t *ref, int width, int height, int stride, uint8_t *pred, int p_col, int p_row, int p_width, int p_height, int p_stride, int subsampling_x, int subsampling_y, ConvolveParams *conv_params, int16_t alpha, int16_t beta, int16_t gamma, int16_t delta);
 
+    void aom_highbd_lpf_horizontal_14_c(uint16_t *s, int32_t pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh, int32_t bd);
+    void aom_highbd_lpf_horizontal_14_sse2(uint16_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit, const uint8_t *thresh, int32_t bd);
+    RTCD_EXTERN void (*aom_highbd_lpf_horizontal_14)(uint16_t *s, int32_t pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh, int32_t bd);
+
+    void aom_highbd_lpf_horizontal_4_c(uint16_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit, const uint8_t *thresh, int32_t bd);
+    void aom_highbd_lpf_horizontal_4_sse2(uint16_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit, const uint8_t *thresh, int32_t bd);
+    RTCD_EXTERN void (*aom_highbd_lpf_horizontal_4)(uint16_t *s, int32_t pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh, int32_t bd);
+
+    void aom_highbd_lpf_horizontal_6_c(uint16_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit, const uint8_t *thresh, int32_t bd);
+    void aom_highbd_lpf_horizontal_6_sse2(uint16_t *s, int32_t pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh, int32_t bd);
+    RTCD_EXTERN void (*aom_highbd_lpf_horizontal_6)(uint16_t *s, int32_t pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh, int32_t bd);
+
+    void aom_highbd_lpf_horizontal_8_c(uint16_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit, const uint8_t *thresh, int32_t bd);
+    void aom_highbd_lpf_horizontal_8_sse2(uint16_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit, const uint8_t *thresh, int32_t bd);
+    RTCD_EXTERN void (*aom_highbd_lpf_horizontal_8)(uint16_t *s, int32_t pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh, int32_t bd);
+
+    void aom_highbd_lpf_vertical_14_c(uint16_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit, const uint8_t *thresh, int32_t bd);
+    void aom_highbd_lpf_vertical_14_sse2(uint16_t *s, int32_t pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh, int32_t bd);
+    RTCD_EXTERN void (*aom_highbd_lpf_vertical_14)(uint16_t *s, int32_t pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh, int32_t bd);
+
+    void aom_highbd_lpf_vertical_4_c(uint16_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit, const uint8_t *thresh, int32_t bd);
+    void aom_highbd_lpf_vertical_4_sse2(uint16_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit, const uint8_t *thresh, int32_t bd);
+    RTCD_EXTERN void (*aom_highbd_lpf_vertical_4)(uint16_t *s, int32_t pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh, int32_t bd);
+
+    void aom_highbd_lpf_vertical_6_c(uint16_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit, const uint8_t *thresh, int32_t bd);
+    void aom_highbd_lpf_vertical_6_sse2(uint16_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit, const uint8_t *thresh, int32_t bd);
+    RTCD_EXTERN void (*aom_highbd_lpf_vertical_6)(uint16_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit, const uint8_t *thresh, int32_t bd);
+
+    void aom_highbd_lpf_vertical_8_c(uint16_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit, const uint8_t *thresh, int32_t bd);
+    void aom_highbd_lpf_vertical_8_sse2(uint16_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit, const uint8_t *thresh, int32_t bd);
+    RTCD_EXTERN void (*aom_highbd_lpf_vertical_8)(uint16_t *s, int32_t pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh, int32_t bd);
+
+    void aom_lpf_horizontal_14_c(uint8_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit, const uint8_t *thresh);
+    void aom_lpf_horizontal_14_sse2(uint8_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit, const uint8_t *thresh);
+    RTCD_EXTERN void (*aom_lpf_horizontal_14)(uint8_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit, const uint8_t *thresh);
+
+    void aom_lpf_horizontal_4_c(uint8_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit,const uint8_t *thresh);
+    void aom_lpf_horizontal_4_sse2(uint8_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit, const uint8_t *thresh);
+    RTCD_EXTERN void (*aom_lpf_horizontal_4)(uint8_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit, const uint8_t *thresh);
+
+    void aom_lpf_horizontal_6_c(uint8_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit,const uint8_t *thresh);
+    void aom_lpf_horizontal_6_sse2(uint8_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit, const uint8_t *thresh);
+    RTCD_EXTERN void (*aom_lpf_horizontal_6)(uint8_t *s, int32_t pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
+
+    void aom_lpf_horizontal_8_c(uint8_t *s, int32_t pitch, const uint8_t *blimit, const uint8_t *limit,const uint8_t *thresh);
+    void aom_lpf_horizontal_8_sse2(uint8_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit, const uint8_t *thresh);
+    RTCD_EXTERN void (*aom_lpf_horizontal_8)(uint8_t *s, int32_t pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
+
+    void aom_lpf_vertical_14_c(uint8_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit, const uint8_t *thresh);
+    void aom_lpf_vertical_14_sse2(uint8_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit, const uint8_t *thresh);
+    RTCD_EXTERN void (*aom_lpf_vertical_14)(uint8_t *s, int32_t pitch, const uint8_t *blimit,const uint8_t *limit, const uint8_t *thresh);
+
+    void aom_lpf_vertical_4_c(uint8_t *s, int32_t pitch, const uint8_t *blimit, const uint8_t *limit,const uint8_t *thresh);
+    void aom_lpf_vertical_4_sse2(uint8_t *s, int32_t pitch, const uint8_t *blimit, const uint8_t *limit,const uint8_t *thresh);
+    RTCD_EXTERN void (*aom_lpf_vertical_4)(uint8_t *s, int32_t pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
+
+    void aom_lpf_vertical_6_c(uint8_t* s, int32_t pitch, const uint8_t* blimit, const uint8_t* limit,const uint8_t* thresh);
+    void aom_lpf_vertical_6_sse2(uint8_t *s, int32_t pitch, const uint8_t *blimit, const uint8_t *limit,const uint8_t *thresh);
+    RTCD_EXTERN void (*aom_lpf_vertical_6)(uint8_t *s, int32_t pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
+
+    void aom_lpf_vertical_8_c(uint8_t *s, int32_t pitch, const uint8_t *blimit, const uint8_t *limit,const uint8_t *thresh);
+    void aom_lpf_vertical_8_sse2(uint8_t *s, int32_t pitch, const uint8_t *blimit, const uint8_t *limit,const uint8_t *thresh);
+    RTCD_EXTERN void (*aom_lpf_vertical_8)(uint8_t *s, int32_t pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh);
 
 #ifdef __cplusplus
 }  // extern "C"
