@@ -52,9 +52,15 @@ EbErrorType check_00_center(PictureParentControlSet *pcs_ptr, EbPictureBufferDes
  ************************************************/
 void *set_me_hme_params_from_config(SequenceControlSet *scs_ptr, MeContext *me_context_ptr) {
     uint16_t hme_region_index = 0;
-
+#if ADAPTIVE_ME_SR_SHAPE
+    for (uint8_t me_sr_shape = 0; me_sr_shape < ME_SR_SAHPE; me_sr_shape++) {
+        me_context_ptr->search_area_width[me_sr_shape]  = (uint8_t)scs_ptr->static_config.search_area_width;
+        me_context_ptr->search_area_height[me_sr_shape] = (uint8_t)scs_ptr->static_config.search_area_height;
+    }
+#else
     me_context_ptr->search_area_width  = (uint8_t)scs_ptr->static_config.search_area_width;
     me_context_ptr->search_area_height = (uint8_t)scs_ptr->static_config.search_area_height;
+#endif
 
     me_context_ptr->number_hme_search_region_in_width =
         (uint16_t)scs_ptr->static_config.number_hme_search_region_in_width;
@@ -152,6 +158,25 @@ void* set_me_hme_params_oq(
         hme_level2_search_area_in_height_array_bottom[sc_content_detected][input_resolution][hmeMeLevel];
 
     // ME
+#if ADAPTIVE_ME_SR_SHAPE
+    for (uint8_t me_sr_shape = 0; me_sr_shape < ME_SR_SAHPE; me_sr_shape++) {
+        if (low_frame_rate_flag) {
+            me_context_ptr->search_area_width[me_sr_shape] =
+                (min_me_search_width[sc_content_detected][input_resolution][hmeMeLevel] * 3) / 2;
+            me_context_ptr->search_area_height[me_sr_shape] =
+                (min_me_search_height[sc_content_detected][input_resolution][hmeMeLevel] * 3) / 2;
+        }
+        else {
+            me_context_ptr->search_area_width[me_sr_shape] =
+                min_me_search_width[sc_content_detected][input_resolution][hmeMeLevel];
+            me_context_ptr->search_area_height[me_sr_shape] =
+                min_me_search_height[sc_content_detected][input_resolution][hmeMeLevel];
+        }
+
+        assert(me_context_ptr->search_area_width[me_sr_shape] <= MAX_SEARCH_AREA_WIDTH && "increase MAX_SEARCH_AREA_WIDTH");
+        assert(me_context_ptr->search_area_height[me_sr_shape] <= MAX_SEARCH_AREA_HEIGHT && "increase MAX_SEARCH_AREA_HEIGHT");
+    }
+#else
     if (low_frame_rate_flag) {
         me_context_ptr->search_area_width  =
             (min_me_search_width[sc_content_detected][input_resolution][hmeMeLevel] *3)/2 ;
@@ -167,7 +192,7 @@ void* set_me_hme_params_oq(
 
     assert(me_context_ptr->search_area_width  <= MAX_SEARCH_AREA_WIDTH  && "increase MAX_SEARCH_AREA_WIDTH" );
     assert(me_context_ptr->search_area_height <= MAX_SEARCH_AREA_HEIGHT && "increase MAX_SEARCH_AREA_HEIGHT");
-
+#endif
     me_context_ptr->update_hme_search_center_flag = 1;
 
     if (input_resolution <= INPUT_SIZE_576p_RANGE_OR_LOWER)
@@ -443,6 +468,17 @@ void* tf_set_me_hme_params_oq(
         tf_hme_level2_search_area_in_height_array_bottom[sc_content_detected][input_resolution][hmeMeLevel];
 
     // ME
+#if ADAPTIVE_ME_SR_SHAPE
+    for (uint8_t me_sr_shape = 0; me_sr_shape < ME_SR_SAHPE; me_sr_shape++) {
+        me_context_ptr->search_area_width[me_sr_shape]  =
+        min_metf_search_width[sc_content_detected][input_resolution][hmeMeLevel] ;
+        me_context_ptr->search_area_height[me_sr_shape] =
+            min_metf_search_height[sc_content_detected][input_resolution][hmeMeLevel];
+
+        assert(me_context_ptr->search_area_width[me_sr_shape] <= MAX_SEARCH_AREA_WIDTH && "increase MAX_SEARCH_AREA_WIDTH");
+        assert(me_context_ptr->search_area_height[me_sr_shape] <= MAX_SEARCH_AREA_HEIGHT && "increase MAX_SEARCH_AREA_HEIGHT");
+    }
+#else
     me_context_ptr->search_area_width  =
         min_metf_search_width[sc_content_detected][input_resolution][hmeMeLevel] ;
     me_context_ptr->search_area_height =
@@ -450,6 +486,7 @@ void* tf_set_me_hme_params_oq(
 
     assert(me_context_ptr->search_area_width <= MAX_SEARCH_AREA_WIDTH && "increase MAX_SEARCH_AREA_WIDTH");
     assert(me_context_ptr->search_area_height <= MAX_SEARCH_AREA_HEIGHT && "increase MAX_SEARCH_AREA_HEIGHT");
+#endif
 
     me_context_ptr->update_hme_search_center_flag = 1;
 

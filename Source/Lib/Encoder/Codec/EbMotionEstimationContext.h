@@ -447,8 +447,13 @@ typedef struct MeContext {
 #endif
 
     // ME
+#if ADAPTIVE_ME_SR_SHAPE
+    uint16_t search_area_width[ME_SR_SAHPE];
+    uint16_t search_area_height[ME_SR_SAHPE];
+#else
     uint16_t search_area_width;
     uint16_t search_area_height;
+#endif
     uint16_t max_me_search_width;
     uint16_t max_me_search_height;
     uint8_t inherit_rec_mv_from_sq_block;

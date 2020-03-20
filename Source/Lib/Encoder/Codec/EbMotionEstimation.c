@@ -9590,9 +9590,35 @@ void integer_search_sb(
                 continue;  //so will not get ME results for those references.
             x_search_center = context_ptr->hme_results[list_index][ref_pic_index].hme_sc_x;
             y_search_center = context_ptr->hme_results[list_index][ref_pic_index].hme_sc_y;
+#if ADAPTIVE_ME_SR_SHAPE
+            search_area_width = context_ptr->search_area_width[0];
+            search_area_height = context_ptr->search_area_height[0];
+            uint64_t reliable_hme_th = 12000; // NM: To be tuned
+            if (context_ptr->hme_results[list_index][ref_pic_index].hme_sad < reliable_hme_th) {
+                int16_t abs_hme_mv_x = ABS(context_ptr->hme_results[list_index][ref_pic_index].hme_sc_x);
+                int16_t abs_hme_mv_y = ABS(context_ptr->hme_results[list_index][ref_pic_index].hme_sc_y);
+                // Width is larger than height case
+                int16_t ratio_width_th = 2; // NM: To be tuned
+                int16_t ratio_height_th = 2; // NM: To be tuned
+                if (abs_hme_mv_x > abs_hme_mv_y) {
+                    int16_t ratio_width = abs_hme_mv_x / abs_hme_mv_y;
+                    if (ratio_width > ratio_width_th) {
+                        search_area_width = context_ptr->search_area_width[1];
+                        search_area_height = context_ptr->search_area_height[1];
+                    }
+                }
+                else if (abs_hme_mv_y > abs_hme_mv_x) {
+                    int16_t ratio_height = abs_hme_mv_y / abs_hme_mv_x;
+                    if (ratio_height > ratio_height_th) {
+                        search_area_width = context_ptr->search_area_width[2];
+                        search_area_height = context_ptr->search_area_height[2];
+                    }
+                }
+            }
+#else
             search_area_width = context_ptr->search_area_width;
             search_area_height = context_ptr->search_area_height;
-
+#endif
             uint16_t dist = (context_ptr->me_alt_ref == EB_TRUE) ?
                 ABS((int16_t)(context_ptr->tf_frame_index - context_ptr->tf_index_center)) :
                 ABS((int16_t)(pcs_ptr->picture_number -
