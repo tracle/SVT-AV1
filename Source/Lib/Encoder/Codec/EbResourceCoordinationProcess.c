@@ -15,7 +15,6 @@
 #include "EbResourceCoordinationResults.h"
 #include "EbTransforms.h"
 #include "EbTime.h"
-#include "EbEntropyCoding.h"
 #include "EbObject.h"
 #include "EbLog.h"
 

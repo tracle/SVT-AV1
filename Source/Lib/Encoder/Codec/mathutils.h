@@ -75,7 +75,7 @@ static INLINE int32_t least_squares(int32_t n, double *A, int32_t rows, int32_t 
     }
     at_a = scratch;
     atb = scratch + n * n;
-
+    assert(at_a);
     for (i = 0; i < n; ++i) {
         for (j = i; j < n; ++j) {
             at_a[i * n + j] = 0.0;

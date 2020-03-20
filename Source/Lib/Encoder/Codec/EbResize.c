@@ -1109,6 +1109,7 @@ void init_resize_picture(SequenceControlSet *scs_ptr, PictureParentControlSet *p
         const uint32_t ss_y       = scs_ptr->subsampling_y;
 
         // downsample picture buffer
+        assert(pcs_ptr->enhanced_downscaled_picture_ptr);
         av1_resize_and_extend_frame(input_picture_ptr,
                                     pcs_ptr->enhanced_downscaled_picture_ptr,
                                     pcs_ptr->enhanced_downscaled_picture_ptr->bit_depth,

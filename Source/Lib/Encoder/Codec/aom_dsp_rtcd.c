@@ -28,14 +28,11 @@
 #include "EbComputeSAD.h"
 #include "EbMotionEstimation.h"
 #include "EbPictureOperators.h"
-#include "EbMcp_SSE2.h"
 #include "EbAvcStyleMcp_SSSE3.h"
 #include "EbComputeMean_SSE2.h"
 #include "EbCombinedAveragingSAD_Intrinsic_AVX2.h"
 #include "EbComputeMean.h"
 #include "EbMeSadCalculation.h"
-#include "EbAvcStyleMcp.h"
-
 
 /**************************************
  * Instruction Set Support

@@ -231,9 +231,11 @@ static TxSize set_lpf_parameters(Av1DeblockingParameters *const params, const ui
                                                        pcs_ptr->parent_pcs_ptr->curr_delta_lf,
                                                        0 /*segment_id*/,
                                                        mode, mbmi->block_mi.ref_frame[0]);
-            else
+            else{
+                assert(mode < 25);
                 curr_level = lfi_n->lvl[plane][0/*segment_id*/][edge_dir]
                              [mbmi->block_mi.ref_frame[0]][mode_lf_lut[mode]];
+            }
 
             const int32_t curr_skipped =
                 mbmi->block_mi.skip && is_inter_block_no_intrabc(mbmi->block_mi.ref_frame[0]);
@@ -263,10 +265,11 @@ static TxSize set_lpf_parameters(Av1DeblockingParameters *const params, const ui
                                                            0 /*segment_id*/,
                                                            mi_prev->block_mi.mode,
                                                            mi_prev->block_mi.ref_frame[0]);
-                    else
+                    else{
+                        assert(mode < 25);
                         pv_lvl = lfi_n->lvl[plane][0/*segment_id*/][edge_dir]
                                 [mi_prev->block_mi.ref_frame[0]][mode_lf_lut[mode]];
-
+                    }
                     const int32_t pv_skip =
                         mi_prev->block_mi.skip &&
                         is_inter_block_no_intrabc(mi_prev->block_mi.ref_frame[0]);
