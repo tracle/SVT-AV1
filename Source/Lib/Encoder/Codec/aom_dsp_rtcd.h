@@ -1176,9 +1176,6 @@ extern "C" {
         uint32_t input_stride, // input parameter, input stride
         uint32_t input_area_width, // input parameter, input area width
         uint32_t input_area_height);
-    uint64_t compute_sub_mean8x8_sse2_intrin(
-        uint8_t* input_samples, // input parameter, input samples Ptr
-        uint16_t input_stride);
     RTCD_EXTERN uint64_t(*compute_mean_square_values_8x8)(uint8_t *input_samples, uint32_t input_stride, uint32_t input_area_width, uint32_t input_area_height);
     uint64_t compute_mean_of_squared_values8x8_sse2_intrin(
         uint8_t* input_samples, // input parameter, input samples Ptr
@@ -1188,6 +1185,11 @@ extern "C" {
     uint64_t compute_subd_mean_of_squared_values8x8_sse2_intrin(
         uint8_t* input_samples, // input parameter, input samples Ptr
         uint16_t input_stride);
+
+    RTCD_EXTERN uint64_t (*compute_sub_mean_8x8)(uint8_t* input_samples, uint16_t input_stride);
+    uint64_t compute_sub_mean_8x8_c(uint8_t* input_samples, uint16_t input_stride);
+    uint64_t compute_sub_mean8x8_sse2_intrin(uint8_t* input_samples, uint16_t input_stride);
+
     RTCD_EXTERN void(*compute_interm_var_four8x8)(uint8_t *input_samples, uint16_t input_stride, uint64_t *mean_of8x8_blocks, uint64_t *mean_of_squared8x8_blocks);
     void compute_interm_var_four8x8_helper_sse2(uint8_t* input_samples, uint16_t input_stride,
         uint64_t* mean_of8x8_blocks, // mean of four  8x8
