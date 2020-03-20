@@ -156,7 +156,7 @@ extern "C" {
 #define HME_L1_DISTANCE_ALGORITHM   0
 #define ALIGN_HME_L1_SR_WITH_HEM_L0 0 
 #endif
-#define ADAPTIVE_ME_SR_SHAPE        1
+#define ADAPTIVE_ME_SR_SHAPE        0
 #if ADAPTIVE_ME_SR_SHAPE
 #define ME_SR_SAHPE                 3
 #endif

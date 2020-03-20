@@ -9601,14 +9601,14 @@ void integer_search_sb(
                 int16_t ratio_width_th = 2; // NM: To be tuned
                 int16_t ratio_height_th = 2; // NM: To be tuned
                 if (abs_hme_mv_x > abs_hme_mv_y) {
-                    int16_t ratio_width = abs_hme_mv_x / abs_hme_mv_y;
+                    int16_t ratio_width = abs_hme_mv_y ? abs_hme_mv_x / abs_hme_mv_y : ratio_width_th + 1;
                     if (ratio_width > ratio_width_th) {
                         search_area_width = context_ptr->search_area_width[1];
                         search_area_height = context_ptr->search_area_height[1];
                     }
                 }
                 else if (abs_hme_mv_y > abs_hme_mv_x) {
-                    int16_t ratio_height = abs_hme_mv_y / abs_hme_mv_x;
+                    int16_t ratio_height = abs_hme_mv_x ? abs_hme_mv_y / abs_hme_mv_x : ratio_height_th + 1;
                     if (ratio_height > ratio_height_th) {
                         search_area_width = context_ptr->search_area_width[2];
                         search_area_height = context_ptr->search_area_height[2];
