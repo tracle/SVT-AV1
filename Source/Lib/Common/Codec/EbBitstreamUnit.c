@@ -130,13 +130,12 @@ static void od_ec_enc_normalize(OdEcEnc *enc, OdEcWindow low, unsigned rng) {
         uint32_t  storage;
         uint32_t  offs;
         unsigned  m;
-        buf     = enc->precarry_buf;
         storage = enc->precarry_storage;
         offs    = enc->offs;
         if (offs + 2 > storage) {
             storage = 2 * storage + 2;
-            buf     = (uint16_t *)realloc(buf, sizeof(*buf) * storage);
-            if (buf == NULL) {
+            buf = realloc(enc->precarry_buf, sizeof(*buf) * storage);
+            if (!buf) {
                 enc->error = -1;
                 enc->offs  = 0;
                 return;
@@ -308,14 +307,13 @@ uint8_t *eb_od_ec_enc_done(OdEcEnc *enc, uint32_t *nbytes) {
     e = ((l + m) & ~m) | (m + 1);
     s += c;
     offs = enc->offs;
-    buf  = enc->precarry_buf;
     if (s > 0) {
         unsigned n;
         storage = enc->precarry_storage;
         if (offs + ((s + 7) >> 3) > storage) {
             storage = storage * 2 + ((s + 7) >> 3);
-            buf     = (uint16_t *)realloc(buf, sizeof(*buf) * storage);
-            if (buf == NULL) {
+            buf = realloc(enc->precarry_buf, sizeof(*buf) * storage);
+            if (!buf) {
                 enc->error = -1;
                 return NULL;
             }
@@ -325,7 +323,7 @@ uint8_t *eb_od_ec_enc_done(OdEcEnc *enc, uint32_t *nbytes) {
         n = (1 << (c + 16)) - 1;
         do {
             assert(offs < storage);
-            buf[offs++] = (uint16_t)(e >> (c + 16));
+            enc->precarry_buf[offs++] = (uint16_t)(e >> (c + 16));
             e &= n;
             s -= 8;
             c -= 8;
@@ -333,13 +331,12 @@ uint8_t *eb_od_ec_enc_done(OdEcEnc *enc, uint32_t *nbytes) {
         } while (s > 0);
     }
     /*Make sure there's enough room for the entropy-coded bits.*/
-    out     = enc->buf;
     storage = enc->storage;
     c       = OD_MAXI((s + 7) >> 3, 0);
     if (offs + c > storage) {
         storage = offs + c;
-        out     = (uint8_t *)realloc(out, sizeof(*out) * storage);
-        if (out == NULL) {
+        out = realloc(enc->buf, sizeof(*buf) * storage);
+        if (!out) {
             enc->error = -1;
             return NULL;
         }
