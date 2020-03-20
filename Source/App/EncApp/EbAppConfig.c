@@ -252,8 +252,11 @@ static void set_cfg_input_file(const char *filename, EbConfig *cfg) {
 static void set_pred_struct_file(const char *value, EbConfig *cfg) {
     if (cfg->input_pred_struct_file) { fclose(cfg->input_pred_struct_file); }
     FOPEN(cfg->input_pred_struct_file, value, "rb");
-    cfg->input_pred_struct_filename = (char *)malloc(strlen(value) + 1); // TODO free the memory
+
+    if (cfg->input_pred_struct_filename) { free(cfg->input_pred_struct_filename); }
+    cfg->input_pred_struct_filename = (char *)malloc(strlen(value) + 1);
     EB_STRCPY(cfg->input_pred_struct_filename, strlen(value) + 1, value);
+
     cfg->enable_manual_pred_struct = EB_TRUE;
 };
 
@@ -1641,6 +1644,16 @@ void eb_config_dtor(EbConfig *config_ptr) {
     if (config_ptr->recon_file) {
         fclose(config_ptr->recon_file);
         config_ptr->recon_file = (FILE *)NULL;
+    }
+
+    if (config_ptr->input_pred_struct_file) {
+        fclose(config_ptr->input_pred_struct_file);
+        config_ptr->input_pred_struct_file = (FILE *)NULL;
+    }
+
+    if (config_ptr->input_pred_struct_filename) {
+        free(config_ptr->input_pred_struct_filename);
+        config_ptr->input_pred_struct_filename = NULL;
     }
 
     if (config_ptr->error_log_file && config_ptr->error_log_file != stderr) {
