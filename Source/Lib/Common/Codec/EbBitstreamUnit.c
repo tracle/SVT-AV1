@@ -130,6 +130,7 @@ static void od_ec_enc_normalize(OdEcEnc *enc, OdEcWindow low, unsigned rng) {
         uint32_t  storage;
         uint32_t  offs;
         unsigned  m;
+        buf     = enc->precarry_buf;
         storage = enc->precarry_storage;
         offs    = enc->offs;
         if (offs + 2 > storage) {
@@ -307,6 +308,7 @@ uint8_t *eb_od_ec_enc_done(OdEcEnc *enc, uint32_t *nbytes) {
     e = ((l + m) & ~m) | (m + 1);
     s += c;
     offs = enc->offs;
+    buf  = enc->precarry_buf;
     if (s > 0) {
         unsigned n;
         storage = enc->precarry_storage;
@@ -323,7 +325,7 @@ uint8_t *eb_od_ec_enc_done(OdEcEnc *enc, uint32_t *nbytes) {
         n = (1 << (c + 16)) - 1;
         do {
             assert(offs < storage);
-            enc->precarry_buf[offs++] = (uint16_t)(e >> (c + 16));
+            buf[offs++] = (uint16_t)(e >> (c + 16));
             e &= n;
             s -= 8;
             c -= 8;
@@ -331,6 +333,7 @@ uint8_t *eb_od_ec_enc_done(OdEcEnc *enc, uint32_t *nbytes) {
         } while (s > 0);
     }
     /*Make sure there's enough room for the entropy-coded bits.*/
+    out     = enc->buf;
     storage = enc->storage;
     c       = OD_MAXI((s + 7) >> 3, 0);
     if (offs + c > storage) {
