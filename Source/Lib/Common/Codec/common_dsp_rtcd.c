@@ -83,9 +83,9 @@ static INLINE int32_t check_xcr0_ymm() {
 }
 
 static int32_t check_4thgen_intel_core_features() {
-    int32_t abcd[4];
-    int32_t fma_movbe_osxsave_mask = ((1 << 12) | (1 << 22) | (1 << 27));
-    int32_t avx2_bmi12_mask        = (1 << 5) | (1 << 3) | (1 << 8);
+    uint32_t abcd[4];
+    uint32_t fma_movbe_osxsave_mask = ((1 << 12) | (1 << 22) | (1 << 27));
+    uint32_t avx2_bmi12_mask        = (1 << 5) | (1 << 3) | (1 << 8);
 
     /* CPUID.(EAX=01H, ECX=0H):ECX.FMA[bit 12]==1   &&
     CPUID.(EAX=01H, ECX=0H):ECX.MOVBE[bit 22]==1 &&
