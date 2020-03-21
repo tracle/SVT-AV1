@@ -36,10 +36,6 @@ void scale_source_references(SequenceControlSet *scs_ptr,
                              PictureParentControlSet *pcs_ptr,
                              EbPictureBufferDesc *input_picture_ptr);
 
-EbErrorType av1_resize_and_extend_frame(const EbPictureBufferDesc* src, EbPictureBufferDesc* dst,
-                                        int bd, const int num_planes, const uint32_t ss_x,
-                                        const uint32_t ss_y);
-
 void init_resize_picture(SequenceControlSet* scs_ptr, PictureParentControlSet* pcs_ptr);
 
 #define filteredinterp_filters1000 av1_resize_filter_normative

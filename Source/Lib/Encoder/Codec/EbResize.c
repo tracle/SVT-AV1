@@ -792,13 +792,13 @@ void save_YUV_to_file_highbd(char *filename, uint16_t *buffer_y, uint16_t *buffe
                              uint16_t stride_u, uint16_t stride_v, uint16_t origin_y,
                              uint16_t origin_x, uint32_t ss_x, uint32_t ss_y);
 
-EbErrorType av1_resize_and_extend_frame(const EbPictureBufferDesc *src, EbPictureBufferDesc *dst,
-                                        int bd, const int num_planes, const uint32_t ss_x,
-                                        const uint32_t ss_y) {
+EbErrorType av1_resize_frame(const EbPictureBufferDesc *src, EbPictureBufferDesc *dst,
+                             int bd, const int num_planes, const uint32_t ss_x,
+                             const uint32_t ss_y, uint8_t is_packed) {
     uint16_t *src_buffer_highbd[MAX_MB_PLANE];
     uint16_t *dst_buffer_highbd[MAX_MB_PLANE];
 
-    if (bd > 8) {
+    if (bd > 8 && !is_packed) {
         EB_MALLOC_ARRAY(src_buffer_highbd[0], src->luma_size);
         EB_MALLOC_ARRAY(src_buffer_highbd[1], src->chroma_size);
         EB_MALLOC_ARRAY(src_buffer_highbd[2], src->chroma_size);
@@ -806,6 +806,13 @@ EbErrorType av1_resize_and_extend_frame(const EbPictureBufferDesc *src, EbPictur
         EB_MALLOC_ARRAY(dst_buffer_highbd[1], dst->chroma_size);
         EB_MALLOC_ARRAY(dst_buffer_highbd[2], dst->chroma_size);
         pack_highbd_pic(src, src_buffer_highbd, ss_x, ss_y, EB_TRUE);
+    }else{
+        src_buffer_highbd[0] = (uint16_t*)src->buffer_y;
+        src_buffer_highbd[1] = (uint16_t*)src->buffer_cb;
+        src_buffer_highbd[2] = (uint16_t*)src->buffer_cr;
+        dst_buffer_highbd[0] = (uint16_t*)dst->buffer_y;
+        dst_buffer_highbd[1] = (uint16_t*)dst->buffer_cb;
+        dst_buffer_highbd[2] = (uint16_t*)dst->buffer_cr;
     }
 
 #if DEBUG_SCALING
@@ -956,7 +963,7 @@ EbErrorType av1_resize_and_extend_frame(const EbPictureBufferDesc *src, EbPictur
                          1);
 #endif
 
-    if (bd > 8) {
+    if (bd > 8 && !is_packed) {
         unpack_highbd_pic(dst_buffer_highbd, dst, ss_x, ss_y, EB_TRUE);
 
         EB_FREE(src_buffer_highbd[0]);
@@ -966,10 +973,6 @@ EbErrorType av1_resize_and_extend_frame(const EbPictureBufferDesc *src, EbPictur
         EB_FREE(dst_buffer_highbd[1]);
         EB_FREE(dst_buffer_highbd[2]);
     }
-
-    // TODO: extend frame borders
-    // use eb_extend_frame() instead
-    // aom_extend_frame_borders(dst, num_planes);
 
     return EB_ErrorNone;
 }
@@ -1298,12 +1301,14 @@ void scale_source_references(SequenceControlSet *scs_ptr,
                     EbPictureBufferDesc *down_ref_pic_ptr = reference_object->downscaled_input_padded_picture_ptr[denom_idx];
 
                     // downsample input padded picture buffer
-                    av1_resize_and_extend_frame(ref_pic_ptr,
-                                                down_ref_pic_ptr,
-                                                down_ref_pic_ptr->bit_depth,
-                                                num_planes,
-                                                ss_x,
-                                                ss_y);
+                    av1_resize_frame(ref_pic_ptr,
+                                     down_ref_pic_ptr,
+                                     8, // only 8-bit buffer needed for open-loop processing
+                                     num_planes,
+                                     ss_x,
+                                     ss_y,
+                                     0 // is_packed
+                                     );
 
                     generate_padding(down_ref_pic_ptr->buffer_y,
                                      down_ref_pic_ptr->stride_y,
@@ -1461,35 +1466,58 @@ void scale_rec_references(PictureControlSet *pcs_ptr,
                                        : reference_object->downscaled_reference_picture[denom_idx];
 
                     // downsample input padded picture buffer
-                    // TODO: where is the extend?
-                    av1_resize_and_extend_frame(ref_pic_ptr,
-                                                down_ref_pic_ptr,
-                                                down_ref_pic_ptr->bit_depth,
-                                                num_planes,
-                                                ss_x,
-                                                ss_y);
+                    av1_resize_frame(ref_pic_ptr,
+                                     down_ref_pic_ptr,
+                                     down_ref_pic_ptr->bit_depth,
+                                     num_planes,
+                                     ss_x,
+                                     ss_y,
+                                     1 // is_packed
+                                     );
 
-                    // TODO: is the correct padding?
-                    generate_padding(down_ref_pic_ptr->buffer_y,
-                                     down_ref_pic_ptr->stride_y,
-                                     down_ref_pic_ptr->width,
-                                     down_ref_pic_ptr->height,
-                                     down_ref_pic_ptr->origin_x,
-                                     down_ref_pic_ptr->origin_y);
+                    if(down_ref_pic_ptr->bit_depth > EB_8BIT){
+                        generate_padding16_bit(down_ref_pic_ptr->buffer_y,
+                                         down_ref_pic_ptr->stride_y << 1,
+                                         down_ref_pic_ptr->width << 1,
+                                         down_ref_pic_ptr->height,
+                                         down_ref_pic_ptr->origin_x << 1,
+                                         down_ref_pic_ptr->origin_y);
 
-                    generate_padding(down_ref_pic_ptr->buffer_cb,
-                                     down_ref_pic_ptr->stride_cb,
-                                     down_ref_pic_ptr->width >> ss_x,
-                                     down_ref_pic_ptr->height >> ss_y,
-                                     down_ref_pic_ptr->origin_x >> ss_x,
-                                     down_ref_pic_ptr->origin_y >> ss_y);
+                        generate_padding16_bit(down_ref_pic_ptr->buffer_cb,
+                                         down_ref_pic_ptr->stride_cb << 1,
+                                         down_ref_pic_ptr->width,
+                                         down_ref_pic_ptr->height >> ss_y,
+                                         down_ref_pic_ptr->origin_x,
+                                         down_ref_pic_ptr->origin_y >> ss_y);
 
-                    generate_padding(down_ref_pic_ptr->buffer_cr,
-                                     down_ref_pic_ptr->stride_cr,
-                                     down_ref_pic_ptr->width >> ss_x,
-                                     down_ref_pic_ptr->height >> ss_y,
-                                     down_ref_pic_ptr->origin_x >> ss_x,
-                                     down_ref_pic_ptr->origin_y >> ss_y);
+                        generate_padding16_bit(down_ref_pic_ptr->buffer_cr,
+                                         down_ref_pic_ptr->stride_cr << 1,
+                                         down_ref_pic_ptr->width,
+                                         down_ref_pic_ptr->height >> ss_y,
+                                         down_ref_pic_ptr->origin_x,
+                                         down_ref_pic_ptr->origin_y >> ss_y);
+                    }else{
+                        generate_padding(down_ref_pic_ptr->buffer_y,
+                                         down_ref_pic_ptr->stride_y,
+                                         down_ref_pic_ptr->width,
+                                         down_ref_pic_ptr->height,
+                                         down_ref_pic_ptr->origin_x,
+                                         down_ref_pic_ptr->origin_y);
+
+                        generate_padding(down_ref_pic_ptr->buffer_cb,
+                                         down_ref_pic_ptr->stride_cb,
+                                         down_ref_pic_ptr->width >> ss_x,
+                                         down_ref_pic_ptr->height >> ss_y,
+                                         down_ref_pic_ptr->origin_x >> ss_x,
+                                         down_ref_pic_ptr->origin_y >> ss_y);
+
+                        generate_padding(down_ref_pic_ptr->buffer_cr,
+                                         down_ref_pic_ptr->stride_cr,
+                                         down_ref_pic_ptr->width >> ss_x,
+                                         down_ref_pic_ptr->height >> ss_y,
+                                         down_ref_pic_ptr->origin_x >> ss_x,
+                                         down_ref_pic_ptr->origin_y >> ss_y);
+                    }
 
                     printf("rescaled reference picture %d\n", (int)ref_picture_number);
 
@@ -1570,12 +1598,16 @@ void init_resize_picture(SequenceControlSet *scs_ptr, PictureParentControlSet *p
         const uint32_t ss_y       = scs_ptr->subsampling_y;
 
         // downsample picture buffer
-        av1_resize_and_extend_frame(input_picture_ptr,
-                                    pcs_ptr->enhanced_downscaled_picture_ptr,
-                                    pcs_ptr->enhanced_downscaled_picture_ptr->bit_depth,
-                                    num_planes,
-                                    ss_x,
-                                    ss_y);
+        av1_resize_frame(input_picture_ptr,
+                         pcs_ptr->enhanced_downscaled_picture_ptr,
+                         pcs_ptr->enhanced_downscaled_picture_ptr->bit_depth,
+                         num_planes,
+                         ss_x,
+                         ss_y,
+                         0 // is_packed
+                         );
+
+        // TODO: apply padding to enchanced picture ptr? The original one is padded
 
         // use downscaled picture instead of original res for mode decision, encoding loop etc
         // after temporal filtering and motion estimation
