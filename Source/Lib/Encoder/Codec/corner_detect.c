@@ -10,7 +10,6 @@
  */
 
 #include <stdlib.h>
-#include <math.h>
 #include "fast.h"
 
 #include "corner_detect.h"

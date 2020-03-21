@@ -809,6 +809,7 @@ void svtav1_predict_inter_block_plane(DecModCtxt *dec_mod_ctx, EbDecHandle *dec_
     int32_t highbd = bit_depth > EB_8BIT;
 
     const BlockSize bsize     = mi->sb_type;
+    assert(bsize < BlockSizeS_ALL);
     const int32_t   ss_x      = plane ? part_info->subsampling_x : 0;
     const int32_t   ss_y      = plane ? part_info->subsampling_y : 0;
     int32_t         bw        = part_info->wpx[0] >> ss_x;

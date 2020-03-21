@@ -230,6 +230,7 @@ static INLINE int32_t svdcmp(double **u, int32_t m, int32_t n, double w[], doubl
                 c = 0.0;
                 s = 1.0;
                 for (i = l; i <= k; i++) {
+                    assert(i > 0);
                     f      = s * rv1[i];
                     rv1[i] = c * rv1[i];
                     if ((double)(fabs(f) + anorm) == anorm) break;

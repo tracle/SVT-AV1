@@ -16,7 +16,6 @@
 
 #include "EbThreads.h"
 #include "EbUtility.h"
-#include "EbString.h"
 #include "EbEncHandle.h"
 #include "EbPictureControlSet.h"
 #include "EbPictureOperators.h"

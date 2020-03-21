@@ -10,7 +10,6 @@
  */
 #include <memory.h>
 #include <math.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 
@@ -520,8 +519,10 @@ finish_ransac:
     free(corners2);
     free(image1_coord);
     free(current_motion.inlier_indices);
-    for (i = 0; i < num_desired_motions; ++i) { free(motions[i].inlier_indices); }
-    free(motions);
+    if (motions){
+        for (i = 0; i < num_desired_motions; ++i) { free(motions[i].inlier_indices); }
+        free(motions);
+    }
 
     return ret_val;
 }
@@ -690,8 +691,10 @@ finish_ransac:
     free(corners2);
     free(image1_coord);
     free(current_motion.inlier_indices);
-    for (i = 0; i < num_desired_motions; ++i) { free(motions[i].inlier_indices); }
-    free(motions);
+    if (motions){
+        for (i = 0; i < num_desired_motions; ++i) { free(motions[i].inlier_indices); }
+        free(motions);
+    }
 
     return ret_val;
 }
