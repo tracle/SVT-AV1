@@ -955,7 +955,11 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
             : 0;
     EbBool enable_wm;
     if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if CS2_ADOPTIONS_1
+        enable_wm = pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M1 ? EB_TRUE : EB_FALSE;
+#else
         enable_wm = EB_FALSE;
+#endif
     else
 #if WARP_IMPROVEMENT
         enable_wm = (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M2 ||
@@ -982,8 +986,13 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     // 3                                            OBMC @(MVP, PME ) + Opt NICs
     // 4                                            OBMC @(MVP, PME ) + Opt2 NICs
     if (scs_ptr->static_config.enable_obmc) {
+#if CS2_ADOPTIONS_1
+        if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M1)
+            pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 2;
+#else
         if (pcs_ptr->parent_pcs_ptr->enc_mode == ENC_M0)
             pcs_ptr->parent_pcs_ptr->pic_obmc_mode = pcs_ptr->slice_type != I_SLICE ? 2 : 0;
+#endif
         else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M2)
             pcs_ptr->parent_pcs_ptr->pic_obmc_mode =
                 pcs_ptr->parent_pcs_ptr->sc_content_detected == 0 && pcs_ptr->slice_type != I_SLICE

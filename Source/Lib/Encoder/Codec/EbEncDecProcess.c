@@ -1329,6 +1329,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
     else {
         if (context_ptr->tx_search_level == TX_SEARCH_ENC_DEC)
             context_ptr->tx_weight = MAX_MODE_COST;
+#if CS2_ADOPTIONS_1
+        else if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+            if (pcs_ptr->enc_mode <= ENC_M0)
+                context_ptr->tx_weight = FC_SKIP_TX_SR_TH025;
+            else
+                context_ptr->tx_weight = FC_SKIP_TX_SR_TH010;
+        else if (pcs_ptr->enc_mode <= ENC_M0)
+            context_ptr->tx_weight = MAX_MODE_COST;
+#endif
         else if (!MR_MODE && pcs_ptr->enc_mode <= ENC_M5)
             context_ptr->tx_weight = FC_SKIP_TX_SR_TH025;
         else if (!MR_MODE) {
@@ -1421,7 +1430,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
             else
                 context_ptr->chroma_level =
                     (scs_ptr->encoder_bit_depth == EB_8BIT) ? CHROMA_MODE_2 : CHROMA_MODE_3;
+#if CS2_ADOPTIONS_1
+        else if (pcs_ptr->enc_mode <= ENC_M1)
+#else
         else if (pcs_ptr->enc_mode == ENC_M0)
+#endif
             context_ptr->chroma_level = CHROMA_MODE_0;
         else if (pcs_ptr->enc_mode <= ENC_M5 && pcs_ptr->temporal_layer_index == 0)
             context_ptr->chroma_level = CHROMA_MODE_0;
@@ -1438,7 +1451,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
     // Level                Settings
     // 0                    post first md_stage
     // 1                    post last md_stage
+#if CS2_ADOPTIONS_1
+    context_ptr->chroma_at_last_md_stage =
+        MR_MODE ? 0 : (context_ptr->chroma_level == CHROMA_MODE_0 && !pcs_ptr->parent_pcs_ptr->sc_content_detected) ? 1 : 0;
+#else
     context_ptr->chroma_at_last_md_stage = (context_ptr->chroma_level == CHROMA_MODE_0) /*&& (pcs_ptr->enc_mode == ENC_M1)*/ ? 1 : 0;
+#endif
 #endif
     // Set the full loop escape level
     // Level                Settings
@@ -1508,7 +1526,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
             context_ptr->new_nearest_near_comb_injection = 0;
         else
 #endif
+#if CS2_ADOPTIONS_1
+            if (pcs_ptr->enc_mode <= ENC_M0)
+#else
             if (pcs_ptr->enc_mode <= ENC_M0 && pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag)
+#endif
             context_ptr->new_nearest_near_comb_injection = 1;
         else
             context_ptr->new_nearest_near_comb_injection = 0;
@@ -1569,13 +1591,19 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
     } else if (context_ptr->pd_pass == PD_PASS_1) {
         context_ptr->unipred3x3_injection = 2;
     } else
-
+#if CS2_ADOPTIONS_1
+        if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+            if (pcs_ptr->enc_mode <= ENC_M1)
+                context_ptr->unipred3x3_injection = 1;
+            else if (pcs_ptr->enc_mode <= ENC_M2)
+                context_ptr->unipred3x3_injection = 2;
+#else
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
         if (MR_MODE)
             context_ptr->unipred3x3_injection = 1;
         else if (pcs_ptr->enc_mode <= ENC_M2)
             context_ptr->unipred3x3_injection = 2;
-
+#endif
         else
             context_ptr->unipred3x3_injection = 0;
     else if (pcs_ptr->enc_mode <= ENC_M7)
@@ -1615,6 +1643,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
     // 3                    Level 3: 7x5 full-pel search +  (H + V + D only ~ the best) sub-pel refinement = up to 6 half-pel + up to 6  quarter-pel = up to 12 positions + pred_me_distortion to pa_me_distortion deviation on
     // 4                    Level 4: 7x5 full-pel search +  (H + V + D) sub-pel refinement = 8 half-pel + 8 quarter-pel = 16 positions + pred_me_distortion to pa_me_distortion deviation on
     // 5                    Level 5: 7x5 full-pel search +  (H + V + D) sub-pel refinement = 8 half-pel + 8 quarter-pel = 16 positions + pred_me_distortion to pa_me_distortion deviation off
+    // 6                    Level 6: (H + V + D) 1/2 & 1/4 refinement = 8 half-pel + 8 quarter-pel = 16 positions + pred_me_distortion to pa_me_distortion deviation off
+
+    // NB: levels 1-5 are restricted to using max 4 ref frames, and 1/8 Pel refinement is always performed for the 8 positions for levels 1-6
     if (pcs_ptr->slice_type != I_SLICE) {
         if (context_ptr->pd_pass == PD_PASS_0)
             context_ptr->predictive_me_level = 0;
@@ -1622,6 +1653,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
             context_ptr->predictive_me_level = 2;
         else if (scs_ptr->static_config.pred_me == DEFAULT) {
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if CS2_ADOPTIONS_1
+                if (pcs_ptr->enc_mode <= ENC_M4)
+                    context_ptr->predictive_me_level = 1;
+#else
                 if (pcs_ptr->enc_mode <= ENC_M1)
                     if (!MR_MODE)
                         context_ptr->predictive_me_level = (pcs_ptr->enc_mode <= ENC_M0) ? 2 : 4;
@@ -1630,8 +1665,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
 
                 else if (pcs_ptr->enc_mode <= ENC_M4)
                     context_ptr->predictive_me_level = 2;
+#endif
                 else
                     context_ptr->predictive_me_level = 0;
+#if CS2_ADOPTIONS_1
+            else if (pcs_ptr->enc_mode <= ENC_M0)
+                context_ptr->predictive_me_level = 6;
+#endif
             else if (pcs_ptr->enc_mode <= ENC_M2)
                 context_ptr->predictive_me_level = 5;
             else if (pcs_ptr->enc_mode <= ENC_M4)
@@ -1803,11 +1843,20 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
         else if (context_ptr->pd_pass == PD_PASS_1)
             context_ptr->edge_based_skip_angle_intra = 1;
         else if (scs_ptr->static_config.edge_skp_angle_intra == DEFAULT) {
+#if CS2_ADOPTIONS_1
+            if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+                if (pcs_ptr->enc_mode <= ENC_M1)
+                    context_ptr->edge_based_skip_angle_intra = 0;
+                else
+                    context_ptr->edge_based_skip_angle_intra = 1;
+            else if (pcs_ptr->enc_mode <= ENC_M7)
+                context_ptr->edge_based_skip_angle_intra = 0;
+#else
             if (MR_MODE)
                 context_ptr->edge_based_skip_angle_intra = 0;
             else if (pcs_ptr->enc_mode <= ENC_M7 && !pcs_ptr->parent_pcs_ptr->sc_content_detected)
                 context_ptr->edge_based_skip_angle_intra = 0;
-
+#endif
             else
                 context_ptr->edge_based_skip_angle_intra = 1;
         } else
@@ -1828,7 +1877,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
 
     // Derive INTER/INTER WEDGE variance TH
     // Phoenix: Active only when inter/inter compound is on
+#if CS2_ADOPTIONS_1
+    if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#else
     if (pcs_ptr->enc_mode <= ENC_M7)
+#endif
         context_ptr->inter_inter_wedge_variance_th = 0;
     else
         context_ptr->inter_inter_wedge_variance_th = 100;
@@ -1838,9 +1891,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
         context_ptr->md_exit_th = 0;
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->md_exit_th = (pcs_ptr->parent_pcs_ptr->sc_content_detected) ? 10 : 18;
+#if CS2_ADOPTIONS_1
+    else if (pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->enc_mode <= ENC_M1 && pcs_ptr->parent_pcs_ptr->sc_content_detected))
+        context_ptr->md_exit_th = 0;
+#else
     else if (MR_MODE ||
              (pcs_ptr->enc_mode == ENC_M0 && pcs_ptr->parent_pcs_ptr->sc_content_detected == 0))
         context_ptr->md_exit_th = 0;
+#endif
     else
         context_ptr->md_exit_th = (pcs_ptr->parent_pcs_ptr->sc_content_detected) ? 10 : 18;
 
@@ -1850,9 +1908,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
         context_ptr->md_stage_1_cand_prune_th = (uint64_t)~0;
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->md_stage_1_cand_prune_th = 75;
+#if CS2_ADOPTIONS_1
+    else if (pcs_ptr->enc_mode <= ENC_M1 || scs_ptr->input_resolution == INPUT_SIZE_576p_RANGE_OR_LOWER)
+#else
     else if (MR_MODE ||
              (pcs_ptr->enc_mode == ENC_M0 && (pcs_ptr->parent_pcs_ptr->sc_content_detected == 0)) ||
              scs_ptr->input_resolution == INPUT_SIZE_576p_RANGE_OR_LOWER)
+#endif
         context_ptr->md_stage_1_cand_prune_th = (uint64_t)~0;
     else if (pcs_ptr->enc_mode <= ENC_M4)
         context_ptr->md_stage_1_cand_prune_th = scs_ptr->static_config.md_stage_1_cand_prune_th;
@@ -1865,9 +1927,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
         context_ptr->md_stage_1_class_prune_th = (uint64_t)~0;
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->md_stage_1_class_prune_th = 100;
+#if CS2_ADOPTIONS_1
+    else if (pcs_ptr->enc_mode <= ENC_M1 || scs_ptr->input_resolution == INPUT_SIZE_576p_RANGE_OR_LOWER)
+#else
     else if (MR_MODE ||
              (pcs_ptr->enc_mode == ENC_M0 && (pcs_ptr->parent_pcs_ptr->sc_content_detected == 0)) ||
              scs_ptr->input_resolution == INPUT_SIZE_576p_RANGE_OR_LOWER)
+#endif
         context_ptr->md_stage_1_class_prune_th = (uint64_t)~0;
     else if (pcs_ptr->enc_mode <= ENC_M4)
         context_ptr->md_stage_1_class_prune_th = scs_ptr->static_config.md_stage_1_class_prune_th;
@@ -1881,8 +1947,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->md_stage_2_3_cand_prune_th =
             scs_ptr->input_resolution <= INPUT_SIZE_1080i_RANGE ? 5 : 3;
+#if CS2_ADOPTIONS_1
+    else if (MR_MODE)
+        context_ptr->md_stage_2_3_cand_prune_th = (uint64_t)~0;
+    else if (pcs_ptr->enc_mode <= ENC_M1 || pcs_ptr->parent_pcs_ptr->sc_content_detected)
+        context_ptr->md_stage_2_3_cand_prune_th = 15;
+#else
     else if (MR_MODE || pcs_ptr->parent_pcs_ptr->sc_content_detected || pcs_ptr->enc_mode <= ENC_M0)
         context_ptr->md_stage_2_3_cand_prune_th = (uint64_t)~0;
+#endif
     else if (pcs_ptr->enc_mode <= ENC_M2)
         context_ptr->md_stage_2_3_cand_prune_th =
             scs_ptr->input_resolution <= INPUT_SIZE_1080i_RANGE ? 15 : 12;
@@ -1898,7 +1971,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
         context_ptr->md_stage_2_3_class_prune_th = (uint64_t)~0;
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->md_stage_2_3_class_prune_th = 25;
+#if CS2_ADOPTIONS_1
+    else if (MR_MODE || (pcs_ptr->enc_mode <= ENC_M1 &&
+                            pcs_ptr->parent_pcs_ptr->sc_content_detected))
+#else
     else if (MR_MODE)
+#endif
         context_ptr->md_stage_2_3_class_prune_th = (uint64_t)~0;
     else if (pcs_ptr->enc_mode <= ENC_M4)
         context_ptr->md_stage_2_3_class_prune_th = scs_ptr->static_config.md_stage_2_3_class_prune_th;
@@ -1918,6 +1996,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
     else if (MR_MODE)
         context_ptr->sq_weight = (uint32_t)~0;
 #if ENHANCED_SQ_WEIGHT
+#if CS2_ADOPTIONS_1
+    else if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+        if (pcs_ptr->enc_mode <= ENC_M0)
+            context_ptr->sq_weight = scs_ptr->static_config.sq_weight + 5;
+        else
+            context_ptr->sq_weight = scs_ptr->static_config.sq_weight - 5;
+#endif
     else if (pcs_ptr->enc_mode <= ENC_M1)
         context_ptr->sq_weight = scs_ptr->static_config.sq_weight + 5;
     else if (pcs_ptr->enc_mode <= ENC_M2)
@@ -2002,6 +2087,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
         context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
+#if CS2_ADOPTIONS_1
+    else if (MR_MODE &&
+        pcs_ptr->parent_pcs_ptr->sc_content_detected == 0)
+        context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
+#endif
     else
         context_ptr->coeff_based_nsq_cand_reduction = EB_TRUE;
 
@@ -2143,12 +2233,21 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
     // 3                1/2
     if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
         if (pcs_ptr->enc_mode <= ENC_M1)
+#if CS2_ADOPTIONS_1
+            context_ptr->nic_level = 0;
+#else
             context_ptr->nic_level = 1;
+#endif
         else
             context_ptr->nic_level = 2;
     else
+#if CS2_ADOPTIONS_1
+        if (pcs_ptr->enc_mode <= ENC_M1)
+            context_ptr->nic_level = 0;
+#else
         if (pcs_ptr->enc_mode <= ENC_M0)
             context_ptr->nic_level = 1;
+#endif
         else if (pcs_ptr->enc_mode <= ENC_M1)
             context_ptr->nic_level = 2;
         else

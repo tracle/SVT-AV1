@@ -813,11 +813,27 @@ EbErrorType signal_derivation_multi_processes_oq(
                     pcs_ptr->pic_depth_mode = PIC_SQ_NON4_DEPTH_MODE;
             else
                 pcs_ptr->pic_depth_mode = PIC_SQ_NON4_DEPTH_MODE;
+#if CS2_ADOPTIONS_1
+        else if (MR_MODE)
+            pcs_ptr->pic_depth_mode =
+            (pcs_ptr->slice_type == I_SLICE)
+            ? PIC_ALL_DEPTH_MODE
+            : PIC_MULTI_PASS_PD_MODE_0;
+        else if (pcs_ptr->enc_mode <= ENC_M1)
+            // Use a single-stage PD if I_SLICE
+            pcs_ptr->pic_depth_mode =
+            (pcs_ptr->slice_type == I_SLICE)
+            ? PIC_ALL_DEPTH_MODE
+            : pcs_ptr->hierarchical_levels < 3
+            ? PIC_MULTI_PASS_PD_MODE_0
+            : PIC_MULTI_PASS_PD_MODE_1;
+#else
         else if (MR_MODE)
             pcs_ptr->pic_depth_mode = PIC_ALL_DEPTH_MODE;
         else if (pcs_ptr->enc_mode == ENC_M0)
             // Use a single-stage PD if I_SLICE
             pcs_ptr->pic_depth_mode = (pcs_ptr->slice_type == I_SLICE) ? PIC_ALL_DEPTH_MODE : PIC_MULTI_PASS_PD_MODE_1;
+#endif
         else if (pcs_ptr->enc_mode <= ENC_M2)
             // Use a single-stage PD if I_SLICE
             pcs_ptr->pic_depth_mode = (pcs_ptr->slice_type == I_SLICE) ? PIC_ALL_DEPTH_MODE : PIC_MULTI_PASS_PD_MODE_2;
@@ -954,7 +970,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     */
     if (frm_hdr->allow_screen_content_tools)
         if (scs_ptr->static_config.enable_palette == -1)//auto mode; if not set by cfg
+#if CS2_ADOPTIONS_1
+            pcs_ptr->palette_mode = pcs_ptr->enc_mode <= ENC_M1 ? 6 : 0;
+#else
             pcs_ptr->palette_mode = pcs_ptr->enc_mode == ENC_M0 ? 6 : 0;
+#endif
         else
             pcs_ptr->palette_mode = scs_ptr->static_config.enable_palette;
     else
@@ -964,10 +984,15 @@ EbErrorType signal_derivation_multi_processes_oq(
 
     if (!pcs_ptr->scs_ptr->static_config.disable_dlf_flag && frm_hdr->allow_intrabc == 0) {
     if (sc_content_detected)
+#if CS2_ADOPTIONS_1
+        if (pcs_ptr->enc_mode <= ENC_M1)
+            pcs_ptr->loop_filter_mode = 3;
+#else
         if (MR_MODE)
             pcs_ptr->loop_filter_mode = 3;
         else if (pcs_ptr->enc_mode == ENC_M1)
             pcs_ptr->loop_filter_mode = pcs_ptr->is_used_as_reference_flag ? 3 : 0;
+#endif
         else
             pcs_ptr->loop_filter_mode = 0;
     else
@@ -989,6 +1014,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     if (scs_ptr->seq_header.enable_cdef && frm_hdr->allow_intrabc == 0) {
         if (scs_ptr->static_config.cdef_mode == DEFAULT) {
             if (sc_content_detected)
+#if CS2_ADOPTIONS_1
+                if (pcs_ptr->enc_mode <= ENC_M1)
+                    pcs_ptr->cdef_filter_mode = 5;
+                else
+#endif
                 if (pcs_ptr->enc_mode <= ENC_M5)
                     pcs_ptr->cdef_filter_mode = 4;
                 else
@@ -1071,7 +1101,11 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->intra_pred_mode = 4;
     else {
     if (sc_content_detected)
+#if CS2_ADOPTIONS_1
+        if (pcs_ptr->enc_mode <= ENC_M1)
+#else
         if (MR_MODE)
+#endif
             pcs_ptr->intra_pred_mode = 0;
         else if (pcs_ptr->enc_mode <= ENC_M2)
             if (pcs_ptr->temporal_layer_index == 0)
@@ -1144,7 +1178,11 @@ EbErrorType signal_derivation_multi_processes_oq(
         if (scs_ptr->static_config.compound_level == DEFAULT) {
             if (scs_ptr->compound_mode)
                 if (pcs_ptr->sc_content_detected)
+#if CS2_ADOPTIONS_1
+                    pcs_ptr->compound_mode = (pcs_ptr->enc_mode <= ENC_M1) ? 2 : 0;
+#else
                     pcs_ptr->compound_mode = (pcs_ptr->enc_mode <= ENC_M0) ? 2 : 0;
+#endif
                 else
                     pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M1 ? 2 : 1;
             else
@@ -1165,7 +1203,11 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->frame_end_cdf_update_mode = scs_ptr->static_config.frame_end_cdf_update;
 
         if (scs_ptr->static_config.prune_unipred_me == DEFAULT)
+#if CS2_ADOPTIONS_1
+            if (MR_MODE || (pcs_ptr->sc_content_detected && pcs_ptr->enc_mode >= ENC_M2) || pcs_ptr->enc_mode >= ENC_M4)
+#else
             if (MR_MODE || pcs_ptr->sc_content_detected || pcs_ptr->enc_mode >= ENC_M4)
+#endif
                 pcs_ptr->prune_unipred_at_me = 0;
             else
                 pcs_ptr->prune_unipred_at_me = 1;
@@ -1183,7 +1225,14 @@ EbErrorType signal_derivation_multi_processes_oq(
         // GM_FULL                                    Exhaustive search mode.
         // GM_DOWN                                    Downsampled resolution with a downsampling factor of 2 in each dimension
         // GM_TRAN_ONLY                               Translation only using ME MV.
+#if CS2_ADOPTIONS_1
+        if (pcs_ptr->sc_content_detected)
+            pcs_ptr->gm_level = GM_FULL;
+        else
+            pcs_ptr->gm_level = pcs_ptr->enc_mode <= ENC_M0 ? GM_FULL : GM_DOWN;
+#else
         pcs_ptr->gm_level = GM_FULL;
+#endif
 #endif
         //Exit TX size search when all coefficients are zero
         // 0: OFF
