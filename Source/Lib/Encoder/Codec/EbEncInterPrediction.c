@@ -5230,7 +5230,8 @@ EbErrorType av1_inter_prediction(
                     &conv_params,
                     interinter_comp,
                     bit_depth,
-                    0//plane=Luma  seg_mask is computed based on luma and used for chroma
+                    0, //plane=Luma  seg_mask is computed based on luma and used for chroma
+                    seg_mask
             );
         }else{
             enc_make_inter_predictor(src_ptr,
@@ -5330,7 +5331,8 @@ EbErrorType av1_inter_prediction(
                         &conv_params,
                         interinter_comp,
                         bit_depth,
-                        1 //plane=cb  seg_mask is computed based on luma and used for chroma
+                        1, //plane=cb  seg_mask is computed based on luma and used for chroma
+                        seg_mask
                 );
             }else{
                 enc_make_inter_predictor(src_ptr,
@@ -5417,7 +5419,8 @@ EbErrorType av1_inter_prediction(
                         &conv_params,
                         interinter_comp,
                         bit_depth,
-                        1 //plane=Cr  seg_mask is computed based on luma and used for chroma
+                        1, //plane=Cr  seg_mask is computed based on luma and used for chroma
+                        seg_mask
                 );
             }else{
                 enc_make_inter_predictor(src_ptr,
