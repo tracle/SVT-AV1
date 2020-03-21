@@ -1368,6 +1368,27 @@ static const int32_t pd1_nic[MD_STAGE_TOTAL-1][MAX_FRAME_TYPE][CAND_CLASS_TOTAL]
     {  4,       3,    3,    3,    4,    4,    2,    7,    1 }
 }
 };
+#if CS2_ADOPTIONS_1
+static const int32_t pd2_nic[MD_STAGE_TOTAL - 1][MAX_FRAME_TYPE][CAND_CLASS_TOTAL] = {
+{
+    //MD_STAGE_1
+        // C0       C1    C2    C3    C4    C5     C6    C7   C8
+        { ALL_S0,   0,    0,    0,    0,    16,    5,    16,   8 }, // I_SLICE
+        { 48,       12,   12,   8,    8,     8,    5,     8,   6 }, // REFERENCE_FRAME
+        { 11,       8,    8,    5,    5,     5,    4,     5,   5 }  // non-REFERENCE_FRAME
+},{
+    //MD_STAGE_2
+        { 32,       0,    0,    0,    0,    8,    5,    8,    6 },
+        { 16,       6,    6,    4,    4,    4,    3,    4,    4 },
+        {  5,       4,    4,    3,    3,    3,    3,    3,    3 }
+},{
+    //MD_STAGE_3
+        { 32,       0,    0,    0,    0,    8,    5,    8,    6 },
+        { 16,       6,    6,    4,    4,    4,    3,    4,    4 },
+        {  5,       4,    4,    3,    3,    3,    3,    3,    3 }
+    }
+};
+#else
 static const int32_t pd2_nic[MD_STAGE_TOTAL-1][MAX_FRAME_TYPE][CAND_CLASS_TOTAL] = {
 {
 //MD_STAGE_1
@@ -1389,6 +1410,7 @@ static const int32_t pd2_nic[MD_STAGE_TOTAL-1][MAX_FRAME_TYPE][CAND_CLASS_TOTAL]
     { 11,       3,    3,    3,    1,    3,    5,    1,    1 }
 }
 };
+#endif
 #endif
 void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
                          uint32_t fastCandidateTotalCount) {
@@ -1559,6 +1581,71 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
             (round((scale_num* ((float)context_ptr->md_stage_3_count[cand_it])) / scale_denum)),
             1);
         }
+#if CS2_ADOPTIONS_1
+        // Apply NIC scaling based on class type and block shape
+        if ((pcs_ptr->enc_mode <= ENC_M0 && !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) ||
+            ((pcs_ptr->enc_mode <= ENC_M1 && pcs_ptr->parent_pcs_ptr->sc_content_detected) && context_ptr->blk_geom->shape == PART_N)) {
+            uint8_t scaling_num   = 1;
+            uint8_t scaling_denum = 1;
+            for (cand_it = CAND_CLASS_0; cand_it < CAND_CLASS_TOTAL; ++cand_it) {
+                if (cand_it == CAND_CLASS_0 || cand_it == CAND_CLASS_6 || cand_it == CAND_CLASS_7) {
+                    // INTRA scaling
+                    scaling_num   = pcs_ptr->parent_pcs_ptr->sc_content_detected ? 5 : 1;
+                    scaling_denum = pcs_ptr->parent_pcs_ptr->sc_content_detected ? 4 : 1;
+                }
+                else {
+                    // INTER scaling
+                    scaling_num   = pcs_ptr->parent_pcs_ptr->sc_content_detected ? 1 : 5;
+                    scaling_denum = pcs_ptr->parent_pcs_ptr->sc_content_detected ? 1 : 4;
+                }
+                context_ptr->md_stage_1_count[cand_it] = MAX((uint32_t)
+                    (round((scaling_num* ((float)context_ptr->md_stage_1_count[cand_it])) / scaling_denum)),
+                    1);
+                context_ptr->md_stage_2_count[cand_it] = MAX((uint32_t)
+                    (round((scaling_num* ((float)context_ptr->md_stage_2_count[cand_it])) / scaling_denum)),
+                    1);
+                context_ptr->md_stage_3_count[cand_it] = MAX((uint32_t)
+                    (round((scaling_num* ((float)context_ptr->md_stage_3_count[cand_it])) / scaling_denum)),
+                    1);
+            }
+        }
+
+        // Apply NIC scaling based on block size
+        if (pcs_ptr->enc_mode > ENC_M0 || pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+            uint8_t scaling_num = 1;
+            uint8_t scaling_denum = 1;
+            if (context_ptr->blk_geom->bheight <= 8 && context_ptr->blk_geom->bwidth <= 8) {
+                scaling_num = 2;
+                scaling_denum = 3;
+            }
+            else if (context_ptr->blk_geom->bheight <= 16 &&
+                context_ptr->blk_geom->bwidth <= 16) {
+                scaling_num = 3;
+                scaling_denum = 4;
+            }
+            else if (context_ptr->blk_geom->bheight <= 32 &&
+                context_ptr->blk_geom->bwidth <= 32) {
+                scaling_num = 7;
+                scaling_denum = 8;
+            }
+            else {
+                scaling_num = 1;
+                scaling_denum = 1;
+            }
+
+            for (cand_it = CAND_CLASS_0; cand_it < CAND_CLASS_TOTAL; ++cand_it) {
+                context_ptr->md_stage_1_count[cand_it] = MAX((uint32_t)
+                    (round((scaling_num* ((float)context_ptr->md_stage_1_count[cand_it])) / scaling_denum)),
+                    1);
+                context_ptr->md_stage_2_count[cand_it] = MAX((uint32_t)
+                    (round((scaling_num* ((float)context_ptr->md_stage_2_count[cand_it])) / scaling_denum)),
+                    1);
+                context_ptr->md_stage_3_count[cand_it] = MAX((uint32_t)
+                    (round((scaling_num* ((float)context_ptr->md_stage_3_count[cand_it])) / scaling_denum)),
+                    1);
+            }
+        }
+#endif
 #else
         // Step 2: set md_stage count
         context_ptr->md_stage_1_count[CAND_CLASS_0] =
@@ -2879,6 +2966,9 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
             MvReferenceFrame frame_type = rf[0];
             uint8_t          list_idx   = get_list_idx(rf[0]);
             uint8_t          ref_idx    = get_ref_frame_idx(rf[0]);
+#if CS2_ADOPTIONS_1
+            if (ref_idx > 1 && context_ptr->predictive_me_level <= 5) continue;
+#endif
             if (ref_idx > context_ptr->md_max_ref_count - 1) continue;
             // Get the ME MV
             const MeSbResults *me_results =
@@ -6145,7 +6235,13 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
              context_ptr->md_staging_mode == MD_STAGING_MODE_2);
 #endif
         context_ptr->md_staging_skip_inter_chroma_pred = EB_FALSE;
+#if CS2_ADOPTIONS_1
+        // only perform TXS for intra frames
+        context_ptr->md_staging_tx_size_mode = (MR_MODE || candidate_ptr->cand_class == CAND_CLASS_0 ||
+            candidate_ptr->cand_class == CAND_CLASS_6 || candidate_ptr->cand_class == CAND_CLASS_7) ? 1 : 0;
+#else
         context_ptr->md_staging_tx_size_mode = EB_TRUE;
+#endif
         context_ptr->md_staging_tx_search =
             (candidate_ptr->cand_class == CAND_CLASS_0 ||
              candidate_ptr->cand_class == CAND_CLASS_6 || candidate_ptr->cand_class == CAND_CLASS_7)
@@ -6970,6 +7066,21 @@ void interintra_class_pruning_2(ModeDecisionContext *context_ptr, uint64_t best_
 
                 // intra class pruning
                 uint32_t cand_count = 1;
+#if CS2_ADOPTIONS_1
+                uint64_t md_stage_2_3_cand_prune_th = context_ptr->md_stage_2_3_cand_prune_th;
+                md_stage_2_3_cand_prune_th = (cand_class_it == CAND_CLASS_0 ||
+                    cand_class_it == CAND_CLASS_6 ||
+                    cand_class_it == CAND_CLASS_7) ?
+                    (uint64_t)~0 : (context_ptr->blk_geom->shape == PART_N) ? (uint64_t)~0 :
+                    md_stage_2_3_cand_prune_th;
+                if (class_best_cost)
+                    while (cand_count < context_ptr->md_stage_2_count[cand_class_it] &&
+                        ((((*(context_ptr->candidate_buffer_ptr_array[cand_buff_indices[cand_count]]
+                            ->full_cost_ptr) - class_best_cost) * 100) /
+                            class_best_cost) < md_stage_2_3_cand_prune_th)) {
+                        cand_count++;
+                    }
+#else
                 if (class_best_cost)
                     while (
                         cand_count < context_ptr->md_stage_2_count[cand_class_it] &&
@@ -6980,6 +7091,7 @@ void interintra_class_pruning_2(ModeDecisionContext *context_ptr, uint64_t best_
                           class_best_cost) < context_ptr->md_stage_2_3_cand_prune_th)) {
                         cand_count++;
                     }
+#endif
                 context_ptr->md_stage_2_count[cand_class_it] = cand_count;
             }
         context_ptr->md_stage_2_total_count += context_ptr->md_stage_2_count[cand_class_it];
