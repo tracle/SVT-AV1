@@ -316,6 +316,7 @@ static INLINE void extract_reg(const __m256i *in, __m128i *out1) {
     out1[14] = _mm256_extracti128_si256(in[6], 0x01);
     out1[15] = _mm256_extracti128_si256(in[7], 0x01);
 }
+
 #ifdef __cplusplus
 }
 #endif

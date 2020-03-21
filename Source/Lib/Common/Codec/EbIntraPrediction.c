@@ -2561,134 +2561,6 @@ void filter_intra_edge_corner_high(uint16_t *p_above, uint16_t *p_left) {
     }
 }
 
-
-EbErrorType update_neighbor_samples_array_open_loop(
-        uint8_t                           *above_ref,
-        uint8_t                            *left_ref,
-        EbPictureBufferDesc              *input_ptr,
-        uint32_t                            stride,
-        uint32_t                            src_origin_x,
-        uint32_t                            src_origin_y,
-        uint8_t                             bwidth,
-        uint8_t                             bheight,
-        uint8_t                            *src_ptr)
-{
-    EbErrorType    return_error = EB_ErrorNone;
-
-    uint32_t idx;
-//    uint8_t  *src_ptr;
-    uint8_t  *read_ptr;
-    uint32_t count;
-
-    uint32_t width = input_ptr->width;
-    uint32_t height = input_ptr->height;
-    uint32_t block_size_half = bwidth << 1;
-
-#if 0
-    // Adjust the Source ptr to start at the origin of the block being updated
-    src_ptr = input_ptr->buffer_y + (((src_origin_y + input_ptr->origin_y) * stride) + (src_origin_x + input_ptr->origin_x));
-#if USE_ORIGIN_YUV
-    if(picture_control_set_ptr->temporal_layer_index == 0)
-        src_ptr =  picture_control_set_ptr->save_enhanced_picture_ptr[0] + (((src_origin_y + input_ptr->origin_y) * stride) + (src_origin_x + input_ptr->origin_x));
-#endif
-#endif
-
-    //Initialise the Luma Intra Reference Array to the mid range value 128 (for CUs at the picture boundaries)
-    EB_MEMSET(above_ref, 127, (bwidth << 1) + 1);
-    EB_MEMSET(left_ref, 129, (bheight << 1) + 1);
-
-    // Get the upper left sample
-    if (src_origin_x != 0 && src_origin_y != 0) {
-        read_ptr = src_ptr - stride - 1;
-        *above_ref = *read_ptr;
-        *left_ref = *read_ptr;
-        left_ref++;
-        above_ref++;
-    } else {
-        *above_ref = *left_ref = 128;
-        left_ref++;
-        above_ref++;
-    }
-    // Get the left-column
-    count = block_size_half;
-    if (src_origin_x != 0) {
-        read_ptr = src_ptr - 1;
-        if(src_origin_y == 0)
-            *(left_ref - 1) = *read_ptr;
-        count = ((src_origin_y + count) > height) ? count - ((src_origin_y + count) - height) : count;
-        for (idx = 0; idx < count; ++idx) {
-            *left_ref = *read_ptr;
-            read_ptr += stride;
-            left_ref++;
-        }
-        left_ref += (block_size_half - count);
-        // pading unknown left bottom pixels with value at(-1, -15)
-        for(idx = 0; idx < bheight; idx++)
-            *(left_ref - bheight + idx) = *(left_ref - bheight - 1);
-    } else
-    if (src_origin_x == 0 && src_origin_y != 0 ) {
-        count = ((src_origin_y + count) > height) ? count - ((src_origin_y + count) - height) : count;
-        EB_MEMSET(left_ref - 1, *(src_ptr - stride), count + 1);
-        *(above_ref - 1) = *(src_ptr - stride);
-    } else
-        left_ref += count;
-
-    // Get the top-row
-    count = block_size_half;
-    if (src_origin_y != 0) {
-        read_ptr = src_ptr - stride;
-        count = ((src_origin_x + count) > width) ? count - ((src_origin_x + count) - width) : count;
-        EB_MEMCPY(above_ref, read_ptr, count);
-#if 0
-        above_ref += (block_size_half - count);
-#else
-        // pading unknown top right pixels with value at(15, -1)
-        if(src_origin_x != 0)
-            for(idx = 0; idx < bwidth; idx++)
-                *(above_ref + bwidth + idx) = *(above_ref + bwidth - 1);
-#endif
-
-    } else
-    if (src_origin_y == 0 && src_origin_x != 0 ) {
-        count = ((src_origin_x + count) > width) ? count - ((src_origin_x + count) - width) : count;
-        EB_MEMSET(above_ref - 1, *(left_ref - count), count + 1);
-    } else
-        above_ref += count;
-
-    return return_error;
-}
-/** intra_prediction_open_loop()
-        performs Open-loop Intra candidate Search for a CU
- */
-EbErrorType intra_prediction_open_loop(
-     int32_t  p_angle ,
-        uint8_t                          ois_intra_mode,
-        uint32_t                         src_origin_x,
-        uint32_t                         src_origin_y,
-        TxSize                          tx_size,
-        uint8_t                         *above_row,
-        uint8_t                         *left_col,
-        MotionEstimationContext_t       *context_ptr)                  // input parameter, ME context
-
-{
-    EbErrorType                return_error = EB_ErrorNone;
-    PredictionMode mode = ois_intra_mode;
-    const int32_t is_dr_mode = av1_is_directional_mode(mode);
-    uint8_t *dst = (&(context_ptr->me_context_ptr->sb_buffer[0]));
-    uint32_t dst_stride = context_ptr->me_context_ptr->sb_buffer_stride;
-
-    if (is_dr_mode)
-        dr_predictor(dst, dst_stride, tx_size, above_row, left_col, 0, 0, p_angle);
-    else {
-        // predict
-        if (mode == DC_PRED) {
-            dc_pred[src_origin_x > 0][src_origin_y > 0][tx_size](dst, dst_stride, above_row, left_col);
-        } else
-            pred[mode][tx_size](dst, dst_stride, above_row, left_col);
-    }
-    return return_error;
-}
-
 #if CUTREE_LA
 static int is_smooth_luma(uint8_t mode) {
     return (mode == SMOOTH_PRED || mode == SMOOTH_V_PRED || mode == SMOOTH_H_PRED);
@@ -2696,9 +2568,9 @@ static int is_smooth_luma(uint8_t mode) {
 
 void filter_intra_edge(PictureParentControlSet *picture_control_set_ptr, OisMbResults *ois_mb_results_ptr, uint8_t mode, 
                               int32_t p_angle, uint32_t cu_origin_x, uint32_t cu_origin_y, uint8_t *above_row, uint8_t *left_col) {
-    SequenceControlSet *sequence_control_set_ptr = (SequenceControlSet *)picture_control_set_ptr->sequence_control_set_wrapper_ptr->object_ptr;
-    uint32_t mb_stride = (sequence_control_set_ptr->seq_header.max_frame_width + 15) / 16;
-    uint32_t mb_height = (sequence_control_set_ptr->seq_header.max_frame_height + 15) / 16;
+    SequenceControlSet *scs_ptr = (SequenceControlSet *)picture_control_set_ptr->scs_wrapper_ptr->object_ptr;
+    uint32_t mb_stride = (scs_ptr->seq_header.max_frame_width + 15) / 16;
+    uint32_t mb_height = (scs_ptr->seq_header.max_frame_height + 15) / 16;
     const int txwpx = tx_size_wide[TX_16X16];
     const int txhpx = tx_size_high[TX_16X16];
     const int need_right = p_angle < 90;

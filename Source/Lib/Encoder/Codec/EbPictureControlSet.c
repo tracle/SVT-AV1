@@ -1186,6 +1186,9 @@ static void picture_parent_control_set_dctor(EbPtr p) {
     }
 
     EB_FREE_2D(obj->ois_sb_results);
+#if CUTREE_LA
+    EB_FREE_2D(obj->ois_mb_results);
+#endif
     EB_FREE_2D(obj->ois_candicate);
     EB_FREE_ARRAY(obj->rc_me_distortion);
     // ME and OIS Distortion Histograms
@@ -1325,6 +1328,11 @@ EbErrorType picture_parent_control_set_ctor(PictureParentControlSet *object_ptr,
     else {
         object_ptr->ois_sb_results = NULL;
     }
+#if CUTREE_LA
+    const uint16_t picture_width_in_mb  = (uint16_t)((init_data_ptr->picture_width + 15) / 16);
+    const uint16_t picture_height_in_mb = (uint16_t)((init_data_ptr->picture_height + 15) / 16);
+    EB_MALLOC_2D(object_ptr->ois_mb_results, picture_width_in_mb * picture_height_in_mb, 1);
+#endif
 
     object_ptr->max_number_of_candidates_per_block =
         (init_data_ptr->mrp_mode == 0)

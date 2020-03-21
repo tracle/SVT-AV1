@@ -25,6 +25,9 @@ extern EbErrorType eb_av1_intra_prediction_cl(uint8_t                      hbd_m
                                               ModeDecisionCandidateBuffer *candidate_buffer_ptr);
 
 extern EbErrorType update_neighbor_samples_array_open_loop(uint8_t *above_ref, uint8_t *left_ref,
+#if CUTREE_LA
+                                                           PictureParentControlSet *pcs_ptr,
+#endif
                                                            EbPictureBufferDesc *input_ptr,
                                                            uint32_t stride, uint32_t srcOriginX,
                                                            uint32_t srcOriginY, uint8_t bwidth,

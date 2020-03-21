@@ -14,6 +14,9 @@
 #include "filter.h"
 #include "convolve.h"
 #include "EbCabacContextModel.h"
+#if CUTREE_LA
+#include "../../Encoder/Codec/EbCodingUnit.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -161,11 +164,10 @@ typedef struct WedgeParamsType
                            int subsampling_x, int subsampling_y, int bit_depth,
                            int use_hbd_buf, int is_intrabc,
                            const struct ScaleFactors *sf,
-                           const struct buf_2d *ref_buf,
+                           const struct Buf2D *ref_buf,
                            uint32_t interp_filters);
 #endif
 
-#if COMP_INTERINTRA
     /* Mapping of interintra to intra mode for use in the intra component */
     static const PredictionMode interintra_to_intra_mode[INTERINTRA_MODES] = {
       DC_PRED, V_PRED, H_PRED, SMOOTH_PRED

@@ -1519,7 +1519,7 @@ void av1_init_inter_params(InterPredParams *inter_pred_params, int block_width,
                            int subsampling_x, int subsampling_y, int bit_depth,
                            int use_hbd_buf, int is_intrabc,
                            const struct ScaleFactors *sf,
-                           const struct buf_2d *ref_buf,
+                           const struct Buf2D *ref_buf,
                            uint32_t interp_filters) {
   inter_pred_params->block_width = block_width;
   inter_pred_params->block_height = block_height;
@@ -1535,8 +1535,8 @@ void av1_init_inter_params(InterPredParams *inter_pred_params, int block_width,
   inter_pred_params->mode = UNIFORM_PRED;
 
   if (is_intrabc) {
-    inter_pred_params->interp_filter_params[0] = av1_intrabc_filter_params;
-    inter_pred_params->interp_filter_params[1] = av1_intrabc_filter_params;
+    inter_pred_params->interp_filter_params[0] = av1_interp_filter_params_list[BILINEAR];
+    inter_pred_params->interp_filter_params[1] = av1_interp_filter_params_list[BILINEAR];
   } else {
     InterpFilter filter_x = av1_extract_interp_filter(interp_filters, 1);
     InterpFilter filter_y = av1_extract_interp_filter(interp_filters, 0);
@@ -1588,7 +1588,7 @@ void av1_build_inter_predictor(const uint8_t *src, int src_stride, uint8_t *dst,
   (void)pix_row;
   (void)pix_col;
 
-  struct buf_2d *pre_buf = &inter_pred_params->ref_frame_buf;
+  struct Buf2D *pre_buf = &inter_pred_params->ref_frame_buf;
   int ssx = inter_pred_params->subsampling_x;
   int ssy = inter_pred_params->subsampling_y;
   int orig_pos_y = inter_pred_params->pix_row << SUBPEL_BITS;

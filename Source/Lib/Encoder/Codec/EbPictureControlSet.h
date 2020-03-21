@@ -584,6 +584,11 @@ typedef struct PictureParentControlSet {
     // Open loop Intra candidate Search Results
     OisSbResults **ois_sb_results;
     OisCandidate **ois_candicate;
+#if CUTREE_LA
+    OisMbResults **ois_mb_results;
+    int32_t      base_rdmult;
+    double       r0;
+#endif
     // Dynamic GOP
     EbPred   pred_structure;
     uint8_t  hierarchical_levels;

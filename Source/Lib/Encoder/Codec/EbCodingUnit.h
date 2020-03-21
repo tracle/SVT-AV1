@@ -234,6 +234,33 @@ typedef struct macroblockd_plane {
 #endif
 } MACROBLOCKD_PLANE;
 
+#if CUTREE_LA
+typedef enum InterPredMode {
+    UNIFORM_PRED,
+    WARP_PRED,
+    MASK_PRED,
+} InterPredMode;
+
+typedef struct InterPredParams {
+    InterPredMode mode;
+    EbWarpedMotionParams warp_params;
+    ConvolveParams conv_params;
+    //const InterpFilterParams *interp_filter_params[2];
+    InterpFilterParams interp_filter_params[2];
+    int block_width;
+    int block_height;
+    int pix_row;
+    int pix_col;
+    struct Buf2D ref_frame_buf;
+    int subsampling_x;
+    int subsampling_y;
+    const struct ScaleFactors *scale_factors;
+    int bit_depth;
+    int use_hbd_buf;
+    int is_intrabc;
+} InterPredParams;
+#endif
+
 typedef struct MacroBlockD {
     // block dimension in the unit of mode_info.
     uint8_t     n8_w, n8_h;
@@ -470,6 +497,22 @@ typedef struct OisSbResults {
     int8_t        best_distortion_index[CU_MAX_COUNT];
 } OisSbResults;
 
+#if CUTREE_LA
+typedef struct OisMbResults {
+    int64_t intra_cost;
+    int32_t intra_mode;
+    int64_t inter_cost;
+    int64_t srcrf_dist;
+    int64_t recrf_dist;
+    int64_t srcrf_rate;
+    int64_t recrf_rate;
+    int64_t mc_dep_rate;
+    int64_t mc_dep_dist;
+    MV mv;
+    int ref_frame_poc;
+} OisMbResults;
+#endif
+
 typedef struct SuperBlock {
     EbDctor                   dctor;
     struct PictureControlSet *pcs_ptr;
@@ -486,6 +529,9 @@ typedef struct SuperBlock {
     unsigned       origin_y : 12;
     uint16_t       qp;
     int16_t        delta_qp;
+#if CUTREE_LA
+    int32_t        rdmult;
+#endif
     uint32_t       total_bits;
 
     // Quantized Coefficients

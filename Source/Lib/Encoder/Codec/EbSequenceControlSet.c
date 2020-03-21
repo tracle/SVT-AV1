@@ -49,6 +49,9 @@ EbErrorType eb_sequence_control_set_ctor(SequenceControlSet *scs_ptr, EbPtr obje
     scs_ptr->static_config.sb_sz           = 64;
     scs_ptr->static_config.partition_depth = 4;
     scs_ptr->static_config.qp              = 32;
+#if CUTREE_LA
+    scs_ptr->save_picture0_ptr             = 0;
+#endif
 
     // Segments
     for (segment_index = 0; segment_index < MAX_TEMPORAL_LAYERS; ++segment_index) {

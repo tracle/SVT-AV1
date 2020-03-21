@@ -148,19 +148,6 @@ extern "C" {
     void eb_av1_upsample_intra_edge_c(uint8_t *p, int32_t sz);
     void eb_av1_upsample_intra_edge_sse4_1(uint8_t *p, int32_t sz);
     RTCD_EXTERN void(*eb_av1_upsample_intra_edge)(uint8_t *p, int32_t sz);
-#if CUTREE_LA
-    void av1_lowbd_fwd_txfm_c(const int16_t *src_diff, tran_low_t *coeff, int diff_stride, TxfmParam *txfm_param);
-    //void av1_lowbd_fwd_txfm_sse2(const int16_t *src_diff, tran_low_t *coeff, int diff_stride, TxfmParam *txfm_param);
-    //void av1_lowbd_fwd_txfm_sse4_1(const int16_t *src_diff, tran_low_t *coeff, int diff_stride, TxfmParam *txfm_param);
-    void av1_lowbd_fwd_txfm_avx2(const int16_t *src_diff, tran_low_t *coeff, int diff_stride, TxfmParam *txfm_param);
-    RTCD_EXTERN void(*eb_av1_lowbd_fwd_txfm)(const int16_t *src_diff, tran_low_t *coeff, int diff_stride, TxfmParam *txfm_param);
-    int aom_satd_c(const tran_low_t *coeff, int length);
-    int aom_satd_avx2(const tran_low_t *coeff, int length);
-    RTCD_EXTERN int (*aom_satd)(const tran_low_t *coeff, int length);
-    int64_t av1_block_error_c(const tran_low_t *coeff, const tran_low_t *dqcoeff, intptr_t block_size, int64_t *ssz);
-    int64_t av1_block_error_avx2(const tran_low_t *coeff, const tran_low_t *dqcoeff, intptr_t block_size, int64_t *ssz);
-    RTCD_EXTERN int64_t (*av1_block_error)(const tran_low_t *coeff, const tran_low_t *dqcoeff, intptr_t block_size, int64_t *ssz);
-#endif
 
     // AMIR
     void eb_av1_upsample_intra_edge_high_c(uint16_t *p, int32_t sz, int32_t bd);
