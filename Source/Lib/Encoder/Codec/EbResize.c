@@ -1093,7 +1093,10 @@ EbErrorType scale_pcs_params(SequenceControlSet *scs_ptr, PictureParentControlSe
     pcs_ptr->sb_total_count = picture_sb_width * picture_sb_height;
 
     // mi params
-    cm->mi_stride = picture_sb_width * (BLOCK_SIZE_64 / 4);
+    const uint16_t picture_sb_pix_width =
+            (uint16_t)((aligned_width + scs_ptr->sb_size_pix - 1) / scs_ptr->sb_size_pix);
+
+    cm->mi_stride = picture_sb_pix_width * (scs_ptr->sb_size_pix >> MI_SIZE_LOG2);
     cm->mi_cols   = aligned_width >> MI_SIZE_LOG2;
     cm->mi_rows   = aligned_height >> MI_SIZE_LOG2;
 
