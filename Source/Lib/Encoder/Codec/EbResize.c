@@ -1108,6 +1108,9 @@ EbErrorType scale_pcs_params(SequenceControlSet *scs_ptr, PictureParentControlSe
         sb_params_init_pcs(scs_ptr, pcs_ptr);
 
         sb_geom_init_pcs(scs_ptr, pcs_ptr);
+
+        pcs_ptr->frm_hdr.use_ref_frame_mvs = 0;
+
     }
 
     return EB_ErrorNone;

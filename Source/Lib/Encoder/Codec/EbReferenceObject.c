@@ -187,16 +187,20 @@ EbErrorType eb_reference_object_ctor(EbReferenceObject *reference_object,
            eb_picture_buffer_desc_ctor,
            (EbPtr)&picture_buffer_desc_init_data_16bit_ptr);
     picture_buffer_desc_init_data_16bit_ptr.bit_depth = EB_8BIT;
+
+    uint32_t mi_rows = reference_object->reference_picture->height >> MI_SIZE_LOG2;
+    uint32_t mi_cols = reference_object->reference_picture->width >> MI_SIZE_LOG2;
     if (picture_buffer_desc_init_data_ptr->mfmv) {
-        // TODO: mariana, any change needed to mvs when changing size? It's allocated at the max size
         //MFMV map is 8x8 based.
-        uint32_t  mi_rows  = reference_object->reference_picture->height >> MI_SIZE_LOG2;
-        uint32_t  mi_cols  = reference_object->reference_picture->width >> MI_SIZE_LOG2;
         const int mem_size = ((mi_rows + 1) >> 1) * ((mi_cols + 1) >> 1);
         EB_CALLOC_ALIGNED_ARRAY(reference_object->mvs, mem_size);
     }
     memset(&reference_object->film_grain_params, 0, sizeof(reference_object->film_grain_params));
     EB_CREATE_MUTEX(reference_object->referenced_area_mutex);
+
+    reference_object->mi_rows = mi_rows;
+    reference_object->mi_cols = mi_cols;
+
     return EB_ErrorNone;
 }
 

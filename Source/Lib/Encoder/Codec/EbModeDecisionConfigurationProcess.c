@@ -1206,7 +1206,6 @@ static int get_block_position(Av1Common *cm, int *mi_r, int *mi_c, int blk_row, 
 // Call Start frame's reference frames as reference frames.
 // Call ref_offset as frame distances between start frame and its reference
 // frames.
-// TODO: understand if this needs to change when super-res is enabled
 static int motion_field_projection(Av1Common *cm, PictureControlSet *pcs_ptr,
                                    MvReferenceFrame start_frame, int dir) {
     TPL_MV_REF *tpl_mvs_base           = pcs_ptr->tpl_mvs;
@@ -1225,6 +1224,11 @@ static int motion_field_projection(Av1Common *cm, PictureControlSet *pcs_ptr,
 
     if (start_frame_buf->frame_type == KEY_FRAME || start_frame_buf->frame_type == INTRA_ONLY_FRAME)
         return 0;
+
+    if (start_frame_buf->mi_rows != cm->mi_rows ||
+        start_frame_buf->mi_cols != cm->mi_cols){
+        return 0;
+    }
 
     const int                 start_frame_order_hint = start_frame_buf->order_hint;
     const unsigned int *const ref_order_hints        = &start_frame_buf->ref_order_hint[0];
@@ -1401,18 +1405,24 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
             (RateControlResults *)rate_control_results_wrapper_ptr->object_ptr;
         pcs_ptr = (PictureControlSet *)rate_control_results_ptr->pcs_wrapper_ptr->object_ptr;
         scs_ptr = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
-        if (pcs_ptr->parent_pcs_ptr->frm_hdr.use_ref_frame_mvs)
-            av1_setup_motion_field(pcs_ptr->parent_pcs_ptr->av1_cm, pcs_ptr);
 
         // -------
         // Scale references if resolution of the reference is different than the input
         // -------
         // TODO: this has to be done under a mutex
         if(pcs_ptr->parent_pcs_ptr->frame_superres_enabled == 1 && pcs_ptr->slice_type != I_SLICE){
+            // update mi_rows and mi_cols for the reference pic wrapper (used in mfmv for other pictures)
+            EbReferenceObject *reference_object = pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr;
+            reference_object->mi_rows = pcs_ptr->parent_pcs_ptr->aligned_height >> MI_SIZE_LOG2;
+            reference_object->mi_cols = pcs_ptr->parent_pcs_ptr->aligned_width >> MI_SIZE_LOG2;
+
             scale_rec_references(pcs_ptr,
                                  pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr,
                                  pcs_ptr->hbd_mode_decision);
         }
+
+        if (pcs_ptr->parent_pcs_ptr->frm_hdr.use_ref_frame_mvs)
+            av1_setup_motion_field(pcs_ptr->parent_pcs_ptr->av1_cm, pcs_ptr);
 
         frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
 

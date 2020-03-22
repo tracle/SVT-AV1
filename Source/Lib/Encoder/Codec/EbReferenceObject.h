@@ -41,6 +41,8 @@ typedef struct EbReferenceObject {
     StatStruct           stat_struct;
     EbHandle             referenced_area_mutex;
     uint64_t             referenced_area_avg;
+    int32_t              mi_cols;
+    int32_t              mi_rows;
 } EbReferenceObject;
 
 typedef struct EbReferenceObjectDescInitData {
