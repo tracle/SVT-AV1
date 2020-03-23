@@ -4627,6 +4627,13 @@ EbErrorType inter_pu_prediction_av1(uint8_t hbd_mode_decision, ModeDecisionConte
     mv_0.y = candidate_buffer_ptr->candidate_ptr->motion_vector_yl0;
     mv_1.x = candidate_buffer_ptr->candidate_ptr->motion_vector_xl1;
     mv_1.y = candidate_buffer_ptr->candidate_ptr->motion_vector_yl1;
+    //omran
+    mv_0.x = MIN(1000, MAX(-1000, candidate_buffer_ptr->candidate_ptr->motion_vector_xl0));
+    mv_0.y = MIN(1000, MAX(-1000, candidate_buffer_ptr->candidate_ptr->motion_vector_yl0));
+    mv_1.x = MIN(1000, MAX(-1000, candidate_buffer_ptr->candidate_ptr->motion_vector_xl1));
+    mv_1.y = MIN(1000, MAX(-1000, candidate_buffer_ptr->candidate_ptr->motion_vector_yl1)); 
+
+
     MvUnit mv_unit;
     mv_unit.pred_direction =
             candidate_buffer_ptr->candidate_ptr->prediction_direction[md_context_ptr->pu_itr];
