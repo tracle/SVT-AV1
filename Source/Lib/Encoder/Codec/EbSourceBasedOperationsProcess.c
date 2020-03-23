@@ -9,7 +9,9 @@
 #include "EbSourceBasedOperationsProcess.h"
 #include "EbInitialRateControlResults.h"
 #include "EbPictureDemuxResults.h"
+#ifdef ARCH_X86
 #include "emmintrin.h"
+#endif
 #include "EbEncHandle.h"
 #include "EbUtility.h"
 

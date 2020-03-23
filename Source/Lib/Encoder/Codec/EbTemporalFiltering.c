@@ -30,7 +30,9 @@
 #include "EbPictureAnalysisProcess.h"
 #include "EbMcp.h"
 #include "av1me.h"
+#ifdef ARCH_X86
 #include "xmmintrin.h"
+#endif
 #include "EbObject.h"
 #include "EbEncInterPrediction.h"
 #include "EbComputeVariance_C.h"
