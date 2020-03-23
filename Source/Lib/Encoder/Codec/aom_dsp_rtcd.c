@@ -65,7 +65,6 @@
 void setup_rtcd_internal(CPU_FLAGS flags) {
     /** Should be done during library initialization,
         but for safe limiting cpu flags again. */
-    flags &= get_cpu_flags_to_use();
 
     //to use C: flags=0
     aom_sse = aom_sse_c;
@@ -370,6 +369,7 @@ void setup_rtcd_internal(CPU_FLAGS flags) {
 #endif
 
 #ifdef ARCH_X86
+    flags &= get_cpu_flags_to_use();
     if (flags & HAS_AVX2) aom_sse = aom_sse_avx2;
     if (flags & HAS_AVX2) aom_highbd_sse = aom_highbd_sse_avx2;
     if (flags & HAS_AVX2) av1_wedge_compute_delta_squares = av1_wedge_compute_delta_squares_avx2;

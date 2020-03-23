@@ -43,7 +43,7 @@
 /**************************************
  * Instruction Set Support
  **************************************/
-
+#ifdef ARCH_X86
 // Helper Functions
 static INLINE void run_cpuid(uint32_t eax, uint32_t ecx, int32_t* abcd) {
 #ifdef _WIN32
@@ -169,7 +169,7 @@ CPU_FLAGS get_cpu_flags_to_use() {
 #endif
     return flags;
 }
-
+#endif
 #ifndef NON_AVX512_SUPPORT
 #define SET_FUNCTIONS(ptr, c, mmx, sse, sse2, sse3, ssse3, sse4_1, sse4_2, avx, avx2, avx512) \
     do {                                                                                      \
@@ -218,10 +218,9 @@ CPU_FLAGS get_cpu_flags_to_use() {
 void setup_common_rtcd_internal(CPU_FLAGS flags) {
     /** Should be done during library initialization,
         but for safe limiting cpu flags again. */
-    flags &= get_cpu_flags_to_use();
 
     //to use C: flags=0
-
+    (void)flags;
     aom_blend_a64_mask = aom_blend_a64_mask_c;
     aom_blend_a64_hmask = aom_blend_a64_hmask_c;
     aom_blend_a64_vmask = aom_blend_a64_vmask_c;
@@ -790,6 +789,7 @@ void setup_common_rtcd_internal(CPU_FLAGS flags) {
     eb_aom_highbd_h_predictor_16x32 = eb_aom_highbd_h_predictor_16x32_c;
 
 #ifdef ARCH_X86
+    flags &= get_cpu_flags_to_use();
     if (flags & HAS_SSE4_1) aom_blend_a64_mask = aom_blend_a64_mask_sse4_1;
     if (flags & HAS_AVX2) aom_blend_a64_mask = aom_blend_a64_mask_avx2;
     if (flags & HAS_SSE4_1) aom_blend_a64_hmask = aom_blend_a64_hmask_sse4_1;
