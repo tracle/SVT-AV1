@@ -302,16 +302,16 @@ void setup_common_rtcd_internal(CPU_FLAGS flags) {
 
 
     eb_av1_convolve_2d_copy_sr = eb_av1_convolve_2d_copy_sr_c;
-    
+
     eb_av1_convolve_2d_scale = eb_av1_convolve_2d_scale_c;
-    
+
     eb_av1_highbd_convolve_2d_copy_sr = eb_av1_highbd_convolve_2d_copy_sr_c;
     eb_av1_highbd_jnt_convolve_2d_copy = eb_av1_highbd_jnt_convolve_2d_copy_c;
     eb_av1_highbd_convolve_y_sr = eb_av1_highbd_convolve_y_sr_c;
     eb_av1_highbd_convolve_2d_sr = eb_av1_highbd_convolve_2d_sr_c;
-    
+
     eb_av1_highbd_convolve_2d_scale = eb_av1_highbd_convolve_2d_scale_c;
-    
+
     eb_av1_highbd_jnt_convolve_2d = eb_av1_highbd_jnt_convolve_2d_c;
     eb_av1_highbd_jnt_convolve_x = eb_av1_highbd_jnt_convolve_x_c;
     eb_av1_highbd_jnt_convolve_y = eb_av1_highbd_jnt_convolve_y_c;
@@ -328,19 +328,19 @@ void setup_common_rtcd_internal(CPU_FLAGS flags) {
 
     aom_convolve8_horiz = aom_convolve8_horiz_c;
     aom_convolve8_vert = aom_convolve8_vert_c;
-    
-    
+
+
     av1_build_compound_diffwtd_mask = av1_build_compound_diffwtd_mask_c;
     av1_build_compound_diffwtd_mask_highbd = av1_build_compound_diffwtd_mask_highbd_c;
     av1_wedge_sse_from_residuals = av1_wedge_sse_from_residuals_c;
-    
+
     aom_subtract_block = aom_subtract_block_c;
-    
+
     aom_lowbd_blend_a64_d16_mask = aom_lowbd_blend_a64_d16_mask_c;
     aom_highbd_blend_a64_d16_mask = aom_highbd_blend_a64_d16_mask_c;
-    
+
     aom_highbd_subtract_block = aom_highbd_subtract_block_c;
-    
+
     eb_aom_highbd_smooth_v_predictor_16x16 = eb_aom_highbd_smooth_v_predictor_16x16_c;
     eb_aom_highbd_smooth_v_predictor_16x32 = eb_aom_highbd_smooth_v_predictor_16x32_c;
     eb_aom_highbd_smooth_v_predictor_16x4 = eb_aom_highbd_smooth_v_predictor_16x4_c;
@@ -1264,7 +1264,7 @@ void setup_common_rtcd_internal(CPU_FLAGS flags) {
         if (flags & HAS_SSSE3) eb_aom_highbd_smooth_predictor_4x16 = eb_aom_highbd_smooth_predictor_4x16_ssse3;
         if (flags & HAS_SSSE3) eb_aom_highbd_smooth_predictor_4x4 = eb_aom_highbd_smooth_predictor_4x4_ssse3;
         if (flags & HAS_SSSE3) eb_aom_highbd_smooth_predictor_4x8 = eb_aom_highbd_smooth_predictor_4x8_ssse3;
-           
+
         if (flags & HAS_AVX2) eb_aom_highbd_smooth_predictor_8x16 = eb_aom_highbd_smooth_predictor_8x16_avx2;
         if (flags & HAS_AVX2) eb_aom_highbd_smooth_predictor_8x32 = eb_aom_highbd_smooth_predictor_8x32_avx2;
         if (flags & HAS_AVX2) eb_aom_highbd_smooth_predictor_8x4 = eb_aom_highbd_smooth_predictor_8x4_avx2;
@@ -1351,7 +1351,7 @@ void setup_common_rtcd_internal(CPU_FLAGS flags) {
         if (flags & HAS_SSE2) eb_aom_highbd_dc_left_predictor_4x16 = eb_aom_highbd_dc_left_predictor_4x16_sse2;
         if (flags & HAS_SSE2) eb_aom_highbd_dc_left_predictor_4x4 = eb_aom_highbd_dc_left_predictor_4x4_sse2;
         if (flags & HAS_SSE2) eb_aom_highbd_dc_left_predictor_4x8 = eb_aom_highbd_dc_left_predictor_4x8_sse2;
-        if (flags & HAS_SSE2) eb_aom_highbd_dc_left_predictor_8x32 = eb_aom_highbd_dc_left_predictor_8x32_sse2; 
+        if (flags & HAS_SSE2) eb_aom_highbd_dc_left_predictor_8x32 = eb_aom_highbd_dc_left_predictor_8x32_sse2;
         if (flags & HAS_SSE2) eb_aom_highbd_dc_left_predictor_8x16 = eb_aom_highbd_dc_left_predictor_8x16_sse2;
         if (flags & HAS_SSE2) eb_aom_highbd_dc_left_predictor_8x4 = eb_aom_highbd_dc_left_predictor_8x4_sse2;
         if (flags & HAS_SSE2) eb_aom_highbd_dc_left_predictor_8x8 = eb_aom_highbd_dc_left_predictor_8x8_sse2;
@@ -1467,6 +1467,6 @@ void setup_common_rtcd_internal(CPU_FLAGS flags) {
 #endif
 
 #endif
- 
+
 
 }

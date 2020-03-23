@@ -30,7 +30,7 @@
 #define inline
 #endif
 
-#if defined(_MSC_VER) //&& defined(_M_IX86) 
+#if defined(_MSC_VER) //&& defined(_M_IX86)
 #if defined(_M_IX86) || defined(_M_X64)
 #define ARCH_X86
 #endif
@@ -380,7 +380,7 @@ typedef int16_t InterpKernel[SUBPEL_TAPS];
 /***************************************************/
 #ifdef ARCH_X86
 extern void RunEmms();
-#define aom_clear_system_state() RunEmms() 
+#define aom_clear_system_state() RunEmms()
 #endif
 
 /* Shift down with rounding for use when n >= 0, value >= 0 */
