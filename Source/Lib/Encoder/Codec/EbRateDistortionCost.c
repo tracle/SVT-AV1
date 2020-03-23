@@ -2363,20 +2363,20 @@ void coding_loop_context_generation(ModeDecisionContext *context_ptr, BlkStruct 
 
     // Generate Partition context
     context_ptr->md_local_blk_unit[blk_ptr->mds_idx].above_neighbor_partition =
-        (((PartitionContext *)
+        /*(((PartitionContext *)
               leaf_partition_neighbor_array->top_array)[partition_above_neighbor_index]
              .above == (int8_t)INVALID_NEIGHBOR_DATA)
             ? 0
-            : ((PartitionContext *)
+            : */((PartitionContext *)
                    leaf_partition_neighbor_array->top_array)[partition_above_neighbor_index]
                   .above;
 
     context_ptr->md_local_blk_unit[blk_ptr->mds_idx].left_neighbor_partition =
-        (((PartitionContext *)
+        /*(((PartitionContext *)
               leaf_partition_neighbor_array->left_array)[partition_left_neighbor_index]
              .left == (int8_t)INVALID_NEIGHBOR_DATA)
             ? 0
-            : ((PartitionContext *)
+            :*/ ((PartitionContext *)
                    leaf_partition_neighbor_array->left_array)[partition_left_neighbor_index]
                   .left;
     // Skip Coeff AV1 Context
