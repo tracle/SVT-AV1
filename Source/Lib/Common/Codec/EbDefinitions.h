@@ -2458,7 +2458,10 @@ typedef int32_t errno_t;
 
 extern void
     eb_memcpy(void  *dst_ptr, void  *src_ptr, size_t size);
-
+#ifndef ARCH_X86
+#define eb_memcpy(dst, src, size) \
+    memcpy(dst, src, size)
+#endif
 #define EB_MEMCPY(dst, src, size) \
     eb_memcpy(dst, src, size)
 

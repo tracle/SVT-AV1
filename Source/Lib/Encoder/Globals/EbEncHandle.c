@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
-#include <immintrin.h>
 
 #include "EbThreads.h"
 #include "EbUtility.h"
@@ -48,7 +47,9 @@
 #include "EbCdefProcess.h"
 #include "EbDlfProcess.h"
 #include "EbRateControlResults.h"
-
+#ifdef ARCH_X86
+#include <immintrin.h>
+#endif
 #include "EbLog.h"
 
 #ifdef _WIN32
