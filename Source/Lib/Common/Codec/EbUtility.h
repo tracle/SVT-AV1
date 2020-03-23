@@ -139,7 +139,12 @@ extern const CodedBlockStats* get_coded_blk_stats(const uint32_t cu_idx);
 #define TU_ORIGIN_ADJUST(cu_origin, cu_size, offset) ((((cu_size) * (offset)) >> 2) + (cu_origin))
 #define TU_SIZE_ADJUST(cu_size, tuDepth) ((cu_size) >> (tuDepth))
 
-extern uint32_t Log2f(uint32_t x);
+#ifdef ARCH_X86
+//extern uint32_t Log2f(uint32_t x);
+extern uint32_t log2f_32(uint32_t x);
+#else
+extern uint32_t log2f_32(uint32_t x);
+#endif
 extern uint64_t log2f_64(uint64_t x);
 
 /****************************
@@ -215,7 +220,12 @@ extern uint64_t log2f_64(uint64_t x);
 
 // Calculates the Log2 floor of the integer 'x'
 //   Intended to only be used for macro definitions
-#define LOG2F Log2f_SSE2
+#ifdef ARCH_X86
+//#define LOG2F Log2f_SSE2
+#define LOG2F log2f_32
+#else
+#define LOG2F log2f_32
+#endif
 
 #define LOG2F_8(x)               \
     (((x) < 0x0002u)             \
