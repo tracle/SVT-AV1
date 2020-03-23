@@ -163,7 +163,7 @@ add_library(SvtAv1Enc
     $<TARGET_OBJECTS:ENCODER_GLOBALS>
     $<TARGET_OBJECTS:ENCODER_CODEC>
     $<TARGET_OBJECTS:ENCODER_C_DEFAULT>)
-endif ()	
+endif ()
 
 set_target_properties(SvtAv1Enc PROPERTIES VERSION ${ENC_VERSION})
 set_target_properties(SvtAv1Enc PROPERTIES SOVERSION ${ENC_VERSION_MAJOR})

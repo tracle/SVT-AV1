@@ -84,21 +84,21 @@ void setup_rtcd_internal(CPU_FLAGS flags) {
     eb_av1_lowbd_pixel_proj_error = eb_av1_lowbd_pixel_proj_error_c;
     eb_av1_highbd_pixel_proj_error = eb_av1_highbd_pixel_proj_error_c;
     eb_av1_calc_frame_error = eb_av1_calc_frame_error_c;
-    
+
     eb_subtract_average = eb_subtract_average_c;
-    
+
     get_proj_subspace = get_proj_subspace_c;
-    
+
     search_one_dual = search_one_dual_c;
-    
+
     eb_aom_mse16x16 = eb_aom_mse16x16_c;
-    
+
     eb_aom_quantize_b = eb_aom_quantize_b_c_ii;
-    
+
     eb_aom_quantize_b_32x32 = eb_aom_quantize_b_32x32_c_ii;
-    
+
     eb_aom_highbd_quantize_b_32x32 = eb_aom_highbd_quantize_b_32x32_c;
-    
+
     eb_aom_highbd_quantize_b = eb_aom_highbd_quantize_b_c;
 
     eb_av1_quantize_fp = eb_av1_quantize_fp_c;
@@ -346,12 +346,12 @@ void setup_rtcd_internal(CPU_FLAGS flags) {
     eb_sad_kernel4x4 = fast_loop_nxm_sad_kernel;
     get_eight_horizontal_search_point_results_8x8_16x16_pu = get_eight_horizontal_search_point_results_8x8_16x16_pu_c;
     get_eight_horizontal_search_point_results_32x32_64x64_pu = get_eight_horizontal_search_point_results_32x32_64x64_pu_c;
-    
+
     initialize_buffer_32bits = initialize_buffer_32bits_c;
     nxm_sad_kernel_sub_sampled = nxm_sad_kernel_helper_c;
     nxm_sad_kernel = nxm_sad_kernel_helper_c;
     nxm_sad_avg_kernel = nxm_sad_avg_kernel_helper_c;
-    
+
     compute_mean_8x8 = compute_mean_c;
     compute_mean_square_values_8x8 = compute_mean_squared_values_c;
     compute_sub_mean_8x8 = compute_sub_mean_8x8_c;
@@ -711,5 +711,5 @@ void setup_rtcd_internal(CPU_FLAGS flags) {
 #endif
 
 #endif
- 
+
 }
