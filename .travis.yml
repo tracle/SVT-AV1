@@ -137,6 +137,9 @@ matrix:
     - name: Arm64 GCC 9 build
       env: build_type=release CC=gcc-9 CXX=g++-9
       arch: arm64
+    - name: Arm64 GCC 7 build
+      env: build_type=release CC=gcc-7 CXX=g++-7
+      arch: arm64 
     - name: PowerPC GCC 9 build
       env: build_type=release CC=gcc-9 CXX=g++-9
       arch: ppc64le
