@@ -15,6 +15,7 @@
 
 #include "EbUtility.h"
 #include "EbLog.h"
+#include <math.h>
 /********************************************************************************************
 * faster memcopy for <= 64B blocks, great w/ inlining and size known at compile time (or w/ PGO)
 * THIS NEEDS TO STAY IN A HEADER FOR BEST PERFORMANCE
@@ -245,6 +246,11 @@ uint64_t log2f_high_precision(uint64_t x, uint8_t precision) {
     return result;
 }
 
+inline uint32_t log2f_32(uint32_t x) {
+    //return (x > 1) ? 1 + log2(x >> 1) : 0;
+    uint32_t log = (uint32_t)log2(x);
+    return log;
+}
 // concatenate two linked list, and return the pointer to the new concatenated list
 EbLinkedListNode* concat_eb_linked_list(EbLinkedListNode* a, EbLinkedListNode* b) {
     if (a) {

@@ -30,6 +30,17 @@
 #define inline
 #endif
 
+#if defined(_MSC_VER) //&& defined(_M_IX86) 
+#if defined(_M_IX86) || defined(_M_X64)
+#define ARCH_X86
+#endif
+#endif
+
+#if __GNUC__
+#if defined(__i386__) || defined(__x86_64__)
+#define ARCH_X86
+#endif
+#endif
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -367,9 +378,10 @@ typedef int16_t InterpKernel[SUBPEL_TAPS];
 /***************************************************/
 /****************** Helper Macros ******************/
 /***************************************************/
-void        aom_reset_mmx_state(void);
+#ifdef ARCH_X86
 extern void RunEmms();
-#define aom_clear_system_state() RunEmms() //aom_reset_mmx_state()
+#define aom_clear_system_state() RunEmms() 
+#endif
 
 /* Shift down with rounding for use when n >= 0, value >= 0 */
 #define ROUND_POWER_OF_TWO(value, n) (((value) + (((1 << (n)) >> 1))) >> (n))
@@ -2017,8 +2029,12 @@ typedef enum EbBitFieldMasks
 #define HIST_OPT                          2 // 1 is intrinsic, 2 is C
 #define ENABLE_8x8                        0
 
-#define    Log2f                              Log2f_SSE2
-
+#ifdef ARCH_X86
+//#define    Log2f                              Log2f_SSE2
+#define    Log2f                              log2f_32
+#else
+#define    Log2f                              log2f_32
+#endif
 #define INPUT_SIZE_576p_TH                  0x90000        // 0.58 Million
 #define INPUT_SIZE_1080i_TH                 0xB71B0        // 0.75 Million
 #define INPUT_SIZE_1080p_TH                 0x1AB3F0    // 1.75 Million
