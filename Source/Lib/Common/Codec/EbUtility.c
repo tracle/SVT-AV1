@@ -20,9 +20,8 @@
 * faster memcopy for <= 64B blocks, great w/ inlining and size known at compile time (or w/ PGO)
 * THIS NEEDS TO STAY IN A HEADER FOR BEST PERFORMANCE
 ********************************************************************************************/
-
+#ifdef ARCH_X86
 #include <immintrin.h>
-
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__ICC__)
 __attribute__((optimize("unroll-loops")))
 #endif
@@ -86,6 +85,7 @@ void eb_memcpy(void* dst_ptr, void* src_ptr, size_t size) {
     else
         eb_memcpy_small(dst_ptr, src_ptr, size);
 }
+#endif
 /*****************************************
  * Z-Order
  *****************************************/
