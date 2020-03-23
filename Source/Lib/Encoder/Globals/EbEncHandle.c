@@ -635,12 +635,17 @@ EbErrorType load_default_buffer_configuration_settings(
     /******************************************************************
     * Platform detection, limit cpu flags to hardware available CPU
     ******************************************************************/
+#ifdef ARCH_X86
     const CPU_FLAGS cpu_flags = get_cpu_flags();
     const CPU_FLAGS cpu_flags_to_use = get_cpu_flags_to_use();
     scs_ptr->static_config.use_cpu_flags &= cpu_flags_to_use;
     SVT_LOG("[asm level on system : up to %s]\n", get_asm_level_name_str(cpu_flags));
     SVT_LOG("[asm level selected : up to %s]\n", get_asm_level_name_str(scs_ptr->static_config.use_cpu_flags));
-
+#else
+    scs_ptr->static_config.use_cpu_flags &= 0;
+    SVT_LOG("[asm level on system : up to %s]\n", get_asm_level_name_str(0));
+    SVT_LOG("[asm level selected : up to %s]\n", get_asm_level_name_str(scs_ptr->static_config.use_cpu_flags));
+#endif
     return return_error;
 }
  // Rate Control
