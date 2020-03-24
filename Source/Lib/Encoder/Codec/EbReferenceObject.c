@@ -134,6 +134,9 @@ static void eb_reference_object_dctor(EbPtr p) {
         if(obj->downscaled_reference_picture[denom_idx] != NULL){
             EB_DELETE(obj->downscaled_reference_picture[denom_idx]);
         }
+        if(obj->downscaled_reference_picture16bit[denom_idx] != NULL){
+            EB_DELETE(obj->downscaled_reference_picture16bit[denom_idx]);
+        }
     }
 }
 
@@ -197,6 +200,12 @@ EbErrorType eb_reference_object_ctor(EbReferenceObject *reference_object,
     }
     memset(&reference_object->film_grain_params, 0, sizeof(reference_object->film_grain_params));
     EB_CREATE_MUTEX(reference_object->referenced_area_mutex);
+
+    // set all supplemental downscaled reference picture pointers to NULL
+    for(uint8_t down_idx = 0; down_idx < NUM_SCALES; down_idx++){
+        reference_object->downscaled_reference_picture[down_idx] = NULL;
+        reference_object->downscaled_reference_picture16bit[down_idx] = NULL;
+    }
 
     reference_object->mi_rows = mi_rows;
     reference_object->mi_cols = mi_cols;
