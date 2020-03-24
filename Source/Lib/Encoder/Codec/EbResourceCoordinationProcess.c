@@ -836,7 +836,9 @@ void *resource_coordination_kernel(void *input_ptr) {
             sb_params_init(scs_ptr);
             sb_geom_init(scs_ptr);
             scs_ptr->enable_altrefs = scs_ptr->static_config.enable_altrefs ? EB_TRUE : EB_FALSE;
-
+#if ALT_REF_OFF
+            scs_ptr->enable_altrefs = 0;
+#endif
             // initialize sequence level enable_superres
             scs_ptr->seq_header.enable_superres = 0;
 

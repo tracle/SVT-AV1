@@ -1433,6 +1433,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
 
     } else // use specified level
         context_ptr->chroma_level = scs_ptr->static_config.set_chroma_mode;
+#if ONLY_DC_CHROMA
+    context_ptr->chroma_level = CHROMA_MODE_3;
+#endif
 #if MOVE_OPT
     // Chroma independent modes search
     // Level                Settings
@@ -2012,7 +2015,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
         context_ptr->md_pic_obmc_mode = 0;
     else
         context_ptr->md_pic_obmc_mode = pcs_ptr->parent_pcs_ptr->pic_obmc_mode;
-
+#if SHUT_OBMC
+    context_ptr->md_pic_obmc_mode = 0;
+#endif
     // Set enable_inter_intra @ MD
 #if  CLEANUP_INTER_INTRA
     //Block level switch, has to follow the picture level
@@ -2093,7 +2098,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
         context_ptr->dc_cand_only_flag = (pcs_ptr->slice_type == I_SLICE) ? EB_FALSE : EB_TRUE;
     else
         context_ptr->dc_cand_only_flag = EB_FALSE;
-
+#if ONLY_DC_LUMA
+    context_ptr->dc_cand_only_flag = EB_TRUE;
+#endif
     // Set disable_angle_z2_prediction_flag
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->disable_angle_z2_intra_flag = EB_TRUE;
