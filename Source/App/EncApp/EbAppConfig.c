@@ -250,8 +250,6 @@ static void set_cfg_input_file(const char *filename, EbConfig *cfg) {
 };
 
 static void set_pred_struct_file(const char *value, EbConfig *cfg) {
-    if (cfg->input_pred_struct_file) { fclose(cfg->input_pred_struct_file); }
-    FOPEN(cfg->input_pred_struct_file, value, "rb");
 
     if (cfg->input_pred_struct_filename) { free(cfg->input_pred_struct_filename); }
     cfg->input_pred_struct_filename = (char *)malloc(strlen(value) + 1);
