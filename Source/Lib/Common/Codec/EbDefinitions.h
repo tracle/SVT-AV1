@@ -37,7 +37,7 @@ extern "C" {
 #define DEBUG_TOOLS 1
 #if DEBUG_TOOLS
 // Non-core / filter
-#define QPS_QPM_OFF 0
+#define QPS_QPM_OFF 1
 #define ALT_REF_OFF 1
 #define SHUT_FILTERING 1 // CDEF RESTORATION DLF
 
@@ -63,13 +63,13 @@ extern "C" {
 #define SHUT_COMP 0
 #define SHUT_FI 0
 #define SHUT_II_COMP 0
-#define SHUT_MFMV 0
+#define SHUT_MFMV 0 // already off m8
 
 // Precision features
 #define TX_TYPE_OFF 0
-#define ATB_OFF 0
-#define SHUT_RDOQ 0
-#define SHUT_QUANT_FP 0
+#define ATB_OFF 0 //already off m8
+#define SHUT_RDOQ 0//already off m8
+#define SHUT_QUANT_FP 0 //already off m8
 
 #define ONLY_FAST_LOOP 0
 #define ONLY_MD_STAGE_0_1 0

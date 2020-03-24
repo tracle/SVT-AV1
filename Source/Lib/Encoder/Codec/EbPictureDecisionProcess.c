@@ -831,7 +831,9 @@ EbErrorType signal_derivation_multi_processes_oq(
                 pcs_ptr->pic_depth_mode = PIC_SB_SWITCH_DEPTH_MODE;
         if (pcs_ptr->pic_depth_mode < PIC_SQ_DEPTH_MODE)
             assert(scs_ptr->nsq_present == 1 && "use nsq_present 1");
-
+#if ALL_64x64 || ALL_32x32 || ALL_16x16 || ALL_8x8 || ALL_4x4
+        pcs_ptr->pic_depth_mode = PIC_SQ_DEPTH_MODE;
+#endif
         pcs_ptr->max_number_of_pus_per_sb = (pcs_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE) ? MAX_ME_PU_COUNT : SQUARE_PU_COUNT;
 
     // NSQ search Level                               Settings
@@ -879,6 +881,9 @@ EbErrorType signal_derivation_multi_processes_oq(
                 pcs_ptr->nsq_search_level = NSQ_SEARCH_LEVEL1;
         else
             pcs_ptr->nsq_search_level = NSQ_SEARCH_OFF;
+#if NSQ_OFF
+        pcs_ptr->nsq_search_level = NSQ_SEARCH_OFF;
+#endif
     if (pcs_ptr->nsq_search_level > NSQ_SEARCH_OFF)
         assert(scs_ptr->nsq_present == 1 && "use nsq_present 1");
 
@@ -1160,6 +1165,15 @@ EbErrorType signal_derivation_multi_processes_oq(
         else
             pcs_ptr->compound_mode = scs_ptr->static_config.compound_level;
 
+#if SHUT_II_COMP
+            scs_ptr->seq_header.enable_interintra_compound = 0;
+#endif
+#if SHUT_COMP
+            scs_ptr->compound_mode = 0;
+#endif
+#if SHUT_FI
+            scs_ptr->seq_header.enable_filter_intra = 0;
+#endif
         if (pcs_ptr->wedge_mode > 0 && pcs_ptr->compound_mode != 2)
             SVT_LOG("wedge_mode set but will not be active\n");
 

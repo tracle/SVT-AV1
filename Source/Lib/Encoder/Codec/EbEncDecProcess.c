@@ -1318,7 +1318,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
             context_ptr->tx_search_level = TX_SEARCH_ENC_DEC;
     } else
         context_ptr->tx_search_level = TX_SEARCH_ENC_DEC;
-
+#if TX_TYPE_OFF
+    context_ptr->tx_search_level = TX_SEARCH_OFF;
+#endif
     // Set tx search skip weights (MAX_MODE_COST: no skipping; 0: always skipping)
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->tx_weight = MAX_MODE_COST;
@@ -2028,7 +2030,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
         context_ptr->md_enable_inter_intra = 0;
     else
         context_ptr->md_enable_inter_intra = pcs_ptr->parent_pcs_ptr->enable_inter_intra;
-
+#if SHUT_II
+    context_ptr->md_enable_inter_intra = 0;
+#endif
     // Set intra_angle_delta @ MD
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->md_intra_angle_delta = 0;

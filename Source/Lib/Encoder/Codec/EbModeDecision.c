@@ -928,6 +928,10 @@ void unipred_3x3_candidates_injection(const SequenceControlSet *scs_ptr, Picture
                         << 1;
                 }
 #endif
+#if ZZ_TEST
+                to_inject_mv_x = 0;
+                to_inject_mv_y = 0;
+#endif
                 uint8_t to_inject_ref_type = svt_get_ref_frame_type(REF_LIST_0, list0_ref_index);
                 uint8_t skip_cand          = check_ref_beackout(
                     context_ptr, to_inject_ref_type, context_ptr->blk_geom->shape);
@@ -1107,6 +1111,10 @@ void unipred_3x3_candidates_injection(const SequenceControlSet *scs_ptr, Picture
                              bipred_3x3_y_pos[bipred_index])
                             << 1;
                     }
+#endif
+#if ZZ_TEST
+                    to_inject_mv_x = 0;
+                    to_inject_mv_y = 0;
 #endif
                     uint8_t to_inject_ref_type =
                         svt_get_ref_frame_type(REF_LIST_1, list1_ref_index);
