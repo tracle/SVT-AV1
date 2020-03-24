@@ -5981,24 +5981,23 @@ EbErrorType av1_inter_prediction_16bit_pipeline(
         int      dst_stride1[MAX_MB_PLANE] = { MAX_SB_SIZE, MAX_SB_SIZE, MAX_SB_SIZE };
         int      dst_stride2[MAX_MB_PLANE] = { MAX_SB_SIZE, MAX_SB_SIZE, MAX_SB_SIZE };
 
-        uint8_t shift = (bit_depth > EB_8BIT) ? 1 : 0;
         dst_buf1[0] = tmp_obmc_bufs[0];
-        dst_buf1[1] = tmp_obmc_bufs[0] + (MAX_SB_SQUARE << shift);
-        dst_buf1[2] = tmp_obmc_bufs[0] + (MAX_SB_SQUARE * 2 << shift);
+        dst_buf1[1] = tmp_obmc_bufs[0] + (MAX_SB_SQUARE << 1);
+        dst_buf1[2] = tmp_obmc_bufs[0] + (MAX_SB_SQUARE * 2 << 1);
         dst_buf2[0] = tmp_obmc_bufs[1];
-        dst_buf2[1] = tmp_obmc_bufs[1] + (MAX_SB_SQUARE << shift);
-        dst_buf2[2] = tmp_obmc_bufs[1] + (MAX_SB_SQUARE * 2 << shift);
+        dst_buf2[1] = tmp_obmc_bufs[1] + (MAX_SB_SQUARE << 1);
+        dst_buf2[2] = tmp_obmc_bufs[1] + (MAX_SB_SQUARE * 2 << 1);
 
         int mi_row = pu_origin_y >> 2;
         int mi_col = pu_origin_x >> 2;
 
         if (use_precomputed_obmc) {
             dst_buf1[0] = md_context->obmc_buff_0;
-            dst_buf1[1] = md_context->obmc_buff_0 + (MAX_SB_SQUARE << shift);
-            dst_buf1[2] = md_context->obmc_buff_0 + (MAX_SB_SQUARE * 2 << shift);
+            dst_buf1[1] = md_context->obmc_buff_0 + (MAX_SB_SQUARE << 1);
+            dst_buf1[2] = md_context->obmc_buff_0 + (MAX_SB_SQUARE * 2 << 1);
             dst_buf2[0] = md_context->obmc_buff_1;
-            dst_buf2[1] = md_context->obmc_buff_1 + (MAX_SB_SQUARE << shift);
-            dst_buf2[2] = md_context->obmc_buff_1 + (MAX_SB_SQUARE * 2 << shift);
+            dst_buf2[1] = md_context->obmc_buff_1 + (MAX_SB_SQUARE << 1);
+            dst_buf2[2] = md_context->obmc_buff_1 + (MAX_SB_SQUARE * 2 << 1);
         }
         else {
             build_prediction_by_above_preds_hbd(perform_chroma,
