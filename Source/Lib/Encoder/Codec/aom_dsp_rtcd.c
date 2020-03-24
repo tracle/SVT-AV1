@@ -65,7 +65,7 @@
 void setup_rtcd_internal(CPU_FLAGS flags) {
     /** Should be done during library initialization,
         but for safe limiting cpu flags again. */
-
+    (void)flags;
     //to use C: flags=0
     aom_sse = aom_sse_c;
 

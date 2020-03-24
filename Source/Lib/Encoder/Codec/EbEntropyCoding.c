@@ -1222,19 +1222,19 @@ static void encode_partition_av1(PictureControlSet *pcs_ptr, FRAME_CONTEXT *fram
     uint32_t context_index = 0;
 
     const PartitionContextType above_ctx =
-        /*(((PartitionContext *)
+        (((PartitionContext *)
               partition_context_neighbor_array->top_array)[partition_context_top_neighbor_index]
-             .above == (int8_t)INVALID_NEIGHBOR_DATA)
+             .above == (char)INVALID_NEIGHBOR_DATA)
             ? 0
-            :*/ ((PartitionContext *)partition_context_neighbor_array
+            : ((PartitionContext *)partition_context_neighbor_array
                    ->top_array)[partition_context_top_neighbor_index]
                   .above;
     const PartitionContextType left_ctx =
-        /*(((PartitionContext *)
+        (((PartitionContext *)
               partition_context_neighbor_array->left_array)[partition_context_left_neighbor_index]
-             .left == (int8_t)INVALID_NEIGHBOR_DATA)
+             .left == (char)INVALID_NEIGHBOR_DATA)
             ? 0
-            :*/ ((PartitionContext *)partition_context_neighbor_array
+            : ((PartitionContext *)partition_context_neighbor_array
                    ->left_array)[partition_context_left_neighbor_index]
                   .left;
 
