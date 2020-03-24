@@ -1410,11 +1410,14 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
         // Scale references if resolution of the reference is different than the input
         // -------
         // TODO: this has to be done under a mutex
-        if(pcs_ptr->parent_pcs_ptr->frame_superres_enabled == 1 && pcs_ptr->slice_type != I_SLICE){
-            // update mi_rows and mi_cols for the reference pic wrapper (used in mfmv for other pictures)
-            EbReferenceObject *reference_object = pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr;
-            reference_object->mi_rows = pcs_ptr->parent_pcs_ptr->aligned_height >> MI_SIZE_LOG2;
-            reference_object->mi_cols = pcs_ptr->parent_pcs_ptr->aligned_width >> MI_SIZE_LOG2;
+        if(pcs_ptr->parent_pcs_ptr->frame_superres_enabled == 1 && pcs_ptr->slice_type != I_SLICE) {
+            if (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag == EB_TRUE &&
+                pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr != EB_NULL){
+                // update mi_rows and mi_cols for the reference pic wrapper (used in mfmv for other pictures)
+                EbReferenceObject *reference_object = pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr;
+                reference_object->mi_rows = pcs_ptr->parent_pcs_ptr->aligned_height >> MI_SIZE_LOG2;
+                reference_object->mi_cols = pcs_ptr->parent_pcs_ptr->aligned_width >> MI_SIZE_LOG2;
+            }
 
             scale_rec_references(pcs_ptr,
                                  pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr,
