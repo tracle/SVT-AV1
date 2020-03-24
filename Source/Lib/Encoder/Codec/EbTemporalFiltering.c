@@ -567,7 +567,7 @@ static void create_me_context_and_picture_control(
                          ->buffer_y[buffer_index + sb_row * input_picture_ptr_central->stride_y])),
                   BLOCK_SIZE_64 * sizeof(uint8_t));
     }
-
+#ifdef ARCH_X86
     {
         uint8_t *src_ptr = &(padded_pic_ptr->buffer_y[buffer_index]);
 
@@ -575,9 +575,12 @@ static void create_me_context_and_picture_control(
         uint32_t i;
         for (i = 0; i < sb_height; i++) {
             char const *p = (char const *)(src_ptr + i * padded_pic_ptr->stride_y);
+
             _mm_prefetch(p, _MM_HINT_T2);
+
         }
     }
+#endif
 
     context_ptr->me_context_ptr->sb_src_ptr    = &(padded_pic_ptr->buffer_y[buffer_index]);
     context_ptr->me_context_ptr->sb_src_stride = padded_pic_ptr->stride_y;
