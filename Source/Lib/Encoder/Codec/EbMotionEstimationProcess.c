@@ -811,7 +811,7 @@ void *motion_estimation_kernel(void *input_ptr) {
                                                   sb_row * input_picture_ptr->stride_y])),
                                 BLOCK_SIZE_64 * sizeof(uint8_t));
                         }
-
+#ifdef ARCH_X86
                         {
                             uint8_t *src_ptr = &input_padded_picture_ptr->buffer_y[buffer_index];
 
@@ -821,9 +821,12 @@ void *motion_estimation_kernel(void *input_ptr) {
                                 char const *p =
                                     (char const *)(src_ptr +
                                                    i * input_padded_picture_ptr->stride_y);
+
                                 _mm_prefetch(p, _MM_HINT_T2);
+
                             }
                         }
+#endif
 
                         context_ptr->me_context_ptr->sb_src_ptr =
                             &input_padded_picture_ptr->buffer_y[buffer_index];
