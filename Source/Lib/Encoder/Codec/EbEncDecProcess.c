@@ -2002,15 +2002,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
     // Remove candidate if deviation to the best is higher than md_stage_2_3_cand_prune_th
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->md_stage_2_3_cand_prune_th = (uint64_t)~0;
-    else if (context_ptr->pd_pass == PD_PASS_1)
-        context_ptr->md_stage_2_3_cand_prune_th =
-            scs_ptr->input_resolution <= INPUT_SIZE_1080i_RANGE ? 5 : 3;
 #if CS2_ADOPTIONS_1
+    else if (context_ptr->pd_pass == PD_PASS_1)
+        context_ptr->md_stage_2_3_cand_prune_th = 5;
     else if (MR_MODE)
         context_ptr->md_stage_2_3_cand_prune_th = (uint64_t)~0;
     else if (pcs_ptr->enc_mode <= ENC_M1 || pcs_ptr->parent_pcs_ptr->sc_content_detected)
         context_ptr->md_stage_2_3_cand_prune_th = 15;
 #else
+    else if (context_ptr->pd_pass == PD_PASS_1)
+        context_ptr->md_stage_2_3_cand_prune_th =
+        scs_ptr->input_resolution <= INPUT_SIZE_1080i_RANGE ? 5 : 3;
     else if (MR_MODE || pcs_ptr->parent_pcs_ptr->sc_content_detected || pcs_ptr->enc_mode <= ENC_M0)
         context_ptr->md_stage_2_3_cand_prune_th = (uint64_t)~0;
 #endif
