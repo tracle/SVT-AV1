@@ -45,35 +45,35 @@ extern "C" {
 #define NSQ_OFF 0
 #define NO_4x4 0
 #define ALL_4x4 0
-#define ALL_8x8 0
+#define ALL_8x8 1
 #define ALL_16x16 0
 #define ALL_32x32 0
 #define ALL_64x64 0
 
 // Simple modes
-#define SHUT_ANGULAR_INTRA 0
-#define ONLY_DC_LUMA 0
-#define ONLY_DC_CHROMA 0
-#define ONLY_ME 0
-#define NO_BIPED 0
+#define SHUT_ANGULAR_INTRA 1
+#define ONLY_DC_LUMA 1
+#define ONLY_DC_CHROMA 1
+#define ONLY_ME 1
+#define NO_BIPED 1
 
 // Complex modes
-#define SHUT_OBMC 0
-#define SHUT_II 0
-#define SHUT_COMP 0
-#define SHUT_FI 0
-#define SHUT_II_COMP 0
+#define SHUT_OBMC 1
+#define SHUT_II 1
+#define SHUT_COMP 1
+#define SHUT_FI 1
+#define SHUT_II_COMP 1
 #define SHUT_MFMV 0 // already off m8
 
 // Precision features
-#define TX_TYPE_OFF 0
-#define ATB_OFF 0 //already off m8
-#define SHUT_RDOQ 0//already off m8
-#define SHUT_QUANT_FP 0 //already off m8
+#define TX_TYPE_OFF 1
+#define ATB_OFF 1 //already off m8
+#define SHUT_RDOQ 1//already off m8
+#define SHUT_QUANT_FP 1 //already off m8
 
-#define ONLY_FAST_LOOP 0
+#define ONLY_FAST_LOOP 1
 #define ONLY_MD_STAGE_0_1 0
-#define ZZ_TEST 0
+#define ZZ_TEST 1
 #endif
 #define QPS_CHANGE_II            1 // Change the QP assignment for I
 #define NSQ_HV                      1 // skip NSQ partitions based on H vs V costs

@@ -831,8 +831,9 @@ EbErrorType signal_derivation_multi_processes_oq(
                 pcs_ptr->pic_depth_mode = PIC_SB_SWITCH_DEPTH_MODE;
         if (pcs_ptr->pic_depth_mode < PIC_SQ_DEPTH_MODE)
             assert(scs_ptr->nsq_present == 1 && "use nsq_present 1");
+
 #if ALL_64x64 || ALL_32x32 || ALL_16x16 || ALL_8x8 || ALL_4x4
-        pcs_ptr->pic_depth_mode = PIC_SQ_DEPTH_MODE;
+        pcs_ptr->pic_depth_mode = PIC_SQ_NON4_DEPTH_MODE;
 #endif
         pcs_ptr->max_number_of_pus_per_sb = (pcs_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE) ? MAX_ME_PU_COUNT : SQUARE_PU_COUNT;
 
