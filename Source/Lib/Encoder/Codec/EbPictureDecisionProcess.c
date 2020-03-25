@@ -1210,7 +1210,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         //Exit TX size search when all coefficients are zero
         // 0: OFF
         // 1: ON
-        pcs_ptr->tx_size_early_exit = 1;
+        pcs_ptr->tx_size_early_exit = 0;
 #if MUS_ME
         //Prune reference and reduce ME SR based on HME/ME distortion
         // 0: OFF

@@ -3943,6 +3943,12 @@ void inject_new_candidates(const SequenceControlSet *  scs_ptr,
                             .y_mv
                         << 1;
 #endif
+#if ZZ_TEST
+                    to_inject_mv_x_l0 = 0;
+                    to_inject_mv_y_l0 = 0;
+                    to_inject_mv_x_l1 = 0;
+                    to_inject_mv_y_l1 = 0;
+#endif
                     MvReferenceFrame rf[2];
                     rf[0] =
                         svt_get_ref_frame_type(me_block_results_ptr->ref0_list, list0_ref_index);
@@ -5026,498 +5032,467 @@ void inject_inter_candidates(PictureControlSet *pcs_ptr, ModeDecisionContext *co
         inject_predictive_me_candidates(
             context_ptr, pcs_ptr, is_compound_enabled, allow_bipred, &cand_total_cnt);
 #endif
-                // update the total number of candidates injected
-                (*candidate_total_cnt) = cand_total_cnt;
+    // update the total number of candidates injected
+    (*candidate_total_cnt) = cand_total_cnt;
 
-                return;
-            }
+    return;
+}
 
-            static INLINE TxType av1_get_tx_type(BlockSize          sb_type,
-                                                 int32_t            is_inter,
-                                                 PredictionMode     pred_mode,
-                                                 UvPredictionMode   pred_mode_uv,
-                                                 PlaneType          plane_type,
-                                                 const MacroBlockD *xd,
-                                                 int32_t            blk_row,
-                                                 int32_t            blk_col,
-                                                 TxSize             tx_size,
-                                                 int32_t            reduced_tx_set) {
-                UNUSED(sb_type);
-                UNUSED(*xd);
-                UNUSED(blk_row);
-                UNUSED(blk_col);
+static INLINE TxType av1_get_tx_type(BlockSize sb_type, int32_t is_inter, PredictionMode pred_mode,
+                                     UvPredictionMode pred_mode_uv, PlaneType plane_type,
+                                     const MacroBlockD *xd, int32_t blk_row, int32_t blk_col,
+                                     TxSize tx_size, int32_t reduced_tx_set) {
+    UNUSED(sb_type);
+    UNUSED(*xd);
+    UNUSED(blk_row);
+    UNUSED(blk_col);
 
-                // BlockSize  sb_type = BLOCK_8X8;
+    // BlockSize  sb_type = BLOCK_8X8;
 
-                MbModeInfo mbmi;
-                mbmi.block_mi.mode    = pred_mode;
-                mbmi.block_mi.uv_mode = pred_mode_uv;
+    MbModeInfo mbmi;
+    mbmi.block_mi.mode    = pred_mode;
+    mbmi.block_mi.uv_mode = pred_mode_uv;
 
-                // const MbModeInfo *const mbmi = xd->mi[0];
-                // const struct MacroblockdPlane *const pd = &xd->plane[plane_type];
-                const TxSetType tx_set_type =
-                    /*av1_*/ get_ext_tx_set_type(tx_size, is_inter, reduced_tx_set);
+    // const MbModeInfo *const mbmi = xd->mi[0];
+    // const struct MacroblockdPlane *const pd = &xd->plane[plane_type];
+    const TxSetType tx_set_type =
+        /*av1_*/ get_ext_tx_set_type(tx_size, is_inter, reduced_tx_set);
 
-                TxType tx_type = DCT_DCT;
-                if (/*xd->lossless[mbmi->segment_id] ||*/ txsize_sqr_up_map[tx_size] > TX_32X32)
-                    tx_type = DCT_DCT;
-                else {
-                    if (plane_type == PLANE_TYPE_Y) {
-                        //const int32_t txk_type_idx =
-                        //    av1_get_txk_type_index(/*mbmi->*/sb_type, blk_row, blk_col);
-                        //tx_type = mbmi->txk_type[txk_type_idx];
-                    } else if (is_inter /*is_inter_block(mbmi)*/) {
-                        // scale back to y plane's coordinate
-                        //blk_row <<= pd->subsampling_y;
-                        //blk_col <<= pd->subsampling_x;
-                        //const int32_t txk_type_idx =
-                        //    av1_get_txk_type_index(mbmi->sb_type, blk_row, blk_col);
-                        //tx_type = mbmi->txk_type[txk_type_idx];
-                    } else {
-                        // In intra mode, uv planes don't share the same prediction mode as y
-                        // plane, so the tx_type should not be shared
-                        tx_type = intra_mode_to_tx_type(&mbmi.block_mi, PLANE_TYPE_UV);
-                    }
-                }
-                ASSERT(tx_type < TX_TYPES);
-                if (!av1_ext_tx_used[tx_set_type][tx_type]) return DCT_DCT;
-                return tx_type;
-            }
+    TxType tx_type = DCT_DCT;
+    if (/*xd->lossless[mbmi->segment_id] ||*/ txsize_sqr_up_map[tx_size] > TX_32X32)
+        tx_type = DCT_DCT;
+    else {
+        if (plane_type == PLANE_TYPE_Y) {
+            //const int32_t txk_type_idx =
+            //    av1_get_txk_type_index(/*mbmi->*/sb_type, blk_row, blk_col);
+            //tx_type = mbmi->txk_type[txk_type_idx];
+        } else if (is_inter /*is_inter_block(mbmi)*/) {
+            // scale back to y plane's coordinate
+            //blk_row <<= pd->subsampling_y;
+            //blk_col <<= pd->subsampling_x;
+            //const int32_t txk_type_idx =
+            //    av1_get_txk_type_index(mbmi->sb_type, blk_row, blk_col);
+            //tx_type = mbmi->txk_type[txk_type_idx];
+        } else {
+            // In intra mode, uv planes don't share the same prediction mode as y
+            // plane, so the tx_type should not be shared
+            tx_type = intra_mode_to_tx_type(&mbmi.block_mi, PLANE_TYPE_UV);
+        }
+    }
+    ASSERT(tx_type < TX_TYPES);
+    if (!av1_ext_tx_used[tx_set_type][tx_type]) return DCT_DCT;
+    return tx_type;
+}
 
-            void inject_intra_candidates_ois(PictureControlSet * pcs_ptr,
-                                             ModeDecisionContext * context_ptr,
-                                             SuperBlock * sb_ptr,
-                                             uint32_t * candidate_total_cnt) {
-                uint8_t                intra_candidate_counter;
-                uint8_t                intra_mode;
-                uint32_t               can_total_cnt   = 0;
-                ModeDecisionCandidate *candidate_array = context_ptr->fast_candidate_array;
-                EbBool                 disable_cfl_flag =
-                    (MAX(context_ptr->blk_geom->bheight, context_ptr->blk_geom->bwidth) > 32)
-                        ? EB_TRUE
-                        : EB_FALSE;
+void inject_intra_candidates_ois(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
+                                 SuperBlock *sb_ptr, uint32_t *candidate_total_cnt) {
+    uint8_t                intra_candidate_counter;
+    uint8_t                intra_mode;
+    uint32_t               can_total_cnt   = 0;
+    ModeDecisionCandidate *candidate_array = context_ptr->fast_candidate_array;
+    EbBool                 disable_cfl_flag =
+        (MAX(context_ptr->blk_geom->bheight, context_ptr->blk_geom->bwidth) > 32) ? EB_TRUE
+                                                                                  : EB_FALSE;
 
-                SequenceControlSet *scs_ptr =
-                    (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
-                if (scs_ptr->static_config.disable_cfl_flag != DEFAULT && !disable_cfl_flag)
-                    // if disable_cfl_flag == 1 then it doesn't matter what cli says otherwise change it to cli
-                    disable_cfl_flag = (EbBool)scs_ptr->static_config.disable_cfl_flag;
+    SequenceControlSet *scs_ptr = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
+    if (scs_ptr->static_config.disable_cfl_flag != DEFAULT && !disable_cfl_flag)
+        // if disable_cfl_flag == 1 then it doesn't matter what cli says otherwise change it to cli
+        disable_cfl_flag = (EbBool)scs_ptr->static_config.disable_cfl_flag;
 
-                OisSbResults *ois_sb_results_ptr =
-                    pcs_ptr->parent_pcs_ptr->ois_sb_results[sb_ptr->index];
-                OisCandidate *ois_blk_ptr =
-                    ois_sb_results_ptr->ois_candidate_array
-                        [ep_to_pa_block_index[context_ptr->blk_geom->blkidx_mds]];
-                uint8_t total_intra_luma_mode =
-                    ois_sb_results_ptr->total_ois_intra_candidate
-                        [ep_to_pa_block_index[context_ptr->blk_geom->blkidx_mds]];
-                FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
+    OisSbResults *ois_sb_results_ptr = pcs_ptr->parent_pcs_ptr->ois_sb_results[sb_ptr->index];
+    OisCandidate *ois_blk_ptr =
+        ois_sb_results_ptr
+            ->ois_candidate_array[ep_to_pa_block_index[context_ptr->blk_geom->blkidx_mds]];
+    uint8_t total_intra_luma_mode =
+        ois_sb_results_ptr
+            ->total_ois_intra_candidate[ep_to_pa_block_index[context_ptr->blk_geom->blkidx_mds]];
+    FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
 
-                for (intra_candidate_counter = 0; intra_candidate_counter < total_intra_luma_mode;
-                     ++intra_candidate_counter) {
-                    intra_mode = ois_blk_ptr[can_total_cnt].intra_mode;
-                    assert(intra_mode < INTRA_MODES);
-                    if (av1_is_directional_mode((PredictionMode)intra_mode)) {
-                        int32_t angle_delta = ois_blk_ptr[can_total_cnt].angle_delta;
-                        candidate_array[can_total_cnt].type       = INTRA_MODE;
-                        candidate_array[can_total_cnt].merge_flag = EB_FALSE;
-                        candidate_array[can_total_cnt].palette_info.pmi.palette_size[0] = 0;
-                        candidate_array[can_total_cnt].palette_info.pmi.palette_size[1] = 0;
-                        candidate_array[can_total_cnt].intra_luma_mode  = intra_mode;
-                        candidate_array[can_total_cnt].distortion_ready = 1;
-                        candidate_array[can_total_cnt].me_distortion =
-                            ois_blk_ptr[can_total_cnt].distortion;
-                        candidate_array[can_total_cnt].use_intrabc = 0;
-                        candidate_array[can_total_cnt].is_directional_mode_flag =
-                            (uint8_t)av1_is_directional_mode((PredictionMode)intra_mode);
-                        candidate_array[can_total_cnt].angle_delta[PLANE_TYPE_Y] = angle_delta;
-                        candidate_array[can_total_cnt].intra_chroma_mode =
-                            disable_cfl_flag
-                                ? intra_luma_to_chroma[intra_mode]
-                                : context_ptr->chroma_level <= CHROMA_MODE_1 ? UV_CFL_PRED
-                                                                             : UV_DC_PRED;
-                        candidate_array[can_total_cnt].cfl_alpha_signs = 0;
-                        candidate_array[can_total_cnt].cfl_alpha_idx   = 0;
-                        candidate_array[can_total_cnt].is_directional_chroma_mode_flag =
-                            (uint8_t)av1_is_directional_mode(
-                                (PredictionMode)candidate_array[can_total_cnt].intra_chroma_mode);
-                        candidate_array[can_total_cnt].angle_delta[PLANE_TYPE_UV] = 0;
+    for (intra_candidate_counter = 0; intra_candidate_counter < total_intra_luma_mode;
+         ++intra_candidate_counter) {
+        intra_mode = ois_blk_ptr[can_total_cnt].intra_mode;
+        assert(intra_mode < INTRA_MODES);
+        if (av1_is_directional_mode((PredictionMode)intra_mode)) {
+            int32_t angle_delta                       = ois_blk_ptr[can_total_cnt].angle_delta;
+            candidate_array[can_total_cnt].type       = INTRA_MODE;
+            candidate_array[can_total_cnt].merge_flag = EB_FALSE;
+            candidate_array[can_total_cnt].palette_info.pmi.palette_size[0] = 0;
+            candidate_array[can_total_cnt].palette_info.pmi.palette_size[1] = 0;
+            candidate_array[can_total_cnt].intra_luma_mode                  = intra_mode;
+            candidate_array[can_total_cnt].distortion_ready                 = 1;
+            candidate_array[can_total_cnt].me_distortion = ois_blk_ptr[can_total_cnt].distortion;
+            candidate_array[can_total_cnt].use_intrabc   = 0;
+            candidate_array[can_total_cnt].is_directional_mode_flag =
+                (uint8_t)av1_is_directional_mode((PredictionMode)intra_mode);
+            candidate_array[can_total_cnt].angle_delta[PLANE_TYPE_Y] = angle_delta;
+            candidate_array[can_total_cnt].intra_chroma_mode =
+                disable_cfl_flag
+                    ? intra_luma_to_chroma[intra_mode]
+                    : context_ptr->chroma_level <= CHROMA_MODE_1 ? UV_CFL_PRED : UV_DC_PRED;
+            candidate_array[can_total_cnt].cfl_alpha_signs = 0;
+            candidate_array[can_total_cnt].cfl_alpha_idx   = 0;
+            candidate_array[can_total_cnt].is_directional_chroma_mode_flag =
+                (uint8_t)av1_is_directional_mode(
+                    (PredictionMode)candidate_array[can_total_cnt].intra_chroma_mode);
+            candidate_array[can_total_cnt].angle_delta[PLANE_TYPE_UV] = 0;
 
-                        candidate_array[can_total_cnt].transform_type[0] = DCT_DCT;
+            candidate_array[can_total_cnt].transform_type[0] = DCT_DCT;
 
-                        if (candidate_array[can_total_cnt].intra_chroma_mode == UV_CFL_PRED)
-                            candidate_array[can_total_cnt].transform_type_uv = DCT_DCT;
-                        else
-                            candidate_array[can_total_cnt].transform_type_uv = av1_get_tx_type(
-                                context_ptr->blk_geom->bsize,
-                                0,
-                                (PredictionMode)candidate_array[can_total_cnt].intra_luma_mode,
-                                (UvPredictionMode)candidate_array[can_total_cnt].intra_chroma_mode,
-                                PLANE_TYPE_UV,
-                                0,
-                                0,
-                                0,
-                                context_ptr->blk_geom->txsize_uv[0][0],
-                                frm_hdr->reduced_tx_set);
-                        candidate_array[can_total_cnt].ref_frame_type = INTRA_FRAME;
-                        candidate_array[can_total_cnt].pred_mode      = (PredictionMode)intra_mode;
-                        candidate_array[can_total_cnt].motion_mode    = SIMPLE_TRANSLATION;
-                        INCRMENT_CAND_TOTAL_COUNT(can_total_cnt);
-                    } else {
-                        candidate_array[can_total_cnt].type       = INTRA_MODE;
-                        candidate_array[can_total_cnt].merge_flag = EB_FALSE;
-                        candidate_array[can_total_cnt].palette_info.pmi.palette_size[0] = 0;
-                        candidate_array[can_total_cnt].palette_info.pmi.palette_size[1] = 0;
-                        candidate_array[can_total_cnt].intra_luma_mode  = intra_mode;
-                        candidate_array[can_total_cnt].distortion_ready = 1;
-                        candidate_array[can_total_cnt].me_distortion =
-                            ois_blk_ptr[can_total_cnt].distortion;
-                        candidate_array[can_total_cnt].use_intrabc = 0;
-                        candidate_array[can_total_cnt].is_directional_mode_flag =
-                            (uint8_t)av1_is_directional_mode((PredictionMode)intra_mode);
-                        candidate_array[can_total_cnt].angle_delta[PLANE_TYPE_Y] = 0;
-                        candidate_array[can_total_cnt].intra_chroma_mode =
-                            disable_cfl_flag
-                                ? intra_luma_to_chroma[intra_mode]
-                                : context_ptr->chroma_level <= CHROMA_MODE_1 ? UV_CFL_PRED
-                                                                             : UV_DC_PRED;
+            if (candidate_array[can_total_cnt].intra_chroma_mode == UV_CFL_PRED)
+                candidate_array[can_total_cnt].transform_type_uv = DCT_DCT;
+            else
+                candidate_array[can_total_cnt].transform_type_uv = av1_get_tx_type(
+                    context_ptr->blk_geom->bsize,
+                    0,
+                    (PredictionMode)candidate_array[can_total_cnt].intra_luma_mode,
+                    (UvPredictionMode)candidate_array[can_total_cnt].intra_chroma_mode,
+                    PLANE_TYPE_UV,
+                    0,
+                    0,
+                    0,
+                    context_ptr->blk_geom->txsize_uv[0][0],
+                    frm_hdr->reduced_tx_set);
+            candidate_array[can_total_cnt].ref_frame_type = INTRA_FRAME;
+            candidate_array[can_total_cnt].pred_mode      = (PredictionMode)intra_mode;
+            candidate_array[can_total_cnt].motion_mode    = SIMPLE_TRANSLATION;
+            INCRMENT_CAND_TOTAL_COUNT(can_total_cnt);
+        } else {
+            candidate_array[can_total_cnt].type                             = INTRA_MODE;
+            candidate_array[can_total_cnt].merge_flag                       = EB_FALSE;
+            candidate_array[can_total_cnt].palette_info.pmi.palette_size[0] = 0;
+            candidate_array[can_total_cnt].palette_info.pmi.palette_size[1] = 0;
+            candidate_array[can_total_cnt].intra_luma_mode                  = intra_mode;
+            candidate_array[can_total_cnt].distortion_ready                 = 1;
+            candidate_array[can_total_cnt].me_distortion = ois_blk_ptr[can_total_cnt].distortion;
+            candidate_array[can_total_cnt].use_intrabc   = 0;
+            candidate_array[can_total_cnt].is_directional_mode_flag =
+                (uint8_t)av1_is_directional_mode((PredictionMode)intra_mode);
+            candidate_array[can_total_cnt].angle_delta[PLANE_TYPE_Y] = 0;
+            candidate_array[can_total_cnt].intra_chroma_mode =
+                disable_cfl_flag
+                    ? intra_luma_to_chroma[intra_mode]
+                    : context_ptr->chroma_level <= CHROMA_MODE_1 ? UV_CFL_PRED : UV_DC_PRED;
 
-                        candidate_array[can_total_cnt].cfl_alpha_signs = 0;
-                        candidate_array[can_total_cnt].cfl_alpha_idx   = 0;
-                        candidate_array[can_total_cnt].is_directional_chroma_mode_flag =
-                            (uint8_t)av1_is_directional_mode(
-                                (PredictionMode)candidate_array[can_total_cnt].intra_chroma_mode);
-                        candidate_array[can_total_cnt].angle_delta[PLANE_TYPE_UV] = 0;
-                        candidate_array[can_total_cnt].transform_type[0]          = DCT_DCT;
+            candidate_array[can_total_cnt].cfl_alpha_signs = 0;
+            candidate_array[can_total_cnt].cfl_alpha_idx   = 0;
+            candidate_array[can_total_cnt].is_directional_chroma_mode_flag =
+                (uint8_t)av1_is_directional_mode(
+                    (PredictionMode)candidate_array[can_total_cnt].intra_chroma_mode);
+            candidate_array[can_total_cnt].angle_delta[PLANE_TYPE_UV] = 0;
+            candidate_array[can_total_cnt].transform_type[0]          = DCT_DCT;
 
-                        if (candidate_array[can_total_cnt].intra_chroma_mode == UV_CFL_PRED)
-                            candidate_array[can_total_cnt].transform_type_uv = DCT_DCT;
-                        else
-                            candidate_array[can_total_cnt].transform_type_uv = av1_get_tx_type(
-                                context_ptr->blk_geom->bsize,
-                                0,
-                                (PredictionMode)candidate_array[can_total_cnt].intra_luma_mode,
-                                (UvPredictionMode)candidate_array[can_total_cnt].intra_chroma_mode,
-                                PLANE_TYPE_UV,
-                                0,
-                                0,
-                                0,
-                                context_ptr->blk_geom->txsize_uv[0][0],
-                                frm_hdr->reduced_tx_set);
-                        candidate_array[can_total_cnt].ref_frame_type = INTRA_FRAME;
-                        candidate_array[can_total_cnt].pred_mode      = (PredictionMode)intra_mode;
-                        candidate_array[can_total_cnt].motion_mode    = SIMPLE_TRANSLATION;
-                        INCRMENT_CAND_TOTAL_COUNT(can_total_cnt);
-                    }
-                }
+            if (candidate_array[can_total_cnt].intra_chroma_mode == UV_CFL_PRED)
+                candidate_array[can_total_cnt].transform_type_uv = DCT_DCT;
+            else
+                candidate_array[can_total_cnt].transform_type_uv = av1_get_tx_type(
+                    context_ptr->blk_geom->bsize,
+                    0,
+                    (PredictionMode)candidate_array[can_total_cnt].intra_luma_mode,
+                    (UvPredictionMode)candidate_array[can_total_cnt].intra_chroma_mode,
+                    PLANE_TYPE_UV,
+                    0,
+                    0,
+                    0,
+                    context_ptr->blk_geom->txsize_uv[0][0],
+                    frm_hdr->reduced_tx_set);
+            candidate_array[can_total_cnt].ref_frame_type = INTRA_FRAME;
+            candidate_array[can_total_cnt].pred_mode      = (PredictionMode)intra_mode;
+            candidate_array[can_total_cnt].motion_mode    = SIMPLE_TRANSLATION;
+            INCRMENT_CAND_TOTAL_COUNT(can_total_cnt);
+        }
+    }
 
-                // update the total number of candidates injected
-                (*candidate_total_cnt) = can_total_cnt;
+    // update the total number of candidates injected
+    (*candidate_total_cnt) = can_total_cnt;
 
-                return;
-            }
+    return;
+}
 
-            double eb_av1_convert_qindex_to_q(int32_t qindex, AomBitDepth bit_depth);
+double eb_av1_convert_qindex_to_q(int32_t qindex, AomBitDepth bit_depth);
 
-            // Values are now correlated to quantizer.
-            static int sad_per_bit16lut_8[QINDEX_RANGE];
-            static int sad_per_bit4lut_8[QINDEX_RANGE];
+// Values are now correlated to quantizer.
+static int sad_per_bit16lut_8[QINDEX_RANGE];
+static int sad_per_bit4lut_8[QINDEX_RANGE];
 
-            static void init_me_luts_bd(
-                int *bit16lut, int *bit4lut, int range, AomBitDepth bit_depth) {
-                int i;
-                // Initialize the sad lut tables using a formulaic calculation for now.
-                // This is to make it easier to resolve the impact of experimental changes
-                // to the quantizer tables.
-                for (i = 0; i < range; i++) {
-                    const double q = eb_av1_convert_qindex_to_q(i, bit_depth);
-                    bit16lut[i]    = (int)(0.0418 * q + 2.4107);
-                    bit4lut[i]     = (int)(0.063 * q + 2.742);
-                }
-            }
+static void init_me_luts_bd(int *bit16lut, int *bit4lut, int range, AomBitDepth bit_depth) {
+    int i;
+    // Initialize the sad lut tables using a formulaic calculation for now.
+    // This is to make it easier to resolve the impact of experimental changes
+    // to the quantizer tables.
+    for (i = 0; i < range; i++) {
+        const double q = eb_av1_convert_qindex_to_q(i, bit_depth);
+        bit16lut[i]    = (int)(0.0418 * q + 2.4107);
+        bit4lut[i]     = (int)(0.063 * q + 2.742);
+    }
+}
 
-            void eb_av1_init_me_luts(void) {
-                init_me_luts_bd(sad_per_bit16lut_8, sad_per_bit4lut_8, QINDEX_RANGE, AOM_BITS_8);
-            }
+void eb_av1_init_me_luts(void) {
+    init_me_luts_bd(sad_per_bit16lut_8, sad_per_bit4lut_8, QINDEX_RANGE, AOM_BITS_8);
+}
 
-            static INLINE int mv_check_bounds(const MvLimits *mv_limits, const MV *mv) {
-                return (mv->row >> 3) < mv_limits->row_min || (mv->row >> 3) > mv_limits->row_max ||
-                       (mv->col >> 3) < mv_limits->col_min || (mv->col >> 3) > mv_limits->col_max;
-            }
-            void assert_release(int statement) {
-                if (statement == 0) SVT_LOG("ASSERT_ERRRR\n");
-            }
+static INLINE int mv_check_bounds(const MvLimits *mv_limits, const MV *mv) {
+    return (mv->row >> 3) < mv_limits->row_min || (mv->row >> 3) > mv_limits->row_max ||
+           (mv->col >> 3) < mv_limits->col_min || (mv->col >> 3) > mv_limits->col_max;
+}
+void assert_release(int statement) {
+    if (statement == 0) SVT_LOG("ASSERT_ERRRR\n");
+}
 
-            void intra_bc_search(PictureControlSet * pcs,
-                                 ModeDecisionContext * context_ptr,
-                                 const SequenceControlSet *scs,
-                                 BlkStruct *               blk_ptr,
-                                 MV *                      dv_cand,
-                                 uint8_t *                 num_dv_cand) {
-                IntraBcContext  x_st;
-                IntraBcContext *x = &x_st;
+void intra_bc_search(PictureControlSet *pcs, ModeDecisionContext *context_ptr,
+                     const SequenceControlSet *scs, BlkStruct *blk_ptr, MV *dv_cand,
+                     uint8_t *num_dv_cand) {
+    IntraBcContext  x_st;
+    IntraBcContext *x = &x_st;
 #if NEW_MD_LAMBDA
-                uint32_t full_lambda = context_ptr->hbd_mode_decision
-                                           ? context_ptr->full_lambda_md[EB_10_BIT_MD]
-                                           : context_ptr->full_lambda_md[EB_8_BIT_MD];
+    uint32_t full_lambda = context_ptr->hbd_mode_decision
+                               ? context_ptr->full_lambda_md[EB_10_BIT_MD]
+                               : context_ptr->full_lambda_md[EB_8_BIT_MD];
 #endif
-                //fill x with what needed.
-                x->is_exhaustive_allowed =
-                    context_ptr->blk_geom->bwidth == 4 || context_ptr->blk_geom->bheight == 4 ? 1
-                                                                                              : 0;
-                //CHKN crc calculator could be moved to mdContext and these init at init time.
-                av1_crc_calculator_init(&x->crc_calculator1, 24, 0x5D6DCB);
-                av1_crc_calculator_init(&x->crc_calculator2, 24, 0x864CFB);
+    //fill x with what needed.
+    x->is_exhaustive_allowed =
+        context_ptr->blk_geom->bwidth == 4 || context_ptr->blk_geom->bheight == 4 ? 1 : 0;
+    //CHKN crc calculator could be moved to mdContext and these init at init time.
+    av1_crc_calculator_init(&x->crc_calculator1, 24, 0x5D6DCB);
+    av1_crc_calculator_init(&x->crc_calculator2, 24, 0x864CFB);
 
-                x->xd            = blk_ptr->av1xd;
-                x->nmv_vec_cost  = context_ptr->md_rate_estimation_ptr->nmv_vec_cost;
-                x->mv_cost_stack = context_ptr->md_rate_estimation_ptr->nmvcoststack;
-                BlockSize bsize  = context_ptr->blk_geom->bsize;
-                assert(bsize < BlockSizeS_ALL);
-                FrameHeader *          frm_hdr    = &pcs->parent_pcs_ptr->frm_hdr;
-                const Av1Common *const cm         = pcs->parent_pcs_ptr->av1_cm;
-                MvReferenceFrame       ref_frame  = INTRA_FRAME;
-                const int              num_planes = 3;
-                MacroBlockD *          xd         = blk_ptr->av1xd;
-                const TileInfo *       tile       = &xd->tile;
-                const int              mi_row     = -xd->mb_to_top_edge / (8 * MI_SIZE);
-                const int              mi_col     = -xd->mb_to_left_edge / (8 * MI_SIZE);
-                const int              w          = block_size_wide[bsize];
-                const int              h          = block_size_high[bsize];
-                const int              sb_row     = mi_row >> scs->seq_header.sb_size_log2;
-                const int              sb_col     = mi_col >> scs->seq_header.sb_size_log2;
+    x->xd            = blk_ptr->av1xd;
+    x->nmv_vec_cost  = context_ptr->md_rate_estimation_ptr->nmv_vec_cost;
+    x->mv_cost_stack = context_ptr->md_rate_estimation_ptr->nmvcoststack;
+    BlockSize bsize  = context_ptr->blk_geom->bsize;
+    assert(bsize < BlockSizeS_ALL);
+    FrameHeader *          frm_hdr    = &pcs->parent_pcs_ptr->frm_hdr;
+    const Av1Common *const cm         = pcs->parent_pcs_ptr->av1_cm;
+    MvReferenceFrame       ref_frame  = INTRA_FRAME;
+    const int              num_planes = 3;
+    MacroBlockD *          xd         = blk_ptr->av1xd;
+    const TileInfo *       tile       = &xd->tile;
+    const int              mi_row     = -xd->mb_to_top_edge / (8 * MI_SIZE);
+    const int              mi_col     = -xd->mb_to_left_edge / (8 * MI_SIZE);
+    const int              w          = block_size_wide[bsize];
+    const int              h          = block_size_high[bsize];
+    const int              sb_row     = mi_row >> scs->seq_header.sb_size_log2;
+    const int              sb_col     = mi_col >> scs->seq_header.sb_size_log2;
 
-                // Set up limit values for MV components.
-                // Mv beyond the range do not produce new/different prediction block.
-                const int mi_width   = mi_size_wide[bsize];
-                const int mi_height  = mi_size_high[bsize];
-                x->mv_limits.row_min = -(((mi_row + mi_height) * MI_SIZE) + AOM_INTERP_EXTEND);
-                x->mv_limits.col_min = -(((mi_col + mi_width) * MI_SIZE) + AOM_INTERP_EXTEND);
-                x->mv_limits.row_max = (cm->mi_rows - mi_row) * MI_SIZE + AOM_INTERP_EXTEND;
-                x->mv_limits.col_max = (cm->mi_cols - mi_col) * MI_SIZE + AOM_INTERP_EXTEND;
-                //set search paramters
-                x->sadperbit16 = sad_per_bit16lut_8[frm_hdr->quantization_params.base_q_idx];
+    // Set up limit values for MV components.
+    // Mv beyond the range do not produce new/different prediction block.
+    const int mi_width   = mi_size_wide[bsize];
+    const int mi_height  = mi_size_high[bsize];
+    x->mv_limits.row_min = -(((mi_row + mi_height) * MI_SIZE) + AOM_INTERP_EXTEND);
+    x->mv_limits.col_min = -(((mi_col + mi_width) * MI_SIZE) + AOM_INTERP_EXTEND);
+    x->mv_limits.row_max = (cm->mi_rows - mi_row) * MI_SIZE + AOM_INTERP_EXTEND;
+    x->mv_limits.col_max = (cm->mi_cols - mi_col) * MI_SIZE + AOM_INTERP_EXTEND;
+    //set search paramters
+    x->sadperbit16 = sad_per_bit16lut_8[frm_hdr->quantization_params.base_q_idx];
 #if NEW_MD_LAMBDA
-                x->errorperbit = full_lambda >> RD_EPB_SHIFT;
+    x->errorperbit = full_lambda >> RD_EPB_SHIFT;
 #else
     x->errorperbit = context_ptr->full_lambda >> RD_EPB_SHIFT;
 #endif
-                x->errorperbit += (x->errorperbit == 0);
-                //temp buffer for hash me
-                for (int xi = 0; xi < 2; xi++)
-                    for (int yj = 0; yj < 2; yj++)
-                        x->hash_value_buffer[xi][yj] =
-                            (uint32_t *)malloc(AOM_BUFFER_SIZE_FOR_BLOCK_HASH * sizeof(uint32_t));
+    x->errorperbit += (x->errorperbit == 0);
+    //temp buffer for hash me
+    for (int xi = 0; xi < 2; xi++)
+        for (int yj = 0; yj < 2; yj++)
+            x->hash_value_buffer[xi][yj] =
+                (uint32_t *)malloc(AOM_BUFFER_SIZE_FOR_BLOCK_HASH * sizeof(uint32_t));
 
-                IntMv nearestmv, nearmv;
-                eb_av1_find_best_ref_mvs_from_stack(
-                    0,
-                    context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
-                        .ed_ref_mv_stack /*mbmi_ext*/,
-                    xd,
-                    ref_frame,
-                    &nearestmv,
-                    &nearmv,
-                    0);
-                if (nearestmv.as_int == INVALID_MV) nearestmv.as_int = 0;
-                if (nearmv.as_int == INVALID_MV) nearmv.as_int = 0;
-                IntMv dv_ref = nearestmv.as_int == 0 ? nearmv : nearestmv;
-                if (dv_ref.as_int == 0)
-                    av1_find_ref_dv(&dv_ref, tile, scs->seq_header.sb_mi_size, mi_row, mi_col);
-                // Ref DV should not have sub-pel.
-                assert((dv_ref.as_mv.col & 7) == 0);
-                assert((dv_ref.as_mv.row & 7) == 0);
-                context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
-                    .ed_ref_mv_stack[INTRA_FRAME][0]
-                    .this_mv = dv_ref;
+    IntMv nearestmv, nearmv;
+    eb_av1_find_best_ref_mvs_from_stack(
+        0,
+        context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
+            .ed_ref_mv_stack /*mbmi_ext*/,
+        xd,
+        ref_frame,
+        &nearestmv,
+        &nearmv,
+        0);
+    if (nearestmv.as_int == INVALID_MV) nearestmv.as_int = 0;
+    if (nearmv.as_int == INVALID_MV) nearmv.as_int = 0;
+    IntMv dv_ref = nearestmv.as_int == 0 ? nearmv : nearestmv;
+    if (dv_ref.as_int == 0)
+        av1_find_ref_dv(&dv_ref, tile, scs->seq_header.sb_mi_size, mi_row, mi_col);
+    // Ref DV should not have sub-pel.
+    assert((dv_ref.as_mv.col & 7) == 0);
+    assert((dv_ref.as_mv.row & 7) == 0);
+    context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
+        .ed_ref_mv_stack[INTRA_FRAME][0]
+        .this_mv = dv_ref;
 
-                /* pointer to current frame */
-                Yv12BufferConfig cur_buf;
-                link_eb_to_aom_buffer_desc_8bit(pcs->parent_pcs_ptr->enhanced_picture_ptr,
-                                                &cur_buf);
-                struct Buf2D yv12_mb[MAX_MB_PLANE];
-                eb_av1_setup_pred_block(bsize, yv12_mb, &cur_buf, mi_row, mi_col);
-                for (int i = 0; i < num_planes; ++i) x->xdplane[i].pre[0] = yv12_mb[i]; //ref in ME
-                //setup src for DV search same as ref
-                x->plane[0].src = x->xdplane[0].pre[0];
+    /* pointer to current frame */
+    Yv12BufferConfig cur_buf;
+    link_eb_to_aom_buffer_desc_8bit(pcs->parent_pcs_ptr->enhanced_picture_ptr, &cur_buf);
+    struct Buf2D yv12_mb[MAX_MB_PLANE];
+    eb_av1_setup_pred_block(bsize, yv12_mb, &cur_buf, mi_row, mi_col);
+    for (int i = 0; i < num_planes; ++i) x->xdplane[i].pre[0] = yv12_mb[i]; //ref in ME
+    //setup src for DV search same as ref
+    x->plane[0].src = x->xdplane[0].pre[0];
 
-                enum IntrabcMotionDirection {
-                    IBC_MOTION_ABOVE,
-                    IBC_MOTION_LEFT,
-                    IBC_MOTION_DIRECTIONS
-                };
+    enum IntrabcMotionDirection { IBC_MOTION_ABOVE, IBC_MOTION_LEFT, IBC_MOTION_DIRECTIONS };
 
-                //up to two dv candidates will be generated
-                //IBC Modes:   0: OFF 1:Slow   2:Faster   3:Fastest
-                enum IntrabcMotionDirection max_dir =
-                    pcs->parent_pcs_ptr->ibc_mode > 2 ? IBC_MOTION_LEFT : IBC_MOTION_DIRECTIONS;
+    //up to two dv candidates will be generated
+    //IBC Modes:   0: OFF 1:Slow   2:Faster   3:Fastest
+    enum IntrabcMotionDirection max_dir =
+        pcs->parent_pcs_ptr->ibc_mode > 2 ? IBC_MOTION_LEFT : IBC_MOTION_DIRECTIONS;
 
-                for (enum IntrabcMotionDirection dir = IBC_MOTION_ABOVE; dir < max_dir; ++dir) {
-                    const MvLimits tmp_mv_limits = x->mv_limits;
+    for (enum IntrabcMotionDirection dir = IBC_MOTION_ABOVE; dir < max_dir; ++dir) {
+        const MvLimits tmp_mv_limits = x->mv_limits;
 
-                    switch (dir) {
-                    case IBC_MOTION_ABOVE:
-                        x->mv_limits.col_min = (tile->mi_col_start - mi_col) * MI_SIZE;
-                        x->mv_limits.col_max = (tile->mi_col_end - mi_col) * MI_SIZE - w;
-                        x->mv_limits.row_min = (tile->mi_row_start - mi_row) * MI_SIZE;
-                        x->mv_limits.row_max =
-                            (sb_row * scs->seq_header.sb_mi_size - mi_row) * MI_SIZE - h;
-                        break;
-                    case IBC_MOTION_LEFT:
-                        x->mv_limits.col_min = (tile->mi_col_start - mi_col) * MI_SIZE;
-                        x->mv_limits.col_max =
-                            (sb_col * scs->seq_header.sb_mi_size - mi_col) * MI_SIZE - w;
-                        // TODO: Minimize the overlap between above and
-                        // left areas.
-                        x->mv_limits.row_min = (tile->mi_row_start - mi_row) * MI_SIZE;
-                        int bottom_coded_mi_edge =
-                            AOMMIN((sb_row + 1) * scs->seq_header.sb_mi_size, tile->mi_row_end);
-                        x->mv_limits.row_max = (bottom_coded_mi_edge - mi_row) * MI_SIZE - h;
-                        break;
-                    default: assert(0);
-                    }
-                    assert_release(x->mv_limits.col_min >= tmp_mv_limits.col_min);
-                    assert_release(x->mv_limits.col_max <= tmp_mv_limits.col_max);
-                    assert_release(x->mv_limits.row_min >= tmp_mv_limits.row_min);
-                    assert_release(x->mv_limits.row_max <= tmp_mv_limits.row_max);
+        switch (dir) {
+        case IBC_MOTION_ABOVE:
+            x->mv_limits.col_min = (tile->mi_col_start - mi_col) * MI_SIZE;
+            x->mv_limits.col_max = (tile->mi_col_end - mi_col) * MI_SIZE - w;
+            x->mv_limits.row_min = (tile->mi_row_start - mi_row) * MI_SIZE;
+            x->mv_limits.row_max = (sb_row * scs->seq_header.sb_mi_size - mi_row) * MI_SIZE - h;
+            break;
+        case IBC_MOTION_LEFT:
+            x->mv_limits.col_min = (tile->mi_col_start - mi_col) * MI_SIZE;
+            x->mv_limits.col_max = (sb_col * scs->seq_header.sb_mi_size - mi_col) * MI_SIZE - w;
+            // TODO: Minimize the overlap between above and
+            // left areas.
+            x->mv_limits.row_min = (tile->mi_row_start - mi_row) * MI_SIZE;
+            int bottom_coded_mi_edge =
+                AOMMIN((sb_row + 1) * scs->seq_header.sb_mi_size, tile->mi_row_end);
+            x->mv_limits.row_max = (bottom_coded_mi_edge - mi_row) * MI_SIZE - h;
+            break;
+        default: assert(0);
+        }
+        assert_release(x->mv_limits.col_min >= tmp_mv_limits.col_min);
+        assert_release(x->mv_limits.col_max <= tmp_mv_limits.col_max);
+        assert_release(x->mv_limits.row_min >= tmp_mv_limits.row_min);
+        assert_release(x->mv_limits.row_max <= tmp_mv_limits.row_max);
 
-                    eb_av1_set_mv_search_range(&x->mv_limits, &dv_ref.as_mv);
+        eb_av1_set_mv_search_range(&x->mv_limits, &dv_ref.as_mv);
 
-                    if (x->mv_limits.col_max < x->mv_limits.col_min ||
-                        x->mv_limits.row_max < x->mv_limits.row_min) {
-                        x->mv_limits = tmp_mv_limits;
-                        continue;
-                    }
+        if (x->mv_limits.col_max < x->mv_limits.col_min ||
+            x->mv_limits.row_max < x->mv_limits.row_min) {
+            x->mv_limits = tmp_mv_limits;
+            continue;
+        }
 
-                    int step_param = 0;
-                    MV  mvp_full   = dv_ref.as_mv;
-                    mvp_full.col >>= 3;
-                    mvp_full.row >>= 3;
-                    const int sadpb   = x->sadperbit16;
-                    x->best_mv.as_int = 0;
+        int step_param = 0;
+        MV  mvp_full   = dv_ref.as_mv;
+        mvp_full.col >>= 3;
+        mvp_full.row >>= 3;
+        const int sadpb   = x->sadperbit16;
+        x->best_mv.as_int = 0;
 
 #define INT_VAR_MAX 2147483647 // maximum (signed) int value
 
-                    const int bestsme = eb_av1_full_pixel_search(pcs,
-                                                                 x,
-                                                                 bsize,
-                                                                 &mvp_full,
-                                                                 step_param,
-                                                                 1,
-                                                                 0,
-                                                                 sadpb,
-                                                                 NULL,
-                                                                 &dv_ref.as_mv,
-                                                                 INT_VAR_MAX,
-                                                                 1,
-                                                                 (MI_SIZE * mi_col),
-                                                                 (MI_SIZE * mi_row),
-                                                                 1);
+        const int bestsme = eb_av1_full_pixel_search(pcs,
+                                                     x,
+                                                     bsize,
+                                                     &mvp_full,
+                                                     step_param,
+                                                     1,
+                                                     0,
+                                                     sadpb,
+                                                     NULL,
+                                                     &dv_ref.as_mv,
+                                                     INT_VAR_MAX,
+                                                     1,
+                                                     (MI_SIZE * mi_col),
+                                                     (MI_SIZE * mi_row),
+                                                     1);
 
-                    x->mv_limits = tmp_mv_limits;
-                    if (bestsme == INT_VAR_MAX) continue;
-                    mvp_full = x->best_mv.as_mv;
+        x->mv_limits = tmp_mv_limits;
+        if (bestsme == INT_VAR_MAX) continue;
+        mvp_full = x->best_mv.as_mv;
 
-                    const MV dv = {.row = mvp_full.row * 8, .col = mvp_full.col * 8};
-                    if (mv_check_bounds(&x->mv_limits, &dv)) continue;
-                    if (!av1_is_dv_valid(
-                            dv, xd, mi_row, mi_col, bsize, scs->seq_header.sb_size_log2))
-                        continue;
+        const MV dv = {.row = mvp_full.row * 8, .col = mvp_full.col * 8};
+        if (mv_check_bounds(&x->mv_limits, &dv)) continue;
+        if (!av1_is_dv_valid(dv, xd, mi_row, mi_col, bsize, scs->seq_header.sb_size_log2)) continue;
 
-                    // DV should not have sub-pel.
-                    assert_release((dv.col & 7) == 0);
-                    assert_release((dv.row & 7) == 0);
+        // DV should not have sub-pel.
+        assert_release((dv.col & 7) == 0);
+        assert_release((dv.row & 7) == 0);
 
-                    //store output
-                    dv_cand[*num_dv_cand] = dv;
-                    (*num_dv_cand)++;
-                }
+        //store output
+        dv_cand[*num_dv_cand] = dv;
+        (*num_dv_cand)++;
+    }
 
-                for (int i = 0; i < 2; i++)
-                    for (int j = 0; j < 2; j++) free(x->hash_value_buffer[i][j]);
-            }
+    for (int i = 0; i < 2; i++)
+        for (int j = 0; j < 2; j++) free(x->hash_value_buffer[i][j]);
+}
 
-            void inject_intra_bc_candidates(PictureControlSet * pcs_ptr,
-                                            ModeDecisionContext * context_ptr,
-                                            const SequenceControlSet *scs_ptr,
-                                            BlkStruct *               blk_ptr,
-                                            uint32_t *                cand_cnt) {
-                MV      dv_cand[2];
-                uint8_t num_dv_cand = 0;
+void inject_intra_bc_candidates(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
+                                const SequenceControlSet *scs_ptr, BlkStruct *blk_ptr,
+                                uint32_t *cand_cnt) {
+    MV      dv_cand[2];
+    uint8_t num_dv_cand = 0;
 
-                //perform dv-pred + search up to 2 dv(s)
-                intra_bc_search(pcs_ptr, context_ptr, scs_ptr, blk_ptr, dv_cand, &num_dv_cand);
+    //perform dv-pred + search up to 2 dv(s)
+    intra_bc_search(pcs_ptr, context_ptr, scs_ptr, blk_ptr, dv_cand, &num_dv_cand);
 
-                ModeDecisionCandidate *cand_array = context_ptr->fast_candidate_array;
-                uint32_t               dv_i;
+    ModeDecisionCandidate *cand_array = context_ptr->fast_candidate_array;
+    uint32_t               dv_i;
 
-                for (dv_i = 0; dv_i < num_dv_cand; dv_i++) {
-                    cand_array[*cand_cnt].palette_info.pmi.palette_size[0] = 0;
-                    cand_array[*cand_cnt].palette_info.pmi.palette_size[1] = 0;
-                    cand_array[*cand_cnt].type                             = INTRA_MODE;
-                    cand_array[*cand_cnt].intra_luma_mode                  = DC_PRED;
-                    cand_array[*cand_cnt].distortion_ready                 = 0;
-                    cand_array[*cand_cnt].use_intrabc                      = 1;
-                    cand_array[*cand_cnt].is_directional_mode_flag         = 0;
-                    cand_array[*cand_cnt].angle_delta[PLANE_TYPE_Y]        = 0;
-                    cand_array[*cand_cnt].intra_chroma_mode                = UV_DC_PRED;
-                    cand_array[*cand_cnt].cfl_alpha_signs                  = 0;
-                    cand_array[*cand_cnt].cfl_alpha_idx                    = 0;
-                    cand_array[*cand_cnt].is_directional_chroma_mode_flag  = 0;
-                    cand_array[*cand_cnt].angle_delta[PLANE_TYPE_UV]       = 0;
-                    cand_array[*cand_cnt].transform_type[0]                = DCT_DCT;
-                    cand_array[*cand_cnt].transform_type_uv                = DCT_DCT;
-                    cand_array[*cand_cnt].ref_frame_type                   = INTRA_FRAME;
-                    cand_array[*cand_cnt].pred_mode                        = DC_PRED;
-                    cand_array[*cand_cnt].motion_mode                      = SIMPLE_TRANSLATION;
-                    //inter ralated
-                    cand_array[*cand_cnt].is_compound             = 0;
-                    cand_array[*cand_cnt].is_interintra_used      = 0;
-                    cand_array[*cand_cnt].merge_flag              = EB_FALSE;
-                    cand_array[*cand_cnt].prediction_direction[0] = UNI_PRED_LIST_0;
-                    cand_array[*cand_cnt].is_new_mv               = 0;
-                    cand_array[*cand_cnt].is_zero_mv              = 0;
-                    cand_array[*cand_cnt].motion_vector_xl0       = dv_cand[dv_i].col;
-                    cand_array[*cand_cnt].motion_vector_yl0       = dv_cand[dv_i].row;
-                    cand_array[*cand_cnt].motion_vector_pred_x[REF_LIST_0] =
-                        context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
-                            .ed_ref_mv_stack[INTRA_FRAME][0]
-                            .this_mv.as_mv.col;
-                    cand_array[*cand_cnt].motion_vector_pred_y[REF_LIST_0] =
-                        context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
-                            .ed_ref_mv_stack[INTRA_FRAME][0]
-                            .this_mv.as_mv.row;
-                    cand_array[*cand_cnt].drl_index         = 0;
-                    cand_array[*cand_cnt].ref_mv_index      = 0;
-                    cand_array[*cand_cnt].pred_mv_weight    = 0;
-                    cand_array[*cand_cnt].interp_filters    = av1_broadcast_interp_filter(BILINEAR);
-                    cand_array[*cand_cnt].filter_intra_mode = FILTER_INTRA_MODES;
-                    INCRMENT_CAND_TOTAL_COUNT((*cand_cnt));
-                }
-            }
-            // Indices are sign, integer, and fractional part of the gradient value
-            static const uint8_t gradient_to_angle_bin[2][7][16] = {
-                {
-                    {6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1},
-                    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-                    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-                    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-                    {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
-                    {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
-                },
-                {
-                    {6, 6, 6, 6, 5, 5, 5, 5, 5, 5, 5, 5, 4, 4, 4, 4},
-                    {4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3},
-                    {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3},
-                    {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3},
-                    {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3},
-                    {3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2},
-                    {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
-                },
-            };
+    for (dv_i = 0; dv_i < num_dv_cand; dv_i++) {
+        cand_array[*cand_cnt].palette_info.pmi.palette_size[0] = 0;
+        cand_array[*cand_cnt].palette_info.pmi.palette_size[1] = 0;
+        cand_array[*cand_cnt].type                             = INTRA_MODE;
+        cand_array[*cand_cnt].intra_luma_mode                  = DC_PRED;
+        cand_array[*cand_cnt].distortion_ready                 = 0;
+        cand_array[*cand_cnt].use_intrabc                      = 1;
+        cand_array[*cand_cnt].is_directional_mode_flag         = 0;
+        cand_array[*cand_cnt].angle_delta[PLANE_TYPE_Y]        = 0;
+        cand_array[*cand_cnt].intra_chroma_mode                = UV_DC_PRED;
+        cand_array[*cand_cnt].cfl_alpha_signs                  = 0;
+        cand_array[*cand_cnt].cfl_alpha_idx                    = 0;
+        cand_array[*cand_cnt].is_directional_chroma_mode_flag  = 0;
+        cand_array[*cand_cnt].angle_delta[PLANE_TYPE_UV]       = 0;
+        cand_array[*cand_cnt].transform_type[0]                = DCT_DCT;
+        cand_array[*cand_cnt].transform_type_uv                = DCT_DCT;
+        cand_array[*cand_cnt].ref_frame_type                   = INTRA_FRAME;
+        cand_array[*cand_cnt].pred_mode                        = DC_PRED;
+        cand_array[*cand_cnt].motion_mode                      = SIMPLE_TRANSLATION;
+        //inter ralated
+        cand_array[*cand_cnt].is_compound             = 0;
+        cand_array[*cand_cnt].is_interintra_used      = 0;
+        cand_array[*cand_cnt].merge_flag              = EB_FALSE;
+        cand_array[*cand_cnt].prediction_direction[0] = UNI_PRED_LIST_0;
+        cand_array[*cand_cnt].is_new_mv               = 0;
+        cand_array[*cand_cnt].is_zero_mv              = 0;
+        cand_array[*cand_cnt].motion_vector_xl0       = dv_cand[dv_i].col;
+        cand_array[*cand_cnt].motion_vector_yl0       = dv_cand[dv_i].row;
+        cand_array[*cand_cnt].motion_vector_pred_x[REF_LIST_0] =
+            context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
+                .ed_ref_mv_stack[INTRA_FRAME][0]
+                .this_mv.as_mv.col;
+        cand_array[*cand_cnt].motion_vector_pred_y[REF_LIST_0] =
+            context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
+                .ed_ref_mv_stack[INTRA_FRAME][0]
+                .this_mv.as_mv.row;
+        cand_array[*cand_cnt].drl_index         = 0;
+        cand_array[*cand_cnt].ref_mv_index      = 0;
+        cand_array[*cand_cnt].pred_mv_weight    = 0;
+        cand_array[*cand_cnt].interp_filters    = av1_broadcast_interp_filter(BILINEAR);
+        cand_array[*cand_cnt].filter_intra_mode = FILTER_INTRA_MODES;
+        INCRMENT_CAND_TOTAL_COUNT((*cand_cnt));
+    }
+}
+// Indices are sign, integer, and fractional part of the gradient value
+static const uint8_t gradient_to_angle_bin[2][7][16] = {
+    {
+        {6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
+        {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
+    },
+    {
+        {6, 6, 6, 6, 5, 5, 5, 5, 5, 5, 5, 5, 4, 4, 4, 4},
+        {4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3},
+        {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3},
+        {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3},
+        {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3},
+        {3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2},
+        {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
+    },
+};
 
-            /* clang-format off */
+/* clang-format off */
 static const uint8_t mode_to_angle_bin[INTRA_MODES] = {
   0, 2, 6, 0, 4, 3, 5, 7, 1, 0,
   0,
@@ -5597,9 +5572,13 @@ void  inject_intra_candidates(
     (void)sb_ptr;
     FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
     uint8_t                     intra_mode_start = DC_PRED;
+#if ONLY_DC_LUMA
+    uint8_t                     intra_mode_end = DC_PRED;
+#else
     uint8_t                     intra_mode_end = dc_cand_only_flag ? DC_PRED :
                                                  context_ptr->md_enable_paeth ? PAETH_PRED :
                                                  context_ptr->md_enable_smooth ? SMOOTH_H_PRED : D67_PRED;
+#endif
     uint8_t                     open_loop_intra_candidate;
     uint32_t                    cand_total_cnt = 0;
     uint8_t                     angle_delta_counter = 0;
@@ -5684,6 +5663,9 @@ void  inject_intra_candidates(
 #if SHUT_ANGULAR_INTRA
     angle_delta_candidate_count = 0;
     disable_angle_refinement = 1;
+#endif
+#if ONLY_DC_LUMA
+    intra_mode_end = DC_PRED;
 #endif
     for (open_loop_intra_candidate = intra_mode_start; open_loop_intra_candidate <= intra_mode_end ; ++open_loop_intra_candidate) {
         if (av1_is_directional_mode((PredictionMode)open_loop_intra_candidate)) {
@@ -6106,7 +6088,16 @@ EbErrorType generate_md_stage_0_cand(
         assert(context_ptr->fast_candidate_array[i].palette_info.pmi.palette_size[0] < 9);
         assert(context_ptr->fast_candidate_array[i].palette_info.pmi.palette_size[1] == 0);
     }
-
+#if ZZ_TEST
+    inject_new_candidates(scs_ptr,
+                          context_ptr,
+                          pcs_ptr,
+                          0,
+                          0,
+                          context_ptr->me_sb_addr,
+                          context_ptr->me_block_offset,
+                          &cand_total_cnt);
+#else
 #if INTRA_SIMILAR
     if (slice_type != I_SLICE && context_ptr->inject_inter_candidates) {
 #else
@@ -6120,7 +6111,7 @@ EbErrorType generate_md_stage_0_cand(
                 coeff_based_nsq_cand_reduction,
                 &cand_total_cnt);
     }
-
+#endif
     *candidate_total_count_ptr = cand_total_cnt;
     CandClass  cand_class_it;
     memset(context_ptr->md_stage_0_count, 0, CAND_CLASS_TOTAL * sizeof(uint32_t));
