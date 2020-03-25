@@ -738,6 +738,8 @@ void md_update_all_neighbour_arrays(PictureControlSet *pcs_ptr, ModeDecisionCont
     context_ptr->round_origin_y = ((context_ptr->blk_origin_y >> 3) << 3);
 
     context_ptr->blk_ptr   = &context_ptr->md_blk_arr_nsq[last_blk_index_mds];
+    if(context_ptr->blk_ptr->block_is_skipped)
+        return;
     uint8_t avail_blk_flag = context_ptr->md_local_blk_unit[last_blk_index_mds].avail_blk_flag;
 
     mode_decision_update_neighbor_arrays(pcs_ptr, context_ptr, last_blk_index_mds, EB_FALSE);
@@ -8052,6 +8054,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 
         const BlockGeom *blk_geom = context_ptr->blk_geom = get_blk_geom_mds(blk_idx_mds);
         BlkStruct *      blk_ptr = context_ptr->blk_ptr = &context_ptr->md_blk_arr_nsq[blk_idx_mds];
+        blk_ptr->block_is_skipped = true;
 
         context_ptr->cu_size_log2 = blk_geom->bwidth_log2;
         context_ptr->blk_origin_x = sb_origin_x + blk_geom->origin_x;
@@ -8162,6 +8165,8 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                 context_ptr->parent_sq_has_coeff[sq_index] = src_cu->block_has_coeff;
                 context_ptr->parent_sq_pred_mode[sq_index] = src_cu->pred_mode;
             }
+            blk_ptr->block_is_skipped = false;
+
         } else {
             // Initialize tx_depth
             blk_ptr->tx_depth = 0;
@@ -8231,7 +8236,11 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
             if (pcs_ptr->parent_pcs_ptr->sb_geom[sb_addr].block_is_allowed[blk_ptr->mds_idx] &&
                 !skip_next_nsq && !skip_next_sq && !auto_max_partition_block_skip) {
 #endif
-                md_encode_block(pcs_ptr, context_ptr, input_picture_ptr, bestcandidate_buffers);
+                md_encode_block(pcs_ptr,
+                                context_ptr,
+                                input_picture_ptr,
+                                bestcandidate_buffers);
+                blk_ptr->block_is_skipped = false;
             }
 #if ENHANCED_SQ_WEIGHT
             else if (sq_weight_based_nsq_skip) {

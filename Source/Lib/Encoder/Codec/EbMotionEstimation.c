@@ -5030,7 +5030,7 @@ static void pu_half_pel_refinement(
         }
 
         // b position
-        search_region_index += (int16_t)context_ptr->interpolated_stride;
+        search_region_index += (int32_t)context_ptr->interpolated_stride;
         distortion_bottom_pos =
             (context_ptr->fractional_search_method == SSD_SEARCH)
                 ? spatial_full_distortion_kernel(context_ptr->sb_src_ptr,
@@ -5167,7 +5167,7 @@ static void pu_half_pel_refinement(
         }
 
         // BR position
-        search_region_index += (int16_t)context_ptr->interpolated_stride;
+        search_region_index += (int32_t)context_ptr->interpolated_stride;
         distortion_bottom_right_pos =
             (context_ptr->fractional_search_method == SSD_SEARCH)
                 ? spatial_full_distortion_kernel(context_ptr->sb_src_ptr,
@@ -10827,7 +10827,7 @@ EbErrorType motion_estimate_sb(
 #endif
             // R2R FIX: no winner integer MV is set in special case like initial p_sb_best_mv for overlay case,
             // then it sends dirty p_sb_best_mv to MD, initializing it is necessary
-            for (uint32_t pi = 0; pi < MAX_ME_PU_COUNT; pi++)
+            for(uint32_t pi = 0; pi < MAX_ME_PU_COUNT; pi++)
                 context_ptr->p_sb_best_mv[li][ri][pi] = 0;
         }
     }
@@ -11713,11 +11713,11 @@ EbErrorType motion_estimate_sb(
                                          ->interpolated_full_stride[list_index][ref_pic_index]),
                                 context_ptr->interpolated_full_stride[list_index][ref_pic_index],
 #if MUS_ME_FP
-                                (uint32_t)context_ptr->sa_width[list_index][ref_pic_index] + (BLOCK_SIZE_64 - 1),
-                                (uint32_t)context_ptr->sa_height[list_index][ref_pic_index] + (BLOCK_SIZE_64 - 1),
+                                MAX(1, (uint32_t)context_ptr->sa_width[list_index][ref_pic_index]) + (BLOCK_SIZE_64 - 1),
+                                MAX(1, (uint32_t)context_ptr->sa_height[list_index][ref_pic_index]) + (BLOCK_SIZE_64 - 1),
 #else
-                                (uint32_t)search_area_width + (BLOCK_SIZE_64 - 1),
-                                (uint32_t)search_area_height + (BLOCK_SIZE_64 - 1),
+                                MAX(1, (uint32_t)search_area_width) + (BLOCK_SIZE_64 - 1),
+                                MAX(1, (uint32_t)search_area_height) + (BLOCK_SIZE_64 - 1),
 #endif
                                 8);
 
@@ -11909,11 +11909,11 @@ EbErrorType motion_estimate_sb(
                                  context_ptr->interpolated_full_stride[list_index][ref_pic_index]),
                             context_ptr->interpolated_full_stride[list_index][ref_pic_index],
 #if MUS_ME_FP
-                            (uint32_t)context_ptr->sa_width[list_index][ref_pic_index] + (BLOCK_SIZE_64 - 1),
-                            (uint32_t)context_ptr->sa_height[list_index][ref_pic_index] + (BLOCK_SIZE_64 - 1),
+                            MAX(1, (uint32_t)context_ptr->sa_width[list_index][ref_pic_index]) + (BLOCK_SIZE_64 - 1),
+                            MAX(1, (uint32_t)context_ptr->sa_height[list_index][ref_pic_index]) + (BLOCK_SIZE_64 - 1),
 #else
-                            (uint32_t)search_area_width + (BLOCK_SIZE_64 - 1),
-                            (uint32_t)search_area_height + (BLOCK_SIZE_64 - 1),
+                            MAX(1, (uint32_t)search_area_width) + (BLOCK_SIZE_64 - 1),
+                            MAX(1, (uint32_t)search_area_height) + (BLOCK_SIZE_64 - 1),
 #endif
                             8);
 
