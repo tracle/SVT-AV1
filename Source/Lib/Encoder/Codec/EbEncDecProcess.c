@@ -1443,7 +1443,8 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
     // Level                Settings
     // 0                    post first md_stage
     // 1                    post last md_stage
-    context_ptr->chroma_at_last_md_stage = (context_ptr->chroma_level == CHROMA_MODE_0) /*&& (pcs_ptr->enc_mode == ENC_M1)*/ ? 1 : 0;
+    context_ptr->chroma_at_last_md_stage =
+        (context_ptr->chroma_level == CHROMA_MODE_0) /*&& (pcs_ptr->enc_mode == ENC_M1)*/ ? 1 : 0;
 #endif
     // Set the full loop escape level
     // Level                Settings
@@ -1463,7 +1464,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
         context_ptr->full_loop_escape = 0;
     else
         context_ptr->full_loop_escape = 2;
-
+#if DISABLE_FL_ESCAPE
+    context_ptr->full_loop_escape = 0;
+#endif
         // Set global MV injection
         // Level                Settings
         // 0                    Injection off (Hsan: but not derivation as used by MV ref derivation)
@@ -1502,7 +1505,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
         context_ptr->new_nearest_injection = 0;
     else
         context_ptr->new_nearest_injection = 1;
-
+#if DISABLE_NEW_NEAREST_INJECTION
+    context_ptr->new_nearest_injection = 0;
+#endif
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->new_nearest_near_comb_injection = 0;
     else if (context_ptr->pd_pass == PD_PASS_1)
@@ -1539,13 +1544,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
     else
         context_ptr->nx4_4xn_parent_mv_injection = scs_ptr->static_config.nx4_4xn_parent_mv_inject;
 #endif
-    // Set warped motion injection
-    // Level                Settings
-    // 0                    OFF
-    // 1                    On
+        // Set warped motion injection
+        // Level                Settings
+        // 0                    OFF
+        // 1                    On
 #if WARP_IMPROVEMENT
     FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
-    if(frm_hdr->allow_warped_motion)
+    if (frm_hdr->allow_warped_motion)
         if (context_ptr->pd_pass == PD_PASS_0)
             context_ptr->warped_motion_injection = 0;
         else if (context_ptr->pd_pass == PD_PASS_1)
@@ -1563,6 +1568,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
         context_ptr->warped_motion_injection = 0;
     else
         context_ptr->warped_motion_injection = 1;
+#endif
+#if DISABLE_WARPED_MOTION
+    context_ptr->warped_motion_injection = 0;
 #endif
     // Set unipred3x3 injection
     // Level                Settings
@@ -1722,7 +1730,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
         context_ptr->combine_class12 = (pcs_ptr->enc_mode <= ENC_M4) ? 0 : 1;
     else
         context_ptr->combine_class12 = scs_ptr->static_config.combine_class_12;
-
+#if DISABLE_MD_CLASS
+    context_ptr->combine_class12 = 0;
+#endif
     // Set interpolation filter search blk size
     // Level                Settings
     // 0                    ON for 8x8 and above
@@ -1819,6 +1829,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
             context_ptr->edge_based_skip_angle_intra = scs_ptr->static_config.edge_skp_angle_intra;
     else
         context_ptr->edge_based_skip_angle_intra = 0;
+#if DISABLE_EDGE_SKIP_ANGLE_INTRA
+    context_ptr->edge_based_skip_angle_intra = 0;
+#endif
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->prune_ref_frame_for_rec_partitions = 0;
     else if (context_ptr->pd_pass == PD_PASS_1)
@@ -1830,7 +1843,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
             context_ptr->prune_ref_frame_for_rec_partitions = 1;
     else
         context_ptr->prune_ref_frame_for_rec_partitions = scs_ptr->static_config.prune_ref_rec_part;
-
+#if DISABLE_PRUNE_REF
+    context_ptr->prune_ref_frame_for_rec_partitions = 0;
+#endif
     // Derive INTER/INTER WEDGE variance TH
     // Phoenix: Active only when inter/inter compound is on
     if (pcs_ptr->enc_mode <= ENC_M7)
@@ -1906,7 +1921,8 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
     else if (MR_MODE)
         context_ptr->md_stage_2_3_class_prune_th = (uint64_t)~0;
     else if (pcs_ptr->enc_mode <= ENC_M4)
-        context_ptr->md_stage_2_3_class_prune_th = scs_ptr->static_config.md_stage_2_3_class_prune_th;
+        context_ptr->md_stage_2_3_class_prune_th =
+            scs_ptr->static_config.md_stage_2_3_class_prune_th;
     else // to be tested for m5-m8
         context_ptr->md_stage_2_3_class_prune_th = (uint64_t)~0;
 
@@ -1934,7 +1950,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
         context_ptr->sq_weight = scs_ptr->static_config.sq_weight;
 #endif
 
-#if NSQ_HV
+#if NSQ_HV 
     // nsq_hv_level  needs sq_weight to be ON
     // 0: OFF
     // 1: ON
@@ -1946,11 +1962,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
     else if (pcs_ptr->enc_mode <= ENC_M3) {
         context_ptr->nsq_hv_level = 1;
         assert(context_ptr->sq_weight != (uint32_t)~0);
-    }
-    else {
+    } else {
         context_ptr->nsq_hv_level = 2;
         assert(context_ptr->sq_weight != (uint32_t)~0);
     }
+#endif
+
+#if DISABLE_NSQ_HV
+    context_ptr->nsq_hv_level = 0;
 #endif
     // Set pred ME full search area
     if (context_ptr->pd_pass == PD_PASS_0) {
@@ -1994,14 +2013,18 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
             context_ptr->compound_types_to_try = MD_COMP_AVG;
     }
 #endif
-
-#if  INTRA_SIMILAR
+#if DISABLE_COMP_SIM
+    context_ptr->comp_similar_mode = 0;
+#endif
+#if INTRA_SIMILAR
     //intra_similar_mode
     //0: OFF
     //1: If previous similar block is intra, do not inject any inter
     context_ptr->intra_similar_mode = 1;
 #endif
-
+#if DISABLE_INTRA_SIMILAR
+    context_ptr->intra_similar_mode = 0;
+#endif
     // Set coeff_based_nsq_cand_reduction
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
@@ -2009,7 +2032,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
         context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
     else
         context_ptr->coeff_based_nsq_cand_reduction = EB_TRUE;
-
+#if DISABLE_COEFF_BASED_NSQ
+    context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
+#endif
     // Set pic_obmc_mode @ MD
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->md_pic_obmc_mode = 0;
@@ -2021,7 +2046,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
     context_ptr->md_pic_obmc_mode = 0;
 #endif
     // Set enable_inter_intra @ MD
-#if  CLEANUP_INTER_INTRA
+#if CLEANUP_INTER_INTRA
     //Block level switch, has to follow the picture level
 #endif
     if (context_ptr->pd_pass == PD_PASS_0)
@@ -2049,9 +2074,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->md_enable_paeth = 1;
     else if (pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.enable_paeth == DEFAULT)
-            context_ptr->md_enable_paeth = 1;
+        context_ptr->md_enable_paeth = 1;
     else
-        context_ptr->md_enable_paeth = (uint8_t)pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.enable_paeth;
+        context_ptr->md_enable_paeth =
+            (uint8_t)pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.enable_paeth;
 
     // Set enable_smooth @ MD
     if (context_ptr->pd_pass == PD_PASS_0)
@@ -2059,9 +2085,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->md_enable_smooth = 1;
     else if (pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.enable_smooth == DEFAULT)
-            context_ptr->md_enable_smooth = 1;
+        context_ptr->md_enable_smooth = 1;
     else
-        context_ptr->md_enable_smooth = (uint8_t)pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.enable_smooth;
+        context_ptr->md_enable_smooth =
+            (uint8_t)pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.enable_smooth;
 
     // Set md_atb_mode @ MD
     if (context_ptr->pd_pass == PD_PASS_0)
@@ -2136,7 +2163,8 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->perform_me_mv_1_8_pel_ref = EB_FALSE;
     else
-        context_ptr->perform_me_mv_1_8_pel_ref = (pcs_ptr->parent_pcs_ptr->frm_hdr.allow_high_precision_mv);
+        context_ptr->perform_me_mv_1_8_pel_ref =
+            (pcs_ptr->parent_pcs_ptr->frm_hdr.allow_high_precision_mv);
 #endif
 #if NICS_CLEANUP
     // Set nic_level for PD2 only
@@ -2150,13 +2178,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
             context_ptr->nic_level = 1;
         else
             context_ptr->nic_level = 2;
+    else if (pcs_ptr->enc_mode <= ENC_M0)
+        context_ptr->nic_level = 1;
+    else if (pcs_ptr->enc_mode <= ENC_M1)
+        context_ptr->nic_level = 2;
     else
-        if (pcs_ptr->enc_mode <= ENC_M0)
-            context_ptr->nic_level = 1;
-        else if (pcs_ptr->enc_mode <= ENC_M1)
-            context_ptr->nic_level = 2;
-        else
-            context_ptr->nic_level = 3;
+        context_ptr->nic_level = 3;
 #endif
     return return_error;
 }
@@ -2279,7 +2306,8 @@ static void build_cand_block_array(SequenceControlSet *scs_ptr, PictureControlSe
         uint8_t is_blk_allowed =
             pcs_ptr->slice_type != I_SLICE ? 1 : (blk_geom->sq_size < 128) ? 1 : 0;
         //init consider block flag
-        if (pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_inside_md_scan[blk_index] && is_blk_allowed) {
+        if (pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_inside_md_scan[blk_index] &&
+            is_blk_allowed) {
             tot_d1_blocks = blk_geom->sq_size == 128
                                 ? 17
                                 : blk_geom->sq_size > 8 ? 25 : blk_geom->sq_size == 8 ? 5 : 1;
@@ -2477,7 +2505,8 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
         // derive split_flag
         split_flag = context_ptr->md_blk_arr_nsq[blk_index].split_flag;
 
-        if (pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_inside_md_scan[blk_index] && is_blk_allowed) {
+        if (pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_inside_md_scan[blk_index] &&
+            is_blk_allowed) {
             if (blk_geom->shape == PART_N) {
                 if (context_ptr->md_blk_arr_nsq[blk_index].split_flag == EB_FALSE) {
                     int8_t s_depth = 0;
@@ -2784,7 +2813,7 @@ void *enc_dec_kernel(void *input_ptr) {
         context_ptr->coded_sb_count   = 0;
         segments_ptr = pcs_ptr->enc_dec_segment_ctrl[context_ptr->tile_group_index];
 #else
-        segments_ptr                     = pcs_ptr->enc_dec_segment_ctrl;
+        segments_ptr = pcs_ptr->enc_dec_segment_ctrl;
 #endif
         last_sb_flag = EB_FALSE;
         is_16bit     = (EbBool)(scs_ptr->static_config.encoder_bit_depth > EB_8BIT);
@@ -2889,11 +2918,12 @@ void *enc_dec_kernel(void *input_ptr) {
                                              ? sb_row_index_count + 1
                                              : sb_row_index_count;
 #else
-                    sb_index        = (uint16_t)(y_sb_index * pic_width_in_sb + x_sb_index);
-                    sb_ptr          = pcs_ptr->sb_ptr_array[sb_index];
-                    sb_origin_x     = x_sb_index << sb_size_log2;
-                    sb_origin_y     = y_sb_index << sb_size_log2;
-                    last_sb_flag    = (sb_index == pcs_ptr->sb_total_count_pix - 1) ? EB_TRUE : EB_FALSE;
+                    sb_index    = (uint16_t)(y_sb_index * pic_width_in_sb + x_sb_index);
+                    sb_ptr      = pcs_ptr->sb_ptr_array[sb_index];
+                    sb_origin_x = x_sb_index << sb_size_log2;
+                    sb_origin_y = y_sb_index << sb_size_log2;
+                    last_sb_flag =
+                        (sb_index == pcs_ptr->sb_total_count_pix - 1) ? EB_TRUE : EB_FALSE;
                     end_of_row_flag = (x_sb_index == pic_width_in_sb - 1) ? EB_TRUE : EB_FALSE;
                     sb_row_index_start =
                         (x_sb_index == pic_width_in_sb - 1 && sb_row_index_count == 0)
@@ -2909,34 +2939,41 @@ void *enc_dec_kernel(void *input_ptr) {
                     if (pcs_ptr->update_cdf) {
                         pcs_ptr->rate_est_array[sb_index] = *pcs_ptr->md_rate_estimation_array;
 #if MD_RATE_EST_ENH
-                        if (scs_ptr->enc_dec_segment_row_count_array[pcs_ptr->temporal_layer_index] == 1 &&
-                            scs_ptr->enc_dec_segment_col_count_array[pcs_ptr->temporal_layer_index] == 1) {
+                        if (scs_ptr->enc_dec_segment_row_count_array[pcs_ptr
+                                                                         ->temporal_layer_index] ==
+                                1 &&
+                            scs_ptr->enc_dec_segment_col_count_array[pcs_ptr
+                                                                         ->temporal_layer_index] ==
+                                1) {
                             if (sb_index == 0)
-                                pcs_ptr->ec_ctx_array[sb_index] = *pcs_ptr->coeff_est_entropy_coder_ptr->fc;
+                                pcs_ptr->ec_ctx_array[sb_index] =
+                                    *pcs_ptr->coeff_est_entropy_coder_ptr->fc;
                             else
-                                pcs_ptr->ec_ctx_array[sb_index] = pcs_ptr->ec_ctx_array[sb_index - 1];
-                        }
-                        else {
+                                pcs_ptr->ec_ctx_array[sb_index] =
+                                    pcs_ptr->ec_ctx_array[sb_index - 1];
+                        } else {
                             // Use the latest available CDF for the current SB
                             // Use the weighted average of left (3x) and top (1x) if available.
-                            int8_t up_available = ((int32_t)(sb_origin_y >> MI_SIZE_LOG2) >
-                                sb_ptr->tile_info.mi_row_start);
+                            int8_t up_available   = ((int32_t)(sb_origin_y >> MI_SIZE_LOG2) >
+                                                   sb_ptr->tile_info.mi_row_start);
                             int8_t left_available = ((int32_t)(sb_origin_x >> MI_SIZE_LOG2) >
-                                sb_ptr->tile_info.mi_col_start);
+                                                     sb_ptr->tile_info.mi_col_start);
                             if (!left_available && !up_available)
                                 pcs_ptr->ec_ctx_array[sb_index] =
-                                *pcs_ptr->coeff_est_entropy_coder_ptr->fc;
+                                    *pcs_ptr->coeff_est_entropy_coder_ptr->fc;
                             else if (!left_available)
                                 pcs_ptr->ec_ctx_array[sb_index] =
-                                pcs_ptr->ec_ctx_array[sb_index - pic_width_in_sb];
+                                    pcs_ptr->ec_ctx_array[sb_index - pic_width_in_sb];
                             else if (!up_available)
-                                pcs_ptr->ec_ctx_array[sb_index] = pcs_ptr->ec_ctx_array[sb_index - 1];
+                                pcs_ptr->ec_ctx_array[sb_index] =
+                                    pcs_ptr->ec_ctx_array[sb_index - 1];
                             else {
-                                pcs_ptr->ec_ctx_array[sb_index] = pcs_ptr->ec_ctx_array[sb_index - 1];
+                                pcs_ptr->ec_ctx_array[sb_index] =
+                                    pcs_ptr->ec_ctx_array[sb_index - 1];
                                 avg_cdf_symbols(&pcs_ptr->ec_ctx_array[sb_index],
-                                    &pcs_ptr->ec_ctx_array[sb_index - pic_width_in_sb],
-                                    AVG_CDF_WEIGHT_LEFT,
-                                    AVG_CDF_WEIGHT_TOP);
+                                                &pcs_ptr->ec_ctx_array[sb_index - pic_width_in_sb],
+                                                AVG_CDF_WEIGHT_LEFT,
+                                                AVG_CDF_WEIGHT_TOP);
                             }
                         }
 #else
@@ -3183,7 +3220,8 @@ void *enc_dec_kernel(void *input_ptr) {
             //CHKN these are not needed for DLF
             enc_dec_results_ptr->completed_sb_row_index_start = 0;
             enc_dec_results_ptr->completed_sb_row_count =
-                ((pcs_ptr->parent_pcs_ptr->aligned_height + scs_ptr->sb_size_pix - 1) >> sb_size_log2);
+                ((pcs_ptr->parent_pcs_ptr->aligned_height + scs_ptr->sb_size_pix - 1) >>
+                 sb_size_log2);
             // Post EncDec Results
             eb_post_full_object(enc_dec_results_wrapper_ptr);
         }

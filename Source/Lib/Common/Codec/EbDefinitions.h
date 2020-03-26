@@ -68,60 +68,73 @@ extern "C" {
 // Precision features
 #define TX_TYPE_OFF 1
 #define ATB_OFF 1 //already off m8
-#define SHUT_RDOQ 1//already off m8
+#define SHUT_RDOQ 1 //already off m8
 #define SHUT_QUANT_FP 1 //already off m8
 
 #define ONLY_FAST_LOOP 1
 #define ONLY_MD_STAGE_0_1 0
 #define ZZ_TEST 1
+#define DISABLE_FL_ESCAPE 1
+#define DISABLE_NEW_NEAREST_INJECTION 1
+#define DISABLE_WARPED_MOTION 1
+#define DISABLE_MD_CLASS 1
+#define DISABLE_EDGE_SKIP_ANGLE_INTRA 1
+#define DISABLE_PRUNE_REF       1
+#define DISABLE_NSQ_HV  1
+#define DISABLE_COMP_SIM    1
+#define DISABLE_INTRA_SIMILAR   1
+#define DISABLE_COEFF_BASED_NSQ 1
 #endif
-#define QPS_CHANGE_II            1 // Change the QP assignment for I
-#define NSQ_HV                      1 // skip NSQ partitions based on H vs V costs
-#define OMARK_LAMBDA                1 // 2. fix lambda calculation for HBD0
-#define OMARK_HBD1_CDEF             1 // 3. fix CDEF lambda for hbd1/2
-#define OMARK_HBD0_ED               1 // 4. fix ED lambda for hbd0
-#define OMARK_HBD0_IFS              1 // 5. fix IFS lambda for hbd0
-#define OMARK_HBD0_MD               1 // 5. fix MD lambda for hbd0
-#define OMARK_HBD0_RDOQ             1 // 6. fix RDOQ lambda for hbd0
-#define RDQO_ON_HBD0                1 // 6. turn ON RDOQ for hbd0
-#define PICT_SWITCH                 1  // Fix picture switching
-#define QUANT_CLEANUP               1
-#define QUANT_HBD0_FIX              1
-#define NEW_MD_LAMBDA               1
-#define CLEANUP_INTER_INTRA  1  //shutting inter intra could be done via 2 ways.at the seq level(in ress coord), or at the pic level (in pic decision)
-#define MRP_CTRL             1  //add control to inject smaller number of references.
-
+#define QPS_CHANGE_II 1 // Change the QP assignment for I
+#define NSQ_HV 1 // skip NSQ partitions based on H vs V costs
+#define OMARK_LAMBDA 1 // 2. fix lambda calculation for HBD0
+#define OMARK_HBD1_CDEF 1 // 3. fix CDEF lambda for hbd1/2
+#define OMARK_HBD0_ED 1 // 4. fix ED lambda for hbd0
+#define OMARK_HBD0_IFS 1 // 5. fix IFS lambda for hbd0
+#define OMARK_HBD0_MD 1 // 5. fix MD lambda for hbd0
+#define OMARK_HBD0_RDOQ 1 // 6. fix RDOQ lambda for hbd0
+#define RDQO_ON_HBD0 1 // 6. turn ON RDOQ for hbd0
+#define PICT_SWITCH 1 // Fix picture switching
+#define QUANT_CLEANUP 1
+#define QUANT_HBD0_FIX 1
+#define NEW_MD_LAMBDA 1
+#define CLEANUP_INTER_INTRA \
+    1 //shutting inter intra could be done via 2 ways.at the seq level(in ress coord), or at the pic level (in pic decision)
+#define MRP_CTRL 1 //add control to inject smaller number of references.
 
 // Added plane wise TF
 // Tuned TF settings
 // Added the ability to use 32x32 MVs, and the ability to switch between using 16x16 MVs or 32x32 MVs
 // Optimized packing @ TF
-#define ENHANCED_TF              1
-#define DISABLE_QPSM_1PASS       1 // Disable 1 pass QPS and QPM
-#define CHROMA_SEARCH_OPT        1 // Move chroma search to be done on the best intra candidate survived from MD stage 2
+#define ENHANCED_TF 1
+#define DISABLE_QPSM_1PASS 1 // Disable 1 pass QPS and QPM
+#define CHROMA_SEARCH_OPT \
+    1 // Move chroma search to be done on the best intra candidate survived from MD stage 2
 #if CHROMA_SEARCH_OPT
-#define INFR_OPT                 1 // Lossless: Infrastructure work to allow the protability of the chroma search
-#define MOVE_OPT                 1 // Semi-lossless: Move the intra search to just before last md_stage
-#define COMP_OPT                 1 // Speed optimisation by restricting the search only when at least 1 intra candidate survives to the last md_stage
+#define INFR_OPT 1 // Lossless: Infrastructure work to allow the protability of the chroma search
+#define MOVE_OPT 1 // Semi-lossless: Move the intra search to just before last md_stage
+#define COMP_OPT \
+    1 // Speed optimisation by restricting the search only when at least 1 intra candidate survives to the last md_stage
 #endif
 
-#define NICS_CLEANUP        1
-#define COMP_SIMILAR        1 //use previously coded similar blocks to prune compound modes
-#define INTRA_SIMILAR       1 //If previous similar block is intra, do not inject any inter
-#define OIS_MEM              1 //reduce memory consumption due to ois struct
-#define MULTI_STAGE_ME       1
+#define NICS_CLEANUP 1
+#define COMP_SIMILAR 1 //use previously coded similar blocks to prune compound modes
+#define INTRA_SIMILAR 1 //If previous similar block is intra, do not inject any inter
+#define OIS_MEM 1 //reduce memory consumption due to ois struct
+#define MULTI_STAGE_ME 1
 #if MULTI_STAGE_ME
-#define MUS_ME               1 //MUlti-Stage ME - HME pruning
-#define SHUT_HME_L1_CHECK    1 //Remove usage of ME results for list=0 refIndex=0 to decide HME centre. Feature has wrong assumptions as: MRP OFF and list1 distance = list0 distance.
+#define MUS_ME 1 //MUlti-Stage ME - HME pruning
+#define SHUT_HME_L1_CHECK \
+    1 //Remove usage of ME results for list=0 refIndex=0 to decide HME centre. Feature has wrong assumptions as: MRP OFF and list1 distance = list0 distance.
 
-#define MUS_ME_FP            1 //Multi-Stage ME - Decouple full-pel from subpel
-#define MUS_ME_FP_SB         1 //Multi-Stage ME - Full-pel pruning
-#define SKIP_ME_BASED_ON_HME     1 //Multi-Stage ME - Reduce SR based on HME distortion
-#define REDUCE_ME_FOR_LOW_M_SB   1 //Multi-Stage ME - Reduce SR based on HME distortion and HME MV
-#define SWITCHED_HALF_PEL_MODE   1 //Multi-Stage ME - Adapt half_pel mode based on fulpel distortion
+#define MUS_ME_FP 1 //Multi-Stage ME - Decouple full-pel from subpel
+#define MUS_ME_FP_SB 1 //Multi-Stage ME - Full-pel pruning
+#define SKIP_ME_BASED_ON_HME 1 //Multi-Stage ME - Reduce SR based on HME distortion
+#define REDUCE_ME_FOR_LOW_M_SB 1 //Multi-Stage ME - Reduce SR based on HME distortion and HME MV
+#define SWITCHED_HALF_PEL_MODE 1 //Multi-Stage ME - Adapt half_pel mode based on fulpel distortion
 #endif
-#define MC_DYNAMIC_PAD              1
-#define DIST_BASED_ME_SEARCH_AREA       1 // Distance-based multiper for ME search region
+#define MC_DYNAMIC_PAD 1
+#define DIST_BASED_ME_SEARCH_AREA 1 // Distance-based multiper for ME search region
 #define GLOBAL_WARPED_MOTION 1 // Global warped motion detection and insertion
 #ifndef NON_AVX512_SUPPORT
 #define NON_AVX512_SUPPORT
@@ -134,25 +147,29 @@ extern "C" {
 #if TILES_PARALLEL
 #define MAX_TILE_CNTS 128 // Annex A.3
 #endif
-#define ALTREF_IMPROVEMENT     1 // Enable TF for layer 1 in 1 pass encoding. Adjust the filter strength
+#define ALTREF_IMPROVEMENT 1 // Enable TF for layer 1 in 1 pass encoding. Adjust the filter strength
 #define MD_RATE_EST_ENH 1 // MD rate estimation enhancement. Active for LP =1 for now
 
-#define WARP_IMPROVEMENT       1 // Improve Warp motion by adding all the candidates in list0 and list 1
-#define QPS_CHANGE              1 // CQP QP assigment.
-                                  // Add support for other prediction structure
+#define WARP_IMPROVEMENT 1 // Improve Warp motion by adding all the candidates in list0 and list 1
+#define QPS_CHANGE         \
+    1 // CQP QP assigment. \
+        // Add support for other prediction structure
 #define MR_MODE 0
 
 #define ALT_REF_QP_THRESH 20
 
-#define FASTER_RDOQ 1 // Perform a fast RDOQ stage to reduce non-zero coeffs before the main/complex RDOQ stage for inter and chroma blocks
+#define FASTER_RDOQ \
+    1 // Perform a fast RDOQ stage to reduce non-zero coeffs before the main/complex RDOQ stage for inter and chroma blocks
 #define FP_QUANT_BOTH_INTRA_INTER 1 // Add quantize_fp for INTER blocks
 #define ENHANCED_SQ_WEIGHT 1 // tune sq_weight threshold based on block properties
-#define ENHANCED_ME_MV 1 // (1) Improved Nx4 and 4xN INTER candidates for all categories: used the parent ME_MV instead of using of the 64x64 ME_MV, (2) Added ME_MV 1 / 8 Pel refinement.
+#define ENHANCED_ME_MV \
+    1 // (1) Improved Nx4 and 4xN INTER candidates for all categories: used the parent ME_MV instead of using of the 64x64 ME_MV, (2) Added ME_MV 1 / 8 Pel refinement.
 #define TXS_DEPTH_2 1 // TXS for Depth_2
 
 #define HIGH_PRECISION_MV_QTHRESH 150
 
-#define ENHANCED_MULTI_PASS_PD_MD_STAGING_SETTINGS 1 // Updated Multi-Pass-PD and MD-Staging Settings
+#define ENHANCED_MULTI_PASS_PD_MD_STAGING_SETTINGS \
+    1 // Updated Multi-Pass-PD and MD-Staging Settings
 #define IFS_MD_STAGE_3 1 // Moved IFS from MD_STAGE_1 to MD_STAGE_3
 
 // Actions in the second pass: Frame and SB QP assignment and temporal filtering strenght change
@@ -176,10 +193,11 @@ extern "C" {
 #endif
 
 typedef enum MeHpMode {
-    EX_HP_MODE        = 0, // Exhaustive  1/2-pel serach mode.
+    EX_HP_MODE         = 0, // Exhaustive  1/2-pel serach mode.
     REFINEMENT_HP_MODE = 1 // Refinement 1/2-pel serach mode.
 #if SWITCHED_HALF_PEL_MODE
-    , SWITCHABLE_HP_MODE = 2 // Switch between EX_HP_MODE and REFINEMENT_HP_MODE mode.
+    ,
+    SWITCHABLE_HP_MODE = 2 // Switch between EX_HP_MODE and REFINEMENT_HP_MODE mode.
 #endif
 } MeHpMode;
 #if GLOBAL_WARPED_MOTION
@@ -191,19 +209,13 @@ typedef enum GM_LEVEL {
 #endif
 #if ENHANCED_SQ_WEIGHT
 typedef enum SqWeightOffsets {
-    CONSERVATIVE_OFFSET_0 =   5,
-    CONSERVATIVE_OFFSET_1 =  10,
-    AGGRESSIVE_OFFSET_0   =  -5,
+    CONSERVATIVE_OFFSET_0 = 5,
+    CONSERVATIVE_OFFSET_1 = 10,
+    AGGRESSIVE_OFFSET_0   = -5,
     AGGRESSIVE_OFFSET_1   = -10
 } SqWeightOffsets;
 
-typedef enum Qp {
-    QP_20 = 20,
-    QP_32 = 32,
-    QP_43 = 43,
-    QP_55 = 55,
-    QP_63 = 63
-} Qp;
+typedef enum Qp { QP_20 = 20, QP_32 = 32, QP_43 = 43, QP_55 = 55, QP_63 = 63 } Qp;
 #endif
 struct Buf2D {
     uint8_t *buf;
@@ -250,7 +262,7 @@ enum {
 #define ALTREF_MAX_NFRAMES 10
 #define ALTREF_MAX_STRENGTH 6
 #define PAD_VALUE (128 + 32)
-#define PAD_VALUE_SCALED (128+128+32)
+#define PAD_VALUE_SCALED (128 + 128 + 32)
 #define NSQ_TAB_SIZE 8
 #define NUMBER_OF_DEPTH 6
 #define NUMBER_OF_SHAPES 10
@@ -267,8 +279,7 @@ enum {
 #if INFR_OPT
 #define MAX_NFL_BUFF_Y \
     (MAX_NFL + CAND_CLASS_TOTAL) //need one extra temp buffer for each fast loop call
-#define MAX_NFL_BUFF \
-    (MAX_NFL_BUFF_Y + 84) //need one extra temp buffer for each fast loop call
+#define MAX_NFL_BUFF (MAX_NFL_BUFF_Y + 84) //need one extra temp buffer for each fast loop call
 #else
 #define MAX_NFL_BUFF \
     (MAX_NFL + CAND_CLASS_TOTAL) //need one extra temp buffer for each fast loop call
@@ -508,8 +519,8 @@ static __inline void mem_put_le16(void *vmem, MEM_VALUE_T val) {
 static __inline void mem_put_le24(void *vmem, MEM_VALUE_T val) {
     MAU_T *mem = (MAU_T *)vmem;
 
-    mem[0] = (MAU_T)((val >>  0) & 0xff);
-    mem[1] = (MAU_T)((val >>  8) & 0xff);
+    mem[0] = (MAU_T)((val >> 0) & 0xff);
+    mem[1] = (MAU_T)((val >> 8) & 0xff);
     mem[2] = (MAU_T)((val >> 16) & 0xff);
 }
 #endif
@@ -621,8 +632,8 @@ typedef enum MdStagingMode {
 
 #if NICS_CLEANUP
 // NICS
-#define MAX_FRAME_TYPE    3  // Max number of frame type allowed for nics
-#define ALL_S0           -1  // Allow all candidates from stage0
+#define MAX_FRAME_TYPE 3 // Max number of frame type allowed for nics
+#define ALL_S0 -1 // Allow all candidates from stage0
 #else
 #define INTRA_NFL 16
 #define INTER_NEW_NFL 16

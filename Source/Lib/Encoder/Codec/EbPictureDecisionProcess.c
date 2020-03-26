@@ -1219,6 +1219,10 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->prune_ref_based_me = 0;
         else
             pcs_ptr->prune_ref_based_me = 1;
+#if ZZ_TEST
+
+          pcs_ptr->prune_ref_based_me = 0;
+#endif
 #endif
     return return_error;
 }
