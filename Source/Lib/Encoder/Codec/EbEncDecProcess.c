@@ -1984,6 +1984,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                     if (enc_mode <= ENC_M0)
 #endif
                         context_ptr->predictive_me_level = 6;
+#if LIGHT_M8_V1
+                    else if(enc_mode <= ENC_M7)
+                        context_ptr->predictive_me_level = 5;
+                    else
+                        context_ptr->predictive_me_level = 0;
+#else
 #if MAR12_M8_ADOPTIONS
                     else
                         context_ptr->predictive_me_level = 5;
@@ -2006,6 +2012,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                         context_ptr->predictive_me_level = 2;
                     else
                         context_ptr->predictive_me_level = 0;
+#endif
 #endif
 
             }
@@ -2696,6 +2703,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_max_ref_count = 4;
     else if (pd_pass == PD_PASS_1)
         context_ptr->md_max_ref_count = 1;
+#if LIGHT_M8_V1
+    else if (enc_mode <= ENC_M7)
+        context_ptr->md_max_ref_count = 4;
+    else
+        context_ptr->md_max_ref_count = 1;
+#else
 #if M8_CAP_NUMBER_OF_REF_IN_MD
     else if(enc_mode <= ENC_M7)
         context_ptr->md_max_ref_count = 4;
@@ -2704,6 +2717,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #else
     else
         context_ptr->md_max_ref_count = 4;
+#endif
 #endif
 
     // Set md_skip_mvp_generation (and use (0,0) as MVP instead)
@@ -2767,7 +2781,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         if (enc_mode <= ENC_M3)
             context_ptr->skip_depth = 0;
         else
+#if LIGHT_M8_V1
+            // shut skip_depth in M8 b/c we disallowed NSQ blocks, and skip depth cannot be enabled with disallow_nsq
+            context_ptr->skip_depth = enc_mode <= ENC_M7 ? 1 : 0;
+#else
             context_ptr->skip_depth = 1;
+#endif
     else
         context_ptr->skip_depth = 0;
 #else
@@ -4602,6 +4621,13 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                                blk_geom);
 
                         }
+#if LIGHT_M8_V1
+                        // This is only for the light M8, which has PD0 | PD2, but only passes pred to PD2
+                        if (pcs_ptr->slice_type != I_SLICE && pcs_ptr->enc_mode == ENC_M8) {
+                            s_depth = 0;
+                            e_depth = 0;
+                        }
+#endif
                     } else if (context_ptr->pd_pass == PD_PASS_1) {
 
 

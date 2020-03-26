@@ -149,6 +149,7 @@ extern "C" {
 #define PRED_ME_REF_MASKING 1
 #endif
 #define MAR25_ADOPTIONS            1 // Adoptions for all modes. Adopt uniform HME/ME sizes (non-TF)
+#define LIGHT_M8_V1                1 // turn off M8 features for speed gains
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

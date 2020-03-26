@@ -840,14 +840,37 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if ADD_NEW_MPPD_LEVEL
 #if MAR23_ADOPTIONS
     if (sc_content_detected)
+#if LIGHT_M8_V1
+        if (pcs_ptr->enc_mode <= ENC_M7)
+            pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_LEVEL_1;
+        else
+            pcs_ptr->multi_pass_pd_level =
+            (pcs_ptr->slice_type == I_SLICE)
+            ? MULTI_PASS_PD_LEVEL_1
+            : MULTI_PASS_PD_LEVEL_0; // there is a custom hard-coded PD0 refinement for M8
+#else
         pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_LEVEL_1;
+#endif
     else if (pcs_ptr->enc_mode <= ENC_M1)
         pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_LEVEL_1;
+#if LIGHT_M8_V1
+    else if (pcs_ptr->enc_mode <= ENC_M7)
+        pcs_ptr->multi_pass_pd_level =
+        (pcs_ptr->slice_type == I_SLICE)
+        ? MULTI_PASS_PD_LEVEL_1
+        : MULTI_PASS_PD_LEVEL_2;
+    else
+        pcs_ptr->multi_pass_pd_level =
+        (pcs_ptr->slice_type == I_SLICE)
+        ? MULTI_PASS_PD_LEVEL_1
+        : MULTI_PASS_PD_LEVEL_0; // there is a custom hard-coded PD0 refinement for M8
+#else
     else
         pcs_ptr->multi_pass_pd_level =
         (pcs_ptr->slice_type == I_SLICE)
         ? MULTI_PASS_PD_LEVEL_1
         : MULTI_PASS_PD_LEVEL_2;
+#endif
 #else
     if (sc_content_detected)
 #if MAR19_ADOPTIONS
@@ -930,7 +953,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 
 
     // Set disallow_nsq
+#if LIGHT_M8_V1
+    pcs_ptr->disallow_nsq = pcs_ptr->enc_mode <= ENC_M7 ? EB_FALSE : EB_TRUE;
+#else
     pcs_ptr->disallow_nsq = EB_FALSE;
+#endif
     if (!pcs_ptr->disallow_nsq)
         assert(scs_ptr->nsq_present == 1 && "use nsq_present 1");
     pcs_ptr->max_number_of_pus_per_sb =
@@ -1212,7 +1239,11 @@ EbErrorType signal_derivation_multi_processes_oq(
                     0)) &&
 #if MAR4_M3_ADOPTIONS
 #if MAR10_ADOPTIONS
+#if LIGHT_M8_V1
+            pcs_ptr->enc_mode <= ENC_M7
+#else
             pcs_ptr->enc_mode <= ENC_M8
+#endif
 #else
             pcs_ptr->enc_mode <= ENC_M3
 #endif
