@@ -79,11 +79,12 @@ extern "C" {
 #define DISABLE_WARPED_MOTION 1
 #define DISABLE_MD_CLASS 1
 #define DISABLE_EDGE_SKIP_ANGLE_INTRA 1
-#define DISABLE_PRUNE_REF       1
-#define DISABLE_NSQ_HV  1
-#define DISABLE_COMP_SIM    1
-#define DISABLE_INTRA_SIMILAR   1
+#define DISABLE_PRUNE_REF 1
+#define DISABLE_NSQ_HV 1
+#define DISABLE_COMP_SIM 1
+#define DISABLE_INTRA_SIMILAR 1
 #define DISABLE_COEFF_BASED_NSQ 1
+#define DISABLE_COEFF 1
 #endif
 #define QPS_CHANGE_II 1 // Change the QP assignment for I
 #define NSQ_HV 1 // skip NSQ partitions based on H vs V costs
@@ -151,7 +152,7 @@ extern "C" {
 #define MD_RATE_EST_ENH 1 // MD rate estimation enhancement. Active for LP =1 for now
 
 #define WARP_IMPROVEMENT 1 // Improve Warp motion by adding all the candidates in list0 and list 1
-#define QPS_CHANGE         \
+#define QPS_CHANGE \
     1 // CQP QP assigment. \
         // Add support for other prediction structure
 #define MR_MODE 0

@@ -1970,7 +1970,7 @@ int32_t av1_quantize_inv_quantize(PictureControlSet *pcs_ptr, ModeDecisionContex
                               (component_type == COMPONENT_LUMA) ? 0 : 1);
         }
     }
-#if ZERO_COEFF
+#if DISABLE_COEFF
     *count_non_zero_coeffs = 0;
     *eob                   = 0;
 #endif
