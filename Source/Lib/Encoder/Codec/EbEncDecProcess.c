@@ -2509,16 +2509,16 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->nsq_hv_level = 0;
 #else
         context_ptr->nsq_hv_level = 1;
-#endif
         assert(context_ptr->sq_weight != (uint32_t)~0);
+#endif
     }
     else {
 #if SHUT_POST_PD2_SQ_WEIGHT
         context_ptr->nsq_hv_level = 0;
 #else
         context_ptr->nsq_hv_level = 2;
-#endif
         assert(context_ptr->sq_weight != (uint32_t)~0);
+#endif
     }
 
     // Set pred ME full search area
