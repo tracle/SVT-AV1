@@ -5967,7 +5967,7 @@ void *rate_control_kernel(void *input_ptr) {
                 if (scs_ptr->use_input_stat_file &&
                     scs_ptr->static_config.look_ahead_distance != 0 &&
                     scs_ptr->static_config.enable_cutree_in_la &&
-                    pcs_ptr->parent_pcs_ptr->r0 != 0)
+                    pcs_ptr->parent_pcs_ptr->r0 != 0 && pcs_ptr->picture_number<48) // only QPM for poc<48 pictue for last pic seq diff with aom
                     // Content adaptive qp assignment
                     sb_qp_derivation_tpl_la(&rc, pcs_ptr);
                 else

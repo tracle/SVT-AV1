@@ -1052,7 +1052,7 @@ void cutree_mc_flow_dispenser(
     mb_plane.zbin_qtx        = pcs_ptr->quants_bd.y_zbin[qIndex];
     mb_plane.round_qtx       = pcs_ptr->quants_bd.y_round[qIndex];
     mb_plane.dequant_qtx     = pcs_ptr->deq_bd.y_dequant_qtx[qIndex];
-//printf("kelvin cutree_mc_flow_dispenser picture_number=%d qIndex=%d mb_plane.zbin_qtx[0~3]=%d %d %d %d\n", pcs_ptr->picture_number, qIndex, mb_plane.zbin_qtx[0], mb_plane.zbin_qtx[1], mb_plane.zbin_qtx[2], mb_plane.zbin_qtx[3]);
+//printf("kelvin cutree_mc_flow_dispenser picture_number=%d qp=%d qIndex=%d mb_plane.zbin_qtx[0~3]=%d %d %d %d\n", pcs_ptr->picture_number, scs_ptr->static_config.qp, qIndex, mb_plane.zbin_qtx[0], mb_plane.zbin_qtx[1], mb_plane.zbin_qtx[2], mb_plane.zbin_qtx[3]);
     pcs_ptr->base_rdmult = av1_compute_rd_mult_based_on_qindex((AomBitDepth)8/*scs_ptr->static_config.encoder_bit_depth*/, qIndex) / 6;
 
     // Walk the first N entries in the sliding window
@@ -1473,15 +1473,26 @@ static AOM_INLINE void tpl_model_update(PictureParentControlSet *pcs_array[60], 
 #if 0
 // kelvinprintf
 if(pcs_ptr->picture_number == 16 && mi_row == 0)
+//if(pcs_ptr->picture_number == 0 && mi_row >=176)
 {
     if(mi_col==0)
         printf("mbline%d poc%d\n", mi_row>>2, pcs_ptr->picture_number);
-    printf("%d %d \n", ois_mb_results_ptr->srcrf_dist, ois_mb_results_ptr->recrf_dist);
+    //printf("%d %d \n", ois_mb_results_ptr->srcrf_dist, ois_mb_results_ptr->recrf_dist);
+    //printf("tpl_model_update %d %d \n", mi_col, mi_row);
     //printf("%d %d \n", ois_mb_results_ptr->mv.col, ois_mb_results_ptr->mv.row);
 }
 #endif
       while(i<frames_in_sw && pcs_array[i]->picture_number != ois_mb_results_ptr->ref_frame_poc)
         i++;
+#if 0
+if(mi_row == 0 && mi_col == 0)
+{
+    if(i<frames_in_sw)
+        printf("tpl_model_update frame_idx=%d poc=%d i=%d ref_poc=%d\n", frame_idx, pcs_ptr->picture_number, i, pcs_array[i]->picture_number);
+    else
+        printf("tpl_model_update frame_idx=%d poc=%d i=%d i==frames_in_sw\n", frame_idx, pcs_ptr->picture_number, i);
+}
+#endif
       if(i<frames_in_sw)
         tpl_model_update_b(pcs_array[i], pcs_ptr, frame_idx, ois_mb_results_ptr, mi_row + idy, mi_col + idx, block_size);
     }
@@ -1657,7 +1668,14 @@ void update_mc_flow(
                     ois_mb_results_ptr->ref_frame_poc = 0;
                 }
             }
+            if(pcs_array[frame_idx]->temporal_layer_index == 0 && pcs_array[frame_idx]->picture_number>=32 &&
+              (frame_idx == 17 || frame_idx == 18 || frame_idx == 19))
+                encode_context_ptr->poc_map_idx[frame_idx] = -1;
+
             cutree_mc_flow_dispenser(encode_context_ptr, scs_ptr, pcs_array[frame_idx], frame_idx);
+
+            if(pcs_array[frame_idx]->temporal_layer_index == 0 && pcs_array[frame_idx]->picture_number>=32 && frame_idx == 1)
+                encode_context_ptr->poc_map_idx[0] = -1;
         }
     }
 
@@ -1713,7 +1731,13 @@ void update_mc_flow(
                             ois_mb_results_ptr->ref_frame_poc = 0;
                         }
                     }
+                    if(frame_idx == 17 || frame_idx == 18 || frame_idx == 19)
+                        encode_context_ptr->poc_map_idx[frame_idx] = -1;
+
                     cutree_mc_flow_dispenser(encode_context_ptr, scs_ptr, pcs_array[frame_idx], frame_idx);
+
+                    if(frame_idx == 1)
+                        encode_context_ptr->poc_map_idx[0] = -1;
                 }
             }
 #endif
