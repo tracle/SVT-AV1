@@ -786,6 +786,10 @@ void save_YUV_to_file_highbd(char *filename, uint16_t *buffer_y, uint16_t *buffe
                              uint16_t stride_u, uint16_t stride_v, uint16_t origin_y,
                              uint16_t origin_x, uint32_t ss_x, uint32_t ss_y);
 
+/*
+ * Resize frame according to dst resolution.
+ * Supports 8-bit / 10-bit and either packed or unpacked buffers
+ */
 EbErrorType av1_resize_frame(const EbPictureBufferDesc *src, EbPictureBufferDesc *dst,
                              int bd, const int num_planes, const uint32_t ss_x,
                              const uint32_t ss_y, uint8_t is_packed) {
@@ -977,8 +981,10 @@ static INLINE unsigned int lcg_rand16(unsigned int *state) {
     return *state / 65536 % 32768;
 }
 
-// Given the superres configurations and the frame type, determine the denominator and
-// encoding resolution
+/*
+ * Given the superres configurations and the frame type, determine the denominator and
+ * encoding resolution
+ */
 void calc_superres_params(superres_params_type *spr_params, SequenceControlSet *scs_ptr,
                           PictureParentControlSet *pcs_ptr) {
     spr_params->superres_denom = SCALE_NUMERATOR;
@@ -1042,6 +1048,10 @@ EbErrorType sb_geom_init_pcs(SequenceControlSet *scs_ptr, PictureParentControlSe
 
 EbErrorType sb_params_init_pcs(SequenceControlSet *scs_ptr, PictureParentControlSet *pcs_ptr);
 
+/*
+ * Modify encoder parameters and structures that depend on picture resolution
+ * Performed after a source picture has been scaled
+ */
 EbErrorType scale_pcs_params(SequenceControlSet *scs_ptr, PictureParentControlSet *pcs_ptr,
                              superres_params_type spr_params, uint16_t source_width,
                              uint16_t source_height) {
@@ -1088,22 +1098,22 @@ EbErrorType scale_pcs_params(SequenceControlSet *scs_ptr, PictureParentControlSe
     cm->mi_cols   = aligned_width >> MI_SIZE_LOG2;
     cm->mi_rows   = aligned_height >> MI_SIZE_LOG2;
 
-    if (cm->frm_size.superres_denominator != SCALE_NUMERATOR) {
-        derive_input_resolution(&pcs_ptr->input_resolution,
-                                spr_params.encoding_width * spr_params.encoding_height);
+    derive_input_resolution(&pcs_ptr->input_resolution,
+                            spr_params.encoding_width * spr_params.encoding_height);
 
-        // create new picture level sb_params and sb_geom
-        sb_params_init_pcs(scs_ptr, pcs_ptr);
+    // create new picture level sb_params and sb_geom
+    sb_params_init_pcs(scs_ptr, pcs_ptr);
 
-        sb_geom_init_pcs(scs_ptr, pcs_ptr);
+    sb_geom_init_pcs(scs_ptr, pcs_ptr);
 
-        pcs_ptr->frm_hdr.use_ref_frame_mvs = 0;
-
-    }
+    pcs_ptr->frm_hdr.use_ref_frame_mvs = 0;
 
     return EB_ErrorNone;
 }
 
+/*
+ * Memory allocation for donwscaled reconstructed reference pictures
+ */
 EbErrorType allocate_downscaled_reference_pics(EbPictureBufferDesc **downscaled_reference_picture_ptr,
                                                EbPictureBufferDesc **downscaled_reference_picture16bit,
                                                EbPictureBufferDesc *picture_ptr_for_reference,
@@ -1147,6 +1157,9 @@ EbErrorType allocate_downscaled_reference_pics(EbPictureBufferDesc **downscaled_
     return EB_ErrorNone;
 }
 
+/*
+ * Memory allocation for donwscaled source reference pictures
+ */
 EbErrorType allocate_downscaled_source_reference_pics(EbPictureBufferDesc **input_padded_picture_ptr,
                                                       EbPictureBufferDesc **quarter_decimated_picture_ptr,
                                                       EbPictureBufferDesc **quarter_filtered_picture_ptr,
@@ -1230,7 +1243,11 @@ EbErrorType allocate_downscaled_source_reference_pics(EbPictureBufferDesc **inpu
     return EB_ErrorNone;
 }
 
-// Scale source references used in open-loop ME
+/*
+ * Allocate memory and perform scaling of the source reference picture (references to the current picture)
+ * and it's decimated/filtered versions to match with the input's picture resolution
+ * This is used in the open-loop stage.
+ */
 void scale_source_references(SequenceControlSet *scs_ptr,
                              PictureParentControlSet *pcs_ptr,
                              EbPictureBufferDesc *input_picture_ptr){
@@ -1322,7 +1339,11 @@ void scale_source_references(SequenceControlSet *scs_ptr,
 
 }
 
-// Scale decimated or filtered input pictures used as a reference - used in open-loop ME
+/*
+ * Allocate memory and perform scaling of the input reference picture (current picture)
+ * and it's decimated/filtered versions to match with the input's picture resolution
+ * This is used in the open-loop stage.
+ */
 void scale_input_references(PictureParentControlSet *pcs_ptr,
                             superres_params_type superres_params) {
 
@@ -1371,7 +1392,10 @@ void scale_input_references(PictureParentControlSet *pcs_ptr,
                                            src_object->downscaled_sixteenth_filtered_picture_ptr[denom_idx]);
 }
 
-// Scale reconstructed references - predictive ME
+/*
+ * Allocate memory and perform scaling of the reconstructed reference pictures
+ * to match with the input's picture resolution
+ */
 void scale_rec_references(PictureControlSet *pcs_ptr,
                           EbPictureBufferDesc *input_picture_ptr,
                           uint8_t hbd_mode_decision){
@@ -1479,7 +1503,7 @@ void scale_rec_references(PictureControlSet *pcs_ptr,
                                          down_ref_pic_ptr->origin_y >> ss_y);
                     }
 
-                    printf("rescaled reference picture %d\n", (int)ref_picture_number);
+                    //printf("rescaled reference picture %d\n", (int)ref_picture_number);
 
                 }
             }
@@ -1488,6 +1512,10 @@ void scale_rec_references(PictureControlSet *pcs_ptr,
 
 }
 
+/*
+ * Check if width of input and reference <reconstructed> pictures match.
+ * if not, return pointers to downscaled reference picture of the correct resolution
+ */
 void use_scaled_rec_refs_if_needed(PictureControlSet *pcs_ptr,
                                    EbPictureBufferDesc *input_picture_ptr,
                                    EbReferenceObject *ref_obj,
@@ -1508,6 +1536,11 @@ void use_scaled_rec_refs_if_needed(PictureControlSet *pcs_ptr,
 
 }
 
+/*
+ * Check if width of input and reference <source> pictures match.
+ * if not, return pointers to downscaled reference picture of the correct resolution.
+ * These are used in the open-loop stage.
+ */
 void use_scaled_source_refs_if_needed(PictureParentControlSet *pcs_ptr,
                                       EbPictureBufferDesc *input_picture_ptr,
                                       EbPaReferenceObject *ref_obj,
@@ -1531,6 +1564,11 @@ void use_scaled_source_refs_if_needed(PictureParentControlSet *pcs_ptr,
     assert((*ref_pic_ptr)->width == input_picture_ptr->width);
 }
 
+/*
+ * If super-res is ON, determine super-res denominator for current picture,
+ * perform resizing of source picture and
+ * adjust resolution related parameters
+ */
 void init_resize_picture(SequenceControlSet *scs_ptr, PictureParentControlSet *pcs_ptr) {
     EbPictureBufferDesc *input_picture_ptr = pcs_ptr->enhanced_picture_ptr;
 
