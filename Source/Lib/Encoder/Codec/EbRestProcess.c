@@ -123,6 +123,7 @@ EbErrorType rest_context_ctor(EbThreadContext *  thread_context_ptr,
         init_data.top_padding        = AOM_BORDER_IN_PIXELS;
         init_data.bot_padding        = AOM_BORDER_IN_PIXELS;
         init_data.split_mode         = EB_FALSE;
+        init_data.is_16bit_pipeline = config->encoder_16bit_pipeline;
 
         EB_NEW(context_ptr->trial_frame_rst, eb_picture_buffer_desc_ctor, (EbPtr)&init_data);
 
@@ -412,7 +413,7 @@ void eb_av1_superres_upscale_frame(struct Av1Common *cm,
     // Set these parameters for testing since they are not correctly populated yet
     EbPictureBufferDesc *recon_ptr;
 
-    EbBool is_16bit = (EbBool)(scs_ptr->static_config.encoder_bit_depth > EB_8BIT);
+    EbBool is_16bit = (EbBool)(scs_ptr->static_config.encoder_bit_depth > EB_8BIT) || (scs_ptr->static_config.encoder_16bit_pipeline);
 
     get_recon_pic(pcs_ptr,
                   &recon_ptr,
@@ -449,7 +450,7 @@ void eb_av1_superres_upscale_frame(struct Av1Common *cm,
 
         av1_upscale_normative_rows(cm, (const uint8_t *) src_buf, src_stride, dst_buf,
                                    dst_stride, src->height >> sub_x,
-                                   sub_x, src->bit_depth,dst->use_16bit_pipeline);
+                                   sub_x, src->bit_depth, is_16bit);
     }
 
     // free the memory
@@ -516,14 +517,13 @@ void *rest_kernel(void *input_ptr) {
             link_eb_to_aom_buffer_desc(scs_ptr->static_config.encoder_16bit_pipeline || is_16bit
                                        ? pcs_ptr->input_frame16bit
                                        : pcs_ptr->parent_pcs_ptr->enhanced_unscaled_picture_ptr,
-                                       &cpi_source,
-                                        scs_ptr->static_config.encoder_16bit_pipeline || is_16bit);
+                                       &cpi_source);
 
             Yv12BufferConfig trial_frame_rst;
-            link_eb_to_aom_buffer_desc(context_ptr->trial_frame_rst, &trial_frame_rst, scs_ptr->static_config.encoder_16bit_pipeline || is_16bit);
+            link_eb_to_aom_buffer_desc(context_ptr->trial_frame_rst, &trial_frame_rst);
 
             Yv12BufferConfig org_fts;
-            link_eb_to_aom_buffer_desc(context_ptr->org_rec_frame, &org_fts, scs_ptr->static_config.encoder_16bit_pipeline || is_16bit);
+            link_eb_to_aom_buffer_desc(context_ptr->org_rec_frame, &org_fts);
 
             restoration_seg_search(context_ptr->rst_tmpbuf,
                                    &org_fts,

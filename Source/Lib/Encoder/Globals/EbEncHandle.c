@@ -2889,6 +2889,10 @@ static EbErrorType verify_settings(
         return_error = EB_ErrorBadParameter;
     }
 
+    if ((config->encoder_16bit_pipeline == 0) && (config->encoder_bit_depth > 8)) {
+        SVT_LOG("Error instance %u: invalid bit depth for 16bit pipeline, your input: %d\n", channel_number + 1, config->encoder_bit_depth);
+        return_error = EB_ErrorBadParameter;
+    }
     return return_error;
 }
 

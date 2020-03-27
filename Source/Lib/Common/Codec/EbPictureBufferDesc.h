@@ -63,8 +63,8 @@ typedef struct EbPictureBufferDesc {
 
     EbBool   film_grain_flag; // Indicates if film grain parameters are present for the frame
     uint32_t buffer_enable_mask;
-    /* internal bit-depth is set to 16b even if the bitstream is 8b */
-    EbBool use_16bit_pipeline;
+
+    EbBool use_16bit_pipeline; // internal bit-depth: when equals 1 internal bit-depth is 16bits regardless of the input bit-depth
 } EbPictureBufferDesc;
 
 #define YV12_FLAG_HIGHBITDEPTH 8
@@ -230,7 +230,7 @@ typedef struct Yv12BufferConfig {
     int32_t flags;
 } Yv12BufferConfig;
 
-void link_eb_to_aom_buffer_desc(EbPictureBufferDesc *picBuffDsc, Yv12BufferConfig *aomBuffDsc, EbBool is_16bit);
+void link_eb_to_aom_buffer_desc(EbPictureBufferDesc *picBuffDsc, Yv12BufferConfig *aomBuffDsc);
 
 void link_eb_to_aom_buffer_desc_8bit(EbPictureBufferDesc *picBuffDsc, Yv12BufferConfig *aomBuffDsc);
 

@@ -1636,7 +1636,7 @@ void extend_lines(uint8_t *buf, int32_t width, int32_t height, int32_t stride, i
 void save_deblock_boundary_lines(uint8_t *src_buf, int32_t src_stride, int32_t src_width,
                                  int32_t src_height, const Av1Common *cm, int32_t plane,
                                  int32_t row, int32_t stripe, int32_t use_highbd, int32_t is_above,
-                                 RestorationStripeBoundaries *boundaries, EbBool use_16bit_pipeline) {
+                                 RestorationStripeBoundaries *boundaries) {
     const int32_t is_uv     = plane > 0;
     src_stride              = src_stride << use_highbd;
     const uint8_t *src_rows = src_buf + row * src_stride;
@@ -1672,7 +1672,7 @@ void save_deblock_boundary_lines(uint8_t *src_buf, int32_t src_stride, int32_t s
                                    lines_to_save,
                                    sx,
                                    cm->bit_depth,
-                                   use_16bit_pipeline);
+                                   use_highbd);
     } else {
         upscaled_width = src_width;
         line_bytes     = upscaled_width << use_highbd;
@@ -1731,8 +1731,7 @@ void save_cdef_boundary_lines(uint8_t *src_buf, int32_t src_stride, int32_t src_
 void save_tile_row_boundary_lines(uint8_t *src, int32_t src_stride, int32_t src_width,
                                   int32_t src_height, int32_t use_highbd, int32_t plane,
                                   Av1Common *cm, int32_t after_cdef,
-                                  RestorationStripeBoundaries *boundaries,
-                                  EbBool use_16bit_pipeline) {
+                                  RestorationStripeBoundaries *boundaries) {
     const int32_t is_uv         = plane > 0;
     const int32_t ss_y          = is_uv && cm->subsampling_y;
     const int32_t stripe_height = RESTORATION_PROC_UNIT_SIZE >> ss_y;
@@ -1777,8 +1776,7 @@ void save_tile_row_boundary_lines(uint8_t *src, int32_t src_stride, int32_t src_
                                             frame_stripe,
                                             use_highbd,
                                             1,
-                                            boundaries,
-                                            use_16bit_pipeline);
+                                            boundaries);
             }
             if (use_deblock_below) {
                 save_deblock_boundary_lines(src,
@@ -1791,8 +1789,7 @@ void save_tile_row_boundary_lines(uint8_t *src, int32_t src_stride, int32_t src_
                                             frame_stripe,
                                             use_highbd,
                                             0,
-                                            boundaries,
-                                            use_16bit_pipeline);
+                                            boundaries);
             }
         } else {
             // Save CDEF context where needed. Note that we need to save the CDEF
@@ -1833,9 +1830,9 @@ void save_tile_row_boundary_lines(uint8_t *src, int32_t src_stride, int32_t src_
 // lines to be used as boundary in the loop restoration process. The
 // lines are saved in rst_internal.stripe_boundary_lines
 void eb_av1_loop_restoration_save_boundary_lines(const Yv12BufferConfig *frame, Av1Common *cm,
-                                                 int32_t after_cdef, EbBool is_16bit_pipeline) {
+                                                 int32_t after_cdef) {
     const int32_t num_planes = 3; // av1_num_planes(cm);
-    const int32_t use_highbd = cm->use_highbitdepth || is_16bit_pipeline;
+    const int32_t use_highbd = cm->use_highbitdepth;
 
     for (int32_t p = 0; p < num_planes; ++p) {
         const int32_t                is_uv       = p > 0;
@@ -1853,8 +1850,7 @@ void eb_av1_loop_restoration_save_boundary_lines(const Yv12BufferConfig *frame, 
                                      p,
                                      cm,
                                      after_cdef,
-                                     boundaries,
-                                     is_16bit_pipeline);
+                                     boundaries);
     }
 }
 

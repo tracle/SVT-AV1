@@ -46,7 +46,7 @@ void dec_loop_filter_row(EbDecHandle *dec_handle_ptr,
 void save_deblock_boundary_lines(uint8_t *src_buf, int32_t src_stride, int32_t src_width,
                                  int32_t src_height, const Av1Common *cm, int32_t plane,
                                  int32_t row, int32_t stripe, int32_t use_highbd, int32_t is_above,
-                                 RestorationStripeBoundaries *boundaries, EbBool use_16bit_pipeline);
+                                 RestorationStripeBoundaries *boundaries);
 void save_cdef_boundary_lines(uint8_t *src_buf, int32_t src_stride, int32_t src_width,
                               const Av1Common *cm, int32_t plane, int32_t row, int32_t stripe,
                               int32_t use_highbd, int32_t is_above,
@@ -689,8 +689,7 @@ static INLINE void dec_save_lf_boundary_lines_sb_row(EbDecHandle *  dec_handle,
                                             frame_stripe,
                                             use_highbd,
                                             1,
-                                            boundaries,
-                                            dec_handle->decoder_16bit_pipeline);
+                                            boundaries);
             }
             if (use_deblock_below) {
                 save_deblock_boundary_lines(src[p],
@@ -703,8 +702,7 @@ static INLINE void dec_save_lf_boundary_lines_sb_row(EbDecHandle *  dec_handle,
                                             frame_stripe,
                                             use_highbd,
                                             0,
-                                            boundaries,
-                                            dec_handle->decoder_16bit_pipeline);
+                                            boundaries);
             }
         }
     }

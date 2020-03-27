@@ -419,6 +419,7 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
     coeff_buffer_desc_init_data.bot_padding   = PAD_VALUE;
 
     coeff_buffer_desc_init_data.split_mode = EB_FALSE;
+    coeff_buffer_desc_init_data.is_16bit_pipeline = init_data_ptr->is_16bit_pipeline;
 
     object_ptr->scs_wrapper_ptr = (EbObjectWrapper *)EB_NULL;
 
@@ -2014,7 +2015,7 @@ EbErrorType picture_parent_control_set_ctor(PictureParentControlSet *object_ptr,
 
     EB_MALLOC_ARRAY(object_ptr->av1_cm->frame_to_show, 1);
 
-    object_ptr->av1_cm->use_highbitdepth                  = (init_data_ptr->bit_depth > 8 ? 1 : 0);
+    object_ptr->av1_cm->use_highbitdepth                  = ((init_data_ptr->bit_depth > 8) || (init_data_ptr->is_16bit_pipeline)) ? 1 : 0;
     object_ptr->av1_cm->bit_depth                         = init_data_ptr->bit_depth;
     object_ptr->av1_cm->color_format                      = init_data_ptr->color_format;
     object_ptr->av1_cm->subsampling_x                     = subsampling_x;

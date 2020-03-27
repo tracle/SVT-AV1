@@ -37,7 +37,7 @@ void eb_av1_add_film_grain(EbPictureBufferDesc *src, EbPictureBufferDesc *dst,
                            AomFilmGrain *film_grain_ptr);
 
 void eb_av1_loop_restoration_save_boundary_lines(const Yv12BufferConfig *frame, Av1Common *cm,
-                                                 int32_t after_cdef, EbBool is_16bit_pipeline);
+                                                 int32_t after_cdef);
 void eb_av1_loop_restoration_filter_frame(Yv12BufferConfig *frame, Av1Common *cm,
                                           int32_t optimized_lr);
 

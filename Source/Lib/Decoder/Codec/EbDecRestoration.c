@@ -27,7 +27,7 @@
 void save_tile_row_boundary_lines(uint8_t *src, int32_t src_stride, int32_t src_width,
                                   int32_t src_height, int32_t use_highbd, int32_t plane,
                                   Av1Common *cm, int32_t after_cdef,
-                                  RestorationStripeBoundaries *boundaries, EbBool use_16bit_pipeline);
+                                  RestorationStripeBoundaries *boundaries);
 
 void lr_generate_padding(
     EbByte   src_pic, //output paramter, pointer to the source picture(0,0).
@@ -542,7 +542,6 @@ void dec_av1_loop_restoration_save_boundary_lines(EbDecHandle *dec_handle,
                                      p,
                                      &dec_handle->cm,
                                      after_cdef,
-                                     boundaries,
-                                     dec_handle->decoder_16bit_pipeline);
+                                     boundaries);
     }
 }
