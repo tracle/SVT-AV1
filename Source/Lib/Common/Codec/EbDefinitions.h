@@ -157,6 +157,20 @@ extern "C" {
 #define SHUT_POST_PD1_SQ_VS_NSQ 1
 #define SHUT_POST_PD2_SQ_WEIGHT 1
 #define SHUT_POST_PD2_SKIP_DEPTH 1
+
+// cond_0 + cond_1 + cond_2
+#define FIRST_COMBO 0
+#if FIRST_COMBO
+#define USE_COEFF_INFO 0 
+#define USE_COST_SQ_VS_NSQ 0 
+#define USE_TWO_AS_OR 0
+#define USE_TWO_AS_AND 1
+#endif
+
+#define SECOND_COMBO 1
+#if SECOND_COMBO
+#define SQ_COST_TO_SUB_COST_DEV_TH 0
+#endif
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
 
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
