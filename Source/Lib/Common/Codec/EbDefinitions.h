@@ -152,6 +152,11 @@ extern "C" {
 #define MAR26_ADOPTIONS            1 // Adoptions for all modes. Adopt uniform TF HME/ME sizes
 #endif
 
+///////*******************************************************************//
+// Build the depth reduction ref
+#define SHUT_POST_PD1_SQ_VS_NSQ 1
+#define SHUT_POST_PD2_SQ_WEIGHT 1
+#define SHUT_POST_PD2_SKIP_DEPTH 1
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
 
 #define COMMON_16BIT 1 // 16Bit pipeline support for common

@@ -2447,6 +2447,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->sq_weight = 100;
 
     else
+#if SHUT_POST_PD2_SQ_WEIGHT
+        context_ptr->sq_weight = (uint32_t)~0;
+#else
         if (MR_MODE)
             context_ptr->sq_weight =
             sequence_control_set_ptr->static_config.sq_weight + 15;
@@ -2478,7 +2481,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             else
                 context_ptr->sq_weight =
                 sequence_control_set_ptr->static_config.sq_weight - 5;
-
+#endif
     // nsq_hv_level  needs sq_weight to be ON
     // 0: OFF
     // 1: ON 10% + skip HA/HB/H4  or skip VA/VB/V4
@@ -2762,6 +2765,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->skip_depth = 0;
     else if (pd_pass == PD_PASS_1)
         context_ptr->skip_depth = 0;
+#if SHUT_POST_PD2_SKIP_DEPTH
+    else 
+        context_ptr->skip_depth = 0;
+#else
 #if MAR18_MR_TESTS_ADOPTIONS
     else if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
         if (enc_mode <= ENC_M3)
@@ -2777,7 +2784,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->skip_depth =
         pcs_ptr->parent_pcs_ptr->sc_content_detected ? 1 : 0;
 #endif
-
+#endif
     // Set perform_me_mv_1_8_pel_ref
     if (pd_pass == PD_PASS_0)
         context_ptr->perform_me_mv_1_8_pel_ref = EB_FALSE;
@@ -4817,6 +4824,10 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             e_depth = 1;
 #endif
                         }
+#if SHUT_POST_PD1_SQ_VS_NSQ
+                        s_depth = (blk_geom->sq_size == 64 && pcs_ptr->parent_pcs_ptr->sb_64x64_simulated) ? 0 : -1;
+                        e_depth = (blk_geom->sq_size == 8 && pcs_ptr->parent_pcs_ptr->disallow_4x4) ? 0 : 1;
+#endif
                     }
 
                     // Add current pred depth block(s)
