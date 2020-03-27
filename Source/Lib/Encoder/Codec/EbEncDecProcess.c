@@ -2505,11 +2505,19 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
 #endif
+#if SHUT_POST_PD2_SQ_WEIGHT
+        context_ptr->nsq_hv_level = 0;
+#else
         context_ptr->nsq_hv_level = 1;
+#endif
         assert(context_ptr->sq_weight != (uint32_t)~0);
     }
     else {
+#if SHUT_POST_PD2_SQ_WEIGHT
+        context_ptr->nsq_hv_level = 0;
+#else
         context_ptr->nsq_hv_level = 2;
+#endif
         assert(context_ptr->sq_weight != (uint32_t)~0);
     }
 
