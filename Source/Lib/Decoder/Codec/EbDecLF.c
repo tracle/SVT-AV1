@@ -291,7 +291,7 @@ void dec_av1_filter_block_plane_vert(EbDecHandle *dec_handle,
     FrameHeader *frm_hdr = &dec_handle->frame_header;
     EbColorConfig *color_config = &dec_handle->seq_header.color_config;
     EbBitDepthEnum is16bit = (recon_picture_buf->bit_depth > EB_8BIT ||
-        dec_handle->decoder_16bit_pipeline);
+        dec_handle->is_16bit_pipeline);
     int32_t sub_x = color_config->subsampling_x;
     int32_t sub_y = color_config->subsampling_y;
     uint8_t no_lf_luma = !(frm_hdr->loop_filter_params.filter_level[0]) &&
@@ -493,7 +493,7 @@ void dec_av1_filter_block_plane_horz(EbDecHandle *dec_handle, SBInfo *sb_info,
     EbColorConfig *color_config = &dec_handle->seq_header.color_config;
 
     EbBool is16bit = (recon_picture_buf->bit_depth > EB_8BIT ||
-        dec_handle->decoder_16bit_pipeline);
+        dec_handle->is_16bit_pipeline);
 
     int32_t sub_x = color_config->subsampling_x;
     int32_t sub_y = color_config->subsampling_y;

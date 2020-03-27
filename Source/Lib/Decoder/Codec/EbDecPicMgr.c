@@ -174,7 +174,7 @@ EbDecPicBuf *dec_pic_mgr_get_cur_pic(EbDecHandle *dec_handle_ptr) {
         EbErrorType return_error = dec_eb_recon_picture_buffer_desc_ctor(
             (EbPtr *)&(ps_pic_mgr->as_dec_pic[i].ps_pic_buf),
             (EbPtr)&input_pic_buf_desc_init_data,
-            dec_handle_ptr->decoder_16bit_pipeline);
+            dec_handle_ptr->is_16bit_pipeline);
 
         if (return_error != EB_ErrorNone) return NULL;
 

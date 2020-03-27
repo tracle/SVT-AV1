@@ -56,7 +56,7 @@ static INLINE void build_obmc_inter_pred_above(
     int32_t curr_recon_stride[MAX_MB_PLANE], const int num_planes) {
     EbPictureBufferDesc *recon_picture_buf = dec_handle->cur_pic_buf[0]->ps_pic_buf;
     const int            is_hbd = ((recon_picture_buf->bit_depth != EB_8BIT) ||
-        recon_picture_buf->use_16bit_pipeline) ? 1 : 0;
+        recon_picture_buf->is_16bit_pipeline) ? 1 : 0;
     const int overlap = AOMMIN(block_size_high[bsize], block_size_high[BLOCK_64X64]) >> 1;
     uint8_t * above_buf;
     int32_t   above_stride;
@@ -124,7 +124,7 @@ static INLINE void build_obmc_inter_pred_left(
     const int num_planes) {
     EbPictureBufferDesc *recon_picture_buf = dec_handle->cur_pic_buf[0]->ps_pic_buf;
     const int            is_hbd = ((recon_picture_buf->bit_depth != EB_8BIT) ||
-        recon_picture_buf->use_16bit_pipeline) ? 1 : 0;
+        recon_picture_buf->is_16bit_pipeline) ? 1 : 0;
     const int overlap = AOMMIN(block_size_wide[bsize], block_size_wide[BLOCK_64X64]) >> 1;
 
     uint8_t *left_buf;
@@ -226,7 +226,7 @@ static INLINE void dec_build_prediction_by_above_pred(
         uint8_t sub_y = (plane > 0) ? backup_pi->subsampling_y : 0;
 
         if ((recon_picture_buf->bit_depth != EB_8BIT) ||
-            recon_picture_buf->use_16bit_pipeline) {
+            recon_picture_buf->is_16bit_pipeline) {
             tmp_recon_buf =
                 (uint8_t *)((uint16_t *)tmp_buf[plane] + ((rel_mi_col * MI_SIZE) >> sub_x) +
                             0 /*No y-offset for obmc above pred*/);
@@ -385,7 +385,7 @@ static INLINE void dec_build_prediction_by_left_pred(
         int32_t sub_y = (plane > 0) ? backup_pi->subsampling_y : 0;
 
         if ((recon_picture_buf->bit_depth != EB_8BIT) ||
-            recon_picture_buf->use_16bit_pipeline) {
+            recon_picture_buf->is_16bit_pipeline) {
             tmp_recon_buf = (uint8_t *)((uint16_t *)tmp_buf[plane] +
                                         ((MI_SIZE * rel_mi_row * tmp_stride[plane]) >> sub_y) +
                                         0 /*No x offst for left obmc pred*/);

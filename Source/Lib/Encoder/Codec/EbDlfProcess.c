@@ -70,7 +70,7 @@ EbErrorType dlf_context_ctor(EbThreadContext *thread_context_ptr, const EbEncHan
     temp_lf_recon_desc_init_data.split_mode   = EB_FALSE;
     temp_lf_recon_desc_init_data.color_format = color_format;
 
-    if (scs_ptr->static_config.encoder_16bit_pipeline || is_16bit) {
+    if (scs_ptr->static_config.is_16bit_pipeline || is_16bit) {
         temp_lf_recon_desc_init_data.bit_depth = EB_16BIT;
         EB_NEW(context_ptr->temp_lf_recon_picture16bit_ptr,
                eb_recon_picture_buffer_desc_ctor,
@@ -116,7 +116,7 @@ void *dlf_kernel(void *input_ptr) {
 
         EbBool is_16bit = (EbBool)(scs_ptr->static_config.encoder_bit_depth > EB_8BIT);
 
-        if (scs_ptr->static_config.encoder_16bit_pipeline &&
+        if (scs_ptr->static_config.is_16bit_pipeline &&
             scs_ptr->static_config.encoder_bit_depth == EB_8BIT) {
 
             // //copy input from 8bit to 16bit
@@ -195,7 +195,7 @@ void *dlf_kernel(void *input_ptr) {
                 is_16bit ? pcs_ptr->recon_picture16bit_ptr : pcs_ptr->recon_picture_ptr;
 
             if (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag == EB_TRUE) {
-                if (scs_ptr->static_config.encoder_16bit_pipeline || is_16bit)
+                if (scs_ptr->static_config.is_16bit_pipeline || is_16bit)
                     recon_buffer =
                         ((EbReferenceObject *)
                              pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr)
@@ -206,7 +206,7 @@ void *dlf_kernel(void *input_ptr) {
                              pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr)
                             ->reference_picture;
             } else {
-                recon_buffer = scs_ptr->static_config.encoder_16bit_pipeline ||
+                recon_buffer = scs_ptr->static_config.is_16bit_pipeline ||
                     is_16bit ? pcs_ptr->recon_picture16bit_ptr : pcs_ptr->recon_picture_ptr;
             }
             eb_av1_loop_filter_init(pcs_ptr);
@@ -256,7 +256,7 @@ void *dlf_kernel(void *input_ptr) {
                 else
                     recon_picture_ptr = pcs_ptr->recon_picture_ptr;
             }
-            if (scs_ptr->static_config.encoder_16bit_pipeline) {
+            if (scs_ptr->static_config.is_16bit_pipeline) {
                 if (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag == EB_TRUE) {
                     recon_picture_ptr = ((EbReferenceObject *)
                         pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr)
@@ -269,7 +269,7 @@ void *dlf_kernel(void *input_ptr) {
             if (scs_ptr->seq_header.enable_restoration)
                 eb_av1_loop_restoration_save_boundary_lines(cm->frame_to_show, cm, 0);
             if (scs_ptr->seq_header.enable_cdef && pcs_ptr->parent_pcs_ptr->cdef_filter_mode) {
-                if (scs_ptr->static_config.encoder_16bit_pipeline || is_16bit) {
+                if (scs_ptr->static_config.is_16bit_pipeline || is_16bit) {
                     pcs_ptr->src[0] = (uint16_t *)recon_picture_ptr->buffer_y +
                                       (recon_picture_ptr->origin_x +
                                        recon_picture_ptr->origin_y * recon_picture_ptr->stride_y);

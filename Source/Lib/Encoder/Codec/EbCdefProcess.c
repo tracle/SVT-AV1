@@ -524,7 +524,7 @@ void *cdef_kernel(void *input_ptr) {
         int32_t selected_strength_cnt[64] = {0};
 
         if (scs_ptr->seq_header.enable_cdef && pcs_ptr->parent_pcs_ptr->cdef_filter_mode) {
-            if (scs_ptr->static_config.encoder_16bit_pipeline || is_16bit)
+            if (scs_ptr->static_config.is_16bit_pipeline || is_16bit)
                 cdef_seg_search16bit(pcs_ptr, scs_ptr, dlf_results_ptr->segment_index);
             else
                 cdef_seg_search(pcs_ptr, scs_ptr, dlf_results_ptr->segment_index);
@@ -542,7 +542,7 @@ void *cdef_kernel(void *input_ptr) {
                 if (scs_ptr->seq_header.enable_restoration != 0 ||
                     pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ||
                     scs_ptr->static_config.recon_enabled) {
-                    if (scs_ptr->static_config.encoder_16bit_pipeline || is_16bit)
+                    if (scs_ptr->static_config.is_16bit_pipeline || is_16bit)
                         av1_cdef_frame16bit(0, scs_ptr, pcs_ptr);
                     else
                         eb_av1_cdef_frame(0, scs_ptr, pcs_ptr);
@@ -566,21 +566,21 @@ void *cdef_kernel(void *input_ptr) {
                                 cm->frame_to_show->strides[0],
                                 RESTORATION_BORDER,
                                 RESTORATION_BORDER,
-                                scs_ptr->static_config.encoder_16bit_pipeline || is_16bit);
+                                scs_ptr->static_config.is_16bit_pipeline || is_16bit);
                 eb_extend_frame(cm->frame_to_show->buffers[1],
                                 cm->frame_to_show->crop_widths[1],
                                 cm->frame_to_show->crop_heights[1],
                                 cm->frame_to_show->strides[1],
                                 RESTORATION_BORDER,
                                 RESTORATION_BORDER,
-                                scs_ptr->static_config.encoder_16bit_pipeline || is_16bit);
+                                scs_ptr->static_config.is_16bit_pipeline || is_16bit);
                 eb_extend_frame(cm->frame_to_show->buffers[2],
                                 cm->frame_to_show->crop_widths[1],
                                 cm->frame_to_show->crop_heights[1],
                                 cm->frame_to_show->strides[1],
                                 RESTORATION_BORDER,
                                 RESTORATION_BORDER,
-                                scs_ptr->static_config.encoder_16bit_pipeline || is_16bit);
+                                scs_ptr->static_config.is_16bit_pipeline || is_16bit);
             }
 
             pcs_ptr->rest_segments_column_count = scs_ptr->rest_segment_column_count;

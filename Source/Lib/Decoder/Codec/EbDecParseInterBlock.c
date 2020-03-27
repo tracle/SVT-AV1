@@ -2325,7 +2325,7 @@ void palette_tokens(EbDecHandle *dec_handle, ParseCtxt *parse_ctx, PartitionInfo
                                     sub_y);
                 uint16_t *palette = parse_ctx->palette_colors[plane_itr];
                 if (recon_picture_buf->bit_depth == EB_8BIT &&
-                    !(dec_handle->decoder_16bit_pipeline))
+                    !(dec_handle->is_16bit_pipeline))
                 {
                     uint8_t *temp_buf = (uint8_t *)blk_recon_buf;
                     for (int i = 0; i < block_height; i++) {

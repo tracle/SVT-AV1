@@ -2568,9 +2568,6 @@ typedef enum DownSamplingMethod
 #define TRANSFORM_MAX_SIZE          64
 #define TRANSFORM_MIN_SIZE          4
 
-#define BIT_INCREMENT_10BIT    2
-#define BIT_INCREMENT_8BIT     0
-
 #define TRANS_BIT_INCREMENT    0
 #define QUANT_IQUANT_SHIFT     20 // Q(QP%6) * IQ(QP%6) = 2^20
 #define QUANT_SHIFT            14 // Q(4) = 2^14

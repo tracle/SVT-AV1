@@ -121,7 +121,7 @@ typedef struct EbSvtAv1DecConfiguration {
     /* Decoder internal bit-depth is set to 16-bit even if the bitstream is 8-bit
  *
  * Default is 0. */
-    EbBool decoder_16bit_pipeline;
+    EbBool is_16bit_pipeline;
 } EbSvtAv1DecConfiguration;
 
 /* STEP 1: Call the library to construct a Component Handle.

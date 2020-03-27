@@ -105,13 +105,13 @@ EbErrorType enc_dec_context_ctor(EbThreadContext *  thread_context_ptr,
         init_data.color_format       = color_format;
 
         context_ptr->input_sample16bit_buffer = (EbPictureBufferDesc *)EB_NULL;
-        if (is_16bit || static_config->encoder_16bit_pipeline) {
+        if (is_16bit || static_config->is_16bit_pipeline) {
             init_data.bit_depth = EB_16BIT;
 
             EB_NEW(context_ptr->input_sample16bit_buffer,
                    eb_picture_buffer_desc_ctor,
                    (EbPtr)&init_data);
-            init_data.bit_depth = static_config->encoder_16bit_pipeline ? static_config->encoder_bit_depth : init_data.bit_depth;
+            init_data.bit_depth = static_config->is_16bit_pipeline ? static_config->encoder_bit_depth : init_data.bit_depth;
         }
     }
 
@@ -194,7 +194,7 @@ static void reset_encode_pass_neighbor_arrays(PictureControlSet *pcs_ptr, uint16
     // TODO(Joel): 8-bit ep_luma_recon_neighbor_array (Cb,Cr) when is_16bit==0?
     EbBool is_16bit =
         (EbBool)(pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.encoder_bit_depth > EB_8BIT);
-    if (is_16bit || pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.encoder_16bit_pipeline) {
+    if (is_16bit || pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.is_16bit_pipeline) {
         neighbor_array_unit_reset(pcs_ptr->ep_luma_recon_neighbor_array16bit[tile_idx]);
         neighbor_array_unit_reset(pcs_ptr->ep_cb_recon_neighbor_array16bit[tile_idx]);
         neighbor_array_unit_reset(pcs_ptr->ep_cr_recon_neighbor_array16bit[tile_idx]);
@@ -219,7 +219,7 @@ static void reset_encode_pass_neighbor_arrays(PictureControlSet *pcs_ptr) {
     // TODO(Joel): 8-bit ep_luma_recon_neighbor_array (Cb,Cr) when is_16bit==0?
     EbBool is_16bit =
         (EbBool)(pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.encoder_bit_depth > EB_8BIT);
-    if (is_16bit || pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.encoder_16bit_pipeline) {
+    if (is_16bit || pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.is_16bit_pipeline) {
         neighbor_array_unit_reset(pcs_ptr->ep_luma_recon_neighbor_array16bit);
         neighbor_array_unit_reset(pcs_ptr->ep_cb_recon_neighbor_array16bit);
         neighbor_array_unit_reset(pcs_ptr->ep_cr_recon_neighbor_array16bit);
@@ -233,7 +233,7 @@ static void reset_encode_pass_neighbor_arrays(PictureControlSet *pcs_ptr) {
  **************************************************/
 static void reset_enc_dec(EncDecContext *context_ptr, PictureControlSet *pcs_ptr,
                           SequenceControlSet *scs_ptr, uint32_t segment_index) {
-    context_ptr->is_16bit = (EbBool)(scs_ptr->static_config.encoder_bit_depth > EB_8BIT) || (EbBool)(scs_ptr->static_config.encoder_16bit_pipeline);
+    context_ptr->is_16bit = (EbBool)(scs_ptr->static_config.encoder_bit_depth > EB_8BIT) || (EbBool)(scs_ptr->static_config.is_16bit_pipeline);
     context_ptr->bit_depth = scs_ptr->static_config.encoder_bit_depth;
     uint16_t picture_qp   = pcs_ptr->picture_qp;
 #if TILES_PARALLEL
@@ -1239,7 +1239,7 @@ void pad_ref_and_set_flags(PictureControlSet *pcs_ptr, SequenceControlSet *scs_p
                   (ref_pic_16bit_ptr->width + (ref_pic_ptr->origin_x << 1)) >> 1,
                   (ref_pic_16bit_ptr->height + (ref_pic_ptr->origin_y << 1)) >> 1);
     }
-    if ((scs_ptr->static_config.encoder_16bit_pipeline) && (!is_16bit)) {
+    if ((scs_ptr->static_config.is_16bit_pipeline) && (!is_16bit)) {
         // Y samples
         generate_padding16_bit(ref_pic_16bit_ptr->buffer_y,
             ref_pic_16bit_ptr->stride_y << 1,

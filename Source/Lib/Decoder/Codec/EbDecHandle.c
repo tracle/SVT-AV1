@@ -253,11 +253,11 @@ int svt_dec_out_buf(EbDecHandle *dec_handle_ptr, EbBufferHeaderType *p_buffer) {
     {
         if (recon_picture_buf->bit_depth == EB_8BIT) {
 
-            if (dec_handle_ptr->decoder_16bit_pipeline) {
+            if (dec_handle_ptr->is_16bit_pipeline) {
                 uint8_t *dst;
                 uint16_t *pu2_src;
                 uint32_t  j;
-                ASSERT(recon_picture_buf->use_16bit_pipeline);
+                ASSERT(recon_picture_buf->is_16bit_pipeline);
 
                 /* Luma */
                 dst = luma;
@@ -425,7 +425,7 @@ EbErrorType eb_svt_dec_set_default_parameter(EbSvtAv1DecConfiguration *config_pt
     config_ptr->max_picture_width  = 0;
     config_ptr->max_picture_height = 0;
     config_ptr->max_bit_depth      = EB_EIGHT_BIT;
-    config_ptr->decoder_16bit_pipeline = 0;
+    config_ptr->is_16bit_pipeline = 0;
     config_ptr->max_color_format   = EB_YUV420;
     config_ptr->threads            = 1;
 
@@ -528,7 +528,7 @@ eb_svt_dec_set_parameter(EbComponentType *         svt_dec_component,
     EbDecHandle *dec_handle_ptr = (EbDecHandle *)svt_dec_component->p_component_private;
 
     dec_handle_ptr->dec_config = *config_struct;
-    dec_handle_ptr->decoder_16bit_pipeline = config_struct->decoder_16bit_pipeline;
+    dec_handle_ptr->is_16bit_pipeline = config_struct->is_16bit_pipeline;
 
     return EB_ErrorNone;
 }
