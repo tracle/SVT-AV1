@@ -444,6 +444,9 @@ void eb_av1_superres_upscale_frame(struct Av1Common *cm,
     EbPictureBufferDesc *src = ps_recon_pic_temp;
     EbPictureBufferDesc *dst = recon_ptr;
 
+    // get the bit-depth from the encoder config instead of from the recon ptr
+    int bit_depth = scs_ptr->static_config.encoder_bit_depth;
+
     for (int plane = 0; plane < num_planes; ++plane) {
         uint8_t *src_buf, *dst_buf;
         int32_t src_stride, dst_stride;
@@ -457,7 +460,7 @@ void eb_av1_superres_upscale_frame(struct Av1Common *cm,
 
         av1_upscale_normative_rows(cm, (const uint8_t *) src_buf, src_stride, dst_buf,
                                    dst_stride, src->height >> sub_x,
-                                   sub_x, src->bit_depth);
+                                   sub_x, bit_depth);
     }
 
     // free the memory
