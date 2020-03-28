@@ -162,8 +162,8 @@ extern "C" {
 // cond_0 + cond_1 + cond_2
 #define FIRST_COMBO 1
 #if FIRST_COMBO
-#define USE_COEFF_INFO 1 
-#define USE_COST_SQ_VS_NSQ 0 
+#define USE_COEFF_INFO 0 
+#define USE_COST_SQ_VS_NSQ 1 
 #define USE_TWO_AS_OR 0
 #define USE_TWO_AS_AND 0
 #endif
