@@ -4154,9 +4154,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 void copy_neighbour_arrays(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
                            uint32_t src_idx, uint32_t dst_idx, uint32_t blk_mds, uint32_t sb_org_x,
                            uint32_t sb_org_y);
-
+#if POST_PD1_REF_NSQ_FOR_ONLY_PLUS_1 // lossless
+static void set_parent_to_be_considered(ModeDecisionContext *context_ptr, MdcSbData *results_ptr, uint32_t blk_index, int32_t sb_size, int8_t depth_step) {
+#else
 static void set_parent_to_be_considered(MdcSbData *results_ptr, uint32_t blk_index, int32_t sb_size,
                                         int8_t depth_step) {
+#endif
     uint32_t         parent_depth_idx_mds, block_1d_idx;
     const BlockGeom *blk_geom = get_blk_geom_mds(blk_index);
     if (blk_geom->sq_size < ((sb_size == BLOCK_128X128) ? 128 : 64)) {
@@ -4167,6 +4170,9 @@ static void set_parent_to_be_considered(MdcSbData *results_ptr, uint32_t blk_ind
             parent_depth_offset[sb_size == BLOCK_128X128][blk_geom->depth];
         const BlockGeom *parent_blk_geom = get_blk_geom_mds(parent_depth_idx_mds);
         uint32_t         parent_tot_d1_blocks =
+#if POST_PD1_REF_NSQ_FOR_ONLY_PLUS_1 // here
+        (context_ptr->pd_pass == PD_PASS_1) ? 1 :
+#endif
             parent_blk_geom->sq_size == 128
                 ? 17
                 : parent_blk_geom->sq_size > 8 ? 25 : parent_blk_geom->sq_size == 8 ? 5 : 1;
@@ -4175,16 +4181,27 @@ static void set_parent_to_be_considered(MdcSbData *results_ptr, uint32_t blk_ind
         }
 
         if (depth_step < -1)
+#if POST_PD1_REF_NSQ_FOR_ONLY_PLUS_1 // lossless
+            set_parent_to_be_considered(context_ptr, results_ptr, parent_depth_idx_mds, sb_size, depth_step + 1);
+#else
             set_parent_to_be_considered(results_ptr, parent_depth_idx_mds, sb_size, depth_step + 1);
+#endif
     }
 }
-
+#if POST_PD1_REF_NSQ_FOR_ONLY_PLUS_1 // lossless
+static void set_child_to_be_considered(ModeDecisionContext *context_ptr, MdcSbData *results_ptr,  uint32_t blk_index, int32_t sb_size, int8_t depth_step) {
+#else
 static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_index, int32_t sb_size,
                                        int8_t depth_step) {
+#endif
     uint32_t         child_block_idx_1, child_block_idx_2, child_block_idx_3, child_block_idx_4;
     uint32_t         tot_d1_blocks, block_1d_idx;
     const BlockGeom *blk_geom = get_blk_geom_mds(blk_index);
+#if POST_PD1_REF_NSQ_FOR_ONLY_PLUS_1 //here
+    tot_d1_blocks = (context_ptr->pd_pass == PD_PASS_1 && depth_step == 1) ? 1 :
+#else
     tot_d1_blocks =
+#endif
         blk_geom->sq_size == 128 ? 17 : blk_geom->sq_size > 8 ? 25 : blk_geom->sq_size == 8 ? 5 : 1;
     if (blk_geom->sq_size > 4) {
         for (block_1d_idx = 0; block_1d_idx < tot_d1_blocks; block_1d_idx++) {
@@ -4205,7 +4222,11 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
                 EB_FALSE;
         }
         if (depth_step > 1)
+#if POST_PD1_REF_NSQ_FOR_ONLY_PLUS_1 // lossless
+            set_child_to_be_considered(context_ptr,results_ptr, child_block_idx_1, sb_size, depth_step - 1);
+#else
             set_child_to_be_considered(results_ptr, child_block_idx_1, sb_size, depth_step - 1);
+#endif
         //Set second child to be considered
         child_block_idx_2 =
             child_block_idx_1 + ns_depth_offset[sb_size == BLOCK_128X128][blk_geom->depth + 1];
@@ -4220,7 +4241,11 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
                 EB_FALSE;
         }
         if (depth_step > 1)
+#if POST_PD1_REF_NSQ_FOR_ONLY_PLUS_1 // lossless
+            set_child_to_be_considered(context_ptr, results_ptr, child_block_idx_2, sb_size, depth_step - 1);
+#else
             set_child_to_be_considered(results_ptr, child_block_idx_2, sb_size, depth_step - 1);
+#endif
         //Set third child to be considered
         child_block_idx_3 =
             child_block_idx_2 + ns_depth_offset[sb_size == BLOCK_128X128][blk_geom->depth + 1];
@@ -4236,7 +4261,11 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
                 EB_FALSE;
         }
         if (depth_step > 1)
+#if POST_PD1_REF_NSQ_FOR_ONLY_PLUS_1 // lossless
+            set_child_to_be_considered(context_ptr,results_ptr, child_block_idx_3, sb_size, depth_step - 1);
+#else
             set_child_to_be_considered(results_ptr, child_block_idx_3, sb_size, depth_step - 1);
+#endif
         //Set forth child to be considered
         child_block_idx_4 =
             child_block_idx_3 + ns_depth_offset[sb_size == BLOCK_128X128][blk_geom->depth + 1];
@@ -4251,7 +4280,11 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
                 EB_FALSE;
         }
         if (depth_step > 1)
+#if POST_PD1_REF_NSQ_FOR_ONLY_PLUS_1 // lossless
+            set_child_to_be_considered(context_ptr, results_ptr, child_block_idx_4, sb_size, depth_step - 1);
+#else
             set_child_to_be_considered(results_ptr, child_block_idx_4, sb_size, depth_step - 1);
+#endif
     }
 }
 
@@ -4552,7 +4585,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 
     while (blk_index < scs_ptr->max_block_cnt) {
         const BlockGeom *blk_geom = get_blk_geom_mds(blk_index);
+#if POST_PD1_REF_NSQ_FOR_ONLY_PLUS_1 // here
+        tot_d1_blocks = (context_ptr->pd_pass == PD_PASS_1) ? 1 : blk_geom->sq_size == 128
+#else
         tot_d1_blocks             = blk_geom->sq_size == 128
+#endif
                             ? 17
                             : blk_geom->sq_size > 8 ? 25 : blk_geom->sq_size == 8 ? 5 : 1;
 
@@ -4847,13 +4884,20 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 
                     // Add block indices of upper depth(s)
                     if (s_depth != 0)
+#if POST_PD1_REF_NSQ_FOR_ONLY_PLUS_1 // lossless
+                        set_parent_to_be_considered(context_ptr, results_ptr, blk_index, scs_ptr->seq_header.sb_size, s_depth);
+#else
                         set_parent_to_be_considered(
                             results_ptr, blk_index, scs_ptr->seq_header.sb_size, s_depth);
-
+#endif
                     // Add block indices of lower depth(s)
                     if (e_depth != 0)
+#if POST_PD1_REF_NSQ_FOR_ONLY_PLUS_1 // lossless
+                        set_child_to_be_considered(context_ptr, results_ptr, blk_index, scs_ptr->seq_header.sb_size, e_depth);
+#else
                         set_child_to_be_considered(
                             results_ptr, blk_index, scs_ptr->seq_header.sb_size, e_depth);
+#endif
                 }
             }
         }
