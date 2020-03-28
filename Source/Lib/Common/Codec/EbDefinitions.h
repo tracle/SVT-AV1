@@ -172,7 +172,7 @@ extern "C" {
 #define SQ_COST_TO_SUB_COST_DEV_TH 0
 #endif
 
-#define POST_PD1_REF_NSQ_FOR_ONLY_PLUS_1 0
+#define POST_PD1_REF_NSQ_FOR_ONLY_PLUS_1 1
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
 
