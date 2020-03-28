@@ -167,12 +167,12 @@ extern "C" {
 #define USE_TWO_AS_AND 1
 #endif
 
-#define SECOND_COMBO 0
+#define SECOND_COMBO 1
 #if SECOND_COMBO
 #define SQ_COST_TO_SUB_COST_DEV_TH 0
 #endif
 
-#define POST_PD1_REF_NSQ_FOR_ONLY_PLUS_1 1
+#define POST_PD1_REF_NSQ_FOR_ONLY_PLUS_1 0
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
 
