@@ -2204,7 +2204,7 @@ void copy_api_from_app(
     scs_ptr->chroma_format_idc = (uint32_t)(scs_ptr->static_config.encoder_color_format);
     scs_ptr->encoder_bit_depth = (uint32_t)(scs_ptr->static_config.encoder_bit_depth);
     //16bit pipeline
-    scs_ptr->static_config.is_16bit_pipeline = ((EbSvtAv1EncConfiguration*)config_struct)->is_16bit_pipeline;
+    scs_ptr->static_config.is_16bit_pipeline = ((((EbSvtAv1EncConfiguration*)config_struct)->encoder_bit_depth) > EB_8BIT) ? EB_TRUE: ((EbSvtAv1EncConfiguration*)config_struct)->is_16bit_pipeline;
     scs_ptr->subsampling_x = (scs_ptr->chroma_format_idc == EB_YUV444 ? 1 : 2) - 1;
     scs_ptr->subsampling_y = (scs_ptr->chroma_format_idc >= EB_YUV422 ? 1 : 2) - 1;
     scs_ptr->static_config.ten_bit_format = ((EbSvtAv1EncConfiguration*)config_struct)->ten_bit_format;
@@ -2886,11 +2886,6 @@ static EbErrorType verify_settings(
 
     if (config->superres_denom < MIN_SUPERRES_DENOM || config->superres_denom > MAX_SUPERRES_DENOM) {
         SVT_LOG("Error instance %u: invalid superres-denom %d, should be in the range [%d - %d] \n", channel_number + 1, config->superres_denom, MIN_SUPERRES_DENOM, MAX_SUPERRES_DENOM);
-        return_error = EB_ErrorBadParameter;
-    }
-
-    if ((config->is_16bit_pipeline == 0) && (config->encoder_bit_depth > 8)) {
-        SVT_LOG("Error instance %u: invalid bit depth for 16bit pipeline, your input: %d\n", channel_number + 1, config->encoder_bit_depth);
         return_error = EB_ErrorBadParameter;
     }
     return return_error;
