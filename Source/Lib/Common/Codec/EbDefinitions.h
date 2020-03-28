@@ -154,10 +154,11 @@ extern "C" {
 
 ///////*******************************************************************//
 // Build the depth reduction ref
+#if 0
 #define SHUT_POST_PD1_SQ_VS_NSQ 1
 #define SHUT_POST_PD2_SQ_WEIGHT 1
 #define SHUT_POST_PD2_SKIP_DEPTH 1
-
+#endif
 // cond_0 + cond_1 + cond_2
 #define FIRST_COMBO 0
 #if FIRST_COMBO
@@ -167,9 +168,9 @@ extern "C" {
 #define USE_TWO_AS_AND 1
 #endif
 
-#define SECOND_COMBO 1
+#define SECOND_COMBO 0
 #if SECOND_COMBO
-#define SQ_COST_TO_SUB_COST_DEV_TH 0
+#define SQ_COST_TO_SUB_COST_DEV_TH 10
 #endif
 
 #define POST_PD1_REF_NSQ_FOR_ONLY_PLUS_1 0
