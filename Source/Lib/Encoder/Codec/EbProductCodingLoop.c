@@ -10070,7 +10070,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                             context_ptr,
                             blk_geom->sqi_mds,
                             scs_ptr->seq_header.sb_size,
-                            scs_ptr->seq_header.sb_size == BLOCK_128X128 ? 6 : 5);
+                            2/*scs_ptr->seq_header.sb_size == BLOCK_128X128 ? 6 : 5*/);
                     }
             }
 #endif
