@@ -156,7 +156,18 @@ extern "C" {
 #define QPS_UPDATE              1 // 2 PASS QPS improvement
 #define BUG_FIX_INV_TRANSFORM   1 // Ported PR 1124 : Bug fix in common inv_transform sse3 functions and decoder LF-MT
 
-#define REFACTOR_ME_HME         1 // Refactor the HME/ME search code
+#define REFACTOR_ME_HME             1 // Refactor the HME/ME search code
+#define ALLOW_ONE_DECIMATION_HME    0 // Skip hmel0 and use the equivalent SR in hmel1
+#if ALLOW_ONE_DECIMATION_HME
+#define HME_L1_DISTANCE_ALGORITHM   1
+#define ALIGN_HME_L1_SR_WITH_HME_L0 1
+#endif
+
+#define ALLOW_ZERO_DECIMATION_HME   0 // Skip hmel0 and hmel1 and use the equivalent SR in hmel2
+#if ALLOW_ZERO_DECIMATION_HME
+#define HME_L2_DISTANCE_ALGORITHM   1
+#define ALIGN_HME_L2_SR_WITH_HME_L0 1
+#endif
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
