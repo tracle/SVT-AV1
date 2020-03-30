@@ -86,6 +86,7 @@ extern "C" {
 #define NON_AVX512_SUPPORT
 #endif
 
+#define PRED_STR_UPDATE 1 // Prediction structure update
 #define MRP_31B_SUPPORT 1
 #define TILES_PARALLEL 1
 #define R2R_FIX 1
@@ -124,7 +125,12 @@ extern "C" {
 #define AOM_LEFT_TOP_MARGIN_SCALED(subsampling) \
     (AOM_LEFT_TOP_MARGIN_PX(subsampling) << SCALE_SUBPEL_BITS)
 
+#if CS2_ADOPTIONS_1
+#define H_PEL_SEARCH_WIND_3 3  // 1/2-pel serach window 3
+#define H_PEL_SEARCH_WIND_2 2  // 1/2-pel serach window 2
+#else
 #define H_PEL_SEARCH_WIND 3 // 1/2-pel search window
+#endif
 #define Q_PEL_SEARCH_WIND 2 // 1/4-pel search window
 #define HP_REF_OPT 1 // Remove redundant positions.
 
@@ -3449,7 +3455,7 @@ static const uint16_t max_me_search_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SU
     // SC
         {  512,    512,    480,    480,    368,    368,    280,    280,    280,    280,    280,    280,    280 },
         {  800,    800,    480,    480,    368,    368,    280,    280,    280,    280,    280,    280,    280 },
-        {  1024,   1024,   1024,   1024,   784,    784,    600,    600,    600,    600,    600,    600,    600 },
+        {  1024,   800 ,   1024,   1024,   784,    784,    600,    600,    600,    600,    600,    600,    600 },
         {  1536,   1536,   1024,   1024,   784,    784,    600,    600,    600,    600,    600,    600,    600 }
 #else
     // NSC
@@ -3478,7 +3484,7 @@ static const uint16_t max_me_search_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_S
         // SC
         {  512,    512,     480,     480,     368,    368,    280,    280,    280,    280,    280,    280,    280 },
         {  800,    800,     480,     480,     368,    368,    280,    280,    280,    280,    280,    280,    280 },
-        {  1024,   1024,    1024,    1024,    784,    784,    600,    600,    600,    600,    600,    600,    600 },
+        {  1024,   800 ,    1024,    1024,    784,    784,    600,    600,    600,    600,    600,    600,    600 },
         {  1536,   1536,    1024,    1024,    784,    784,    600,    600,    600,    600,    600,    600,    600 }
 #else
     // NSC

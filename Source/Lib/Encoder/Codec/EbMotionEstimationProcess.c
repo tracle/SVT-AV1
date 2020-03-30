@@ -262,11 +262,17 @@ EbErrorType signal_derivation_me_kernel_oq(SequenceControlSet *       scs_ptr,
             context_ptr->me_context_ptr->use_subpel_flag = 1;
     else
         context_ptr->me_context_ptr->use_subpel_flag = scs_ptr->static_config.enable_subpel;
+#if CS2_ADOPTIONS_1
+    if (enc_mode <= ENC_M0) {
+        context_ptr->me_context_ptr->half_pel_mode =
+            (sc_content_detected) ? REFINEMENT_HP_MODE : EX_HP_MODE;
+#else
     if (MR_MODE) {
         context_ptr->me_context_ptr->half_pel_mode    = EX_HP_MODE;
     } else if (enc_mode <= ENC_M0) {
         context_ptr->me_context_ptr->half_pel_mode =
             (sc_content_detected) ? REFINEMENT_HP_MODE : EX_HP_MODE;
+#endif
 #if SWITCHED_HALF_PEL_MODE
     }else if (enc_mode <= ENC_M2) {
         context_ptr->me_context_ptr->half_pel_mode =
@@ -276,6 +282,9 @@ EbErrorType signal_derivation_me_kernel_oq(SequenceControlSet *       scs_ptr,
         context_ptr->me_context_ptr->half_pel_mode    = REFINEMENT_HP_MODE;
     }
 
+#if CS2_ADOPTIONS_1
+    context_ptr->me_context_ptr->h_pel_search_wind = H_PEL_SEARCH_WIND_2;
+#endif
     // Set fractional search model
     // 0: search all blocks
     // 1: selective based on Full-Search SAD & MV.
@@ -287,13 +296,10 @@ EbErrorType signal_derivation_me_kernel_oq(SequenceControlSet *       scs_ptr,
             context_ptr->me_context_ptr->fractional_search_model = 1;
     } else
         context_ptr->me_context_ptr->fractional_search_model = 2;
-
-#if CS2_ADOPTIONS_1
-    // HME Search Method and ME Search Method
-    context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
-    context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;
-#else
     // HME Search Method
+#if CS2_ADOPTIONS_1
+        context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
+#else
     if (sc_content_detected)
         if (enc_mode <= ENC_M6)
             context_ptr->me_context_ptr->hme_search_method = FULL_SAD_SEARCH;
@@ -301,7 +307,11 @@ EbErrorType signal_derivation_me_kernel_oq(SequenceControlSet *       scs_ptr,
             context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
     else
         context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
+#endif
     // ME Search Method
+#if CS2_ADOPTIONS_1
+        context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;
+#else
     if (sc_content_detected)
         if (enc_mode <= ENC_M5)
             context_ptr->me_context_ptr->me_search_method = FULL_SAD_SEARCH;
@@ -470,28 +480,38 @@ EbErrorType tf_signal_derivation_me_kernel_oq(SequenceControlSet *       scs_ptr
     if (scs_ptr->static_config.enable_subpel == DEFAULT)
         // Set the default settings of subpel
         if (sc_content_detected)
+#if !CS2_ADOPTIONS_1
             if (enc_mode <= ENC_M1)
                 context_ptr->me_context_ptr->use_subpel_flag = 1;
             else
+#endif
                 context_ptr->me_context_ptr->use_subpel_flag = 0;
         else
             context_ptr->me_context_ptr->use_subpel_flag = 1;
     else
         context_ptr->me_context_ptr->use_subpel_flag = scs_ptr->static_config.enable_subpel;
-
+#if CS2_ADOPTIONS_1
+    if (enc_mode <= ENC_M0) {
+        context_ptr->me_context_ptr->half_pel_mode =
+            (sc_content_detected) ? REFINEMENT_HP_MODE : EX_HP_MODE;
+#else
     if (MR_MODE) {
         context_ptr->me_context_ptr->half_pel_mode    = EX_HP_MODE;
     } else if (enc_mode <= ENC_M0) {
         context_ptr->me_context_ptr->half_pel_mode =
             (sc_content_detected) ? REFINEMENT_HP_MODE : EX_HP_MODE;
+#endif
 #if SWITCHED_HALF_PEL_MODE
-    }else if (enc_mode <= ENC_M2) {
+    }else if (enc_mode <= ENC_M1) {
         context_ptr->me_context_ptr->half_pel_mode =
             (sc_content_detected) ? REFINEMENT_HP_MODE : SWITCHABLE_HP_MODE;
 #endif
     } else {
         context_ptr->me_context_ptr->half_pel_mode    = REFINEMENT_HP_MODE;
     }
+#if CS2_ADOPTIONS_1
+    context_ptr->me_context_ptr->h_pel_search_wind =   H_PEL_SEARCH_WIND_3;
+#endif
     // Set fractional search model
     // 0: search all blocks
     // 1: selective based on Full-Search SAD & MV.
