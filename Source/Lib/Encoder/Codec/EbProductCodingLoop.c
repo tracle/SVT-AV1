@@ -10060,17 +10060,72 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                 }
 
                 uint64_t best_sub_cost = MIN(sub_group_0_cost, sub_group_1_cost);
-                if (best_sub_cost != MAX_MODE_COST)
+
+                // Derive H cost
+                uint64_t h_cost = MAX_MODE_COST;
+                if (
+                    context_ptr->md_local_blk_unit[blk_geom->sqi_mds + 1].avail_blk_flag  &&
+                    context_ptr->md_local_blk_unit[blk_geom->sqi_mds + 2].avail_blk_flag  ){
+
+                    h_cost =
+                        context_ptr->md_local_blk_unit[blk_geom->sqi_mds + 1].default_cost +
+                        context_ptr->md_local_blk_unit[blk_geom->sqi_mds + 2].default_cost ;
+                }
+                // Derive H4 cost
+                uint64_t h4_cost = MAX_MODE_COST;
+                if (
+                    context_ptr->md_local_blk_unit[blk_geom->sqi_mds + 17].avail_blk_flag  &&
+                    context_ptr->md_local_blk_unit[blk_geom->sqi_mds + 18].avail_blk_flag  &&
+                    context_ptr->md_local_blk_unit[blk_geom->sqi_mds + 19].avail_blk_flag  &&
+                    context_ptr->md_local_blk_unit[blk_geom->sqi_mds + 20].avail_blk_flag) {
+
+                    h4_cost =
+                        context_ptr->md_local_blk_unit[blk_geom->sqi_mds + 17].default_cost +
+                        context_ptr->md_local_blk_unit[blk_geom->sqi_mds + 18].default_cost +
+                        context_ptr->md_local_blk_unit[blk_geom->sqi_mds + 19].default_cost +
+                        context_ptr->md_local_blk_unit[blk_geom->sqi_mds + 20].default_cost;
+                }
+                // Derive V cost
+                uint64_t v_cost = MAX_MODE_COST;
+                if (
+                    context_ptr->md_local_blk_unit[blk_geom->sqi_mds + 3].avail_blk_flag  &&
+                    context_ptr->md_local_blk_unit[blk_geom->sqi_mds + 4].avail_blk_flag) {
+
+                    v_cost =
+                        context_ptr->md_local_blk_unit[blk_geom->sqi_mds + 3].default_cost +
+                        context_ptr->md_local_blk_unit[blk_geom->sqi_mds + 4].default_cost;
+                }
+                // Derive V4 cost
+                uint64_t v4_cost = MAX_MODE_COST;
+                if (
+                    context_ptr->md_local_blk_unit[blk_geom->sqi_mds + 21].avail_blk_flag  &&
+                    context_ptr->md_local_blk_unit[blk_geom->sqi_mds + 22].avail_blk_flag  &&
+                    context_ptr->md_local_blk_unit[blk_geom->sqi_mds + 23].avail_blk_flag  &&
+                    context_ptr->md_local_blk_unit[blk_geom->sqi_mds + 24].avail_blk_flag) {
+
+                    v4_cost =
+                        context_ptr->md_local_blk_unit[blk_geom->sqi_mds + 21].default_cost +
+                        context_ptr->md_local_blk_unit[blk_geom->sqi_mds + 22].default_cost +
+                        context_ptr->md_local_blk_unit[blk_geom->sqi_mds + 23].default_cost +
+                        context_ptr->md_local_blk_unit[blk_geom->sqi_mds + 24].default_cost;
+                }
+
+                if (best_sub_cost != MAX_MODE_COST && h_cost != MAX_MODE_COST && h4_cost != MAX_MODE_COST && v_cost != MAX_MODE_COST && v4_cost != MAX_MODE_COST)
+
                     //if (context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost < best_sub_cost)
                     {
-                        int64_t sq_cost_to_best_sub_cost_deviation = (int64_t)(((int64_t)best_sub_cost - (int64_t)context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost) * 100) / (int64_t)context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost;
+                        int64_t sq_cost_to_best_sub_cost_deviation = (int64_t)(((int64_t)context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost - (int64_t)best_sub_cost) * 100) / (int64_t)context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost;
+                        int64_t h_cost_to_h4_cost = (int64_t)(((int64_t)h_cost - (int64_t)h4_cost) * 100) / (int64_t)h_cost;
+                        int64_t v_cost_to_v4_cost = (int64_t)(((int64_t)v_cost - (int64_t)v4_cost) * 100) / (int64_t)v_cost;
 
-                        if(sq_cost_to_best_sub_cost_deviation >= SQ_COST_TO_SUB_COST_DEV_TH)
+
+                        if(h_cost_to_h4_cost <= 0 && v_cost_to_v4_cost <= 0)
+                        if(sq_cost_to_best_sub_cost_deviation <= SQ_COST_TO_SUB_COST_DEV_TH)
                         set_child_to_be_skipped(
                             context_ptr,
                             blk_geom->sqi_mds,
                             scs_ptr->seq_header.sb_size,
-                            2/*scs_ptr->seq_header.sb_size == BLOCK_128X128 ? 6 : 5*/);
+                            scs_ptr->seq_header.sb_size == BLOCK_128X128 ? 6 : 5);
                     }
             }
 #endif
