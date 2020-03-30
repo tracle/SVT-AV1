@@ -148,6 +148,10 @@ void* set_me_hme_params_oq(
         me_context_ptr->hme_level2_search_area_in_height_array[0] =
         me_context_ptr->hme_level2_search_area_in_height_array[1] = 16;
 
+#if ADD_HME_DECIMATION_SIGNAL
+    me_context_ptr->hme_decimation = TWO_DECIMATION_HME;
+#endif
+
     // Scale up the MIN ME area if low frame rate
     uint8_t  low_frame_rate_flag = sc_content_detected ? 0 :
         (scs_ptr->static_config.frame_rate >> 16) < 50 ? 1 : 0;
@@ -475,6 +479,10 @@ void* tf_set_me_hme_params_oq(
         me_context_ptr->hme_level2_search_area_in_width_array[1] =
         me_context_ptr->hme_level2_search_area_in_height_array[0] =
         me_context_ptr->hme_level2_search_area_in_height_array[1] = 16;
+
+#if ADD_HME_DECIMATION_SIGNAL
+    me_context_ptr->hme_decimation = TWO_DECIMATION_HME;
+#endif
 #else
     // HME Level0
     me_context_ptr->hme_level0_total_search_area_width =

@@ -7894,8 +7894,16 @@ void hme_level_1(
     hme_level1_search_area_in_height = (hme_level1_search_area_in_height * context_ptr->hme_factor) / 100;
 #endif
 #if HME_L1_DISTANCE_ALGORITHM
+#if ADD_HME_DECIMATION_SIGNAL
+    // Don't change TWO_DECIMATION_HME refinement; use the HME distance algorithm only for non-2D HME
+    if (context_ptr->hme_decimation <= ONE_DECIMATION_HME) {
+        hme_level1_search_area_in_width = (hme_sr_factor_x  * hme_level1_search_area_in_width) / 100;
+        hme_level1_search_area_in_height = (hme_sr_factor_y  * hme_level1_search_area_in_height) / 100;
+    }
+#else
     hme_level1_search_area_in_width = (hme_sr_factor_x  * hme_level1_search_area_in_width) / 100;
     hme_level1_search_area_in_height = (hme_sr_factor_y  * hme_level1_search_area_in_height) / 100;
+#endif
 #endif
     int16_t search_area_width  = (int16_t)((hme_level1_search_area_in_width + 7) & ~0x07);
     int16_t search_area_height = hme_level1_search_area_in_height;
@@ -8036,12 +8044,12 @@ void hme_level_2(PictureParentControlSet *pcs_ptr, // input parameter, Picture c
                  // number in the horizontal direction
                  uint32_t search_region_number_in_height, // input parameter, search region
 #if ALIGN_HME_L2_SR_WITH_HME_L0 || HME_L2_DISTANCE_ALGORITHM
-    int16_t hme_level2_search_area_in_width,
-    int16_t hme_level2_search_area_in_height,
+                int16_t hme_level2_search_area_in_width,
+                int16_t hme_level2_search_area_in_height,
 #endif
 #if HME_L2_DISTANCE_ALGORITHM
-    uint32_t hme_sr_factor_x,
-    uint32_t hme_sr_factor_y,
+                uint32_t hme_sr_factor_x,
+                uint32_t hme_sr_factor_y,
 #endif
                  // number in the vertical direction
                  int16_t xLevel1SearchCenter, // input parameter, best Level1 xMV
@@ -8076,8 +8084,16 @@ void hme_level_2(PictureParentControlSet *pcs_ptr, // input parameter, Picture c
 #else
 #if HME_L2_DISTANCE_ALGORITHM || ALIGN_HME_L2_SR_WITH_HME_L0
 #if HME_L2_DISTANCE_ALGORITHM
+#if ADD_HME_DECIMATION_SIGNAL
+    // Don't change TWO_DECIMATION_HME or ONE_DECIMATION_HME refinement; use the HME distance algorithm only for 0D HME
+    if (context_ptr->hme_decimation <= ZERO_DECIMATION_HME) {
+        hme_level2_search_area_in_width = (hme_sr_factor_x  * hme_level2_search_area_in_width) / 100;
+        hme_level2_search_area_in_height = (hme_sr_factor_y  * hme_level2_search_area_in_height) / 100;
+    }
+#else
     hme_level2_search_area_in_width = (hme_sr_factor_x  * hme_level2_search_area_in_width) / 100;
     hme_level2_search_area_in_height = (hme_sr_factor_y  * hme_level2_search_area_in_height) / 100;
+#endif
 #endif
     // Round up x_HME_L0 to be a multiple of 8
     int16_t search_area_width = (int16_t)((hme_level2_search_area_in_width + 7) & ~0x07);
@@ -10187,7 +10203,11 @@ void hme_level0_sb(
     enable_hme_level0_flag = input_ptr->height < 360 && input_ptr->width < 640 ? 0 : enable_hme_level0_flag;
 #endif
 #if ALLOW_ONE_DECIMATION_HME || ALLOW_ZERO_DECIMATION_HME
+#if ADD_HME_DECIMATION_SIGNAL
+    enable_hme_level0_flag = context_ptr->hme_decimation <= ONE_DECIMATION_HME ? 0 : enable_hme_level0_flag;
+#else
     enable_hme_level0_flag = 0;
+#endif
 #endif
     num_of_list_to_search = (pcs_ptr->slice_type == P_SLICE)
         ? (uint32_t)REF_LIST_0
@@ -10396,7 +10416,11 @@ void hme_level1_sb(
     // Configure HME level 0, level 1 and level 2 from static config parameters
     EbBool enable_hme_level1_flag = context_ptr->enable_hme_level1_flag;
 #if ALLOW_ZERO_DECIMATION_HME
+#if ADD_HME_DECIMATION_SIGNAL
+    enable_hme_level1_flag = context_ptr->hme_decimation <= ZERO_DECIMATION_HME ? 0 : enable_hme_level1_flag;
+#else
     enable_hme_level1_flag = 0;
+#endif
 #endif
     num_of_list_to_search = (pcs_ptr->slice_type == P_SLICE)
         ? (uint32_t)REF_LIST_0
@@ -10480,8 +10504,15 @@ void hme_level1_sb(
                                 hmeLevel1SearchAreaInWidth = (int16_t)context_ptr->hme_level1_search_area_in_width_array[search_region_number_in_width];
                                 hmeLevel1SearchAreaInHeight = (int16_t)context_ptr->hme_level1_search_area_in_height_array[search_region_number_in_height];
 #if ALIGN_HME_L1_SR_WITH_HME_L0
+#if ADD_HME_DECIMATION_SIGNAL
+                                if (context_ptr->hme_decimation <= ONE_DECIMATION_HME) {
+                                    hmeLevel1SearchAreaInWidth = (int16_t)context_ptr->hme_level0_search_area_in_width_array[search_region_number_in_width];
+                                    hmeLevel1SearchAreaInHeight = (int16_t)context_ptr->hme_level0_search_area_in_height_array[search_region_number_in_height];
+                                }
+#else
                                 hmeLevel1SearchAreaInWidth = (int16_t)context_ptr->hme_level0_search_area_in_width_array[search_region_number_in_width];
                                 hmeLevel1SearchAreaInHeight = (int16_t)context_ptr->hme_level0_search_area_in_height_array[search_region_number_in_height];
+#endif
 #endif
                                 hme_level_1(
                                     context_ptr,
@@ -10632,8 +10663,20 @@ void hme_level2_sb(
                         while (search_region_number_in_height < context_ptr->number_hme_search_region_in_height) {
                             while (search_region_number_in_width < context_ptr->number_hme_search_region_in_width) {
 #if ALIGN_HME_L2_SR_WITH_HME_L0
+#if ADD_HME_DECIMATION_SIGNAL
+                                int16_t hmeLevel2_search_area_in_width, hmeLevel2_search_area_in_height;
+                                if (context_ptr->hme_decimation <= ZERO_DECIMATION_HME) {
+                                   hmeLevel2_search_area_in_width = (int16_t)context_ptr->hme_level0_search_area_in_width_array[search_region_number_in_width];
+                                   hmeLevel2_search_area_in_height = (int16_t)context_ptr->hme_level0_search_area_in_height_array[search_region_number_in_height];
+                                }
+                                else {
+                                    hmeLevel2_search_area_in_width = (int16_t)context_ptr->hme_level2_search_area_in_width_array[search_region_number_in_width];
+                                    hmeLevel2_search_area_in_height = (int16_t)context_ptr->hme_level2_search_area_in_height_array[search_region_number_in_height];
+                                }
+#else
                                 int16_t hmeLevel2_search_area_in_width = (int16_t)context_ptr->hme_level0_search_area_in_width_array[search_region_number_in_width];
                                 int16_t hmeLevel2_search_area_in_height = (int16_t)context_ptr->hme_level0_search_area_in_height_array[search_region_number_in_height];
+#endif
 #else
                                 int16_t hmeLevel2_search_area_in_width = (int16_t)context_ptr->hme_level2_search_area_in_width_array[search_region_number_in_width];
                                 int16_t hmeLevel2_search_area_in_height = (int16_t)context_ptr->hme_level2_search_area_in_height_array[search_region_number_in_height];

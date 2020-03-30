@@ -157,17 +157,18 @@ extern "C" {
 #define BUG_FIX_INV_TRANSFORM   1 // Ported PR 1124 : Bug fix in common inv_transform sse3 functions and decoder LF-MT
 
 #define REFACTOR_ME_HME             1 // Refactor the HME/ME search code
-#define ALLOW_ONE_DECIMATION_HME    0 // Skip hmel0 and use the equivalent SR in hmel1
+#define ALLOW_ONE_DECIMATION_HME    1 // Skip hmel0 and use the equivalent SR in hmel1
 #if ALLOW_ONE_DECIMATION_HME
 #define HME_L1_DISTANCE_ALGORITHM   1
 #define ALIGN_HME_L1_SR_WITH_HME_L0 1
 #endif
 
-#define ALLOW_ZERO_DECIMATION_HME   0 // Skip hmel0 and hmel1 and use the equivalent SR in hmel2
+#define ALLOW_ZERO_DECIMATION_HME   1 // Skip hmel0 and hmel1 and use the equivalent SR in hmel2
 #if ALLOW_ZERO_DECIMATION_HME
 #define HME_L2_DISTANCE_ALGORITHM   1
 #define ALIGN_HME_L2_SR_WITH_HME_L0 1
 #endif
+#define ADD_HME_DECIMATION_SIGNAL   1 // Add a signal to control the number of HME levels used
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
@@ -3269,6 +3270,14 @@ typedef struct StatStruct
                                 // the referenced area is normalized
 #define SC_MAX_LEVEL 2 // 2 sets of HME/ME settings are used depending on the scene content mode
 
+#if ADD_HME_DECIMATION_SIGNAL
+typedef enum HmeDecimation
+{
+    ZERO_DECIMATION_HME = 0, // Perform HME search on full-res picture; no refinement
+    ONE_DECIMATION_HME  = 1, // HME search on quarter-res picture; 1 refinement level
+    TWO_DECIMATION_HME  = 2, // HME search on sixteenth-res picture; 2 refinement level
+} HmeDecimation;
+#endif
 #if ! REFACTOR_ME_HME
 /******************************************************************************
                             ME/HME settings
