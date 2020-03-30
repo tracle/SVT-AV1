@@ -168,7 +168,7 @@ extern "C" {
 #define USE_TWO_AS_AND 1
 #endif
 
-#define SECOND_COMBO 1
+#define SECOND_COMBO 0
 #if SECOND_COMBO
 #define H_V_TO_H4_V4_COST_DEV_TH 0
 #define SQ_COST_TO_SUB_COST_DEV_TH 0
