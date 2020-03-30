@@ -10061,16 +10061,16 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 
                 uint64_t best_sub_cost = MIN(sub_group_0_cost, sub_group_1_cost);
                 if (best_sub_cost != MAX_MODE_COST)
-                    if (context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost < best_sub_cost)
+                    //if (context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost < best_sub_cost)
                     {
-                        uint64_t sq_cost_to_best_sub_cost_deviation = (best_sub_cost - context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost) * 100 / context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost;
+                        int64_t sq_cost_to_best_sub_cost_deviation = (int64_t)(((int64_t)best_sub_cost - (int64_t)context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost) * 100) / (int64_t)context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost;
 
                         if(sq_cost_to_best_sub_cost_deviation >= SQ_COST_TO_SUB_COST_DEV_TH)
                         set_child_to_be_skipped(
                             context_ptr,
                             blk_geom->sqi_mds,
                             scs_ptr->seq_header.sb_size,
-                            1); // scs_ptr->seq_header.sb_size == BLOCK_128X128 ? 6 : 5);
+                            scs_ptr->seq_header.sb_size == BLOCK_128X128 ? 6 : 5);
                     }
             }
 #endif
