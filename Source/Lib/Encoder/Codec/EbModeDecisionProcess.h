@@ -181,6 +181,14 @@ typedef struct RefPruningControls {
     uint8_t max_ref_to_tag;
 }RefPruningControls;
 #endif
+
+#if SECOND_COMBO
+typedef struct NsqBasedEstimationCtrls {
+    uint8_t nsq_based_estimation_sq_to_4_sq_children_th;
+    uint8_t nsq_based_estimation_h_v_to_h4_v4_th;
+}NsqBasedEstimationCtrls;
+#endif
+
 typedef struct ModeDecisionContext {
     EbDctor  dctor;
     EbFifo * mode_decision_configuration_input_fifo_ptr;
@@ -472,6 +480,10 @@ typedef struct ModeDecisionContext {
 #if MD_REFERENCE_MASKING
     uint8_t      inter_inter_distortion_based_reference_pruning;
     uint8_t      inter_intra_distortion_based_reference_pruning;
+#endif
+#if SECOND_COMBO
+    uint8_t      nsq_based_estimation_level;
+    NsqBasedEstimationCtrls nsq_based_estimation_ctrls;
 #endif
     uint8_t      md_max_ref_count;
     EbBool       md_skip_mvp_generation;

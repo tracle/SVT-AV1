@@ -10020,7 +10020,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                     sb_origin_y);
             }
 #if SECOND_COMBO
-            else if (context_ptr->pd_pass == PD_PASS_2 &&
+            else if (context_ptr->nsq_based_estimation_level &&
                 context_ptr->md_blk_arr_nsq[blk_geom->sqi_mds].split_flag == EB_TRUE &&  // not last depth = might further split
                 context_ptr->md_local_blk_unit[blk_geom->sqi_mds].avail_blk_flag &&
                 blk_geom->sq_size >= 16
@@ -10118,8 +10118,11 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                         int64_t h_cost_to_h4_cost = (int64_t)(((int64_t)h_cost - (int64_t)h4_cost) * 100) / (int64_t)h_cost;
                         int64_t v_cost_to_v4_cost = (int64_t)(((int64_t)v_cost - (int64_t)v4_cost) * 100) / (int64_t)v_cost;
 
-                        if(h_cost_to_h4_cost <= H_V_TO_H4_V4_COST_DEV_TH && v_cost_to_v4_cost <= H_V_TO_H4_V4_COST_DEV_TH)
-                        if(sq_cost_to_best_sub_cost_deviation <= SQ_COST_TO_SUB_COST_DEV_TH)
+                        if(h_cost_to_h4_cost <= context_ptr->nsq_based_estimation_ctrls.nsq_based_estimation_h_v_to_h4_v4_th && 
+                           v_cost_to_v4_cost <= context_ptr->nsq_based_estimation_ctrls.nsq_based_estimation_h_v_to_h4_v4_th )
+
+                        if(sq_cost_to_best_sub_cost_deviation <= context_ptr->nsq_based_estimation_ctrls.nsq_based_estimation_sq_to_4_sq_children_th)
+
                         set_child_to_be_skipped(
                             context_ptr,
                             blk_geom->sqi_mds,
