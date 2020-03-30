@@ -155,6 +155,8 @@ extern "C" {
 #define PASS1_FIX               1 // Fix bugs related to pass 1
 #define QPS_UPDATE              1 // 2 PASS QPS improvement
 #define BUG_FIX_INV_TRANSFORM   1 // Ported PR 1124 : Bug fix in common inv_transform sse3 functions and decoder LF-MT
+
+#define REFACTOR_ME_HME         1 // Refactor the HME/ME search code
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
@@ -3256,6 +3258,7 @@ typedef struct StatStruct
                                 // the referenced area is normalized
 #define SC_MAX_LEVEL 2 // 2 sets of HME/ME settings are used depending on the scene content mode
 
+#if ! REFACTOR_ME_HME
 /******************************************************************************
                             ME/HME settings
 *******************************************************************************/
@@ -5342,6 +5345,7 @@ static const uint16_t tf_hme_level2_search_area_in_height_array_bottom[SC_MAX_LE
 #endif
     }
 };
+#endif
 
 #if !MAR17_ADOPTIONS
 static const uint16_t tf_search_area_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
