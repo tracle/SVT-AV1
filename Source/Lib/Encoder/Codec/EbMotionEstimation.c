@@ -12462,7 +12462,11 @@ EbErrorType motion_estimate_sb(
         pcs_ptr->rc_me_distortion[sb_index] = 0;
         // Compute the sum of the distortion of all 16 16x16 (720 and above) and
         // 64 8x8 (for lower resolutions) blocks in the SB
+#if NEW_RESOLUTION_RANGES
+        if (scs_ptr->input_resolution <= INPUT_SIZE_480p_RANGE) {
+#else
         if (scs_ptr->input_resolution < INPUT_SIZE_1080i_RANGE) {
+#endif
             for (i = 0; i < 64; i++) {
                 me_candidate = &(context_ptr->me_candidate[0].pu[21 + i]);
                 pcs_ptr->rc_me_distortion[sb_index] += me_candidate->distortion;

@@ -215,7 +215,11 @@ void* set_me_hme_params_oq(
 
     me_context_ptr->update_hme_search_center_flag = 1;
 
+#if NEW_RESOLUTION_RANGES
+    if (input_resolution <= INPUT_SIZE_480p_RANGE)
+#else
     if (input_resolution <= INPUT_SIZE_576p_RANGE_OR_LOWER)
+#endif
         me_context_ptr->update_hme_search_center_flag = 0;
 
     return EB_NULL;
@@ -528,7 +532,11 @@ void* tf_set_me_hme_params_oq(
 
     me_context_ptr->update_hme_search_center_flag = 1;
 
+#if NEW_RESOLUTION_RANGES
+    if (input_resolution <= INPUT_SIZE_480p_RANGE)
+#else
     if (input_resolution <= INPUT_SIZE_576p_RANGE_OR_LOWER)
+#endif
         me_context_ptr->update_hme_search_center_flag = 0;
 
     return EB_NULL;

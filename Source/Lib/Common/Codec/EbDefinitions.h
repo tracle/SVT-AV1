@@ -169,6 +169,7 @@ extern "C" {
 #define ALIGN_HME_L2_SR_WITH_HME_L0 1
 #endif
 #define ADD_HME_DECIMATION_SIGNAL   1 // Add a signal to control the number of HME levels used
+#define NEW_RESOLUTION_RANGES       1 // Make new resolution ranges
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
@@ -2081,11 +2082,20 @@ typedef enum EbBitFieldMasks
 
 #define    Log2f                              Log2f_SSE2
 
+#if NEW_RESOLUTION_RANGES
+#define INPUT_SIZE_240p_TH                  0x28500      // 0.165 Million
+#define INPUT_SIZE_360p_TH                  0x4CE00      // 0.315 Million
+#define INPUT_SIZE_480p_TH                  0xA1400      // 0.661 Million
+#define INPUT_SIZE_720p_TH                  0x16DA00     // 1.5 Million
+#define INPUT_SIZE_1080p_TH                 0x535200     // 5.46 Million
+#define INPUT_SIZE_4K_TH                    0x140A000    // 21 Million
+#else
 #define INPUT_SIZE_576p_TH                  0x90000        // 0.58 Million
 #define INPUT_SIZE_1080i_TH                 0xB71B0        // 0.75 Million
 #define INPUT_SIZE_1080p_TH                 0x1AB3F0    // 1.75 Million
 #define INPUT_SIZE_4K_TH                    0x29F630    // 2.75 Million
 #define INPUT_SIZE_8K_TH                    0xA7D8C0    // 11 Million
+#endif
 
 /** Redefine ASSERT() to avoid warnings
 */
@@ -2107,11 +2117,25 @@ typedef enum EbBitFieldMasks
 /************************ INPUT CLASS **************************/
 
 #define EbInputResolution             uint8_t
+#if NEW_RESOLUTION_RANGES
+typedef enum ResolutionRange
+{
+    INPUT_SIZE_240p_RANGE   = 0,
+    INPUT_SIZE_360p_RANGE   = 1,
+    INPUT_SIZE_480p_RANGE   = 2,
+    INPUT_SIZE_720p_RANGE   = 3,
+    INPUT_SIZE_1080p_RANGE  = 4,
+    INPUT_SIZE_4K_RANGE     = 5,
+    INPUT_SIZE_8K_RANGE     = 6,
+    INPUT_SIZE_COUNT        = 7
+} ResolutionRange;
+#else
 #define INPUT_SIZE_576p_RANGE_OR_LOWER     0
 #define INPUT_SIZE_1080i_RANGE             1
 #define INPUT_SIZE_1080p_RANGE             2
 #define INPUT_SIZE_4K_RANGE                3
 #define INPUT_SIZE_COUNT                   INPUT_SIZE_4K_RANGE + 1
+#endif
 
 /** The EbPtr type is intended to be used to pass pointers to and from the eBrisk
 API.  This is a 32 bit pointer and is aligned on a 32 bit word boundary.
