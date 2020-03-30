@@ -154,7 +154,7 @@ extern "C" {
 
 ///////*******************************************************************//
 // Build the depth reduction ref
-#if 1
+#if 0
 #define SHUT_POST_PD1_SQ_VS_NSQ 1
 #define SHUT_POST_PD2_SQ_WEIGHT 1
 #define SHUT_POST_PD2_SKIP_DEPTH 1
