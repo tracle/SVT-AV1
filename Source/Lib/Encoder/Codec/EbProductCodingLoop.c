@@ -10118,8 +10118,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                         int64_t h_cost_to_h4_cost = (int64_t)(((int64_t)h_cost - (int64_t)h4_cost) * 100) / (int64_t)h_cost;
                         int64_t v_cost_to_v4_cost = (int64_t)(((int64_t)v_cost - (int64_t)v4_cost) * 100) / (int64_t)v_cost;
 
-
-                        if(h_cost_to_h4_cost <= 0 && v_cost_to_v4_cost <= 0)
+                        if(h_cost_to_h4_cost <= H_V_TO_H4_V4_COST_DEV_TH && v_cost_to_v4_cost <= H_V_TO_H4_V4_COST_DEV_TH)
                         if(sq_cost_to_best_sub_cost_deviation <= SQ_COST_TO_SUB_COST_DEV_TH)
                         set_child_to_be_skipped(
                             context_ptr,
