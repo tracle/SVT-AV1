@@ -1009,7 +1009,7 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                 ((uint16_t *)pred_samples16bit->buffer_cb) + pred_cb_offset,
                 pred_samples16bit->stride_cb,
                 alpha_q3,
-                    context_ptr->is_16bit ? 10 : 8,
+                context_ptr->bit_depth,
                 context_ptr->blk_geom->tx_width_uv[blk_ptr->tx_depth][context_ptr->txb_itr],
                 context_ptr->blk_geom->tx_height_uv[blk_ptr->tx_depth][context_ptr->txb_itr]);
 
@@ -1026,7 +1026,7 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                 ((uint16_t *)pred_samples16bit->buffer_cr) + pred_cr_offset,
                 pred_samples16bit->stride_cr,
                 alpha_q3,
-                    context_ptr->is_16bit ? 10 : 8,
+                context_ptr->bit_depth,
                 context_ptr->blk_geom->tx_width_uv[blk_ptr->tx_depth][context_ptr->txb_itr],
                 context_ptr->blk_geom->tx_height_uv[blk_ptr->tx_depth][context_ptr->txb_itr]);
         }
