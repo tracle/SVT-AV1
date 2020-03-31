@@ -157,6 +157,7 @@ extern "C" {
 #define OVERLAY_R2R_FIX         1
 #define INCOMPLETE_SB_FIX       1 // Enable the block_is_allowed for some block sizes,
                                     //which were removed due to lack of intrinsics
+
 #define INTRA_COMPOUND_OPT      1  // new fast mode
 #define ME_REFACTOR_FOR_CLEANUP 1 // refactor HME/ME code and improve resolution granularity for future cleanup and features
 #if ME_REFACTOR_FOR_CLEANUP
@@ -165,6 +166,18 @@ extern "C" {
 #define NEW_RESOLUTION_RANGES     1 // Make new resolution ranges
 #endif
 #define MAR30_ADOPTIONS           1 // Adoptions in all modes; create a new M1
+
+#define NSQ_MD_SIGNAL					1
+#define DETECT_NASTY_CLIPS				1
+#if DETECT_NASTY_CLIPS
+#define DETECT_HIGH_INTRA_PIC			1
+#define DETECT_HIGH_COEF_PIC			1
+#define DETECT_HIGH_SMALLBLOCK_PIC		1
+#define DISABLE_NSQ_FOR_HIGH_COMP_PIC	1
+#define INTRA_TH		50
+#define COEFF_TH		90
+#define SMALL_BLK_TH	80
+#endif
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
