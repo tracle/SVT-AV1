@@ -4856,7 +4856,7 @@ static int get_gf_high_motion_quality(int q, AomBitDepth bit_depth) {
     return arfgf_high_motion_minq[q];
 }
 
-#if CUTREE_LA && CUTREE_LA_QPS
+#if CUTREE_LA
 static int get_kf_boost_from_r0(double r0, int frames_to_key) {
     double factor = sqrt((double)frames_to_key);
     factor = AOMMIN(factor, 10.0);
@@ -5495,6 +5495,8 @@ static void sb_qp_derivation_tpl_la(
 #else
             delta_qp = 0;
 #endif
+            //if(sb_addr == 0)
+            //    printf("kelvinrc ---> poc%ld sb_addr=%d r0=%f rk=%f delta_qp=%d offset=%d, beta=%f, base_rdmult=%d, base_q_idx=%d\n", pcs_ptr->parent_pcs_ptr->picture_number, sb_addr, r0, rk, delta_qp, offset, beta, ppcs_ptr->base_rdmult, ppcs_ptr->frm_hdr.quantization_params.base_q_idx);
             //if(pcs_ptr->parent_pcs_ptr->picture_number == 0)
             //printf("kelvinrc ---> poc%ld sb_addr=%d r0=%f rk=%f delta_qp=%d offset=%d, beta=%f, base_q_idx=%d\n", pcs_ptr->parent_pcs_ptr->picture_number, sb_addr, r0, rk, delta_qp, offset, beta, ppcs_ptr->frm_hdr.quantization_params.base_q_idx);
 #if 0
@@ -5505,7 +5507,7 @@ static void sb_qp_derivation_tpl_la(
                 else
                     delta_qp = max_delta_qp;
 
-                if (delta_qp < 0 && variance_sb < IS_COMPLEX_LCU_FLAT_VARIANCE_TH)
+                if (delta_qp < 0 && variance_sb < IS_COMPLEX_SB_FLAT_VARIANCE_TH)
                     delta_qp = 0;
             }
             else if (pcs_ptr->temporal_layer_index == 0) {
