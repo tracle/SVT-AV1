@@ -186,6 +186,9 @@ typedef struct RefPruningControls {
 typedef struct BlockbasedDepthReductionCtrls {
     uint8_t nsq_based_estimation_sq_to_4_sq_children_th;
     uint8_t nsq_based_estimation_h_v_to_h4_v4_th;
+    uint8_t use_coeff_info;
+    uint8_t use_sq_vs_nsq_decision;
+    uint8_t current_to_parent_deviation_th;
 }BlockbasedDepthReductionCtrls;
 #endif
 
