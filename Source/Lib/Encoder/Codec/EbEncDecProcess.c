@@ -2259,6 +2259,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
     else
         context_ptr->skip_cfl_cost_dev_th = 30;
 
+        context_ptr->skip_cfl_cost_dev_th = (uint16_t)~0;
     // set intra count to zero for md stage 3 if intra_cost is
     // mds3_intra_prune_th % greater than inter_cost
     if (MR_MODE)
