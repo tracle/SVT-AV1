@@ -2266,6 +2266,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
         context_ptr->mds3_intra_prune_th = (uint16_t)~0;
     else
         context_ptr->mds3_intra_prune_th = 30;
+        context_ptr->mds3_intra_prune_th = (uint16_t)~0;
 #endif
     return return_error;
 }
