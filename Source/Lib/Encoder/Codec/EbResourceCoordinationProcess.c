@@ -838,10 +838,17 @@ void *resource_coordination_kernel(void *input_ptr) {
                 // 0                 OFF
                 // 1                 ON
                 scs_ptr->seq_header.enable_interintra_compound =
+#if M2_ENABLE_INTER_INTRA_PERIOD_IN_M1
+                    MR_MODE || (scs_ptr->static_config.enc_mode <= ENC_M0 &&
+                                scs_ptr->static_config.screen_content_mode != 1)
+                        ? 1
+                        : 0;
+#else
                     MR_MODE || (scs_ptr->static_config.enc_mode <= ENC_M1 &&
                                 scs_ptr->static_config.screen_content_mode != 1)
                         ? 1
                         : 0;
+#endif
 
             } else
                 scs_ptr->seq_header.enable_interintra_compound =

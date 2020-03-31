@@ -852,7 +852,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 
             if (MR_MODE)
                 pcs_ptr->nsq_search_level = NSQ_SEARCH_LEVEL6;
+#if M2_NSQ_SEARCH_IN_M1
+            else if (pcs_ptr->enc_mode <= ENC_M0)
+#else
             else if (pcs_ptr->enc_mode <= ENC_M1)
+#endif
                 pcs_ptr->nsq_search_level = (pcs_ptr->is_used_as_reference_flag) ?
                 NSQ_SEARCH_LEVEL6 : NSQ_SEARCH_LEVEL3;
             else if (pcs_ptr->enc_mode <= ENC_M2)
@@ -865,7 +869,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 
         else if (pcs_ptr->enc_mode <= ENC_M0)
             pcs_ptr->nsq_search_level = NSQ_SEARCH_LEVEL6;
+#if M2_NSQ_SEARCH_IN_M1
+        else if (pcs_ptr->enc_mode <= ENC_M0)
+#else
         else if (pcs_ptr->enc_mode <= ENC_M1)
+#endif
             pcs_ptr->nsq_search_level = (pcs_ptr->is_used_as_reference_flag) ? NSQ_SEARCH_LEVEL6 : NSQ_SEARCH_LEVEL3;
         else if (pcs_ptr->enc_mode <= ENC_M2)
             if (pcs_ptr->is_used_as_reference_flag)
@@ -966,7 +974,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     if (sc_content_detected)
         if (MR_MODE)
             pcs_ptr->loop_filter_mode = 3;
-        else if (pcs_ptr->enc_mode == ENC_M1)
+#if M2_LOOP_FILTER_IN_M1
+        else if (pcs_ptr->enc_mode <= ENC_M0)
+#else
+        else if (pcs_ptr->enc_mode <= ENC_M1)
+#endif
             pcs_ptr->loop_filter_mode = pcs_ptr->is_used_as_reference_flag ? 3 : 0;
         else
             pcs_ptr->loop_filter_mode = 0;
@@ -1086,7 +1098,11 @@ EbErrorType signal_derivation_multi_processes_oq(
         else
             pcs_ptr->intra_pred_mode = 4;
     else
-        if ((pcs_ptr->enc_mode <= ENC_M1) || (pcs_ptr->enc_mode <= ENC_M2 && pcs_ptr->temporal_layer_index == 0))
+#if M2_INTRA_PRED_IN_M1
+            if ((pcs_ptr->enc_mode <= ENC_M0) || (pcs_ptr->enc_mode <= ENC_M2 && pcs_ptr->temporal_layer_index == 0))
+#else
+            if ((pcs_ptr->enc_mode <= ENC_M1) || (pcs_ptr->enc_mode <= ENC_M2 && pcs_ptr->temporal_layer_index == 0))
+#endif
             pcs_ptr->intra_pred_mode = 0;
         else if (pcs_ptr->enc_mode <= ENC_M7)
             if (pcs_ptr->temporal_layer_index == 0)
@@ -1145,8 +1161,13 @@ EbErrorType signal_derivation_multi_processes_oq(
             if (scs_ptr->compound_mode)
                 if (pcs_ptr->sc_content_detected)
                     pcs_ptr->compound_mode = (pcs_ptr->enc_mode <= ENC_M0) ? 2 : 0;
+#if M2_COMPOUND_MODE_IN_M1
+                else
+                    pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M0 ? 2 : 1;
+#else
                 else
                     pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M1 ? 2 : 1;
+#endif
             else
                 pcs_ptr->compound_mode = 0;
         }

@@ -104,7 +104,11 @@ void *set_me_hme_params_oq(MeContext *me_context_ptr, PictureParentControlSet *p
     UNUSED(scs_ptr);
     uint8_t hme_me_level =
         scs_ptr->use_output_stat_file ? pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
+#if M2_HME_LEVEL_IN_M1
+    if (hme_me_level <= ENC_M0) hme_me_level = ENC_M0;
+#else
     if (hme_me_level <= ENC_M1) hme_me_level = ENC_M0;
+#endif
     // HME/ME default settings
     me_context_ptr->number_hme_search_region_in_width  = 2;
     me_context_ptr->number_hme_search_region_in_height = 2;
@@ -296,7 +300,11 @@ EbErrorType signal_derivation_me_kernel_oq(SequenceControlSet *       scs_ptr,
         context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;
 
     if (scs_ptr->static_config.enable_global_motion == EB_TRUE) {
+#if M2_GLOBAL_MOTION_IN_M1
+        if (enc_mode <= ENC_M0)
+#else
         if (enc_mode <= ENC_M1)
+#endif
             context_ptr->me_context_ptr->compute_global_motion = EB_TRUE;
         else
             context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
@@ -431,7 +439,11 @@ EbErrorType tf_signal_derivation_me_kernel_oq(SequenceControlSet *       scs_ptr
         max_metf_search_height[sc_content_detected][input_resolution][hme_me_level];
 #endif
     if (sc_content_detected)
+#if M2_FRAC_SEARCH_IN_M1
+        if (enc_mode <= ENC_M0)
+#else
         if (enc_mode <= ENC_M1)
+#endif
             context_ptr->me_context_ptr->fractional_search_method =
                 (enc_mode == ENC_M0) ? FULL_SAD_SEARCH : SSD_SEARCH;
         else
@@ -449,7 +461,11 @@ EbErrorType tf_signal_derivation_me_kernel_oq(SequenceControlSet *       scs_ptr
     if (scs_ptr->static_config.enable_subpel == DEFAULT)
         // Set the default settings of subpel
         if (sc_content_detected)
+#if M2_SUBPEL_IN_M1
+            if (enc_mode <= ENC_M0)
+#else
             if (enc_mode <= ENC_M1)
+#endif
                 context_ptr->me_context_ptr->use_subpel_flag = 1;
             else
                 context_ptr->me_context_ptr->use_subpel_flag = 0;

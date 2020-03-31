@@ -133,6 +133,18 @@ extern "C" {
 #define RESTRUCTURE_SAD 1
 #endif
 
+// debug purpose only
+#define M2_GLOBAL_MV_IN_M1 1
+#define M2_PRED_ME_IN_M1 1
+#define M2_PRUNE_REF_FRAME_REC_IN_M1 1
+#define M2_SQ_WEIGHT_IN_M1 1
+#define M2_NIC_LEVEL_IN_M1 1
+#define M2_HME_LEVEL_IN_M1 1
+#define M2_GLOBAL_MOTION_IN_M1 1
+#define M2_FRAC_SEARCH_IN_M1 1
+#define M2_SUBPEL_IN_M1 1
+#define M2_NSQ_FLAG_IN_M1 1
+
 typedef enum MeHpMode {
     EX_HP_MODE        = 0, // Exhaustive  1/2-pel serach mode.
     REFINEMENT_HP_MODE = 1 // Refinement 1/2-pel serach mode.

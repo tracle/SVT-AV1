@@ -1469,8 +1469,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
             context_ptr->global_mv_injection = 0;
         else if (context_ptr->pd_pass == PD_PASS_1)
             context_ptr->global_mv_injection = 0;
+#if M2_GLOBAL_MV_IN_M1
+        else if (pcs_ptr->enc_mode <= ENC_M0)
+            context_ptr->global_mv_injection = 1;
+#else
         else if (pcs_ptr->enc_mode <= ENC_M1)
             context_ptr->global_mv_injection = 1;
+#endif
         else
             context_ptr->global_mv_injection = 0;
     } else
@@ -1478,8 +1483,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
 #else
     if (scs_ptr->static_config.enable_global_warped_motion == EB_TRUE) {
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+#if M2_GLOBAL_MV_IN_M1
+            if (pcs_ptr->enc_mode <= ENC_M0)
+                context_ptr->global_mv_injection = 1;
+#else
             if (pcs_ptr->enc_mode <= ENC_M1)
                 context_ptr->global_mv_injection = 1;
+#endif
             else
                 context_ptr->global_mv_injection = 0;
         } else {
@@ -1622,7 +1632,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
             context_ptr->predictive_me_level = 2;
         else if (scs_ptr->static_config.pred_me == DEFAULT) {
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if M2_PRED_ME_IN_M1
+                if (pcs_ptr->enc_mode <= ENC_M0)
+#else
                 if (pcs_ptr->enc_mode <= ENC_M1)
+#endif
                     if (!MR_MODE)
                         context_ptr->predictive_me_level = (pcs_ptr->enc_mode <= ENC_M0) ? 2 : 4;
                     else
@@ -1819,7 +1833,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->prune_ref_frame_for_rec_partitions = 1;
     else if (scs_ptr->static_config.prune_ref_rec_part == DEFAULT)
+#if M2_PRUNE_REF_FRAME_REC_IN_M1
+        if (pcs_ptr->parent_pcs_ptr->sc_content_detected || pcs_ptr->enc_mode <= ENC_M0)
+#else
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected || pcs_ptr->enc_mode <= ENC_M1)
+#endif
             context_ptr->prune_ref_frame_for_rec_partitions = 0;
         else
             context_ptr->prune_ref_frame_for_rec_partitions = 1;
@@ -1918,8 +1936,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
     else if (MR_MODE)
         context_ptr->sq_weight = (uint32_t)~0;
 #if ENHANCED_SQ_WEIGHT
+#if M2_SQ_WEIGHT_IN_M1
+    else if (pcs_ptr->enc_mode <= ENC_M0)
+        context_ptr->sq_weight = scs_ptr->static_config.sq_weight + 5;
+#else
     else if (pcs_ptr->enc_mode <= ENC_M1)
         context_ptr->sq_weight = scs_ptr->static_config.sq_weight + 5;
+#endif
     else if (pcs_ptr->enc_mode <= ENC_M2)
         context_ptr->sq_weight = scs_ptr->static_config.sq_weight;
     else
@@ -2142,15 +2165,25 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
     // 2                2/3
     // 3                1/2
     if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if M2_NIC_LEVEL_IN_M1
+        if (pcs_ptr->enc_mode <= ENC_M0)
+            context_ptr->nic_level = 1;
+#else
         if (pcs_ptr->enc_mode <= ENC_M1)
             context_ptr->nic_level = 1;
+#endif
         else
             context_ptr->nic_level = 2;
     else
         if (pcs_ptr->enc_mode <= ENC_M0)
             context_ptr->nic_level = 1;
+#if M2_NIC_LEVEL_IN_M1
+        else if (pcs_ptr->enc_mode <= ENC_M0)
+            context_ptr->nic_level = 2;
+#else
         else if (pcs_ptr->enc_mode <= ENC_M1)
             context_ptr->nic_level = 2;
+#endif
         else
             context_ptr->nic_level = 3;
 #endif
