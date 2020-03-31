@@ -940,10 +940,14 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     if (pcs_ptr->update_cdf) assert(scs_ptr->cdf_mode == 0 && "use cdf_mode 0");
     //Filter Intra Mode : 0: OFF  1: ON
     if (scs_ptr->seq_header.enable_filter_intra)
+#if CS2_ADOPTIONS_1
+        pcs_ptr->pic_filter_intra_mode = 1 ;
+#else
         pcs_ptr->pic_filter_intra_mode =
             pcs_ptr->parent_pcs_ptr->sc_content_detected == 0 && pcs_ptr->temporal_layer_index == 0
                 ? 1
                 : 0;
+#endif
     else
         pcs_ptr->pic_filter_intra_mode = 0;
     FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
@@ -954,13 +958,11 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
             ? 1
             : 0;
     EbBool enable_wm;
+#if !CS2_ADOPTIONS_1
     if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
-#if CS2_ADOPTIONS_1
-        enable_wm = pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M1 ? EB_TRUE : EB_FALSE;
-#else
         enable_wm = EB_FALSE;
-#endif
     else
+#endif
 #if WARP_IMPROVEMENT
         enable_wm = (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M2 ||
 #else
@@ -989,10 +991,11 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #if CS2_ADOPTIONS_1
         if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M1)
             pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 2;
+        else
+            pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 0;
 #else
         if (pcs_ptr->parent_pcs_ptr->enc_mode == ENC_M0)
             pcs_ptr->parent_pcs_ptr->pic_obmc_mode = pcs_ptr->slice_type != I_SLICE ? 2 : 0;
-#endif
         else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M2)
             pcs_ptr->parent_pcs_ptr->pic_obmc_mode =
                 pcs_ptr->parent_pcs_ptr->sc_content_detected == 0 && pcs_ptr->slice_type != I_SLICE
@@ -1000,7 +1003,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
                     : 0;
         else
             pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 0;
-
+#endif
 #if MR_MODE
         pcs_ptr->parent_pcs_ptr->pic_obmc_mode =
             pcs_ptr->parent_pcs_ptr->sc_content_detected == 0 && pcs_ptr->slice_type != I_SLICE ? 1
