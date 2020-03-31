@@ -156,6 +156,8 @@ extern "C" {
 #define QPS_UPDATE              1 // 2 PASS QPS improvement
 #define BUG_FIX_INV_TRANSFORM   1 // Ported PR 1124 : Bug fix in common inv_transform sse3 functions and decoder LF-MT
 #define UPGRADE_TX_SIZE         0 // Make tx size to use the latest available cost
+#define INTRA_CASE              0 // Use full_cost only for intra
+#define INTER_CASE              0 // Use full_cost only for inter
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

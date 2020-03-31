@@ -443,7 +443,7 @@ static void av1_encode_loop(PictureControlSet *pcs_ptr, EncDecContext *context_p
         uint8_t tx_search_skip_flag =
             context_ptr->md_context->tx_search_level == TX_SEARCH_ENC_DEC
 #if UPGRADE_TX_SIZE
-                ? get_skip_tx_search_flag(context_ptr->blk_geom->sq_size, MAX_MODE_COST, 0,MAX_MODE_COST, 0, 1)
+                ? get_skip_tx_search_flag(context_ptr->blk_geom->sq_size, MAX_MODE_COST, 0,MAX_MODE_COST, 0,is_inter, 1)
 #else
                 ? get_skip_tx_search_flag(context_ptr->blk_geom->sq_size, MAX_MODE_COST, 0, 1)
 #endif
@@ -924,7 +924,7 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
             uint8_t tx_search_skip_flag =
                 context_ptr->md_context->tx_search_level == TX_SEARCH_ENC_DEC
 #if UPGRADE_TX_SIZE
-                    ? get_skip_tx_search_flag(context_ptr->blk_geom->sq_size, MAX_MODE_COST, 0,MAX_MODE_COST, 0, 1)
+                    ? get_skip_tx_search_flag(context_ptr->blk_geom->sq_size, MAX_MODE_COST, 0,MAX_MODE_COST, 0,is_inter, 1)
 #else
                     ? get_skip_tx_search_flag(context_ptr->blk_geom->sq_size, MAX_MODE_COST, 0, 1)
 #endif

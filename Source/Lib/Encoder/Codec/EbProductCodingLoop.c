@@ -5510,13 +5510,20 @@ static void cfl_prediction(PictureControlSet *          pcs_ptr,
 uint8_t get_skip_tx_search_flag(int32_t sq_size, uint64_t ref_fast_cost, uint64_t cu_cost,
 #if UPGRADE_TX_SIZE
                                uint64_t ref_full_cost, uint64_t full_cost,
+                               uint8_t is_inter,
 #endif
                                 uint64_t weight) {
     //NM: Skip tx search when the fast cost of the current mode candidate is substansially
     // Larger than the best fast_cost (
 #if UPGRADE_TX_SIZE
     uint8_t tx_search_skip_flag;
-    if (ref_full_cost < MAX_MODE_COST)
+#if INTRA_CASE
+    if (ref_full_cost < MAX_MODE_COST && !is_inter)
+#elif INTER_CASE
+    if (ref_full_cost < MAX_MODE_COST && is_inter)
+#else
+    if (ref_full_cost < MAX_MODE_COST && )
+#endif
         tx_search_skip_flag = full_cost >= ((ref_full_cost * weight) / 100) ? 1 : 0;
     else
         tx_search_skip_flag = cu_cost >= ((ref_fast_cost * weight) / 100) ? 1 : 0;
@@ -7006,6 +7013,7 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
 #if UPGRADE_TX_SIZE
                 ref_full_cost,
                 *candidate_buffer->full_cost_ptr,
+                is_inter,
 #endif
                 context_ptr->tx_weight)
             : EB_TRUE;
