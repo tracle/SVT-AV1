@@ -147,6 +147,9 @@ extern "C" {
 
 // Actions in the second pass: Frame and SB QP assignment and temporal filtering strenght change
 #define CUTREE_LA  0 // Add CUTREE into look ahead
+#define CUTREE_LA_QPS 0
+#define CUTREE_LA_QPM 1
+
 //FOR DEBUGGING - Do not remove
 #define NO_ENCDEC \
     0 // bypass encDec to test cmpliance of MD. complained achieved when skip_flag is OFF. Port sample code from VCI-SW_AV1_Candidate1 branch
