@@ -24,6 +24,9 @@ extern EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureControlS
                                     ModeDecisionContext *context_ptr);
 
 uint8_t get_skip_tx_search_flag(int32_t sq_size, uint64_t ref_fast_cost, uint64_t cu_cost,
+#if UPGRADE_TX_SIZE
+                               uint64_t ref_full_cost, uint64_t full_cost,
+#endif
                                 uint64_t weight);
 
 extern void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
