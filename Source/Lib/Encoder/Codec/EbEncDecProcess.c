@@ -1400,7 +1400,7 @@ void set_inter_intra_distortion_based_reference_pruning_controls(ModeDecisionCon
 }
 #endif
 
-#if SECOND_COMBO
+#if BLOCK_REDUCTION_ALGORITHM_2
 void set_nsq_based_estimation_controls(ModeDecisionContext *mdctxt, uint8_t nsq_based_estimation_level) {
 
     NsqBasedEstimationCtrls *nsq_based_estimation_ctrls = &mdctxt->nsq_based_estimation_ctrls;
@@ -2724,7 +2724,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     }
     set_inter_intra_distortion_based_reference_pruning_controls(context_ptr, context_ptr->inter_intra_distortion_based_reference_pruning);
 #endif
-#if SECOND_COMBO
+#if BLOCK_REDUCTION_ALGORITHM_2
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->nsq_based_estimation_level = 0;
     else if (context_ptr->pd_pass == PD_PASS_1)

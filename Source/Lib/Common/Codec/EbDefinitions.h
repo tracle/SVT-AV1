@@ -160,19 +160,15 @@ extern "C" {
 #define SHUT_POST_PD2_SKIP_DEPTH 1
 #endif
 // cond_0 + cond_1 + cond_2
-#define FIRST_COMBO 0
-#if FIRST_COMBO
+#define BLOCK_REDUCTION_ALGORITHM_1 0
+#if BLOCK_REDUCTION_ALGORITHM_1
 #define USE_COEFF_INFO 0 
 #define USE_COST_SQ_VS_NSQ 0 
 #define USE_TWO_AS_OR 0
 #define USE_TWO_AS_AND 1
 #endif
 
-#define SECOND_COMBO 1
-#if SECOND_COMBO
-#define H_V_TO_H4_V4_COST_DEV_TH 0
-#define SQ_COST_TO_SUB_COST_DEV_TH 0
-#endif
+#define BLOCK_REDUCTION_ALGORITHM_2 1
 
 #define POST_PD1_REF_NSQ_FOR_ONLY_PLUS_1 0
 

@@ -182,7 +182,7 @@ typedef struct RefPruningControls {
 }RefPruningControls;
 #endif
 
-#if SECOND_COMBO
+#if BLOCK_REDUCTION_ALGORITHM_2
 typedef struct NsqBasedEstimationCtrls {
     uint8_t nsq_based_estimation_sq_to_4_sq_children_th;
     uint8_t nsq_based_estimation_h_v_to_h4_v4_th;
@@ -481,7 +481,7 @@ typedef struct ModeDecisionContext {
     uint8_t      inter_inter_distortion_based_reference_pruning;
     uint8_t      inter_intra_distortion_based_reference_pruning;
 #endif
-#if SECOND_COMBO
+#if BLOCK_REDUCTION_ALGORITHM_2
     uint8_t      nsq_based_estimation_level;
     NsqBasedEstimationCtrls nsq_based_estimation_ctrls;
 #endif
