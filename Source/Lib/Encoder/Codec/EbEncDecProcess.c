@@ -1843,7 +1843,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
         else if (context_ptr->pd_pass == PD_PASS_1)
             context_ptr->edge_based_skip_angle_intra = 1;
         else if (scs_ptr->static_config.edge_skp_angle_intra == DEFAULT) {
-#if CS2_ADOPTIONS_1
+#if 0//CS2_ADOPTIONS_1
             if (MR_MODE)
                 context_ptr->edge_based_skip_angle_intra = 0;
             else
