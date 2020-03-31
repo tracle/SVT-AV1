@@ -153,22 +153,16 @@ extern "C" {
 #endif
 
 ///////*******************************************************************//
+#define SHUT_POST_PD2_SKIP_DEPTH 1
+///////*******************************************************************//
 // Build the depth reduction ref
-#if 1
 #define SHUT_POST_PD1_SQ_VS_NSQ 1
 #define SHUT_POST_PD2_SQ_WEIGHT 1
-#define SHUT_POST_PD2_SKIP_DEPTH 1
-#endif
-// cond_0 + cond_1 + cond_2
-#define BLOCK_REDUCTION_ALGORITHM_1 0
-#if BLOCK_REDUCTION_ALGORITHM_1
-#define USE_COEFF_INFO 0 
-#define USE_COST_SQ_VS_NSQ 0 
-#define USE_TWO_AS_OR 0
-#define USE_TWO_AS_AND 1
-#endif
 
-#define BLOCK_REDUCTION_ALGORITHM_2 1
+#define BLOCK_REDUCTION_ALGORITHM_1 0
+#define BLOCK_REDUCTION_ALGORITHM_2 0
+
+///////*******************************************************************//
 
 #define POST_PD1_REF_NSQ_FOR_ONLY_PLUS_1 0
 

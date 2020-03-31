@@ -9606,10 +9606,10 @@ void perform_nsq_based_estimation_child_skip(
         int64_t h_cost_to_h4_cost = (int64_t)(((int64_t)h_cost - (int64_t)h4_cost) * 100) / (int64_t)h_cost;
         int64_t v_cost_to_v4_cost = (int64_t)(((int64_t)v_cost - (int64_t)v4_cost) * 100) / (int64_t)v_cost;
 
-        if (h_cost_to_h4_cost <= context_ptr->nsq_based_estimation_ctrls.nsq_based_estimation_h_v_to_h4_v4_th &&
-            v_cost_to_v4_cost <= context_ptr->nsq_based_estimation_ctrls.nsq_based_estimation_h_v_to_h4_v4_th)
+        if (h_cost_to_h4_cost <= context_ptr->block_based_depth_reduction_ctrls.nsq_based_estimation_h_v_to_h4_v4_th &&
+            v_cost_to_v4_cost <= context_ptr->block_based_depth_reduction_ctrls.nsq_based_estimation_h_v_to_h4_v4_th)
 
-            if (sq_cost_to_best_sub_cost_deviation <= context_ptr->nsq_based_estimation_ctrls.nsq_based_estimation_sq_to_4_sq_children_th)
+            if (sq_cost_to_best_sub_cost_deviation <= context_ptr->block_based_depth_reduction_ctrls.nsq_based_estimation_sq_to_4_sq_children_th)
 
                 set_child_to_be_skipped(
                     context_ptr,
@@ -10129,8 +10129,8 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
             }
 #if BLOCK_REDUCTION_ALGORITHM_2
             // Here d1 is already performed but not d2
-            else if (context_ptr->nsq_based_estimation_level &&
-                context_ptr->md_blk_arr_nsq[blk_geom->sqi_mds].split_flag == EB_TRUE &&  // not last depth = might further split
+            else if (context_ptr->block_based_depth_reduction &&
+                context_ptr->md_blk_arr_nsq[blk_geom->sqi_mds].split_flag == EB_TRUE &&  // could be further splitted
                 context_ptr->md_local_blk_unit[blk_geom->sqi_mds].avail_blk_flag && // valid block
                 blk_geom->sq_size <= 64 &&
                 blk_geom->sq_size >= 16) {
@@ -10141,15 +10141,10 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
             }
 #endif
 #if BLOCK_REDUCTION_ALGORITHM_1
-            else if (context_ptr->md_blk_arr_nsq[blk_geom->sqi_mds].split_flag == EB_TRUE &&  // not last depth = might further split
+            if (context_ptr->block_based_depth_reduction &&
+                context_ptr->md_blk_arr_nsq[blk_geom->sqi_mds].split_flag == EB_TRUE && // could be further splitted
                 blk_geom->depth && // not 1st depth
-                context_ptr->md_local_blk_unit[blk_geom->sqi_mds].avail_blk_flag
-                // valid block
-                ) { // not 1st depth=cost available
-                // @ this stage d1 is performed but not d2
-                // stop break-down if current cost is good enough
-                //get parent idx
-
+                context_ptr->md_local_blk_unit[blk_geom->sqi_mds].avail_blk_flag) { // valid block
 
                 //Set parent to be considered
                 uint32_t parent_depth_sqi_mds =
@@ -10158,80 +10153,36 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                     parent_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
 
                 if (context_ptr->md_local_blk_unit[parent_depth_sqi_mds].avail_blk_flag) {
-                    if (context_ptr->pd_pass == PD_PASS_2) {
+                    // Get the current depth block type
+                    uint32_t current_depth_best_d1_blk_mds = context_ptr->md_local_blk_unit[blk_geom->sqi_mds].best_d1_blk;
+                    BlkStruct *current_depth_best_d1_blk_ptr = &(context_ptr->md_blk_arr_nsq[current_depth_best_d1_blk_mds]);
 
-                        // Get the current depth block type
-                        uint32_t current_depth_best_d1_blk_mds = context_ptr->md_local_blk_unit[blk_geom->sqi_mds].best_d1_blk;
-                        BlkStruct *current_depth_best_d1_blk_ptr = &(context_ptr->md_blk_arr_nsq[current_depth_best_d1_blk_mds]);
-                        EbBool is_current_depth_block_intra = EB_FALSE;
-                        {
-                            for (int32_t d1_itr = 0; d1_itr < get_blk_geom_mds(current_depth_best_d1_blk_mds)->totns; d1_itr++) {
-                                is_current_depth_block_intra |= (current_depth_best_d1_blk_ptr[d1_itr].prediction_mode_flag == INTRA_MODE);
-                            }
+
+                    EbBool current_depth_has_coeff = EB_FALSE;
+                    
+                    {
+                        for (int32_t d1_itr = 0; d1_itr < get_blk_geom_mds(current_depth_best_d1_blk_mds)->totns; d1_itr++) {
+                            current_depth_has_coeff |= (current_depth_best_d1_blk_ptr[d1_itr].block_has_coeff);
                         }
-
-
-                        EbBool current_depth_has_coeff = EB_FALSE;
-                        {
-                            for (int32_t d1_itr = 0; d1_itr < get_blk_geom_mds(current_depth_best_d1_blk_mds)->totns; d1_itr++) {
-                                current_depth_has_coeff |= (current_depth_best_d1_blk_ptr[d1_itr].block_has_coeff);
-                            }
-                        }
-
-
-
-                        // Get the parent depth block type
-                        uint32_t parent_depth_best_d1_blk_mds = context_ptr->md_local_blk_unit[parent_depth_sqi_mds].best_d1_blk;
-                        BlkStruct *parent_depth_best_d1_blk_ptr = &(context_ptr->md_blk_arr_nsq[parent_depth_best_d1_blk_mds]);
-                        EbBool is_parent_depth_block_intra = EB_FALSE;
-                        {
-                            for (int32_t d1_itr = 0; d1_itr < get_blk_geom_mds(parent_depth_best_d1_blk_mds)->totns; d1_itr++) {
-                                is_parent_depth_block_intra |= (parent_depth_best_d1_blk_ptr[d1_itr].prediction_mode_flag == INTRA_MODE);
-                            }
-                        }
-
-
-                        //EbBool skip_check = (is_parent_depth_block_intra == EB_FALSE && is_current_depth_block_intra == EB_TRUE);
-
-                        //if(is_current_depth_block_intra == EB_FALSE)
-                        //if(!skip_check)
-#if USE_TWO_AS_AND
-                        if (current_depth_has_coeff == EB_FALSE &&
-                            (
-
-                                context_ptr->md_local_blk_unit[blk_geom->sqi_mds].best_d1_blk == blk_geom->sqi_mds &&
-                                ((context_ptr->md_local_blk_unit[blk_geom->sqi_mds].cost * 4) > ((context_ptr->md_local_blk_unit[parent_depth_sqi_mds].cost * 100) / 100))))
-#endif
-
-#if USE_TWO_AS_OR
-                            if (current_depth_has_coeff == EB_FALSE ||
-                                (
-
-                                    context_ptr->md_local_blk_unit[blk_geom->sqi_mds].best_d1_blk == blk_geom->sqi_mds &&
-                                    ((context_ptr->md_local_blk_unit[blk_geom->sqi_mds].cost * 4) > ((context_ptr->md_local_blk_unit[parent_depth_sqi_mds].cost * 100) / 100))))
-#endif
-
-#if USE_COEFF_INFO
-                                if (current_depth_has_coeff == EB_FALSE)
-#endif
-#if USE_COST_SQ_VS_NSQ
-                                    if (context_ptr->md_local_blk_unit[blk_geom->sqi_mds].best_d1_blk == blk_geom->sqi_mds)
-#endif
-                                    {
-#if USE_COST_SQ_VS_NSQ
-                                        if ((context_ptr->md_local_blk_unit[blk_geom->sqi_mds].cost * 4) > ((context_ptr->md_local_blk_unit[parent_depth_sqi_mds].cost * 100) / 100))
-#endif
-                                        {
-
-                                            //if ((context_ptr->md_local_blk_unit[blk_geom->sqi_mds].cost * 4) > parent_depth_cost[blk_geom->depth - 1]) {
-                                            set_child_to_be_skipped(
-                                                context_ptr,
-                                                blk_geom->sqi_mds,
-                                                scs_ptr->seq_header.sb_size,
-                                                scs_ptr->seq_header.sb_size == BLOCK_128X128 ? 6 : 5);
-                                        }
-                                    }
                     }
+
+                    if (current_depth_has_coeff == EB_FALSE &&
+                        (
+
+                            context_ptr->md_local_blk_unit[blk_geom->sqi_mds].best_d1_blk == blk_geom->sqi_mds &&
+                            ((context_ptr->md_local_blk_unit[blk_geom->sqi_mds].cost * 4) > ((context_ptr->md_local_blk_unit[parent_depth_sqi_mds].cost * 100) / 100))))
+
+                    {
+
+                        {
+                            set_child_to_be_skipped(
+                                context_ptr,
+                                blk_geom->sqi_mds,
+                                scs_ptr->seq_header.sb_size,
+                                scs_ptr->seq_header.sb_size == BLOCK_128X128 ? 6 : 5);
+                        }
+                    }
+
                 }
             }
 #endif

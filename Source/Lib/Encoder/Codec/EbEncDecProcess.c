@@ -1400,20 +1400,20 @@ void set_inter_intra_distortion_based_reference_pruning_controls(ModeDecisionCon
 }
 #endif
 
-#if BLOCK_REDUCTION_ALGORITHM_2
-void set_nsq_based_estimation_controls(ModeDecisionContext *mdctxt, uint8_t nsq_based_estimation_level) {
+#if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2
+void set_block_based_depth_reduction_controls(ModeDecisionContext *mdctxt, uint8_t nsq_based_estimation_level) {
 
-    NsqBasedEstimationCtrls *nsq_based_estimation_ctrls = &mdctxt->nsq_based_estimation_ctrls;
+    BlockbasedDepthReductionCtrls *block_based_depth_reduction_ctrls = &mdctxt->block_based_depth_reduction_ctrls;
 
     switch (nsq_based_estimation_level)
     {
     case 0:
-        nsq_based_estimation_ctrls->nsq_based_estimation_sq_to_4_sq_children_th = (uint8_t) ~0;
-        nsq_based_estimation_ctrls->nsq_based_estimation_h_v_to_h4_v4_th = (uint8_t)~0;
+        block_based_depth_reduction_ctrls->nsq_based_estimation_sq_to_4_sq_children_th = (uint8_t) ~0;
+        block_based_depth_reduction_ctrls->nsq_based_estimation_h_v_to_h4_v4_th = (uint8_t)~0;
         break;
     case 1:
-        nsq_based_estimation_ctrls->nsq_based_estimation_sq_to_4_sq_children_th = 0;
-        nsq_based_estimation_ctrls->nsq_based_estimation_h_v_to_h4_v4_th = 0;
+        block_based_depth_reduction_ctrls->nsq_based_estimation_sq_to_4_sq_children_th = 0;
+        block_based_depth_reduction_ctrls->nsq_based_estimation_h_v_to_h4_v4_th = 0;
         break;
     default:
         assert(0);
@@ -2724,14 +2724,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     }
     set_inter_intra_distortion_based_reference_pruning_controls(context_ptr, context_ptr->inter_intra_distortion_based_reference_pruning);
 #endif
-#if BLOCK_REDUCTION_ALGORITHM_2
-    if (context_ptr->pd_pass == PD_PASS_0)
-        context_ptr->nsq_based_estimation_level = 0;
-    else if (context_ptr->pd_pass == PD_PASS_1)
-        context_ptr->nsq_based_estimation_level = 0;
+#if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2
+    if (pd_pass == PD_PASS_0)
+        context_ptr->block_based_depth_reduction = 0;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->block_based_depth_reduction = 0;
     else
-        context_ptr->nsq_based_estimation_level = 1;  // 1 as default mode
-    set_nsq_based_estimation_controls(context_ptr, context_ptr->nsq_based_estimation_level);
+        context_ptr->block_based_depth_reduction = 1; 
+    set_block_based_depth_reduction_controls(context_ptr, context_ptr->block_based_depth_reduction);
 #endif
     // Set max_ref_count @ MD
     if (pd_pass == PD_PASS_0)

@@ -182,11 +182,11 @@ typedef struct RefPruningControls {
 }RefPruningControls;
 #endif
 
-#if BLOCK_REDUCTION_ALGORITHM_2
-typedef struct NsqBasedEstimationCtrls {
+#if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2
+typedef struct BlockbasedDepthReductionCtrls {
     uint8_t nsq_based_estimation_sq_to_4_sq_children_th;
     uint8_t nsq_based_estimation_h_v_to_h4_v4_th;
-}NsqBasedEstimationCtrls;
+}BlockbasedDepthReductionCtrls;
 #endif
 
 typedef struct ModeDecisionContext {
@@ -481,9 +481,9 @@ typedef struct ModeDecisionContext {
     uint8_t      inter_inter_distortion_based_reference_pruning;
     uint8_t      inter_intra_distortion_based_reference_pruning;
 #endif
-#if BLOCK_REDUCTION_ALGORITHM_2
-    uint8_t      nsq_based_estimation_level;
-    NsqBasedEstimationCtrls nsq_based_estimation_ctrls;
+#if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2
+    uint8_t      block_based_depth_reduction;
+    BlockbasedDepthReductionCtrls block_based_depth_reduction_ctrls;
 #endif
     uint8_t      md_max_ref_count;
     EbBool       md_skip_mvp_generation;
