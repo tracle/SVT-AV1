@@ -159,8 +159,8 @@ extern "C" {
 #define SHUT_POST_PD1_SQ_VS_NSQ 1
 #define SHUT_POST_PD2_SQ_WEIGHT 1
 
-#define BLOCK_REDUCTION_ALGORITHM_1 1
-#define BLOCK_REDUCTION_ALGORITHM_2 0
+#define BLOCK_REDUCTION_ALGORITHM_1 0
+#define BLOCK_REDUCTION_ALGORITHM_2 1
 
 ///////*******************************************************************//
 
