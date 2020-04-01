@@ -1111,19 +1111,19 @@ void update_part_stats(PictureControlSet *pcs_ptr, BlkStruct *blk_ptr, int mi_ro
             partition_context_neighbor_array, (mi_col << MI_SIZE_LOG2));
 
         const PartitionContextType above_ctx =
-           /* (((PartitionContext *)
+            (((PartitionContext *)
                   partition_context_neighbor_array->top_array)[partition_context_top_neighbor_index]
-                 .above == (int8_t)INVALID_NEIGHBOR_DATA)
+                 .above == (char)INVALID_NEIGHBOR_DATA)
                 ? 0
-                :*/ ((PartitionContext *)partition_context_neighbor_array
+                : ((PartitionContext *)partition_context_neighbor_array
                        ->top_array)[partition_context_top_neighbor_index]
                       .above;
         const PartitionContextType left_ctx =
-            /*(((PartitionContext *)partition_context_neighbor_array
+            (((PartitionContext *)partition_context_neighbor_array
                   ->left_array)[partition_context_left_neighbor_index]
-                 .left == (int8_t)INVALID_NEIGHBOR_DATA)
+                 .left == (char)INVALID_NEIGHBOR_DATA)
                 ? 0
-                : */((PartitionContext *)partition_context_neighbor_array
+                : ((PartitionContext *)partition_context_neighbor_array
                        ->left_array)[partition_context_left_neighbor_index]
                       .left;
 
