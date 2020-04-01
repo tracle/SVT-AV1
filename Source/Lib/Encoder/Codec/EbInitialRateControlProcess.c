@@ -1519,9 +1519,10 @@ void cutree_mc_flow_synthesizer(
     return;
 }
 
-void generate_r0(PictureParentControlSet         *pcs_ptr)
+static void generate_r0beta(PictureParentControlSet *pcs_ptr)
 {
     Av1Common *cm = pcs_ptr->av1_cm;
+    SequenceControlSet *scs_ptr = pcs_ptr->scs_ptr;
     //int tpl_stride = tpl_frame->stride;
     int64_t intra_cost_base = 0;
     int64_t mc_dep_cost_base = 0;
@@ -1547,6 +1548,41 @@ void generate_r0(PictureParentControlSet         *pcs_ptr)
 
     printf("kelvin ------> poc %d\t%.0f\t%.0f \t%.3f base_rdmult=%d\n", pcs_ptr->picture_number, (double)intra_cost_base, (double)mc_dep_cost_base, pcs_ptr->r0, pcs_ptr->base_rdmult);
 
+    const uint32_t sb_sz = scs_ptr->seq_header.sb_size == BLOCK_128X128 ? 128 : 64;
+    const uint32_t picture_sb_width  = (uint32_t)((scs_ptr->seq_header.max_frame_width  + sb_sz - 1) / sb_sz);
+    const uint32_t picture_sb_height = (uint32_t)((scs_ptr->seq_header.max_frame_height + sb_sz - 1) / sb_sz);
+    const uint32_t picture_width_in_mb  = (scs_ptr->seq_header.max_frame_width  + 16 - 1) / 16;
+    const uint32_t picture_height_in_mb = (scs_ptr->seq_header.max_frame_height + 16 - 1) / 16;
+    for (uint32_t sb_y = 0; sb_y < picture_sb_height; ++sb_y) {
+        for (uint32_t sb_x = 0; sb_x < picture_sb_width; ++sb_x) {
+            int64_t intra_cost = 0;
+            int64_t mc_dep_cost = 0;
+            for (int mby_offset = 0; mby_offset < (scs_ptr->seq_header.sb_size == BLOCK_128X128 ? 8 : 4); mby_offset++) {
+                for (int mbx_offset = 0; mbx_offset < (scs_ptr->seq_header.sb_size == BLOCK_128X128 ? 8 : 4); mbx_offset++) {
+                    uint32_t mbx = ((sb_x * sb_sz) / 16) + mbx_offset;
+                    uint32_t mby = ((sb_y * sb_sz) / 16) + mby_offset;
+                    if(mbx>=picture_width_in_mb || mby>= picture_height_in_mb)
+                        continue;
+                    OisMbResults *ois_mb_results_ptr = pcs_ptr->ois_mb_results[mby * picture_width_in_mb + mbx];
+                    int64_t mc_dep_delta =
+                        RDCOST(pcs_ptr->base_rdmult, ois_mb_results_ptr->mc_dep_rate, ois_mb_results_ptr->mc_dep_dist);
+                    intra_cost  += (ois_mb_results_ptr->recrf_dist << RDDIV_BITS);
+                    mc_dep_cost += (ois_mb_results_ptr->recrf_dist << RDDIV_BITS) + mc_dep_delta;
+
+                }
+            }
+            double beta = 1.0;
+            double rk = -1.0;
+            if (mc_dep_cost > 0 && intra_cost > 0) {
+                rk = (double)intra_cost / mc_dep_cost;
+                beta = (pcs_ptr->r0 / rk);
+                assert(beta > 0.0);
+            }
+            pcs_ptr->cutree_beta[sb_y * picture_sb_width + sb_x] = beta;
+        }
+    }
+    //printf("generater0rk rk[0~4]=%f %f %f %f %f, scs_ptr->sb_sz=%d, scs_ptr->seq_header.sb_size==BLOCK_128X128%d\n", pcs_ptr->cutree_rk[0], pcs_ptr->cutree_rk[1], pcs_ptr->cutree_rk[2], pcs_ptr->cutree_rk[3], pcs_ptr->cutree_rk[4], scs_ptr->sb_sz, scs_ptr->seq_header.sb_size==BLOCK_128X128);
+    //printf("generater0rk beta[0~4]=%f %f %f %f %f\n",pcs_ptr->cutree_beta[0], pcs_ptr->cutree_beta[1], pcs_ptr->cutree_beta[2], pcs_ptr->cutree_beta[3], pcs_ptr->cutree_beta[4]);
     return;
 }
 
@@ -1693,7 +1729,8 @@ void update_mc_flow(
                 //printf("kelvin ---> init_rc cutree_mc_flow_synthesizer frame_idx=%d, reordered picture_number=%d, decode_order=%d\n", frame_idx, pcs_array_reorder[frame_idx]->picture_number, pcs_array_reorder[frame_idx]->decode_order);
                 cutree_mc_flow_synthesizer(encode_context_ptr, scs_ptr, pcs_array_reorder, frame_idx, 16);
             }
-            generate_r0(pcs_array[start_idx]);
+            generate_r0beta(pcs_array[start_idx]);
+            //printf(" qIndex = %d\n", quantizer_to_qindex[(uint8_t)scs_ptr->static_config.qp]);
         }
 
         if (pcs_array[start_idx]->temporal_layer_index == 0 && start_idx == 1) {
@@ -1747,7 +1784,8 @@ void update_mc_flow(
                 //printf("kelvin ---> init_rc cutree_mc_flow_synthesizer frame_idx=%d, reordered picture_number=%d, decode_order=%d\n", frame_idx, pcs_array_reorder[frame_idx]->picture_number, pcs_array_reorder[frame_idx]->decode_order);
                 cutree_mc_flow_synthesizer(encode_context_ptr, scs_ptr, pcs_array_reorder, frame_idx, sw_length);
             }
-            generate_r0(pcs_array[start_idx]);
+            generate_r0beta(pcs_array[start_idx]);
+            //printf(" qIndex = %d\n", quantizer_to_qindex[(uint8_t)scs_ptr->static_config.qp]);
         }
     }
 #else
@@ -1756,7 +1794,7 @@ void update_mc_flow(
         cutree_mc_flow_synthesizer(encode_context_ptr, scs_ptr, pcs_array, frame_idx, pcs_ptr->frames_in_sw); // in decode order
     }
 
-    generate_r0(pcs_array[0]);
+    generate_r0beta(pcs_array[0]);
 #endif
 
     for(frame_idx = 0; frame_idx < 60/*pcs_ptr->frames_in_sw*/; frame_idx++)

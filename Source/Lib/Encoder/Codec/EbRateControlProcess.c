@@ -5461,33 +5461,8 @@ static void sb_qp_derivation_tpl_la(
                 me_distortion = pcs_ptr->parent_pcs_ptr->rc_me_distortion[sb_addr] >> 8;
             }
 
-            int64_t intra_cost = 0;
-            int64_t mc_dep_cost = 0;
-            for (int mby_offset = 0; mby_offset < (scs_ptr->seq_header.sb_size == BLOCK_128X128 ? 8 : 4); mby_offset++) {
-                for (int mbx_offset = 0; mbx_offset < (scs_ptr->seq_header.sb_size == BLOCK_128X128 ? 8 : 4); mbx_offset++) {
-                    uint32_t mbx = (sb_ptr->origin_x / 16) + mbx_offset;
-                    uint32_t mby = (sb_ptr->origin_y / 16) + mby_offset;
-                    if(mbx>=picture_width_in_mb || mby>= picture_height_in_mb)
-                        continue;
-                    OisMbResults *ois_mb_results_ptr = ppcs_ptr->ois_mb_results[mby * picture_width_in_mb + mbx];
-                    //if(pcs_ptr->parent_pcs_ptr->picture_number == 0 && sb_addr == 0)
-                    //printf("kelvin ---> mbx=%d mby=%d picture_width_in_mb=%d, sb origin_xy=%d %d sb_addr=%d\n", mbx, mby, picture_width_in_mb, sb_ptr->origin_x, sb_ptr->origin_y, sb_addr);
-                    int64_t mc_dep_delta =
-                        RDCOST(ppcs_ptr->base_rdmult, ois_mb_results_ptr->mc_dep_rate, ois_mb_results_ptr->mc_dep_dist);
-                    intra_cost  += (ois_mb_results_ptr->recrf_dist << RDDIV_BITS);
-                    mc_dep_cost += (ois_mb_results_ptr->recrf_dist << RDDIV_BITS) + mc_dep_delta;
-
-                }
-            }
-            int offset = 0;
-            double beta = 1.0;
-            double rk = -1.0;
-            if (mc_dep_cost > 0 && intra_cost > 0) {
-                rk = (double)intra_cost / mc_dep_cost;
-                beta = (r0 / rk);
-                assert(beta > 0.0);
-            }
-            offset = av1_get_deltaq_offset(scs_ptr->static_config.encoder_bit_depth, ppcs_ptr->frm_hdr.quantization_params.base_q_idx, beta);
+            double beta = ppcs_ptr->cutree_beta[sb_addr];
+            int offset = av1_get_deltaq_offset(scs_ptr->static_config.encoder_bit_depth, ppcs_ptr->frm_hdr.quantization_params.base_q_idx, beta);
             offset = AOMMIN(offset,  pcs_ptr->parent_pcs_ptr->frm_hdr.delta_q_params.delta_q_res * 9*2 - 1);
             offset = AOMMAX(offset, -pcs_ptr->parent_pcs_ptr->frm_hdr.delta_q_params.delta_q_res * 9*2 + 1);
 #if 1
@@ -5495,28 +5470,15 @@ static void sb_qp_derivation_tpl_la(
 #else
             delta_qp = 0;
 #endif
-            //if(sb_addr == 0)
-            //    printf("kelvinrc ---> poc%ld sb_addr=%d r0=%f rk=%f delta_qp=%d offset=%d, beta=%f, base_rdmult=%d, base_q_idx=%d\n", pcs_ptr->parent_pcs_ptr->picture_number, sb_addr, r0, rk, delta_qp, offset, beta, ppcs_ptr->base_rdmult, ppcs_ptr->frm_hdr.quantization_params.base_q_idx);
+            //if(sb_addr < 5)
+            //    printf("kelvinrc ---> poc%ld sb_addr=%d r0=%f delta_qp=%d offset=%d, beta=%f, base_rdmult=%d, base_q_idx=%d\n", pcs_ptr->parent_pcs_ptr->picture_number, sb_addr, r0, delta_qp, offset, beta, ppcs_ptr->base_rdmult, ppcs_ptr->frm_hdr.quantization_params.base_q_idx);
             //if(pcs_ptr->parent_pcs_ptr->picture_number == 0)
             //printf("kelvinrc ---> poc%ld sb_addr=%d r0=%f rk=%f delta_qp=%d offset=%d, beta=%f, base_q_idx=%d\n", pcs_ptr->parent_pcs_ptr->picture_number, sb_addr, r0, rk, delta_qp, offset, beta, ppcs_ptr->frm_hdr.quantization_params.base_q_idx);
+
 #if 0
             if (pcs_ptr->slice_type == 2) {
-                referenced_area_sb = MIN(REF_AREA_MED_THRESHOLD + REF_AREA_LOW_THRESHOLD, referenced_area_sb);
-                if (referenced_area_sb >= REF_AREA_MED_THRESHOLD)
-                    delta_qp = -(max_delta_qp * ((int)referenced_area_sb - REF_AREA_MED_THRESHOLD) / (REF_AREA_MED_THRESHOLD));
-                else
-                    delta_qp = max_delta_qp;
-
                 if (delta_qp < 0 && variance_sb < IS_COMPLEX_SB_FLAT_VARIANCE_TH)
                     delta_qp = 0;
-            }
-            else if (pcs_ptr->temporal_layer_index == 0) {
-                if (referenced_area_sb < REF_AREA_LOW_THRESHOLD)
-                    delta_qp = max_delta_qp >> 1;
-#if !TWO_PASS_IMPROVEMENT
-                else if (referenced_area_sb > MAX_REF_AREA_NONI_LOW_RES && me_distortion > ME_SAD_HIGH_THRESHOLD)
-                    delta_qp = -max_delta_qp >> 2;
-#endif
             }
 #endif
             if (pcs_ptr->slice_type == 2)

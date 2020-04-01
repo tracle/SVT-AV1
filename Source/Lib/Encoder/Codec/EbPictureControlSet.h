@@ -588,6 +588,7 @@ typedef struct PictureParentControlSet {
     OisMbResults **ois_mb_results;
     int32_t      base_rdmult;
     double       r0;
+    double       *cutree_beta;
 #endif
     // Dynamic GOP
     EbPred   pred_structure;
