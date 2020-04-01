@@ -166,8 +166,11 @@ extern "C" {
 #define NEW_RESOLUTION_RANGES     1 // Make new resolution ranges
 #endif
 #define MAR30_ADOPTIONS           1 // Adoptions in all modes; create a new M1
-#define NSQ_MD_SIGNAL                    1 // Add signal to shut md_nsq
+
 #define REDUCE_COMPLEX_CLIP_CYCLES       1 // Add picture classifier
+#if  REDUCE_COMPLEX_CLIP_CYCLES
+#define NSQ_MD_SIGNAL                    1 // Add signal to shut md_nsq
+#endif
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
