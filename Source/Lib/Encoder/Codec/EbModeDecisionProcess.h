@@ -184,11 +184,14 @@ typedef struct RefPruningControls {
 
 #if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2
 typedef struct BlockbasedDepthReductionCtrls {
-    uint8_t nsq_based_estimation_sq_to_4_sq_children_th;
-    uint8_t nsq_based_estimation_h_v_to_h4_v4_th;
+
+    int64_t nsq_based_estimation_sq_to_4_sq_children_th;
+    int64_t nsq_based_estimation_h_v_to_h4_v4_th;
+    int64_t current_to_parent_deviation_th;
+    int64_t sq_to_best_nsq_deviation_th;
+
     uint8_t use_coeff_info;
-    uint8_t use_sq_vs_nsq_decision;
-    uint8_t current_to_parent_deviation_th;
+
 }BlockbasedDepthReductionCtrls;
 #endif
 
@@ -516,6 +519,11 @@ typedef struct ModeDecisionContext {
 #endif
 #if UV_SEARCH_MODE_INJCECTION
     uint8_t       intra_chroma_search_follows_intra_luma_injection;
+#endif
+
+#if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2   
+    uint64_t best_nsq_default_cost;
+    uint64_t default_cost_per_shape[NUMBER_OF_SHAPES];
 #endif
 } ModeDecisionContext;
 

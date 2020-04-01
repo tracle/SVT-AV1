@@ -1408,13 +1408,21 @@ void set_block_based_depth_reduction_controls(ModeDecisionContext *mdctxt, uint8
     switch (nsq_based_estimation_level)
     {
     case 0:
-        block_based_depth_reduction_ctrls->nsq_based_estimation_sq_to_4_sq_children_th = (uint8_t) ~0;
-        block_based_depth_reduction_ctrls->nsq_based_estimation_h_v_to_h4_v4_th = (uint8_t)~0;
+        block_based_depth_reduction_ctrls->nsq_based_estimation_sq_to_4_sq_children_th = MAX_SIGNED_VALUE;
+        block_based_depth_reduction_ctrls->nsq_based_estimation_h_v_to_h4_v4_th = MAX_SIGNED_VALUE;
+
+        block_based_depth_reduction_ctrls->current_to_parent_deviation_th = MAX_SIGNED_VALUE;
+        block_based_depth_reduction_ctrls->sq_to_best_nsq_deviation_th = MAX_SIGNED_VALUE;
+
         block_based_depth_reduction_ctrls->use_coeff_info = 0;
         break;
     case 1:
         block_based_depth_reduction_ctrls->nsq_based_estimation_sq_to_4_sq_children_th = 0;
         block_based_depth_reduction_ctrls->nsq_based_estimation_h_v_to_h4_v4_th = 0;
+
+        block_based_depth_reduction_ctrls->current_to_parent_deviation_th = 0;
+        block_based_depth_reduction_ctrls->sq_to_best_nsq_deviation_th = 0;
+
         block_based_depth_reduction_ctrls->use_coeff_info = 1;
         break;
     default:
