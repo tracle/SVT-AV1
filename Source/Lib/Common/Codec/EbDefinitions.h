@@ -160,9 +160,10 @@ extern "C" {
 #define INTER_CASE              0 // Use full_cost only for inter
 #define COMBINED_COND           0
 #if COMBINED_COND
-#define FAST_TX_WEIGHT_OFFSET   -1
+#define FAST_TX_WEIGHT_OFFSET   0
 #define FULL_TX_WEIGHT_OFFSET   0
 #endif
+#define DISABLE_TXT_WEIGHT      0
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

@@ -1512,6 +1512,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->tx_weight = FC_SKIP_TX_SR_TH025;
         else
             context_ptr->tx_weight = FC_SKIP_TX_SR_TH010;
+#if DISABLE_TXT_WEIGHT
+           ontext_ptr->tx_weight = MAX_MODE_COST;
+#endif
     }
 
     // Set tx search reduced set falg (0: full tx set; 1: reduced tx set; 1: two
