@@ -1128,7 +1128,7 @@ void cutree_mc_flow_dispenser(
                         const MeSbResults *me_results = pcs_ptr->me_results[sb_index];
                         x_curr_mv = me_results->me_mv_array[me_mb_offset][(list_index ? ((scs_ptr->mrp_mode == 0) ? 4 : 2) : 0) + ref_pic_index].x_mv << 1;
                         y_curr_mv = me_results->me_mv_array[me_mb_offset][(list_index ? ((scs_ptr->mrp_mode == 0) ? 4 : 2) : 0) + ref_pic_index].y_mv << 1;
-//if(pcs_ptr->picture_number == 16 && mb_origin_x == 0 && mb_origin_y == 0) {
+//if(pcs_ptr->picture_number == 2 && mb_origin_x == 48 && mb_origin_y == 16) {
 //    printf("kelvin ---> inter search poc%d, mb_origin_xy=%d %d, rf_idx=%d, src[0~3]=%d %d %d %d, MV=%d %d, ref[0~3]=%d %d %d %d\n", pcs_ptr->picture_number, mb_origin_x, mb_origin_y, rf_idx, src_mb[0], src_mb[1], src_mb[2], src_mb[3], x_curr_mv, y_curr_mv, ref_mb[0], ref_mb[1], ref_mb[2], ref_mb[3]);
 //}
                         InterPredParams inter_pred_params;
@@ -1139,8 +1139,20 @@ void cutree_mc_flow_dispenser(
                         inter_pred_params.conv_params = get_conv_params(0, 0, 0, 8/*xd->bd*/);
 
                         MV best_mv = {y_curr_mv, x_curr_mv};
+#if CUTREE_MV_CLIP
+                        av1_build_inter_predictor(pcs_ptr->av1_cm,
+                                                  ref_mb,
+                                                  input_picture_ptr->stride_y,
+                                                  predictor,
+                                                  16,
+                                                  &best_mv,
+                                                  mb_origin_x,
+                                                  mb_origin_y,
+                                                  &inter_pred_params);
+#else
                         av1_build_inter_predictor(ref_mb, input_picture_ptr->stride_y, predictor, 16,
                                 &best_mv, mb_origin_x, mb_origin_y, &inter_pred_params);
+#endif
                         aom_subtract_block(16, 16, src_diff, 16, src_mb, input_picture_ptr->stride_y, predictor, 16);
 
                         wht_fwd_txfm(src_diff, 16, coeff, tx_size, 8/*xd->bd*/, 0/*is_cur_buf_hbd(xd)*/);
@@ -1202,9 +1214,20 @@ if(pcs_ptr->picture_number == 16 && mb_origin_y == 0)
                             &sf, &ref_buf, kernel);
 
                         inter_pred_params.conv_params = get_conv_params(0, 0, 0, 8/*xd->bd*/);
-
+#if CUTREE_MV_CLIP
+                        av1_build_inter_predictor(pcs_ptr->av1_cm,
+                                                  ref_mb,
+                                                  input_picture_ptr->stride_y,
+                                                  dst_buffer,
+                                                  dst_buffer_stride,
+                                                  &final_best_mv,
+                                                  mb_origin_x,
+                                                  mb_origin_y,
+                                                  &inter_pred_params);
+#else
                         av1_build_inter_predictor(ref_mb, input_picture_ptr->stride_y, dst_buffer, dst_buffer_stride,
                                 &final_best_mv, mb_origin_x, mb_origin_y, &inter_pred_params);
+#endif
                     } else {
                         // intra recon
                         uint8_t *above_row;

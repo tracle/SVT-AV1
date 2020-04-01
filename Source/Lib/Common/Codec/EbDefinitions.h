@@ -146,9 +146,10 @@ extern "C" {
 #define IFS_MD_STAGE_3 1
 
 // Actions in the second pass: Frame and SB QP assignment and temporal filtering strenght change
-#define CUTREE_LA  0 // Add CUTREE into look ahead
+#define CUTREE_LA  1 // Add CUTREE into look ahead
 #define CUTREE_LA_QPS 0
 #define CUTREE_LA_QPM 1
+#define CUTREE_MV_CLIP 1
 
 //FOR DEBUGGING - Do not remove
 #define NO_ENCDEC \

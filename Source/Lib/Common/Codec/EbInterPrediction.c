@@ -20,6 +20,9 @@
 #include "convolve.h"
 #include "common_dsp_rtcd.h"
 #include "EbUtility.h"
+#if CUTREE_MV_CLIP
+#include "Av1Common.h"
+#endif
 //#include "EbRateDistortionCost.h"
 
 #define MVBOUNDLOW \
@@ -1514,6 +1517,31 @@ void svt_highbd_inter_predictor(const uint16_t *src, int32_t src_stride, uint16_
 }
 
 #if CUTREE_LA
+#if CUTREE_MV_CLIP
+static INLINE MV clamp_mv_to_umv_border_sb(const MacroBlockD *xd, const MV *src_mv, int32_t bw,
+    int32_t bh, int32_t ss_x, int32_t ss_y) {
+    // If the MV points so far into the UMV border that no visible pixels
+    // are used for reconstruction, the subpel part of the MV can be
+    // discarded and the MV limited to 16 pixels with equivalent results.
+    const int32_t spel_left = (AOM_INTERP_EXTEND + bw) << SUBPEL_BITS;
+    const int32_t spel_right = spel_left - SUBPEL_SHIFTS;
+    const int32_t spel_top = (AOM_INTERP_EXTEND + bh) << SUBPEL_BITS;
+    const int32_t spel_bottom = spel_top - SUBPEL_SHIFTS;
+    MV            clamped_mv = { (int16_t)(src_mv->row * (1 << (1 - ss_y))),
+                                 (int16_t)(src_mv->col * (1 << (1 - ss_x))) };
+    assert(ss_x <= 1);
+    assert(ss_y <= 1);
+
+    clamp_mv(&clamped_mv,
+        xd->mb_to_left_edge * (1 << (1 - ss_x)) - spel_left,
+        xd->mb_to_right_edge * (1 << (1 - ss_x)) + spel_right,
+        xd->mb_to_top_edge * (1 << (1 - ss_y)) - spel_top,
+        xd->mb_to_bottom_edge * (1 << (1 - ss_y)) + spel_bottom);
+
+    return clamped_mv;
+}
+#endif
+
 void av1_init_inter_params(InterPredParams *inter_pred_params, int block_width,
                            int block_height, int pix_row, int pix_col,
                            int subsampling_x, int subsampling_y, int bit_depth,
@@ -1576,11 +1604,15 @@ void av1_make_inter_predictor(const uint8_t *src, int src_stride, uint8_t *dst,
         interp_filters, 0);
   }
 }
-
-void av1_build_inter_predictor(const uint8_t *src, int src_stride, uint8_t *dst,
-                               int dst_stride, const MV *src_mv, int pix_col,
-                               int pix_row,
+#if CUTREE_MV_CLIP
+void av1_build_inter_predictor(Av1Common *cm, const uint8_t *src, int src_stride, uint8_t *dst,
+                               int dst_stride, const MV *src_mv, int pix_col, int pix_row,
                                InterPredParams *inter_pred_params) {
+#else
+void av1_build_inter_predictor(const uint8_t *src, int src_stride, uint8_t *dst, int dst_stride,
+                               const MV *src_mv, int pix_col, int pix_row,
+                               InterPredParams *inter_pred_params) {
+#endif
   SubpelParams subpel_params;
   //const struct scale_factors *sf = inter_pred_params->scale_factors;
   const struct ScaleFactors *sf = inter_pred_params->scale_factors;
@@ -1588,13 +1620,38 @@ void av1_build_inter_predictor(const uint8_t *src, int src_stride, uint8_t *dst,
   (void)pix_row;
   (void)pix_col;
 
-  struct Buf2D *pre_buf = &inter_pred_params->ref_frame_buf;
-  int ssx = inter_pred_params->subsampling_x;
+#if CUTREE_MV_CLIP
+  MacroBlockD xd;
+  int32_t       mi_row = pix_row >> MI_SIZE_LOG2;
+  int32_t       mi_col = pix_col >> MI_SIZE_LOG2;
+  BlockSize     bsize = BLOCK_16X16;
+  const int32_t bw = mi_size_wide[bsize];
+  const int32_t bh = mi_size_high[bsize];
+  xd.mb_to_top_edge = -((mi_row * MI_SIZE) * 8);
+  xd.mb_to_bottom_edge = ((cm->mi_rows - bh - mi_row) * MI_SIZE) * 8;
+  xd.mb_to_left_edge = -((mi_col * MI_SIZE) * 8);
+  xd.mb_to_right_edge = ((cm->mi_cols - bw - mi_col) * MI_SIZE) * 8;
+  MV best_mv_tmp = clamp_mv_to_umv_border_sb(&xd,
+                                             src_mv,
+                                             16,//blk_geom->bwidth,
+                                             16,//blk_geom->bheight,
+                                             inter_pred_params->subsampling_x,
+                                             inter_pred_params->subsampling_y);
+#endif
+
+  struct Buf2D *pre_buf    = &inter_pred_params->ref_frame_buf;
+  int           ssx        = inter_pred_params->subsampling_x;
   int ssy = inter_pred_params->subsampling_y;
   int orig_pos_y = inter_pred_params->pix_row << SUBPEL_BITS;
+#if CUTREE_MV_CLIP
+  orig_pos_y += best_mv_tmp.row;
+  int orig_pos_x = inter_pred_params->pix_col << SUBPEL_BITS;
+  orig_pos_x += best_mv_tmp.col;
+#else
   orig_pos_y += src_mv->row * (1 << (1 - ssy));
   int orig_pos_x = inter_pred_params->pix_col << SUBPEL_BITS;
   orig_pos_x += src_mv->col * (1 << (1 - ssx));
+#endif
   int pos_y = sf->scale_value_y(orig_pos_y, sf);
   int pos_x = sf->scale_value_x(orig_pos_x, sf);
   pos_x += SCALE_EXTRA_OFF;
