@@ -158,6 +158,7 @@ extern "C" {
 #define UPGRADE_TX_SIZE         0 // Make tx size to use the latest available cost
 #define INTRA_CASE              0 // Use full_cost only for intra
 #define INTER_CASE              0 // Use full_cost only for inter
+#define COMBINED_COND           0
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
