@@ -2612,7 +2612,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->nsq_hv_level = 2;
         assert(context_ptr->sq_weight != (uint32_t)~0);
     }
-
+#if SHUT_NSQ_HV_LEVEL
+    context_ptr->nsq_hv_level = 0;
+#endif
     // Set pred ME full search area
     if (pd_pass == PD_PASS_0) {
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
