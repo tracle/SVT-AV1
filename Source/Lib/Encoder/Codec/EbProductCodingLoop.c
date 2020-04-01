@@ -5517,8 +5517,10 @@ uint8_t get_skip_tx_search_flag(int32_t sq_size, uint64_t ref_fast_cost, uint64_
     // Larger than the best fast_cost (
 #if UPGRADE_TX_SIZE
     uint8_t tx_search_skip_flag;
-    uint8_t stage0_cond = cu_cost >= ((ref_fast_cost * weight) / 100) ? 1 : 0;
-    uint8_t stage1_cond = ((ref_full_cost < MAX_MODE_COST) && full_cost >= ((ref_full_cost * weight) / 100)) ? 1 : 0;
+    uint64_t tx_fast_weight = weight + FAST_TX_WEIGHT_OFFSET;
+    uint64_t tx_full_weight = weight + FULL_TX_WEIGHT_OFFSET;
+    uint8_t stage0_cond = cu_cost >= ((ref_fast_cost * tx_fast_weight) / 100) ? 1 : 0;
+    uint8_t stage1_cond = ((ref_full_cost < MAX_MODE_COST) && full_cost >= ((ref_full_cost * tx_full_weight) / 100)) ? 1 : 0;
 #if COMBINED_COND
     tx_search_skip_flag = (stage0_cond && stage1_cond) ? 1 : 0;
 #else
