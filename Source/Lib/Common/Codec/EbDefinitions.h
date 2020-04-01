@@ -166,18 +166,8 @@ extern "C" {
 #define NEW_RESOLUTION_RANGES     1 // Make new resolution ranges
 #endif
 #define MAR30_ADOPTIONS           1 // Adoptions in all modes; create a new M1
-
-#define NSQ_MD_SIGNAL					1
-#define DETECT_NASTY_CLIPS				1
-#if DETECT_NASTY_CLIPS
-#define DETECT_HIGH_INTRA_PIC			1
-#define DETECT_HIGH_COEF_PIC			1
-#define DETECT_HIGH_SMALLBLOCK_PIC		1
-#define DISABLE_NSQ_FOR_HIGH_COMP_PIC	1
-#define INTRA_TH		50
-#define COEFF_TH		90
-#define SMALL_BLK_TH	80
-#endif
+#define NSQ_MD_SIGNAL                    1 // Add signal to shut md_nsq
+#define REDUCE_COMPLEX_CLIP_CYCLES       1 // Add picture classifier
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
