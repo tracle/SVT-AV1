@@ -6291,7 +6291,11 @@ void tx_type_search(PictureControlSet *pcs_ptr,
         uint8_t cand_group = txt_group((TxType)tx_type);
         uint8_t best_group = txt_group(best_tx_type);
         uint8_t group_distance = cand_group - best_group;
+#if REORDER_TX_TYPE_2
+        if (cand_group > 0)
+#else
         if (cand_group > 1)
+#endif
             if(best_tx_type == DCT_DCT)
                 continue;
 #endif

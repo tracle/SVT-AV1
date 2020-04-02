@@ -165,6 +165,7 @@ extern "C" {
 #endif
 #define DISABLE_TXT_WEIGHT      0
 #define REORDER_TX_TYPE         0
+#define REORDER_TX_TYPE_2       0
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
