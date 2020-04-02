@@ -130,6 +130,8 @@ extern "C" {
 #define CFL_REDUCED_ALPHA          1 // use faster libaom_short_cuts_ths
 #endif
 #define UV_SEARCH_MODE_INJCECTION  1 // use the luma mode ijection method in chroma independent mode search
+#define PASS1_FIX               1 // Fix bugs related to pass 1
+#define QPS_UPDATE              1 // 2 PASS QPS improvement
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
