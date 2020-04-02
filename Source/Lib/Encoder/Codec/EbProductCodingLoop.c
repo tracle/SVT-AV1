@@ -6171,7 +6171,63 @@ void tx_reset_neighbor_arrays(PictureControlSet *pcs_ptr, ModeDecisionContext *c
             NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
     }
 }
-
+#if REORDER_TX_TYPE
+TxType pre_ranked_txtype[TX_TYPES] = {
+    // A GROUP
+    DCT_DCT,
+    ADST_DCT,
+    DCT_ADST,
+    ADST_ADST,
+    // B GROUP
+    IDTX,
+    V_DCT,
+    H_DCT,
+    // C GROUP
+    V_ADST,
+    H_ADST,
+    V_FLIPADST,
+    H_FLIPADST,
+    // D GROUP
+    FLIPADST_DCT,
+    DCT_FLIPADST,
+    FLIPADST_FLIPADST,
+    ADST_FLIPADST,
+    FLIPADST_ADST
+};
+uint8_t txt_group(TxType tx_type)
+{
+    switch (tx_type) {
+    case DCT_DCT: 
+    case ADST_DCT:
+    case DCT_ADST: 
+    case ADST_ADST:
+        return 0;
+        break;
+    case IDTX: 
+    case V_DCT:
+    case H_DCT: 
+        return 1;
+        break;
+    case V_ADST: 
+    case H_ADST:
+    case V_FLIPADST: 
+    case H_FLIPADST: 
+        return 2;
+        break;
+    case FLIPADST_DCT: 
+    case DCT_FLIPADST:
+    case FLIPADST_FLIPADST: 
+    case ADST_FLIPADST: 
+    case FLIPADST_ADST: 
+        return 3;
+        break;
+    default:
+        printf("not valid tx_ype");
+        break;
+    }
+    return 0;
+}
+#endif
 void tx_type_search(PictureControlSet *pcs_ptr,
                     ModeDecisionContext *context_ptr, ModeDecisionCandidateBuffer *candidate_buffer,
                     uint32_t qp) {
@@ -6223,11 +6279,22 @@ void tx_type_search(PictureControlSet *pcs_ptr,
                 &context_ptr->luma_dc_sign_context);
     if (context_ptr->tx_search_reduced_set == 2) txk_end = 2;
     TxType best_tx_type = DCT_DCT;
+#if REORDER_TX_TYPE
+    uint8_t txt_count = 0;
+#endif
     for (tx_type = txk_start; tx_type < txk_end; ++tx_type) {
         uint64_t txb_full_distortion[3][DIST_CALC_TOTAL];
         uint64_t y_txb_coeff_bits = 0;
         uint32_t y_count_non_zero_coeffs;
-
+#if REORDER_TX_TYPE
+        tx_type = pre_ranked_txtype[tx_type];
+        uint8_t cand_group = txt_group((TxType)tx_type);
+        uint8_t best_group = txt_group(best_tx_type);
+        uint8_t group_distance = cand_group - best_group;
+        if (cand_group > 1)
+            if(best_tx_type == DCT_DCT)
+                continue;
+#endif
         if (context_ptr->tx_search_reduced_set == 2) tx_type = (tx_type == 1) ? IDTX : tx_type;
 
         context_ptr->three_quad_energy = 0;
