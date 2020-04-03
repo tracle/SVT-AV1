@@ -117,7 +117,9 @@ void precompute_intra_pred_for_inter_intra(PictureControlSet *  pcs_ptr,
                                            ModeDecisionContext *context_ptr);
 
 int svt_av1_allow_palette(int allow_palette, BlockSize sb_type);
-
+extern AomVarianceFnPtr mefn_ptr[BlockSizeS_ALL];
+unsigned int                 eb_av1_get_sby_perpixel_variance(const AomVarianceFnPtr *fn_ptr,
+                                                              const uint8_t *src, int stride, BlockSize bs);
 /*******************************************
 * set Penalize Skip Flag
 *
@@ -6180,14 +6182,15 @@ TxType pre_ranked_txtype[TX_TYPES] = {
     ADST_ADST,
     // B GROUP
     IDTX,
+    // C GROUP
     V_DCT,
     H_DCT,
-    // C GROUP
+    // D GROUP
     V_ADST,
     H_ADST,
     V_FLIPADST,
     H_FLIPADST,
-    // D GROUP
+    // E GROUP
     FLIPADST_DCT,
     DCT_FLIPADST,
     FLIPADST_FLIPADST,
@@ -6204,22 +6207,24 @@ uint8_t txt_group(TxType tx_type)
         return 0;
         break;
     case IDTX: 
+        return 1; 
+        break;
     case V_DCT:
     case H_DCT: 
-        return 1;
+        return 2;
         break;
     case V_ADST: 
     case H_ADST:
     case V_FLIPADST: 
     case H_FLIPADST: 
-        return 2;
+        return 3;
         break;
     case FLIPADST_DCT: 
     case DCT_FLIPADST:
     case FLIPADST_FLIPADST: 
     case ADST_FLIPADST: 
     case FLIPADST_ADST: 
-        return 3;
+        return 4;
         break;
     default:
         printf("not valid tx_ype");
@@ -6321,9 +6326,20 @@ void tx_type_search(PictureControlSet *pcs_ptr,
                 context_ptr->blk_geom->txsize[context_ptr->tx_depth][context_ptr->txb_itr],
                 &context_ptr->luma_txb_skip_context,
                 &context_ptr->luma_dc_sign_context);
+
     if (context_ptr->tx_search_reduced_set == 2) txk_end = 2;
+#if USE_VARIANCE
+    unsigned int residual_variance;
+    const AomVarianceFnPtr *fn_ptr = &mefn_ptr[context_ptr->blk_geom->txsize[context_ptr->tx_depth][context_ptr->txb_itr]];
+    residual_variance =
+        eb_av1_get_sby_perpixel_variance(fn_ptr,
+                                    (candidate_buffer->residual_ptr->buffer_y + txb_origin_index),
+                                    candidate_buffer->residual_ptr->stride_y,
+                                    context_ptr->blk_geom->txsize[context_ptr->tx_depth][context_ptr->txb_itr]); 
+#endif
     TxType best_tx_type = DCT_DCT;
-#if REORDER_TX_TYPE
+#define TXT_STATISTIC 0
+#if TXT_STATISTIC
     uint8_t txt_count = 0;
     uint8_t tested_txt_type[16];
 #endif
@@ -6419,6 +6435,7 @@ void tx_type_search(PictureControlSet *pcs_ptr,
                 (context_ptr->txb_itr == 0)
                 ? candidate_buffer->candidate_ptr->transform_type[context_ptr->txb_itr]
                 : candidate_buffer->candidate_ptr->transform_type_uv;
+
 #if REORDER_TX_TYPE
             txt_count++;
 #endif
@@ -6948,6 +6965,12 @@ void tx_type_search(PictureControlSet *pcs_ptr,
         uint8_t cand_group = txt_group((TxType)tx_type);
         uint8_t best_group = txt_group(best_tx_type);
         uint8_t group_distance = cand_group - best_group;
+#if 1
+#if USE_VARIANCE
+        if(tx_set_type == EXT_TX_SET_DTT9_IDTX_1DDCT || tx_set_type == EXT_TX_SET_ALL16)
+            if (residual_variance < 800 && cand_group > 0)
+                continue;
+#else
 #if REORDER_TX_TYPE_2
         if (cand_group > 0)
 #else
@@ -6956,6 +6979,9 @@ void tx_type_search(PictureControlSet *pcs_ptr,
             if (best_tx_type == DCT_DCT)
                 continue;
 #endif
+#endif
+#endif
+
 #if DCT_VS_IDTX
         tx_type = reorder_txtype[tx_type];
         if (processed_idtx) {
@@ -7018,7 +7044,7 @@ void tx_type_search(PictureControlSet *pcs_ptr,
             (context_ptr->txb_itr == 0)
             ? candidate_buffer->candidate_ptr->transform_type[context_ptr->txb_itr]
             : candidate_buffer->candidate_ptr->transform_type_uv;
-#if REORDER_TX_TYPE
+#if TXT_STATISTIC
         tested_txt_type[txt_count] = tx_type;
         txt_count++;
 #endif
@@ -7208,15 +7234,16 @@ void tx_type_search(PictureControlSet *pcs_ptr,
 #if MULTI_STAGE_TXT
     }
 #endif
-#if 0//REORDER_TX_TYPE
+#if TXT_STATISTIC
    /* if(context_ptr->blk_geom->tx_width[context_ptr->tx_depth][context_ptr->txb_itr] == 4 &&
         context_ptr->blk_geom->tx_height[context_ptr->tx_depth][context_ptr->txb_itr] ==  4)*/
-        if (best_tx_type == 9) {
-            printf("txt_count %d\t", txt_count);
-            for (uint8_t i = 0; i<txt_count;i++)
-                printf("%d\t", tested_txt_type[i]);
-            printf("%d\n",best_tx_type);   
-        }
+    uint8_t best_group = txt_group(best_tx_type);
+    if (1/*best_group > 1 && residual_variance < 800 */) {
+        printf("txt_count %d\t", txt_count);
+        for (uint8_t i = 0; i<txt_count;i++)
+            printf("%d\t", tested_txt_type[i]);
+        printf("%d\t%d\t%d\t%d\n",best_tx_type,context_ptr->blk_geom->shape, residual_variance,best_group);   
+    }
 #endif
     //  Best Tx Type Pass
     candidate_buffer->candidate_ptr->transform_type[context_ptr->txb_itr] = best_tx_type;
@@ -9328,9 +9355,7 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
     // End uv search path
     context_ptr->uv_search_path = EB_FALSE;
 }
-extern AomVarianceFnPtr mefn_ptr[BlockSizeS_ALL];
-unsigned int                 eb_av1_get_sby_perpixel_variance(const AomVarianceFnPtr *fn_ptr,
-                                                              const uint8_t *src, int stride, BlockSize bs);
+
 
 void interintra_class_pruning_1(ModeDecisionContext *context_ptr, uint64_t best_md_stage_cost) {
     for (CandClass cand_class_it = CAND_CLASS_0; cand_class_it < CAND_CLASS_TOTAL;

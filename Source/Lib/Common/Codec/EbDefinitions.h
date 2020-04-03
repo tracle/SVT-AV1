@@ -175,6 +175,7 @@ extern "C" {
 #define DCT_VS_IDTX             0
 #define DCT_VS_IDTX_TH          0
 #define REVERSE_DECISION        0
+#define USE_VARIANCE            0
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
