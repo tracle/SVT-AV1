@@ -157,6 +157,7 @@ extern "C" {
 
 
 #define QP2QINDEX 1
+#define LAMBDA_SCALING 0
 //FOR DEBUGGING - Do not remove
 #define NO_ENCDEC \
     0 // bypass encDec to test cmpliance of MD. complained achieved when skip_flag is OFF. Port sample code from VCI-SW_AV1_Candidate1 branch

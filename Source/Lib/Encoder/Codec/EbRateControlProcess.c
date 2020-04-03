@@ -28,6 +28,9 @@
 #include "EbRateControlTasks.h"
 #if CUTREE_LA
 #include "EbRateDistortionCost.h"
+#if LAMBDA_SCALING
+#include "EbLambdaRateTables.h"
+#endif
 #endif
 
 #include "EbSegmentation.h"
@@ -5586,6 +5589,80 @@ static void sb_qp_derivation_two_pass(PictureControlSet *pcs_ptr) {
 }
 
 #if CUTREE_LA
+#if LAMBDA_SCALING
+static void sb_setup_lambda(PictureControlSet *pcs_ptr,
+        SuperBlock *sb_ptr) {
+    const Av1Common  *const cm = pcs_ptr->parent_pcs_ptr->av1_cm;
+    PictureParentControlSet   *ppcs_ptr = pcs_ptr->parent_pcs_ptr;
+    SequenceControlSet        *scs_ptr = ppcs_ptr->scs_ptr;
+    const int bsize_base = BLOCK_16X16;
+    const int num_mi_w = mi_size_wide[bsize_base];
+    const int num_mi_h = mi_size_high[bsize_base];
+    const int num_cols = (cm->mi_cols + num_mi_w - 1) / num_mi_w;
+    const int num_rows = (cm->mi_rows + num_mi_h - 1) / num_mi_h;
+    const int num_bcols = (mi_size_wide[scs_ptr->seq_header.sb_size] + num_mi_w - 1) / num_mi_w;
+    const int num_brows = (mi_size_high[scs_ptr->seq_header.sb_size] + num_mi_h - 1) / num_mi_h;
+    int mi_col = sb_ptr->origin_x / 4;
+    int mi_row = sb_ptr->origin_y / 4;
+    int row, col;
+
+    double base_block_count = 0.0;
+    double log_sum = 0.0;
+
+    for (row = mi_row / num_mi_w;
+            row < num_rows && row < mi_row / num_mi_w + num_brows; ++row) {
+        for (col = mi_col / num_mi_h;
+                col < num_cols && col < mi_col / num_mi_h + num_bcols; ++col) {
+            const int index = row * num_cols + col;
+            log_sum += log(ppcs_ptr->tpl_rdmult_scaling_factors[index]);
+            base_block_count += 1.0;
+        }
+    }
+
+    const int orig_rdmult = pcs_ptr->hbd_mode_decision ?
+        av1lambda_mode_decision10_bit_sse[ppcs_ptr->frm_hdr.quantization_params.base_q_idx]:
+        av1_lambda_mode_decision8_bit_sse[ppcs_ptr->frm_hdr.quantization_params.base_q_idx];
+    const int new_rdmult = pcs_ptr->hbd_mode_decision ?
+        av1lambda_mode_decision10_bit_sse[sb_ptr->qindex]:
+        av1_lambda_mode_decision8_bit_sse[sb_ptr->qindex];
+    const double scaling_factor = (double)new_rdmult / (double)orig_rdmult;
+    double scale_adj = log(scaling_factor) - log_sum / base_block_count;
+    scale_adj = exp(scale_adj);
+
+//Debug purpose
+    int dbg = 0;
+    if (pcs_ptr->picture_number == 0 && 0) {
+        dbg = 1;
+        printf("rdmult_setup_sb (%d, %d): base_block_count %f, pic_qindex %d, sb_qindex %d, lambda %d/%d, sb_size %d\n",
+                sb_ptr->origin_x, sb_ptr->origin_y,
+                base_block_count, ppcs_ptr->frm_hdr.quantization_params.base_q_idx,
+                sb_ptr->qindex, orig_rdmult, new_rdmult,
+                scs_ptr->seq_header.sb_size);
+    }
+//////////////
+
+    for (row = mi_row / num_mi_w;
+            row < num_rows && row < mi_row / num_mi_w + num_brows; ++row) {
+        for (col = mi_col / num_mi_h;
+                col < num_cols && col < mi_col / num_mi_h + num_bcols; ++col) {
+            const int index = row * num_cols + col;
+            ppcs_ptr->tpl_sb_rdmult_scaling_factors[index] =
+                scale_adj * ppcs_ptr->tpl_rdmult_scaling_factors[index];
+//Debug purpose
+            if (dbg) {
+                printf("\t(%d, %d): factor %f/%f, scale_adj is %f\n",
+                        col*16, row*16,
+                        ppcs_ptr->tpl_rdmult_scaling_factors[index],
+                        ppcs_ptr->tpl_sb_rdmult_scaling_factors[index],
+                        scale_adj);
+            }
+////////////////////
+        }
+    }
+    ppcs_ptr->blk_lambda_tuning = EB_TRUE;
+}
+
+#endif
 /******************************************************
  * sb_qp_derivation_tpl_la
  * Calculates the QP per SB based on the referenced area
@@ -5597,6 +5674,7 @@ static void sb_qp_derivation_tpl_la(
 
     PictureParentControlSet   *ppcs_ptr = pcs_ptr->parent_pcs_ptr;
     SequenceControlSet        *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
+    const Av1Common           *const cm = pcs_ptr->parent_pcs_ptr->av1_cm;
     SuperBlock                *sb_ptr;
     uint32_t                  sb_addr;
 #if QP2QINDEX
@@ -5753,7 +5831,11 @@ static void sb_qp_derivation_tpl_la(
 #else
             pcs_ptr->parent_pcs_ptr->average_qp += sb_ptr->qp;
 #endif
+#if LAMBDA_SCALING
+			sb_setup_lambda(pcs_ptr, sb_ptr);
 #endif
+#endif
+
             //int qp_index = quantizer_to_qindex[sb_ptr->qp];
             int qp_index = quantizer_to_qindex[(int)pcs_ptr->parent_pcs_ptr->picture_qp];
             //pcs_ptr->parent_pcs_ptr->frm_hdr.delta_q_params.delta_q_present ? (uint8_t)quantizer_to_qindex[sb_qp] : (uint8_t)pcs_ptr->parent_pcs_ptr->frm_hdr.quantization_params.base_q_idx;
@@ -5979,6 +6061,9 @@ void *rate_control_kernel(void *input_ptr) {
             pcs_ptr = (PictureControlSet *)rate_control_tasks_ptr->pcs_wrapper_ptr->object_ptr;
             scs_ptr = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
             FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
+#if LAMBDA_SCALING
+            pcs_ptr->parent_pcs_ptr->blk_lambda_tuning = EB_FALSE;
+#endif
 
             if (pcs_ptr->picture_number == 0) {
                 //init rate control parameters
