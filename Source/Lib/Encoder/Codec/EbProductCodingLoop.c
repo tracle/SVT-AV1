@@ -6960,7 +6960,11 @@ void tx_type_search(PictureControlSet *pcs_ptr,
         tx_type = reorder_txtype[tx_type];
         if (processed_idtx) {
             if (cost_idtx < cost_dct) {
+#if REVERSE_DECISION
+                if(!((cost_dct - cost_idtx) * 100 > (cost_idtx * DCT_VS_IDTX_TH)))
+#else
                 if((cost_dct - cost_idtx) * 100 > (cost_idtx * DCT_VS_IDTX_TH))
+#endif
                     continue;
             }
         }
