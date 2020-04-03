@@ -874,6 +874,15 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if ADD_NEW_MPPD_LEVEL
 #if MAR23_ADOPTIONS
     if (sc_content_detected)
+#if M8_MPPD
+        if (pcs_ptr->enc_mode <= ENC_M7)
+            pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_LEVEL_1;
+        else
+            pcs_ptr->multi_pass_pd_level =
+            (pcs_ptr->slice_type == I_SLICE)
+            ? MULTI_PASS_PD_LEVEL_1
+            : MULTI_PASS_PD_LEVEL_0; // there is a custom hard-coded PD0 refinement for M8
+#else
 #if MAR30_ADOPTIONS
         if (pcs_ptr->enc_mode <= ENC_M3)
             pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_LEVEL_1;
@@ -888,11 +897,28 @@ EbErrorType signal_derivation_multi_processes_oq(
     else if (pcs_ptr->enc_mode <= ENC_M1)
 #endif
         pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_LEVEL_1;
+#endif
+#if M8_MPPD
+    else if (pcs_ptr->enc_mode <= ENC_M7)
+        pcs_ptr->multi_pass_pd_level =
+        (pcs_ptr->slice_type == I_SLICE)
+        ? MULTI_PASS_PD_LEVEL_1
+        : MULTI_PASS_PD_LEVEL_2;
+    else
+        pcs_ptr->multi_pass_pd_level =
+        (pcs_ptr->slice_type == I_SLICE)
+        ? MULTI_PASS_PD_LEVEL_1
+        : MULTI_PASS_PD_LEVEL_0; // there is a custom hard-coded PD0 refinement for M8
+#else
     else
         pcs_ptr->multi_pass_pd_level =
         (pcs_ptr->slice_type == I_SLICE)
         ? MULTI_PASS_PD_LEVEL_1
         : MULTI_PASS_PD_LEVEL_2;
+#endif
+#if M8_NEW_MPPD
+    pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_LEVEL_0;
+#endif
 #else
     if (sc_content_detected)
 #if MAR19_ADOPTIONS
@@ -964,14 +990,18 @@ EbErrorType signal_derivation_multi_processes_oq(
         (pcs_ptr->slice_type == I_SLICE)
         ? MULTI_PASS_PD_OFF
         : MULTI_PASS_PD_LEVEL_2;
-    // If ADP then set multi_pass_pd_level to INVALID
-    if(pcs_ptr->adp_level != ADP_OFF)
-        pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_INVALID;
+
 #endif
 
-
+#if UNIFIED_PART
+    pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_OFF;
+#endif
     // Set disallow_nsq
+#if M8_NSQ
+    pcs_ptr->disallow_nsq = pcs_ptr->enc_mode <= ENC_M7 ? EB_FALSE : EB_TRUE;
+#else
     pcs_ptr->disallow_nsq = EB_FALSE;
+#endif
     if (!pcs_ptr->disallow_nsq)
         assert(scs_ptr->nsq_present == 1 && "use nsq_present 1");
     pcs_ptr->max_number_of_pus_per_sb =
@@ -999,7 +1029,14 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 
     // Set disallow_4x4
+#if M8_4x4
+    if (pcs_ptr->enc_mode <= ENC_M7)
+        pcs_ptr->disallow_4x4 = EB_FALSE;
+    else
+        pcs_ptr->disallow_4x4 = EB_TRUE;
+#else
     pcs_ptr->disallow_4x4 = EB_FALSE;
+#endif
 
     // Set disallow_all_nsq_blocks_below_8x8: 8x4, 4x8
     if (sc_content_detected) {
@@ -1098,6 +1135,10 @@ EbErrorType signal_derivation_multi_processes_oq(
         pcs_ptr->pic_depth_mode = PIC_SB_SWITCH_DEPTH_MODE;
 #endif
 #endif
+#if  UNIFIED_PART      
+    pcs_ptr->pic_depth_mode = PIC_SQ_NON4_DEPTH_MODE;
+#endif
+
     if (pcs_ptr->pic_depth_mode < PIC_SQ_DEPTH_MODE)
         assert(scs_ptr->nsq_present == 1 && "use nsq_present 1");
 
@@ -1211,13 +1252,25 @@ EbErrorType signal_derivation_multi_processes_oq(
 
         // IBC Modes:   0:Slow   1:Fast   2:Faster
 #if MAR4_M8_ADOPTIONS
+#if M8_IBC
+        if (pcs_ptr->enc_mode <= ENC_M7)
+#else
         if (pcs_ptr->enc_mode <= ENC_M8)
+#endif
 #else
         if (pcs_ptr->enc_mode <= ENC_M5)
 #endif
             pcs_ptr->ibc_mode = 0;
         else
+#if M8_IBC
+#if 1
             pcs_ptr->ibc_mode = 1;
+#else
+            pcs_ptr->ibc_mode = 2;
+#endif
+#else
+            pcs_ptr->ibc_mode = 1;
+#endif
     }
     else {
         // this will enable sc tools for P frames. hence change bitstream even if
@@ -1248,7 +1301,11 @@ EbErrorType signal_derivation_multi_processes_oq(
                     0)) &&
 #if MAR4_M3_ADOPTIONS
 #if MAR10_ADOPTIONS
+#if M8_PALETTE
+            pcs_ptr->enc_mode <= ENC_M7
+#else
             pcs_ptr->enc_mode <= ENC_M8
+#endif
 #else
             pcs_ptr->enc_mode <= ENC_M3
 #endif
@@ -1269,7 +1326,15 @@ EbErrorType signal_derivation_multi_processes_oq(
         .disable_dlf_flag &&
         frm_hdr->allow_intrabc == 0) {
 #if MAR2_M8_ADOPTIONS
+#if M8_LOOP_FILTER
+        if (pcs_ptr->enc_mode <= ENC_M7)
+            pcs_ptr->loop_filter_mode = 3;
+        else
+            pcs_ptr->loop_filter_mode =
+            pcs_ptr->is_used_as_reference_flag ? 1 : 0;
+#else
         pcs_ptr->loop_filter_mode = 3;
+#endif
 #else
         if (pcs_ptr->enc_mode <= ENC_M7)
             pcs_ptr->loop_filter_mode = 3;
@@ -1291,7 +1356,21 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 5                                            64 step refinement
     if (scs_ptr->seq_header.enable_cdef && frm_hdr->allow_intrabc == 0) {
 #if MAR17_ADOPTIONS
+#if M8_CDEF
+#if 1
+        pcs_ptr->cdef_filter_mode = 2;
+#else
+        if (pcs_ptr->sc_content_detected)
+            pcs_ptr->cdef_filter_mode = 5;
+        else
+            if (pcs_ptr->enc_mode <= ENC_M7)
+                pcs_ptr->cdef_filter_mode = 5;
+            else
+                pcs_ptr->cdef_filter_mode = 0;
+#endif
+#else
         pcs_ptr->cdef_filter_mode = 5;
+#endif
 #else
 #if MAR10_ADOPTIONS
         if (pcs_ptr->sc_content_detected)
@@ -1339,7 +1418,15 @@ EbErrorType signal_derivation_multi_processes_oq(
         cm->sg_filter_mode = 4;
 #if MAR12_M8_ADOPTIONS
     else
+#if M8_SG
+#if 1
+        cm->sg_filter_mode = 1;
+#else
+        cm->sg_filter_mode = 0;
+#endif
+#else
         cm->sg_filter_mode = 3;
+#endif
 #else
     else if (pcs_ptr->enc_mode <= ENC_M6)
         cm->sg_filter_mode = 3;
@@ -1373,8 +1460,13 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
             cm->wn_filter_mode = 3;
 #if MAR12_M8_ADOPTIONS
+#if M8_WN
+        else 
+            cm->wn_filter_mode = 0;
+#else
         else
             cm->wn_filter_mode = 2;
+#endif
 #else
         else if (pcs_ptr->enc_mode <= ENC_M7)
             cm->wn_filter_mode = 2;
@@ -1391,7 +1483,14 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 5                                            Light OIS based Intra
     if (pcs_ptr->slice_type == I_SLICE)
 #if MAR2_M8_ADOPTIONS
+#if M8_INTRA_MODE
+        if (pcs_ptr->enc_mode <= ENC_M7)
+            pcs_ptr->intra_pred_mode = 0;
+        else
+            pcs_ptr->intra_pred_mode = 4;
+#else
         pcs_ptr->intra_pred_mode = 0;
+#endif
 #else
         if (sc_content_detected)
             if (pcs_ptr->enc_mode <= ENC_M6)
@@ -1423,11 +1522,21 @@ EbErrorType signal_derivation_multi_processes_oq(
                     pcs_ptr->intra_pred_mode = 2;
 #endif
 #if MAR17_ADOPTIONS
+#if M8_INTRA_MODE
+            else if (pcs_ptr->enc_mode <= ENC_M7)
+                if (pcs_ptr->temporal_layer_index == 0)
+                    pcs_ptr->intra_pred_mode = 2;
+                else
+                    pcs_ptr->intra_pred_mode = 3;
+            else 
+                pcs_ptr->intra_pred_mode = 4;
+#else
             else
                 if (pcs_ptr->temporal_layer_index == 0)
                     pcs_ptr->intra_pred_mode = 2;
                 else
                     pcs_ptr->intra_pred_mode = 3;
+#endif
 #else
             else if (pcs_ptr->enc_mode <= ENC_M6)
                 if (pcs_ptr->temporal_layer_index == 0)
@@ -1449,10 +1558,14 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->intra_pred_mode = 0;
 #if MAR2_M8_ADOPTIONS
         else
+#if M8_INTRA_MODE
+            pcs_ptr->intra_pred_mode = 4;
+#else
             if (pcs_ptr->temporal_layer_index == 0)
                 pcs_ptr->intra_pred_mode = 1;
             else
                 pcs_ptr->intra_pred_mode = 3;
+#endif
 #else
         else if (pcs_ptr->enc_mode <= ENC_M7)
 
@@ -5397,7 +5510,9 @@ void* picture_decision_kernel(void *input_ptr)
                                   (pcs_ptr->slice_type != I_SLICE && pcs_ptr->temporal_layer_index == 0)||
                                   (pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))
                                 ? 1 : 0;
-
+#if UNIFIED_TF
+                            perform_filtering = EB_FALSE;
+#endif
                             if (perform_filtering){
                                 derive_tf_window_params(
                                     scs_ptr,

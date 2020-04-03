@@ -205,7 +205,7 @@ EbErrorType signal_derivation_pre_analysis_oq(SequenceControlSet *     scs_ptr,
         scs_ptr->seq_header.pic_based_rate_est = (uint8_t)scs_ptr->static_config.pic_based_rate_est;
 
     if (scs_ptr->static_config.enable_restoration_filtering == DEFAULT) {
-#if !MAR10_ADOPTIONS
+#if !MAR10_ADOPTIONS || M8_RESTORATION
         if (pcs_ptr->enc_mode >= ENC_M8)
             scs_ptr->seq_header.enable_restoration = 0;
         else
@@ -226,7 +226,11 @@ EbErrorType signal_derivation_pre_analysis_oq(SequenceControlSet *     scs_ptr,
 #endif
 #if MAR2_M7_ADOPTIONS
 #if MAR10_ADOPTIONS
+#if UNIFIED_CDF
+    scs_ptr->cdf_mode = (pcs_ptr->enc_mode <= ENC_M7) ? 0 : 1;
+#else
     scs_ptr->cdf_mode = (pcs_ptr->enc_mode <= ENC_M8) ? 0 : 1;
+#endif
 #else
     scs_ptr->cdf_mode = (pcs_ptr->enc_mode <= ENC_M7) ? 0 : 1;
 #endif
@@ -932,7 +936,11 @@ void *resource_coordination_kernel(void *input_ptr) {
             // 1                  ON
             if (scs_ptr->static_config.compound_level == DEFAULT) {
 #if MAR11_ADOPTIONS
+#if M8_COMPOUND
+                scs_ptr->compound_mode = (scs_ptr->static_config.enc_mode <= ENC_M7) ? 1 : 0;
+#else
                 scs_ptr->compound_mode = (scs_ptr->static_config.enc_mode <= ENC_M8) ? 1 : 0;
+#endif
 #else
                 scs_ptr->compound_mode = (scs_ptr->static_config.enc_mode <= ENC_M4) ? 1 : 0;
 #endif

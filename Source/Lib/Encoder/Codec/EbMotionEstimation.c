@@ -11781,6 +11781,7 @@ EbErrorType motion_estimate_sb(
         sb_origin_y,
         context_ptr,
         input_ptr);
+
     // prune the refrence frames based on the HME outputs.
     if (pcs_ptr->prune_ref_based_me && prune_ref)
         prune_references(

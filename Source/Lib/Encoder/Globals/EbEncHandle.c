@@ -1954,12 +1954,19 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
 #endif
         else
 #if DEPTH_PART_CLEAN_UP
+#if M8_SB_SIZE
+            scs_ptr->static_config.super_block_size = (scs_ptr->static_config.enc_mode <= ENC_M7) ? 128 : 64;
+#else
             scs_ptr->static_config.super_block_size = 128;
+#endif
 #else
             scs_ptr->static_config.super_block_size = (scs_ptr->static_config.enc_mode <= ENC_M4) ? 128 : 64;
 #endif
 #else
         scs_ptr->static_config.super_block_size = (scs_ptr->static_config.enc_mode <= ENC_M3) ? 128 : 64;
+#endif
+#if UNIFIED_PART
+    scs_ptr->static_config.super_block_size = 64;
 #endif
     scs_ptr->static_config.super_block_size = (scs_ptr->static_config.rate_control_mode > 1) ? 64 : scs_ptr->static_config.super_block_size;
    // scs_ptr->static_config.hierarchical_levels = (scs_ptr->static_config.rate_control_mode > 1) ? 3 : scs_ptr->static_config.hierarchical_levels;
@@ -2010,7 +2017,11 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
     if (scs_ptr->static_config.screen_content_mode == 1)
 #if MAR3_M6_ADOPTIONS
 #if MAR10_ADOPTIONS
+#if UNIFIED_ME_FILTERED_DOWNSAMPLED
+        if (scs_ptr->static_config.enc_mode <= ENC_M7)
+#else
         if (scs_ptr->static_config.enc_mode <= ENC_M8)
+#endif
 #else
         if (scs_ptr->static_config.enc_mode <= ENC_M6)
 #endif
@@ -2022,7 +2033,11 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
             scs_ptr->down_sampling_method_me_search = ME_DECIMATED_DOWNSAMPLED;
     else
 #if MAR17_ADOPTIONS
+#if UNIFIED_ME_FILTERED_DOWNSAMPLED
+        if (scs_ptr->static_config.enc_mode <= ENC_M7)
+#else
         if (scs_ptr->static_config.enc_mode <= ENC_M8)
+#endif
 #else
 #if MAR3_M6_ADOPTIONS
         if (scs_ptr->static_config.enc_mode <= ENC_M6)
@@ -2056,7 +2071,11 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
 #if MAR3_M2_ADOPTIONS
 #if MAR4_M3_ADOPTIONS
 #if MAR10_ADOPTIONS
+#if UNIFIED_MVF
+            scs_ptr->mfmv_enabled = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M7) ? 1 : 0;
+#else
             scs_ptr->mfmv_enabled = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M8) ? 1 : 0;
+#endif
 #else
             scs_ptr->mfmv_enabled = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M3) ? 1 : 0;
 #endif

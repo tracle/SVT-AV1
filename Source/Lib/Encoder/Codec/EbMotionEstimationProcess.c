@@ -135,13 +135,32 @@ void* set_me_hme_params_oq(
 #else
         me_context_ptr->search_area_width = me_context_ptr->search_area_height = 150;
 #endif
+
+
+#if UNIFIED_ME_HME_SETTINGS
+#if 1
+    else if (pcs_ptr->enc_mode <= ENC_M7)
+        me_context_ptr->search_area_width = me_context_ptr->search_area_height = 75;
+    else
+        me_context_ptr->search_area_width = me_context_ptr->search_area_height = 25;
+#else
+    else if (pcs_ptr->enc_mode <= ENC_M7)
+        me_context_ptr->search_area_width = me_context_ptr->search_area_height = 75;
+    else
+        me_context_ptr->search_area_width = me_context_ptr->search_area_height = 25;
+#endif
+    me_context_ptr->max_me_search_width = me_context_ptr->search_area_width * 2;
+    me_context_ptr->max_me_search_height = me_context_ptr->search_area_height * 2;
+
+#else
     else
         me_context_ptr->search_area_width = me_context_ptr->search_area_height = 75;
 
     me_context_ptr->max_me_search_width = me_context_ptr->search_area_width * 2;
     me_context_ptr->max_me_search_height = me_context_ptr->search_area_height * 2;
-
+#endif
     me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = me_context_ptr->max_me_search_height;
+
     me_context_ptr->hme_level0_search_area_in_width_array[0] =
         me_context_ptr->hme_level0_search_area_in_width_array[1] =
         me_context_ptr->hme_level0_total_search_area_width / me_context_ptr->number_hme_search_region_in_width;
@@ -152,12 +171,19 @@ void* set_me_hme_params_oq(
     me_context_ptr->hme_level1_search_area_in_width_array[0] =
         me_context_ptr->hme_level1_search_area_in_width_array[1] =
         me_context_ptr->hme_level1_search_area_in_height_array[0] =
+#if ME_NEUTRALIZE_LEVEL_1_2
+        me_context_ptr->hme_level1_search_area_in_height_array[1] = 8;
+#else
         me_context_ptr->hme_level1_search_area_in_height_array[1] = 16;
-
+#endif
     me_context_ptr->hme_level2_search_area_in_width_array[0] =
         me_context_ptr->hme_level2_search_area_in_width_array[1] =
         me_context_ptr->hme_level2_search_area_in_height_array[0] =
+#if ME_NEUTRALIZE_LEVEL_1_2
+        me_context_ptr->hme_level2_search_area_in_height_array[1] = 0;
+#else
         me_context_ptr->hme_level2_search_area_in_height_array[1] = 16;
+#endif
 
 #if ADD_HME_DECIMATION_SIGNAL
 #if MAR30_ADOPTIONS
@@ -287,14 +313,36 @@ EbErrorType signal_derivation_me_kernel_oq(
     if (pcs_ptr->sc_content_detected)
 #if MAR11_ADOPTIONS
         // fractional_search_method is not used if subpel is OFF
+#if UNIFIED_ME_HME_SETTINGS
+#if 0
         context_ptr->me_context_ptr->fractional_search_method = FULL_SAD_SEARCH;
+#else
+        if (enc_mode <= ENC_M7)
+        context_ptr->me_context_ptr->fractional_search_method = FULL_SAD_SEARCH;
+        else
+            context_ptr->me_context_ptr->fractional_search_method = SUB_SAD_SEARCH;
+#endif
+#else
+        context_ptr->me_context_ptr->fractional_search_method = FULL_SAD_SEARCH;
+#endif
 #else
         context_ptr->me_context_ptr->fractional_search_method =
         (enc_mode <= ENC_M1) ? FULL_SAD_SEARCH : SUB_SAD_SEARCH;
 #endif
     else
 #if MAR2_M8_ADOPTIONS
+#if UNIFIED_ME_HME_SETTINGS
+#if 0
         context_ptr->me_context_ptr->fractional_search_method = SSD_SEARCH;
+#else
+        if (enc_mode <= ENC_M7)
+            context_ptr->me_context_ptr->fractional_search_method = SSD_SEARCH;
+        else
+            context_ptr->me_context_ptr->fractional_search_method = FULL_SAD_SEARCH;
+#endif
+#else
+        context_ptr->me_context_ptr->fractional_search_method = SSD_SEARCH;
+#endif
 #else
         if (enc_mode <= ENC_M6)
             context_ptr->me_context_ptr->fractional_search_method = SSD_SEARCH;
@@ -305,8 +353,11 @@ EbErrorType signal_derivation_me_kernel_oq(
     context_ptr->me_context_ptr->enable_hme_flag = pcs_ptr->enable_hme_flag;
     context_ptr->me_context_ptr->enable_hme_level0_flag = pcs_ptr->enable_hme_level0_flag;
     context_ptr->me_context_ptr->enable_hme_level1_flag = pcs_ptr->enable_hme_level1_flag;
+#if ME_NEUTRALIZE_LEVEL_1_2
+    context_ptr->me_context_ptr->enable_hme_level2_flag = 0;// pcs_ptr->enable_hme_level2_flag;
+#else
     context_ptr->me_context_ptr->enable_hme_level2_flag = pcs_ptr->enable_hme_level2_flag;
-
+#endif
     if (scs_ptr->static_config.enable_subpel == DEFAULT)
         // Set the default settings of subpel
         if (pcs_ptr->sc_content_detected)

@@ -18,11 +18,27 @@ extern "C" {
      * ModeDecisionSb
      *   performs CL (SB)
      *******************************************/
+#if MPPD_PROFILNG
+    extern EbErrorType pd_pass_0(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
+        const MdcSbData *const mdcResultTbPtr, SuperBlock *sb_ptr,
+        uint16_t sb_origin_x, uint16_t sb_origin_y, uint32_t sb_addr,
+        ModeDecisionContext *context_ptr);
+
+    extern EbErrorType pd_pass_1(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
+        const MdcSbData *const mdcResultTbPtr, SuperBlock *sb_ptr,
+        uint16_t sb_origin_x, uint16_t sb_origin_y, uint32_t sb_addr,
+        ModeDecisionContext *context_ptr);
+
+    extern EbErrorType pd_pass_2(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
+        const MdcSbData *const mdcResultTbPtr, SuperBlock *sb_ptr,
+        uint16_t sb_origin_x, uint16_t sb_origin_y, uint32_t sb_addr,
+        ModeDecisionContext *context_ptr);
+#else
 extern EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
                                     const MdcSbData *const mdcResultTbPtr, SuperBlock *sb_ptr,
                                     uint16_t sb_origin_x, uint16_t sb_origin_y, uint32_t sb_addr,
                                     ModeDecisionContext *context_ptr);
-
+#endif
 uint8_t get_skip_tx_search_flag(int32_t sq_size, uint64_t ref_fast_cost, uint64_t cu_cost,
                                 uint64_t weight);
 
