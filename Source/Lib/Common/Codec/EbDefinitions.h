@@ -150,6 +150,11 @@ extern "C" {
 #endif
 #define MAR25_ADOPTIONS            1 // Adoptions for all modes. Adopt uniform HME/ME sizes (non-TF)
 #define LIGHT_M8_V1                1 // turn off M8 features for speed gains
+
+
+#define MULTI_PASS_PD_FOR_INCOMPLETE_SB_SUPPORT 1
+#define MULTI_PASS_PD_FOR_INCOMPLETE_SB_ENABLE 1
+
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
