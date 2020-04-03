@@ -79,7 +79,7 @@ static void eb_memcpy_sse(void* dst_ptr, void const* src_ptr, size_t size) {
     // copy the remainder
     if (i < size) eb_memcpy_small(dst + i, src + i, size - i);
 }
-void eb_memcpy(void* dst_ptr, void* src_ptr, size_t size) {
+void eb_memcpy_app(void* dst_ptr, void* src_ptr, size_t size) {
     if (size > 64)
         eb_memcpy_sse(dst_ptr, src_ptr, size);
     else
@@ -246,7 +246,7 @@ uint64_t log2f_high_precision(uint64_t x, uint8_t precision) {
     return result;
 }
 
-inline uint32_t log2f_32(uint32_t x) {
+uint32_t log2f_32(uint32_t x) {
     //return (x > 1) ? 1 + log2(x >> 1) : 0;
     uint32_t log = (uint32_t)log2(x);
     return log;
@@ -471,8 +471,8 @@ void md_scan_all_blks(uint32_t* idx_mds, uint32_t sq_size, uint32_t x, uint32_t 
 
             blk_geom_mds[*idx_mds].bwidth  = quartsize * ns_quarter_size_mult[part_it][0][nsq_it];
             blk_geom_mds[*idx_mds].bheight = quartsize * ns_quarter_size_mult[part_it][1][nsq_it];
-            blk_geom_mds[*idx_mds].bwidth_log2  = Log2f(blk_geom_mds[*idx_mds].bwidth);
-            blk_geom_mds[*idx_mds].bheight_log2 = Log2f(blk_geom_mds[*idx_mds].bheight);
+            blk_geom_mds[*idx_mds].bwidth_log2  = eb_log2f(blk_geom_mds[*idx_mds].bwidth);
+            blk_geom_mds[*idx_mds].bheight_log2 = eb_log2f(blk_geom_mds[*idx_mds].bheight);
             blk_geom_mds[*idx_mds].bsize = hvsize_to_bsize[blk_geom_mds[*idx_mds].bwidth_log2 - 2]
                                                           [blk_geom_mds[*idx_mds].bheight_log2 - 2];
             blk_geom_mds[*idx_mds].bwidth_uv  = MAX(4, blk_geom_mds[*idx_mds].bwidth >> 1);

@@ -3324,21 +3324,21 @@ static EbErrorType copy_frame_buffer(
         //uint16_t     luma_height  = input_picture_ptr->max_height;
         // Y
         for (input_row_index = 0; input_row_index < luma_height; input_row_index++) {
-            EB_MEMCPY((input_picture_ptr->buffer_y + luma_buffer_offset + luma_stride * input_row_index),
+            eb_memcpy((input_picture_ptr->buffer_y + luma_buffer_offset + luma_stride * input_row_index),
                 (input_ptr->luma + source_luma_stride * input_row_index),
                 luma_width);
         }
 
         // U
         for (input_row_index = 0; input_row_index < luma_height >> 1; input_row_index++) {
-            EB_MEMCPY((input_picture_ptr->buffer_cb + chroma_buffer_offset + chroma_stride * input_row_index),
+            eb_memcpy((input_picture_ptr->buffer_cb + chroma_buffer_offset + chroma_stride * input_row_index),
                 (input_ptr->cb + (source_cb_stride*input_row_index)),
                 chroma_width);
         }
 
         // V
         for (input_row_index = 0; input_row_index < luma_height >> 1; input_row_index++) {
-            EB_MEMCPY((input_picture_ptr->buffer_cr + chroma_buffer_offset + chroma_stride * input_row_index),
+            eb_memcpy((input_picture_ptr->buffer_cr + chroma_buffer_offset + chroma_stride * input_row_index),
                 (input_ptr->cr + (source_cr_stride*input_row_index)),
                 chroma_width);
         }
@@ -3360,21 +3360,21 @@ static EbErrorType copy_frame_buffer(
 
             // Y 8bit
             for (input_row_index = 0; input_row_index < luma_height; input_row_index++) {
-                EB_MEMCPY((input_picture_ptr->buffer_y + luma_buffer_offset + luma_stride * input_row_index),
+                eb_memcpy((input_picture_ptr->buffer_y + luma_buffer_offset + luma_stride * input_row_index),
                     (input_ptr->luma + source_luma_stride * input_row_index),
                     luma_width);
             }
 
             // U 8bit
             for (input_row_index = 0; input_row_index < luma_height >> 1; input_row_index++) {
-                EB_MEMCPY((input_picture_ptr->buffer_cb + chroma_buffer_offset + chroma_stride * input_row_index),
+                eb_memcpy((input_picture_ptr->buffer_cb + chroma_buffer_offset + chroma_stride * input_row_index),
                     (input_ptr->cb + (source_cb_stride*input_row_index)),
                     chroma_width);
             }
 
             // V 8bit
             for (input_row_index = 0; input_row_index < luma_height >> 1; input_row_index++) {
-                EB_MEMCPY((input_picture_ptr->buffer_cr + chroma_buffer_offset + chroma_stride * input_row_index),
+                eb_memcpy((input_picture_ptr->buffer_cr + chroma_buffer_offset + chroma_stride * input_row_index),
                     (input_ptr->cr + (source_cr_stride*input_row_index)),
                     chroma_width);
             }
@@ -3389,13 +3389,13 @@ static EbErrorType copy_frame_buffer(
                 uint16_t source_chroma_2bit_stride = source_luma_2bit_stride >> 1;
 
                 for (input_row_index = 0; input_row_index < luma_height; input_row_index++) {
-                    EB_MEMCPY(input_picture_ptr->buffer_bit_inc_y + luma_2bit_width * input_row_index, input_ptr->luma_ext + source_luma_2bit_stride * input_row_index, luma_2bit_width);
+                    eb_memcpy(input_picture_ptr->buffer_bit_inc_y + luma_2bit_width * input_row_index, input_ptr->luma_ext + source_luma_2bit_stride * input_row_index, luma_2bit_width);
                 }
                 for (input_row_index = 0; input_row_index < luma_height >> 1; input_row_index++) {
-                    EB_MEMCPY(input_picture_ptr->buffer_bit_inc_cb + (luma_2bit_width >> 1)*input_row_index, input_ptr->cb_ext + source_chroma_2bit_stride * input_row_index, luma_2bit_width >> 1);
+                    eb_memcpy(input_picture_ptr->buffer_bit_inc_cb + (luma_2bit_width >> 1)*input_row_index, input_ptr->cb_ext + source_chroma_2bit_stride * input_row_index, luma_2bit_width >> 1);
                 }
                 for (input_row_index = 0; input_row_index < luma_height >> 1; input_row_index++) {
-                    EB_MEMCPY(input_picture_ptr->buffer_bit_inc_cr + (luma_2bit_width >> 1)*input_row_index, input_ptr->cr_ext + source_chroma_2bit_stride * input_row_index, luma_2bit_width >> 1);
+                    eb_memcpy(input_picture_ptr->buffer_bit_inc_cr + (luma_2bit_width >> 1)*input_row_index, input_ptr->cr_ext + source_chroma_2bit_stride * input_row_index, luma_2bit_width >> 1);
                 }
             }
         }
@@ -3511,7 +3511,7 @@ static void copy_output_recon_buffer(
     dst->flags = src->flags;
     dst->pic_type = src->pic_type;
     if (src->p_buffer)
-        EB_MEMCPY(dst->p_buffer, src->p_buffer, src->n_filled_len);
+        eb_memcpy(dst->p_buffer, src->p_buffer, src->n_filled_len);
 
     return;
 }

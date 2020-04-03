@@ -804,7 +804,7 @@ void *motion_estimation_kernel(void *input_ptr) {
                         context_ptr->me_context_ptr->hme_search_type = HME_RECTANGULAR;
 
                         for (sb_row = 0; sb_row < BLOCK_SIZE_64; sb_row++) {
-                            EB_MEMCPY(
+                            eb_memcpy(
                                 (&(context_ptr->me_context_ptr->sb_buffer[sb_row * BLOCK_SIZE_64])),
                                 (&(input_picture_ptr
                                        ->buffer_y[buffer_index +
@@ -839,7 +839,7 @@ void *motion_estimation_kernel(void *input_ptr) {
                                            quarter_picture_ptr->origin_x + (sb_origin_x >> 1);
 
                             for (sb_row = 0; sb_row < (sb_height >> 1); sb_row++) {
-                                EB_MEMCPY(
+                                eb_memcpy(
                                     (&(context_ptr->me_context_ptr
                                            ->quarter_sb_buffer[sb_row *
                                                                context_ptr->me_context_ptr
@@ -864,7 +864,7 @@ void *motion_estimation_kernel(void *input_ptr) {
                                 if (context_ptr->me_context_ptr->hme_search_method ==
                                     FULL_SAD_SEARCH) {
                                     for (sb_row = 0; sb_row < (sb_height >> 2); sb_row += 1) {
-                                        EB_MEMCPY(local_ptr,
+                                        eb_memcpy(local_ptr,
                                                   frame_ptr,
                                                   (sb_width >> 2) * sizeof(uint8_t));
                                         local_ptr += 16;
@@ -872,7 +872,7 @@ void *motion_estimation_kernel(void *input_ptr) {
                                     }
                                 } else {
                                     for (sb_row = 0; sb_row < (sb_height >> 2); sb_row += 2) {
-                                        EB_MEMCPY(local_ptr,
+                                        eb_memcpy(local_ptr,
                                                   frame_ptr,
                                                   (sb_width >> 2) * sizeof(uint8_t));
                                         local_ptr += 16;

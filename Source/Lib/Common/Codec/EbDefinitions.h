@@ -2029,12 +2029,7 @@ typedef enum EbBitFieldMasks
 #define HIST_OPT                          2 // 1 is intrinsic, 2 is C
 #define ENABLE_8x8                        0
 
-#ifdef ARCH_X86
-//#define    Log2f                              Log2f_SSE2
-#define    Log2f                              log2f_32
-#else
-#define    Log2f                              log2f_32
-#endif
+
 #define INPUT_SIZE_576p_TH                  0x90000        // 0.58 Million
 #define INPUT_SIZE_1080i_TH                 0xB71B0        // 0.75 Million
 #define INPUT_SIZE_1080p_TH                 0x1AB3F0    // 1.75 Million
@@ -2457,13 +2452,14 @@ typedef int32_t errno_t;
 #endif  /* _ERRNO_T_DEFINED */
 
 extern void
-    eb_memcpy(void  *dst_ptr, void  *src_ptr, size_t size);
-#ifndef ARCH_X86
-#define eb_memcpy(dst, src, size) \
+    eb_memcpy_app(void  *dst_ptr, void  *src_ptr, size_t size);
+#ifdef ARCH_X86
+#define EB_MEMCPY(dst, src, size) \
+    eb_memcpy_app(dst, src, size)
+#else
+#define EB_MEMCPY(dst, src, size) \
     memcpy(dst, src, size)
 #endif
-#define EB_MEMCPY(dst, src, size) \
-    eb_memcpy(dst, src, size)
 
 #define EB_MEMSET(dst, val, count) \
 memset(dst, val, count)
