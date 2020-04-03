@@ -171,6 +171,9 @@ extern "C" {
 #define REDO_ALL_WHEN_ADST      0
 #define REDO_ALL_WHEN_FLIP      0
 #define REDO_ALL_WHEN_IDXT      0
+#define TYPE_SET_BASED_MS       0
+#define DCT_VS_IDTX             0
+#define DCT_VS_IDTX_TH          0
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
