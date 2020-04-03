@@ -180,6 +180,9 @@ extern "C" {
 
 #define APR02_ADOPTIONS 1 // adoptions in all modes
 
+#define MULTI_PASS_PD_FOR_INCOMPLETE_SB_SUPPORT 1
+#define MULTI_PASS_PD_FOR_INCOMPLETE_SB_ENABLE 1
+
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
