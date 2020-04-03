@@ -307,7 +307,7 @@ EbErrorType signal_derivation_me_kernel_oq(SequenceControlSet *       scs_ptr,
 #endif
             context_ptr->me_context_ptr->compute_global_motion = EB_TRUE;
         else
-            context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
+            context_ptr->me_context_ptr->compute_global_motion = EB_TRUE;
     } else
         context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
 

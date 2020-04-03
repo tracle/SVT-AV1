@@ -7,7 +7,6 @@
 #include <immintrin.h>
 #include "EbPictureOperators_Inline_AVX2.h"
 
-
 #define _mm256_set_m128i(/* __m128i */ hi, /* __m128i */ lo) \
     _mm256_insertf128_si256(_mm256_castsi128_si256(lo), (hi), 0x1)
 
@@ -50,7 +49,7 @@ void compressed_packmsb_avx2_intrin(uint8_t *in8_bit_buffer, uint32_t in8_stride
             ext32_47 = _mm_unpacklo_epi16(ext01h, ext23h);
             ext48_63 = _mm_unpackhi_epi16(ext01h, ext23h);
 
-            in_n_bit       = _mm256_set_m128i(ext16_31, ext0_15);
+            in_n_bit        = _mm256_set_m128i(ext16_31, ext0_15);
             in_n_bit_stride = _mm256_set_m128i(ext48_63, ext32_47);
 
             in_8_bit       = _mm256_loadu_si256((__m256i *)in8_bit_buffer);
@@ -326,10 +325,10 @@ void eb_enc_msb_pack2d_avx2_intrin_al(uint8_t *in8_bit_buffer, uint32_t in8_stri
         __m128i in_n_bit, in_8_bit, in_n_bit_stride, in_8bit_stride, out0, out1, out2, out3;
 
         for (y = 0; y < height; y += 2) {
-            in_n_bit       = _mm_loadu_si128((__m128i *)inn_bit_buffer);
-            in_8_bit       = _mm_loadu_si128((__m128i *)in8_bit_buffer);
+            in_n_bit        = _mm_loadu_si128((__m128i *)inn_bit_buffer);
+            in_8_bit        = _mm_loadu_si128((__m128i *)in8_bit_buffer);
             in_n_bit_stride = _mm_loadu_si128((__m128i *)(inn_bit_buffer + inn_stride));
-            in_8bit_stride = _mm_loadu_si128((__m128i *)(in8_bit_buffer + in8_stride));
+            in_8bit_stride  = _mm_loadu_si128((__m128i *)(in8_bit_buffer + in8_stride));
 
             out0 = _mm_srli_epi16(_mm_unpacklo_epi8(in_n_bit, in_8_bit), 6);
             out1 = _mm_srli_epi16(_mm_unpackhi_epi8(in_n_bit, in_8_bit), 6);
@@ -351,10 +350,10 @@ void eb_enc_msb_pack2d_avx2_intrin_al(uint8_t *in8_bit_buffer, uint32_t in8_stri
         __m256i out0_15, out16_31, out_s0_s15, out_s16_s31;
 
         for (y = 0; y < height; y += 2) {
-            in_n_bit       = _mm256_loadu_si256((__m256i *)inn_bit_buffer);
-            in_8_bit       = _mm256_loadu_si256((__m256i *)in8_bit_buffer);
+            in_n_bit        = _mm256_loadu_si256((__m256i *)inn_bit_buffer);
+            in_8_bit        = _mm256_loadu_si256((__m256i *)in8_bit_buffer);
             in_n_bit_stride = _mm256_loadu_si256((__m256i *)(inn_bit_buffer + inn_stride));
-            in_8bit_stride = _mm256_loadu_si256((__m256i *)(in8_bit_buffer + in8_stride));
+            in_8bit_stride  = _mm256_loadu_si256((__m256i *)(in8_bit_buffer + in8_stride));
 
             //(out_pixel | n_bit_pixel) concatenation is done with unpacklo_epi8 and unpackhi_epi8
             concat0 = _mm256_srli_epi16(_mm256_unpacklo_epi8(in_n_bit, in_8_bit), 6);
@@ -390,7 +389,7 @@ void eb_enc_msb_pack2d_avx2_intrin_al(uint8_t *in8_bit_buffer, uint32_t in8_stri
             in_8_bit         = _mm256_loadu_si256((__m256i *)in8_bit_buffer);
             in_n_bit32       = _mm256_loadu_si256((__m256i *)(inn_bit_buffer + 32));
             in_8_bit32       = _mm256_loadu_si256((__m256i *)(in8_bit_buffer + 32));
-            in_n_bit_stride   = _mm256_loadu_si256((__m256i *)(inn_bit_buffer + inn_stride));
+            in_n_bit_stride  = _mm256_loadu_si256((__m256i *)(inn_bit_buffer + inn_stride));
             in_8bit_stride   = _mm256_loadu_si256((__m256i *)(in8_bit_buffer + in8_stride));
             in_n_bitStride32 = _mm256_loadu_si256((__m256i *)(inn_bit_buffer + inn_stride + 32));
             in_8bit_stride32 = _mm256_loadu_si256((__m256i *)(in8_bit_buffer + in8_stride + 32));
@@ -1430,7 +1429,16 @@ uint64_t spatial_full_distortion_kernel_avx2(uint8_t *input, uint32_t input_offs
     __m128i        sum_l, sum_h, s;
     uint64_t       spatial_distortion = 0;
     input += input_offset;
+    uint8_t *recon_copy = recon;
     recon += recon_offset;
+    if (recon_offset == 3070752) {
+        ///break here
+        fprintf(stderr, "recon_offset = 3070752\n");
+    }
+    //if (leftover == 0)
+    //	fprintf(stderr, "no leftover");
+    //if (area_width != 0 && leftover ==0)
+    //	fprintf(stderr, "area_width: %d\n", area_width);
 
     if (leftover) {
         const uint8_t *inp = input + area_width - leftover;
@@ -1521,6 +1529,12 @@ uint64_t spatial_full_distortion_kernel_avx2(uint8_t *input, uint32_t input_offs
 
         if (area_width == 32) {
             do {
+                if (recon_offset > 3070000 && h == 3) {
+                    fprintf(stderr, "recon_offset moer than  3070000 and h = 3\n");
+                }
+                if (recon_offset > 3070000 && h == 3) {
+                    fprintf(stderr, "recon_offset = 3070000 and h = 3\n");
+                }
                 spatial_full_distortion_kernel32_avx2_intrin(inp, rec, &sum);
                 inp += input_stride;
                 rec += recon_stride;
