@@ -487,14 +487,14 @@ void reset_mode_decision(SequenceControlSet *scs_ptr, ModeDecisionContext *conte
     FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
     context_ptr->hbd_mode_decision = pcs_ptr->hbd_mode_decision;
     // QP
-    uint16_t picture_qp   = pcs_ptr->parent_pcs_ptr->frm_hdr.quantization_params.base_q_idx;
 #if !QP2QINDEX
+    uint16_t picture_qp   = pcs_ptr->parent_pcs_ptr->frm_hdr.quantization_params.base_q_idx;
     context_ptr->qp       = picture_qp;
     context_ptr->qp_index = context_ptr->qp;
     // Asuming cb and cr offset to be the same for chroma QP in both slice and pps for lambda computation
     context_ptr->chroma_qp = (uint8_t)context_ptr->qp;
-    context_ptr->qp_index  = (uint8_t)frm_hdr->quantization_params.base_q_idx;
 #endif
+    context_ptr->qp_index  = frm_hdr->quantization_params.base_q_idx;
     av1_lambda_assign_md(context_ptr);
     // Reset MD rate Estimation table to initial values by copying from md_rate_estimation_array
     if (context_ptr->is_md_rate_estimation_ptr_owner) {

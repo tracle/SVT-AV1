@@ -2213,7 +2213,11 @@ void encode_pass_tx_search(PictureControlSet *pcs_ptr, EncDecContext *context_pt
             0,
             0,
             blk_ptr->av1xd->use_intrabc,
+#if QP2QINDEX
+            context_ptr->md_context->full_lambda_md[EB_8_BIT_MD],
+#else
             context_ptr->full_lambda,
+#endif
             EB_FALSE);
 
         //tx_type not equal to DCT_DCT and no coeff is not an acceptable option in AV1.
@@ -2295,7 +2299,11 @@ void encode_pass_tx_search(PictureControlSet *pcs_ptr, EncDecContext *context_pt
             txb_full_distortion[0],
             &y_txb_coeff_bits,
             &y_full_cost,
+#if QP2QINDEX
+            context_ptr->md_context->full_lambda_md[EB_8_BIT_MD]);
+#else
             context_ptr->full_lambda);
+#endif
 
         if (y_full_cost < best_full_cost) {
             best_full_cost = y_full_cost;
@@ -2401,7 +2409,11 @@ void encode_pass_tx_search_hbd(
             0,
             0,
             blk_ptr->av1xd->use_intrabc,
+#if QP2QINDEX
+            context_ptr->md_context->full_lambda_md[EB_10_BIT_MD],
+#else
             context_ptr->full_lambda,
+#endif
             EB_FALSE);
 
         //tx_type not equal to DCT_DCT and no coeff is not an acceptable option in AV1.
@@ -2483,7 +2495,11 @@ void encode_pass_tx_search_hbd(
             txb_full_distortion[0],
             &y_txb_coeff_bits,
             &y_full_cost,
+#if QP2QINDEX
+            context_ptr->md_context->full_lambda_md[EB_10_BIT_MD]);
+#else
             context_ptr->full_lambda);
+#endif
 
         if (y_full_cost < best_full_cost) {
             best_full_cost = y_full_cost;
