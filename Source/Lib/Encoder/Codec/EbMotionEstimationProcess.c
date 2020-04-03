@@ -1011,21 +1011,17 @@ void *motion_estimation_kernel(void *input_ptr) {
 
 #if CUTREE_LA
             if (scs_ptr->static_config.look_ahead_distance != 0 && scs_ptr->static_config.enable_cutree_in_la) {
-                //kelvinhack
                 for (y_sb_index = y_sb_start_index; y_sb_index < y_sb_end_index; ++y_sb_index) {
                     for (x_sb_index = x_sb_start_index; x_sb_index < x_sb_end_index; ++x_sb_index) {
                         sb_origin_x = x_sb_index * scs_ptr->sb_sz;
                         sb_origin_y = y_sb_index * scs_ptr->sb_sz;
 
                         sb_index = (uint16_t)(x_sb_index + y_sb_index * pic_width_in_sb);
-//if(picture_control_set_ptr->picture_number == 0)
-//    printf("kelvin ---> motion_estimation_kernel sb_index=%d, la distance=%d\n", sb_index, scs_ptr->static_config.look_ahead_distance);
                         open_loop_intra_search_mb(
                             pcs_ptr,
                             sb_index,
                             context_ptr,
                             input_picture_ptr);
-                            //picture_control_set_ptr->save_enhanced_picture_ptr); //original YUV
                     }
                 }
             }

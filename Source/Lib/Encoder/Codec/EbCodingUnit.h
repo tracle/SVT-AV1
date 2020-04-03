@@ -509,7 +509,7 @@ typedef struct OisMbResults {
     int64_t mc_dep_rate;
     int64_t mc_dep_dist;
     MV mv;
-    int ref_frame_poc;
+    uint64_t ref_frame_poc;
 } OisMbResults;
 #endif
 

@@ -1334,7 +1334,6 @@ EbErrorType picture_parent_control_set_ctor(PictureParentControlSet *object_ptr,
     const uint16_t picture_height_in_mb = (uint16_t)((init_data_ptr->picture_height + 15) / 16);
     EB_MALLOC_2D(object_ptr->ois_mb_results, picture_width_in_mb * picture_height_in_mb, 1);
     EB_MALLOC_ARRAY(object_ptr->cutree_beta, object_ptr->sb_total_count);
-    //printf("kelvin ---> EbPictureControlSet sb_total_count=%d sb_sz=%d\n", object_ptr->sb_total_count, init_data_ptr->sb_sz);
 #endif
 
     object_ptr->max_number_of_candidates_per_block =

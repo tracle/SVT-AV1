@@ -23,6 +23,9 @@
 #include "EbLambdaRateTables.h"
 
 #include "EbLog.h"
+#if CUTREE
+#include "EbTransforms.h"
+#endif
 
 #define AVCCODEL
 /********************************************
@@ -12512,7 +12515,6 @@ EbErrorType open_loop_intra_search_mb(
     DECLARE_ALIGNED(32, uint8_t, predictor8[256 * 2]);
     DECLARE_ALIGNED(32, int16_t, src_diff[256]);
     DECLARE_ALIGNED(32, int32_t, coeff[256]);
-    DECLARE_ALIGNED(32, int32_t, qcoeff[256]);
     uint8_t *predictor = /*is_16_bit is_cur_buf_hbd(xd) ? CONVERT_TO_BYTEPTR(predictor8) :*/ predictor8;
 
     while (pa_blk_index < CU_MAX_COUNT) {
@@ -12540,20 +12542,16 @@ EbErrorType open_loop_intra_search_mb(
                 src = pcs_ptr->save_enhanced_picture_ptr[0] + pcs_ptr->enhanced_picture_ptr->origin_x + cu_origin_x +
                       (pcs_ptr->enhanced_picture_ptr->origin_y + cu_origin_y) * input_ptr->stride_y;
                 if(cu_origin_x == 0 && cu_origin_y ==0)
-                    printf("kelvin ---> using original src yuv, src[0~3]=%d %d %d %d, poc=%d\n", src[0], src[1], src[2], src[3], pcs_ptr->picture_number);
+                    printf("open_loop_intra_search_mb using original src yuv, src[0~3]=%d %d %d %d, poc=%d\n", src[0], src[1], src[2], src[3], pcs_ptr->picture_number);
             }
 #endif
             // Fill Neighbor Arrays
             update_neighbor_samples_array_open_loop(above0_row - 1, left0_col - 1, pcs_ptr, input_ptr, input_ptr->stride_y, cu_origin_x, cu_origin_y, bsize, bsize);
             uint8_t ois_intra_mode;
-            uint8_t ois_intra_count = 0;
-            uint8_t best_intra_ois_index = 0;
-            uint32_t best_intra_ois_distortion = 64 * 64 * 255;
             uint8_t intra_mode_start = DC_PRED;
             EbBool   enable_paeth                = pcs_ptr->scs_ptr->static_config.enable_paeth == DEFAULT ? EB_TRUE : (EbBool) pcs_ptr->scs_ptr->static_config.enable_paeth;
             EbBool   enable_smooth               = pcs_ptr->scs_ptr->static_config.enable_smooth == DEFAULT ? EB_TRUE : (EbBool) pcs_ptr->scs_ptr->static_config.enable_smooth;
             uint8_t  intra_mode_end              = enable_paeth ? PAETH_PRED : enable_smooth ? SMOOTH_H_PRED : D67_PRED;
-            //intra_mode_end = DC_PRED; //kelvinhack to run only DC mode
             int64_t intra_cost;
             PredictionMode best_mode = DC_PRED;
             int64_t best_intra_cost = INT64_MAX;
@@ -12579,7 +12577,7 @@ EbErrorType open_loop_intra_search_mb(
                 wht_fwd_txfm(src_diff, 16, coeff, 2/*TX_16X16*/, 8, 0/*is_cur_buf_hbd(xd)*/);
                 intra_cost = aom_satd(coeff, 16 * 16);
 
-//printf("kelvin ---> aom_satd mbxy %d %d, mode=%d, satd=%d, dst[0~4]=0x%d,%d,%d,%d\n", cu_origin_x, cu_origin_y, ois_intra_mode, intra_cost, predictor[0], predictor[1], predictor[2], predictor[3]);
+//printf("open_loop_intra_search_mb aom_satd mbxy %d %d, mode=%d, satd=%d, dst[0~4]=0x%d,%d,%d,%d\n", cu_origin_x, cu_origin_y, ois_intra_mode, intra_cost, predictor[0], predictor[1], predictor[2], predictor[3]);
                 if (intra_cost < best_intra_cost) {
                     best_intra_cost = intra_cost;
                     best_mode = ois_intra_mode;
@@ -12589,7 +12587,7 @@ EbErrorType open_loop_intra_search_mb(
             ois_mb_results_ptr->intra_mode = best_mode;
             ois_mb_results_ptr->intra_cost = best_intra_cost;
 //if(pcs_ptr->picture_number == 16 && cu_origin_x <= 15 && cu_origin_y == 0)
-//    printf("kelvincost0 poc%d sb_index=%d, mb_origin_xy=%d %d, best_mode=%d, best_intra_cost=%d, offset=%d, src[0~3]= %d %d %d %d\n", pcs_ptr->picture_number, sb_index, cu_origin_x, cu_origin_y, best_mode, best_intra_cost, (cu_origin_y >> 4) * mb_stride + (cu_origin_x >> 4), src[0], src[1], src[2], src[3]);
+//    printf("open_loop_intra_search_mb cost0 poc%d sb_index=%d, mb_origin_xy=%d %d, best_mode=%d, best_intra_cost=%d, offset=%d, src[0~3]= %d %d %d %d\n", pcs_ptr->picture_number, sb_index, cu_origin_x, cu_origin_y, best_mode, best_intra_cost, (cu_origin_y >> 4) * mb_stride + (cu_origin_x >> 4), src[0], src[1], src[2], src[3]);
         }
         pa_blk_index++;
     }
