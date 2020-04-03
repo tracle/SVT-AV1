@@ -1513,7 +1513,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
             context_ptr->tx_weight = FC_SKIP_TX_SR_TH010;
 #if DISABLE_TXT_WEIGHT
-           ontext_ptr->tx_weight = MAX_MODE_COST;
+           context_ptr->tx_weight = MAX_MODE_COST;
 #endif
     }
 
