@@ -375,7 +375,11 @@ static void av1_encode_loop(PictureControlSet *pcs_ptr, EncDecContext *context_p
     TransformUnit *txb_ptr = &blk_ptr->txb_array[context_ptr->txb_itr];
     //    EB_SLICE               slice_type = sb_ptr->pcs_ptr->slice_type;
     //    uint32_t                 temporal_layer_index = sb_ptr->pcs_ptr->temporal_layer_index;
+#if QP2QINDEX
+    uint32_t             qp            = blk_ptr->qindex;
+#else
     uint32_t             qp            = blk_ptr->qp;
+#endif
     EbPictureBufferDesc *input_samples = context_ptr->input_samples;
 
     uint32_t round_origin_x = (origin_x >> 3) << 3; // for Chroma blocks with size of 4
@@ -831,7 +835,11 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
     TransformUnit *txb_ptr = &blk_ptr->txb_array[context_ptr->txb_itr];
     //    EB_SLICE               slice_type = sb_ptr->pcs_ptr->slice_type;
     //    uint32_t                 temporal_layer_index = sb_ptr->pcs_ptr->temporal_layer_index;
+#if QP2QINDEX
+    uint32_t             qp        = blk_ptr->qindex;
+#else
     uint32_t             qp        = blk_ptr->qp;
+#endif
     uint32_t             bit_depth = context_ptr->bit_depth;
     EbPictureBufferDesc *input_samples16bit = context_ptr->input_sample16bit_buffer;
     EbPictureBufferDesc *pred_samples16bit  = pred_samples;
@@ -1732,7 +1740,11 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
         }
         // Encode Transform Unit -INTRA-
 
+#if QP2QINDEX
+        uint16_t cb_qp = blk_ptr->qindex;
+#else
         uint16_t cb_qp = blk_ptr->qp;
+#endif
         av1_encode_loop_func_table[is_16bit](pcs_ptr,
                                                                   context_ptr,
                                                                   sb_ptr,
@@ -2054,7 +2066,11 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
         }
 
         // Encode Transform Unit -INTRA-
+#if QP2QINDEX
+        uint16_t cb_qp = blk_ptr->qindex;
+#else
         uint16_t cb_qp = blk_ptr->qp;
+#endif
 
         av1_encode_loop_func_table[is_16bit](pcs_ptr,
                                                                   context_ptr,
@@ -2811,10 +2827,16 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                 if (pcs_ptr->parent_pcs_ptr->frm_hdr.segmentation_params.segmentation_enabled) {
                     apply_segmentation_based_quantization(blk_geom, pcs_ptr, sb_ptr, blk_ptr);
 
+#if QP2QINDEX
+                    sb_ptr->qindex = blk_ptr->qindex;
+#else
                     sb_ptr->qp = blk_ptr->qp;
+#endif
                 }
                 else {
-                    blk_ptr->qp = sb_ptr->qp;
+#if QP2QINDEX
+                    blk_ptr->qindex = sb_ptr->qindex;
+#endif
 #if !CLEAN_UP_SB_DATA_2
                     blk_ptr->delta_qp = sb_ptr->delta_qp;
 #endif
@@ -3090,7 +3112,11 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                 }
                                 // Encode Transform Unit -INTRA-
                                 {
+#if QP2QINDEX
+                                    uint16_t cb_qp = blk_ptr->qindex;
+#else
                                     uint16_t cb_qp = blk_ptr->qp;
+#endif
 
                                     av1_encode_loop_func_table[is_16bit](
                                         pcs_ptr,
@@ -3678,7 +3704,11 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
 
                         uint32_t tot_tu = context_ptr->blk_geom->txb_count[blk_ptr->tx_depth];
                         uint8_t  tu_it;
+#if QP2QINDEX
+                        uint16_t cb_qp = blk_ptr->qindex;
+#else
                         uint16_t cb_qp = blk_ptr->qp;
+#endif
                         uint32_t component_mask = context_ptr->blk_geom->has_uv
                             ? PICTURE_BUFFER_DESC_FULL_MASK
                             : PICTURE_BUFFER_DESC_LUMA_MASK;

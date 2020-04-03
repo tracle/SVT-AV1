@@ -50,8 +50,10 @@ typedef struct EncDecContext {
     // Since recon switches between reconPtr and referencePtr, the temporary buffers sizes used the referencePtr's which has padding,...
     EbPictureBufferDesc *inverse_quant_buffer;
     // Lambda
+#if !QP2QINDEX
     uint16_t qp;
     uint8_t  chroma_qp;
+#endif
     uint32_t fast_lambda;
     uint32_t full_lambda;
     uint32_t full_chroma_lambda_sao;

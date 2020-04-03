@@ -213,6 +213,7 @@ static void reset_enc_dec(EncDecContext *context_ptr, PictureControlSet *pcs_ptr
     context_ptr->bit_depth = scs_ptr->static_config.encoder_bit_depth;
     uint16_t picture_qp   = pcs_ptr->picture_qp;
     uint16_t tile_group_idx = context_ptr->tile_group_index;
+#if !QP2QINDEX
     context_ptr->qp = picture_qp;
     context_ptr->qp_index =
         pcs_ptr->parent_pcs_ptr->frm_hdr.delta_q_params.delta_q_present
@@ -221,6 +222,7 @@ static void reset_enc_dec(EncDecContext *context_ptr, PictureControlSet *pcs_ptr
     // Asuming cb and cr offset to be the same for chroma QP in both slice and pps for lambda computation
 
     context_ptr->chroma_qp = (uint8_t)context_ptr->qp;
+#endif
     // Lambda Assignement
     context_ptr->qp_index =
         (uint8_t)pcs_ptr->parent_pcs_ptr->frm_hdr.quantization_params.base_q_idx;
@@ -263,6 +265,7 @@ static void reset_enc_dec(EncDecContext *context_ptr, PictureControlSet *pcs_ptr
  ******************************************************/
 static void enc_dec_configure_sb(EncDecContext *context_ptr, SuperBlock *sb_ptr,
                                  PictureControlSet *pcs_ptr, uint8_t sb_qp) {
+#if !QP2QINDEX
     context_ptr->qp = sb_qp;
 
     // Asuming cb and cr offset to be the same for chroma QP in both slice and pps for lambda computation
@@ -271,6 +274,9 @@ static void enc_dec_configure_sb(EncDecContext *context_ptr, SuperBlock *sb_ptr,
     (void)sb_ptr;
     context_ptr->qp_index =
         (uint8_t)pcs_ptr->parent_pcs_ptr->frm_hdr.quantization_params.base_q_idx;
+#else
+    context_ptr->qp_index = sb_qp;
+#endif
     (*av1_lambda_assignment_function_table[pcs_ptr->parent_pcs_ptr->pred_structure])(
         &context_ptr->fast_lambda,
         &context_ptr->full_lambda,
@@ -3688,7 +3694,11 @@ void *enc_dec_kernel(void *input_ptr) {
                     }
                     // Configure the SB
                     mode_decision_configure_sb(
+#if QP2QINDEX
+                        context_ptr->md_context, pcs_ptr, (uint8_t)sb_ptr->qindex);
+#else
                         context_ptr->md_context, pcs_ptr, (uint8_t)sb_ptr->qp);
+#endif
 #if DEPTH_PART_CLEAN_UP
                     // Build the t=0 cand_block_array
                     build_starting_cand_block_array(scs_ptr, pcs_ptr, context_ptr, mdc_ptr);
@@ -3846,7 +3856,11 @@ void *enc_dec_kernel(void *input_ptr) {
                                      context_ptr->md_context);
 
                     // Configure the SB
+#if QP2QINDEX
+                    enc_dec_configure_sb(context_ptr, sb_ptr, pcs_ptr, (uint8_t)sb_ptr->qindex);
+#else
                     enc_dec_configure_sb(context_ptr, sb_ptr, pcs_ptr, (uint8_t)sb_ptr->qp);
+#endif
 
 #if NO_ENCDEC
                     no_enc_dec_pass(scs_ptr,

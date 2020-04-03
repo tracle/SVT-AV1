@@ -109,7 +109,11 @@ void apply_segmentation_based_quantization(const BlockGeom *blk_geom, PictureCon
     int32_t q_index = pcs_ptr->parent_pcs_ptr->frm_hdr.quantization_params.base_q_idx +
                       pcs_ptr->parent_pcs_ptr->frm_hdr.segmentation_params
                           .feature_data[blk_ptr->segment_id][SEG_LVL_ALT_Q];
+#if QP2QINDEX
+    blk_ptr->qindex = q_index;
+#else
     blk_ptr->qp = q_index_to_quantizer[q_index];
+#endif
 }
 
 void setup_segmentation(PictureControlSet *pcs_ptr, SequenceControlSet *scs_ptr,

@@ -1335,7 +1335,11 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
     *(candidate_buffer->fast_cost_ptr) = av1_product_fast_cost_func_table[candidate_ptr->type](
         blk_ptr,
         candidate_buffer->candidate_ptr,
+#if QP2QINDEX
+        NOT_USED_VALUE,
+#else
         blk_ptr->qp,
+#endif
         luma_fast_distortion,
         chroma_fast_distortion,
         use_ssd ? full_lambda : fast_lambda,
@@ -3313,7 +3317,11 @@ void md_stage_0(
                     av1_product_fast_cost_func_table[candidate_ptr->type](
                         blk_ptr,
                         candidate_buffer->candidate_ptr,
+#if QP2QINDEX
+                        NOT_USED_VALUE,
+#else
                         blk_ptr->qp,
+#endif
                         luma_fast_distortion,
                         0,
                         fast_lambda,
@@ -4388,8 +4396,13 @@ void av1_cost_calc_cfl(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *
     uint32_t               chroma_height = context_ptr->blk_geom->bheight_uv;
     // FullLoop and TU search
     int32_t  alpha_q3;
+#if QP2QINDEX
+    uint16_t cb_qp = context_ptr->qp_index;
+    uint16_t cr_qp = context_ptr->qp_index;
+#else
     uint16_t cb_qp = context_ptr->qp;
     uint16_t cr_qp = context_ptr->qp;
+#endif
 
     full_distortion[DIST_CALC_RESIDUAL]   = 0;
     full_distortion[DIST_CALC_PREDICTION] = 0;
@@ -6626,7 +6639,11 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
                               context_ptr,
                               pcs_ptr,
                               input_picture_ptr,
+#if QP2QINDEX
+                              context_ptr->blk_ptr->qindex,
+#else
                               context_ptr->blk_ptr->qp,
+#endif
                               &(tx_y_count_non_zero_coeffs[0]),
                               &tx_y_coeff_bits,
                               &tx_y_full_distortion[0]);
@@ -6782,7 +6799,11 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
                                 ref_fast_cost,
                                 start_tx_depth,
                                 end_tx_depth,
+#if QP2QINDEX
+                                context_ptr->blk_ptr->qindex,
+#else
                                 context_ptr->blk_ptr->qp,
+#endif
                                 &(*count_non_zero_coeffs[0]),
                                 &y_coeff_bits,
                                 &y_full_distortion[0]);
@@ -6801,8 +6822,13 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
     cr_coeff_bits = 0;
 
     // FullLoop and TU search
+#if QP2QINDEX
+    uint16_t cb_qp = context_ptr->qp_index;
+    uint16_t cr_qp = context_ptr->qp_index;
+#else
     uint16_t cb_qp = context_ptr->qp;
     uint16_t cr_qp = context_ptr->qp;
+#endif
     if (context_ptr->md_staging_skip_full_chroma == EB_FALSE) {
         if (context_ptr->blk_geom->has_uv && context_ptr->chroma_level <= CHROMA_MODE_1) {
             //Cb Residual
@@ -7210,7 +7236,11 @@ void move_blk_data(PictureControlSet *pcs, EncDecContext *context_ptr, BlkStruct
 #if !CLEAN_UP_SB_DATA_4
     dst_cu->split_flag_context   = src_cu->split_flag_context;
 #endif
+#if QP2QINDEX
+    dst_cu->qindex               = src_cu->qindex;
+#else
     dst_cu->qp                   = src_cu->qp;
+#endif
 #if !CLEAN_UP_SB_DATA_2
     dst_cu->delta_qp             = src_cu->delta_qp;
 #endif
@@ -7315,7 +7345,11 @@ void move_blk_data_redund(PictureControlSet *pcs, ModeDecisionContext *context_p
 #if !CLEAN_UP_SB_DATA_4
     dst_cu->split_flag_context   = src_cu->split_flag_context;
 #endif
+#if QP2QINDEX
+    dst_cu->qindex               = src_cu->qindex;
+#else
     dst_cu->qp                   = src_cu->qp;
+#endif
 #if !CLEAN_UP_SB_DATA_2
     dst_cu->delta_qp             = src_cu->delta_qp;
     dst_cu->leaf_index           = src_cu->leaf_index;
@@ -7878,8 +7912,13 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
             context_ptr->candidate_buffer_ptr_array[uv_cand_buff_indices[uv_mode_count]];
         candidate_buffer->candidate_ptr =
             &context_ptr->fast_candidate_array[uv_cand_buff_indices[uv_mode_count]- start_full_buffer_index + start_fast_buffer_index];
+#if QP2QINDEX
+        uint16_t cb_qp                               = context_ptr->qp_index;
+        uint16_t cr_qp                               = context_ptr->qp_index;
+#else
         uint16_t cb_qp                               = context_ptr->qp;
         uint16_t cr_qp                               = context_ptr->qp;
+#endif
         uint64_t cb_coeff_bits                       = 0;
         uint64_t cr_coeff_bits                       = 0;
         uint64_t cb_full_distortion[DIST_CALC_TOTAL] = {0, 0};
@@ -7988,7 +8027,11 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
                 av1_product_fast_cost_func_table[candidate_ptr->type](
                     context_ptr->blk_ptr,
                     candidate_ptr,
+#if QP2QINDEX
+                    NOT_USED_VALUE,
+#else
                     context_ptr->qp,
+#endif
                     0,
                     0,
                     0,
@@ -8835,7 +8878,11 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
 #if SQ_WEIGHT_PATCH_0 || SQ_WEIGHT_PATCH_1 || SQ_WEIGHT_PATCH_2 || SQ_WEIGHT_PATCH_3
     sq_weight += sq_weight_per_qp[scs_ptr->static_config.qp];
 #else
+#if QP2QINDEX
+    sq_weight += sq_weight_per_qp[(context_ptr->qp_index + 2)>>2];
+#else
     sq_weight += sq_weight_per_qp[context_ptr->qp];
+#endif
 #endif
 #else
     // use an aggressive threshold for QP 20
@@ -8899,8 +8946,13 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
                     if (offset >= (uint32_t)-nsq_weight_per_qp[scs_ptr->static_config.qp])
                         offset += nsq_weight_per_qp[scs_ptr->static_config.qp];
 #else
+#if QP2QINDEX
+                    if (offset >= (uint32_t) -nsq_weight_per_qp[(context_ptr->qp_index + 2) >> 2])
+                        offset += nsq_weight_per_qp[(context_ptr->qp_index + 2) >> 2];
+#else
                     if (offset >= (uint32_t) -nsq_weight_per_qp[context_ptr->qp])
                         offset += nsq_weight_per_qp[context_ptr->qp];
+#endif
 #endif
 #else
                     if (offset >= 5 && scs_ptr->static_config.qp <= 20)
@@ -8962,8 +9014,13 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
                     if (offset >= (uint32_t)-nsq_weight_per_qp[scs_ptr->static_config.qp])
                         offset += nsq_weight_per_qp[scs_ptr->static_config.qp];
 #else
+#if QP2QINDEX
+                    if (offset >= (uint32_t) -nsq_weight_per_qp[(context_ptr->qp_index+2)>>2])
+                        offset += nsq_weight_per_qp[(context_ptr->qp_index + 2) >> 2];
+#else
                     if (offset >= (uint32_t) -nsq_weight_per_qp[context_ptr->qp])
                         offset += nsq_weight_per_qp[context_ptr->qp];
+#endif
 #endif
 #else
                     if (offset >= 5 && scs_ptr->static_config.qp <= 20)
@@ -9259,7 +9316,11 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
         blk_ptr->split_flag =
             (uint16_t)leaf_data_ptr
                 ->split_flag; //mdc indicates smallest or non valid CUs with split flag=
+#if QP2QINDEX
+        blk_ptr->qindex      = context_ptr->qp_index;
+#else
         blk_ptr->qp          = context_ptr->qp;
+#endif
 #if CLEAN_UP_SB_DATA_1
         context_ptr->md_local_blk_unit[blk_idx_mds].best_d1_blk = blk_idx_mds;
 #else
