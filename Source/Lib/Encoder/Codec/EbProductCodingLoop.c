@@ -6585,6 +6585,10 @@ void tx_type_search(PictureControlSet *pcs_ptr,
             second_pass_mask[V_DCT] = 1;
             second_pass_mask[H_DCT] = 1;
             best_txtype = DCT_DCT;
+#if REDO_ALL_WHEN_DCT
+            for (uint8_t i = 0; i < 16; i++)
+                second_pass_mask[i] = 1;
+#endif
         }
         else if (best_cost == stage_1_cost[ADST_ADST]) {
             second_pass_mask[ADST_ADST] = 1;
@@ -6595,6 +6599,10 @@ void tx_type_search(PictureControlSet *pcs_ptr,
             second_pass_mask[V_ADST] = 1;
             second_pass_mask[H_ADST] = 1;
             best_txtype = ADST_ADST;
+#if REDO_ALL_WHEN_ADST
+            for (uint8_t i = 0; i < 16; i++)
+                second_pass_mask[i] = 1;
+#endif
         }
         else if (best_cost == stage_1_cost[FLIPADST_FLIPADST]) {
             second_pass_mask[FLIPADST_FLIPADST] = 1;
@@ -6605,6 +6613,10 @@ void tx_type_search(PictureControlSet *pcs_ptr,
             second_pass_mask[V_FLIPADST] = 1;
             second_pass_mask[H_FLIPADST] = 1;
             best_txtype = FLIPADST_FLIPADST;
+#if REDO_ALL_WHEN_FLIP
+            for (uint8_t i = 0; i < 16; i++)
+                second_pass_mask[i] = 1;
+#endif
         }
         else if (best_cost == stage_1_cost[IDTX]) {
             second_pass_mask[IDTX] = 1;
@@ -6615,6 +6627,10 @@ void tx_type_search(PictureControlSet *pcs_ptr,
             second_pass_mask[V_FLIPADST] = 1;
             second_pass_mask[H_FLIPADST] = 1;
             best_txtype = IDTX;
+#if REDO_ALL_WHEN_IDXT
+            for (uint8_t i = 0; i < 16; i++)
+                second_pass_mask[i] = 1;
+#endif
         }
         uint64_t cost;
         for (tx_type = txk_start; tx_type < txk_end; ++tx_type) {

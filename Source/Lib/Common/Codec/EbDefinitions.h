@@ -167,6 +167,10 @@ extern "C" {
 #define REORDER_TX_TYPE         0
 #define REORDER_TX_TYPE_2       0
 #define MULTI_STAGE_TXT         0
+#define REDO_ALL_WHEN_DCT       0
+#define REDO_ALL_WHEN_ADST      0
+#define REDO_ALL_WHEN_FLIP      0
+#define REDO_ALL_WHEN_IDXT      0
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
