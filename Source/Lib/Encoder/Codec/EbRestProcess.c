@@ -520,7 +520,7 @@ void *rest_kernel(void *input_ptr) {
                                               pcs_ptr,
                                               scs_ptr);
 
-                if(scs_ptr->static_config.encoder_16bit_pipeline || is_16bit){
+                if(scs_ptr->static_config.is_16bit_pipeline || is_16bit){
                     set_unscaled_input_16bit(pcs_ptr);
                 }
             }

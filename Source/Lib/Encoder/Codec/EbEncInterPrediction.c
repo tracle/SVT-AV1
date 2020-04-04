@@ -129,7 +129,8 @@ void av1_make_masked_inter_predictor(uint8_t *src_ptr, uint32_t src_stride, uint
                                    bheight,
                                    bwidth,
                                    conv_params,
-                                   bitdepth);
+                                   bitdepth,
+                                   is_16bit);
 }
 
 void av1_make_masked_scaled_inter_predictor(uint8_t *src_ptr, uint32_t src_stride, uint8_t *dst_ptr,
@@ -138,7 +139,7 @@ void av1_make_masked_scaled_inter_predictor(uint8_t *src_ptr, uint32_t src_strid
                                              const SubpelParams *subpel_params, const ScaleFactors *sf,
                                              ConvolveParams *conv_params,
                                              InterInterCompoundData *comp_data, uint8_t bitdepth,
-                                             uint8_t plane, uint8_t use_intrabc) {
+                                             uint8_t plane, uint8_t use_intrabc, uint8_t is_16bit) {
     //We come here when we have a prediction done using regular path for the ref0 stored in conv_param.dst.
     //use regular path to generate a prediction for ref1 into  a temporary buffer,
     //then  blend that temporary buffer with that from  the first reference.
@@ -3915,7 +3916,8 @@ void enc_make_inter_predictor(uint8_t* src_ptr,
                               const uint32_t ss_x,
                               uint8_t bit_depth,
                               uint8_t use_intrabc,
-                              uint8_t is_masked_compound){
+                              uint8_t is_masked_compound,
+                              uint8_t is16bit){
 
     SubpelParams subpel_params;
     int32_t pos_y, pos_x;
@@ -3956,7 +3958,8 @@ void enc_make_inter_predictor(uint8_t* src_ptr,
                 interinter_comp,
                 bit_depth,
                 plane,
-                use_intrabc
+                use_intrabc,
+                is16bit
         );
     }
     if (is_highbd) {
@@ -4614,7 +4617,8 @@ EbErrorType av1_inter_prediction(
                                              ss_x,
                                              bit_depth,
                                              use_intrabc,
-                                             0);
+                                             0,
+                                             is16bit);
 
                     //Cr
                     conv_params = get_conv_params_no_round(
@@ -4659,7 +4663,8 @@ EbErrorType av1_inter_prediction(
                                              ss_x,
                                              bit_depth,
                                              use_intrabc,
-                                             0);
+                                             0,
+                                             is16bit);
 
                     ++col;
                 }
@@ -4721,7 +4726,8 @@ EbErrorType av1_inter_prediction(
                                  ss_x,
                                  bit_depth,
                                  use_intrabc,
-                                 0);
+                                 0,
+                                 is16bit);
 
         if (perform_chroma && blk_geom->has_uv && sub8x8_inter == 0) {
 
@@ -4773,7 +4779,8 @@ EbErrorType av1_inter_prediction(
                                      ss_x,
                                      bit_depth,
                                      use_intrabc,
-                                     0);
+                                     0,
+                                     is16bit);
 
             // List0-Cr
             src_ptr = ref_pic_list0->buffer_cr +
@@ -4811,7 +4818,8 @@ EbErrorType av1_inter_prediction(
                                      ss_x,
                                      bit_depth,
                                      use_intrabc,
-                                     0);
+                                     0,
+                                     is16bit);
 
         }
     }
@@ -4903,6 +4911,31 @@ EbErrorType av1_inter_prediction(
                     0, //plane=Luma  seg_mask is computed based on luma and used for chroma
                     is16bit,
                     seg_mask);
+        }else{
+            enc_make_inter_predictor(src_ptr,
+                                     dst_ptr,
+                                     (int16_t)pu_origin_y,
+                                     (int16_t)pu_origin_x,
+                                     mv,
+                                     sf,
+                                     &conv_params,
+                                     interp_filters,
+                                     interinter_comp,
+                                     ref_pic_list1->width,
+                                     ref_pic_list1->height,
+                                     (uint16_t)bwidth,
+                                     (uint16_t)bheight,
+                                     blk_geom->bsize,
+                                     blk_ptr->av1xd,
+                                     src_stride,
+                                     dst_stride,
+                                     0,
+                                     ss_y,
+                                     ss_x,
+                                     bit_depth,
+                                     use_intrabc,
+                                     is_compound && is_masked_compound_type(interinter_comp->type),
+                                     is16bit);
         }
 
         if (perform_chroma && blk_geom->has_uv && sub8x8_inter == 0) {
@@ -4980,6 +5013,31 @@ EbErrorType av1_inter_prediction(
                         1, //plane=cb  seg_mask is computed based on luma and used for chroma
                         is16bit,
                         seg_mask);
+            }else{
+                enc_make_inter_predictor(src_ptr,
+                                         dst_ptr,
+                                         (int16_t)pu_origin_y_chroma,
+                                         (int16_t)pu_origin_x_chroma,
+                                         mv,
+                                         sf,
+                                         &conv_params,
+                                         interp_filters,
+                                         interinter_comp,
+                                         ref_pic_list1->width,
+                                         ref_pic_list1->height,
+                                         (uint16_t)blk_geom->bwidth_uv,
+                                         (uint16_t)blk_geom->bheight_uv,
+                                         blk_geom->bsize,
+                                         blk_ptr->av1xd,
+                                         src_stride,
+                                         dst_stride,
+                                         1,
+                                         ss_y,
+                                         ss_x,
+                                         bit_depth,
+                                         use_intrabc,
+                                         is_compound && is_masked_compound_type(interinter_comp->type),
+                                         is16bit);
             }
 
             // List1-Cr
@@ -5044,6 +5102,31 @@ EbErrorType av1_inter_prediction(
                         1, //plane=Cr  seg_mask is computed based on luma and used for chroma,
                         is16bit,
                         seg_mask);
+            }else{
+                enc_make_inter_predictor(src_ptr,
+                                         dst_ptr,
+                                         (int16_t)pu_origin_y_chroma,
+                                         (int16_t)pu_origin_x_chroma,
+                                         mv,
+                                         sf,
+                                         &conv_params,
+                                         interp_filters,
+                                         interinter_comp,
+                                         ref_pic_list1->width,
+                                         ref_pic_list1->height,
+                                         (uint16_t)blk_geom->bwidth_uv,
+                                         (uint16_t)blk_geom->bheight_uv,
+                                         blk_geom->bsize,
+                                         blk_ptr->av1xd,
+                                         src_stride,
+                                         dst_stride,
+                                         2,
+                                         ss_y,
+                                         ss_x,
+                                         bit_depth,
+                                         use_intrabc,
+                                         is_compound && is_masked_compound_type(interinter_comp->type),
+                                         is16bit);
             }
         }
     }
