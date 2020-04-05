@@ -37,9 +37,15 @@ extern "C" {
 #ifndef NON_AVX512_SUPPORT
 #define NON_AVX512_SUPPORT
 #endif
+#define UNIFIED_PART 1
+#define UNIFIED_FILTERING          1
 
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
+#if UNIFIED_FILTERING
+#define SHUT_FILTERING 1 //1
+#else
 #define SHUT_FILTERING 0 //1
+#endif
 #define MAX_TILE_CNTS 128 // Annex A.3
 #define MR_MODE 0
 #define ALT_REF_QP_THRESH 20
@@ -50,7 +56,7 @@ extern "C" {
 #define IFS_MD_STAGE_3 1
 
 
-#define UNIFIED_PART 1
+
 
 // Actions in the second pass: Frame and SB QP assignment and temporal filtering strenght change
 //FOR DEBUGGING - Do not remove
