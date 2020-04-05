@@ -866,6 +866,9 @@ EbErrorType signal_derivation_multi_processes_oq(
     else
         pcs_ptr->pic_depth_mode = PIC_SB_SWITCH_DEPTH_MODE;
 
+#if  UNIFIED_PART      
+    pcs_ptr->pic_depth_mode = PIC_SQ_NON4_DEPTH_MODE;
+#endif
     if (pcs_ptr->pic_depth_mode < PIC_SQ_DEPTH_MODE)
         assert(scs_ptr->nsq_present == 1 && "use nsq_present 1");
 
