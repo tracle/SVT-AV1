@@ -184,6 +184,8 @@ extern "C" {
 #define APPLY_TXT_ONLY_WHEN_NO_COEFF 0
 #define ANALYSE_DCT                0
 #define DISABLE_RDOQ_SSSE          0
+#define DISABLE_RDOQ_AT_TXT        0
+#define DISABLE_SSE_AT_TXT         0
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

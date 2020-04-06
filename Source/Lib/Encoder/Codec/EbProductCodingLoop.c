@@ -6327,11 +6327,15 @@ void tx_type_search(PictureControlSet *pcs_ptr,
                 context_ptr->blk_geom->txsize[context_ptr->tx_depth][context_ptr->txb_itr],
                 &context_ptr->luma_txb_skip_context,
                 &context_ptr->luma_dc_sign_context);
-#if DISABLE_RDOQ_SSSE
+#if DISABLE_RDOQ_SSSE || DISABLE_RDOQ_AT_TXT || DISABLE_SSE_AT_TXT
+#if DISABLE_RDOQ_AT_TXT
         uint8_t default_md_staging_skip_rdoq = context_ptr->md_staging_skip_rdoq;
         context_ptr->md_staging_skip_rdoq = EB_TRUE;
+#endif
+#if DISABLE_SSE_AT_TXT
         uint8_t default_md_staging_spatial_sse_full_loop = context_ptr->md_staging_spatial_sse_full_loop;
         context_ptr->md_staging_spatial_sse_full_loop = 0;
+#endif
 #endif
     if (context_ptr->tx_search_reduced_set == 2) txk_end = 2;
 #if USE_VARIANCE
@@ -7402,6 +7406,12 @@ uint8_t direction_mask[TX_TYPES] = {
 #if DISABLE_RDOQ_SSSE
     context_ptr->md_staging_skip_rdoq = default_md_staging_skip_rdoq;
     context_ptr->md_staging_spatial_sse_full_loop = default_md_staging_spatial_sse_full_loop;
+#endif
+#if DISABLE_RDOQ_AT_TXT
+    context_ptr->md_staging_skip_rdoq = default_md_staging_skip_rdoq;
+#endif
+#if DISABLE_SSE_AT_TXT
+     context_ptr->md_staging_spatial_sse_full_loop = default_md_staging_spatial_sse_full_loop;
 #endif
     //  Best Tx Type Pass
     candidate_buffer->candidate_ptr->transform_type[context_ptr->txb_itr] = best_tx_type;
