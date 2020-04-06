@@ -177,6 +177,13 @@ extern "C" {
 #define REVERSE_DECISION        0
 #define USE_VARIANCE            0
 #define MULTI_SECOND_BEST       0
+#define FASTER_MS0              0
+#define FASTER_MS1              0
+#define FASTER_MS2              0
+#define FASTER_MS3              0
+#define APPLY_TXT_ONLY_WHEN_NO_COEFF 0
+#define ANALYSE_DCT                0
+#define DISABLE_RDOQ_SSSE          0
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

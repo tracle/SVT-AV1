@@ -6277,6 +6277,7 @@ TxType reorder_txtype[TX_TYPES] = {
     FLIPADST_ADST
 };
 #endif
+
 void tx_type_search(PictureControlSet *pcs_ptr,
                     ModeDecisionContext *context_ptr, ModeDecisionCandidateBuffer *candidate_buffer,
                     uint32_t qp) {
@@ -6326,7 +6327,12 @@ void tx_type_search(PictureControlSet *pcs_ptr,
                 context_ptr->blk_geom->txsize[context_ptr->tx_depth][context_ptr->txb_itr],
                 &context_ptr->luma_txb_skip_context,
                 &context_ptr->luma_dc_sign_context);
-
+#if DISABLE_RDOQ_SSSE
+        uint8_t default_md_staging_skip_rdoq = context_ptr->md_staging_skip_rdoq;
+        context_ptr->md_staging_skip_rdoq = EB_TRUE;
+        uint8_t default_md_staging_spatial_sse_full_loop = context_ptr->md_staging_spatial_sse_full_loop;
+        context_ptr->md_staging_spatial_sse_full_loop = 0;
+#endif
     if (context_ptr->tx_search_reduced_set == 2) txk_end = 2;
 #if USE_VARIANCE
     unsigned int residual_variance;
@@ -6367,6 +6373,14 @@ void tx_type_search(PictureControlSet *pcs_ptr,
 #define mc MAX_MODE_COST
         uint64_t stage_1_cost[TX_TYPES] = { mc,mc,mc,mc,mc,mc,mc,mc,
                                             mc,mc,mc,mc,mc,mc,mc,mc };
+#if FASTER_MS0 || FASTER_MS1
+        uint8_t default_md_staging_skip_rdoq = context_ptr->md_staging_skip_rdoq;
+        context_ptr->md_staging_skip_rdoq = EB_TRUE;
+#endif
+#if FASTER_MS2 || FASTER_MS3
+        uint8_t default_md_staging_spatial_sse_full_loop = context_ptr->md_staging_spatial_sse_full_loop;
+        context_ptr->md_staging_spatial_sse_full_loop = 0;
+#endif
         for (tx_type = txk_start; tx_type < txk_end; ++tx_type) {
             if (!first_pass_mask[tx_type]) continue;
 
@@ -6614,7 +6628,12 @@ void tx_type_search(PictureControlSet *pcs_ptr,
                 full_lambda, y_txb_coeff_bits, txb_full_distortion[0][DIST_CALC_RESIDUAL]);
 
         }
-        
+#if FASTER_MS0 || FASTER_MS1
+        context_ptr->md_staging_skip_rdoq = default_md_staging_skip_rdoq;
+#endif   
+#if FASTER_MS2 || FASTER_MS3
+        context_ptr->md_staging_spatial_sse_full_loop = default_md_staging_spatial_sse_full_loop;
+#endif
         uint8_t second_pass_mask[TX_TYPES] = {
             0,//DCT_DCT, // DCT  in both horizontal and vertical
             0,//ADST_DCT, // ADST in vertical, DCT in horizontal
@@ -6768,7 +6787,11 @@ void tx_type_search(PictureControlSet *pcs_ptr,
         uint64_t cost;
         for (tx_type = txk_start; tx_type < txk_end; ++tx_type) {
             if (!second_pass_mask[tx_type]) continue;
+#if FASTER_MS1 || FASTER_MS3
+            if (0) {
+#else
             if (best_txtype == tx_type) {
+#endif
                 cost = best_cost;
             }
             else {
@@ -7027,6 +7050,29 @@ void tx_type_search(PictureControlSet *pcs_ptr,
         uint64_t cost_idtx = MAX_MODE_COST;
         uint64_t cost_dct = MAX_MODE_COST;
 #endif
+#if APPLY_TXT_ONLY_WHEN_NO_COEFF || ANALYSE_DCT
+    uint8_t n = 0;
+#endif
+#if ANALYSE_DCT
+uint8_t direction_mask[TX_TYPES] = {
+    1,//DCT_DCT, // DCT  in both horizontal and vertical
+    1,//ADST_DCT, // ADST in vertical, DCT in horizontal
+    1,//DCT_ADST, // DCT  in vertical, ADST in horizontal
+    1,//ADST_ADST, // ADST in both directions
+    1,//FLIPADST_DCT,
+    1,//DCT_FLIPADST,
+    1,//FLIPADST_FLIPADST,
+    1,//ADST_FLIPADST,
+    1,//FLIPADST_ADST,
+    1,//IDTX,
+    1,//V_DCT,
+    1,//H_DCT,
+    1,//V_ADST,
+    1,//H_ADST,
+    1,//V_FLIPADST,
+    1//H_FLIPADST,
+};
+#endif
     for (tx_type = txk_start; tx_type < txk_end; ++tx_type) {
         uint64_t txb_full_distortion[3][DIST_CALC_TOTAL];
         uint64_t y_txb_coeff_bits = 0;
@@ -7115,9 +7161,14 @@ void tx_type_search(PictureControlSet *pcs_ptr,
             (context_ptr->txb_itr == 0)
             ? candidate_buffer->candidate_ptr->transform_type[context_ptr->txb_itr]
             : candidate_buffer->candidate_ptr->transform_type_uv;
-#if TXT_STATISTIC
-        tested_txt_type[txt_count] = tx_type;
-        txt_count++;
+
+#if APPLY_TXT_ONLY_WHEN_NO_COEFF
+        if (n > 0 && candidate_buffer->candidate_ptr->y_has_coeff)
+            continue;
+#endif
+#if ANALYSE_DCT
+        direction_mask[tx_type] == 0;
+        continue;
 #endif
         // Y: T Q i_q
         av1_estimate_transform(
@@ -7290,6 +7341,37 @@ void tx_type_search(PictureControlSet *pcs_ptr,
             candidate_buffer->candidate_ptr->transform_type_uv,
             COMPONENT_LUMA);
 
+#if ANALYSE_DCT
+        if (n == 0) {
+            uint8_t quad_cnt[4] = { 0 };
+            uint8_t tx_height = context_ptr->blk_geom->tx_height[context_ptr->tx_depth][context_ptr->txb_itr];
+            uint8_t tx_width = context_ptr->blk_geom->tx_width[context_ptr->tx_depth][context_ptr->txb_itr];
+            uint8_t half_tx_width = tx_width / 2;
+            uint8_t half_height = tx_height / 2;
+            for (uint8_t i = 0; i < tx_height; i++) {
+                for (uint8_t j = 0; j < tx_width; j++) {
+                    uint8_t quad_idx = ((i / half_height) * 2) + (j / half_tx_width);
+                    uint64_t coeff_idx = context_ptr->txb_1d_offset + (i*tx_width) + j;
+                    quad_cnt[quad_idx] += &(((int32_t *)context_ptr->trans_quant_buffers_ptr->txb_trans_coeff2_nx2_n_ptr->buffer_y)[coeff_idx]) == 0 ? 0 : 1;                        
+                }
+            }
+
+            if ((quad_cnt[0] == 0 && quad_cnt[1] == 0) || (quad_cnt[2] == 0 && quad_cnt[3] == 0)){
+                direction_mask[V_DCT] = 0;
+                direction_mask[V_ADST] = 0;
+                direction_mask[V_FLIPADST] = 0;
+            }
+            else if ((quad_cnt[0] == 0 && quad_cnt[2] == 0) || (quad_cnt[1] == 0 && quad_cnt[3] == 0)) {
+                direction_mask[H_DCT] = 0;
+                direction_mask[H_ADST] = 0;
+                direction_mask[H_FLIPADST] = 0;
+            }
+        }
+        n++;
+#endif
+#if APPLY_TXT_ONLY_WHEN_NO_COEFF
+        n++;
+#endif
         uint64_t cost = RDCOST(
             full_lambda, y_txb_coeff_bits, txb_full_distortion[0][DIST_CALC_RESIDUAL]);
 #if DCT_VS_IDTX
@@ -7297,6 +7379,7 @@ void tx_type_search(PictureControlSet *pcs_ptr,
         cost_idtx = tx_type == IDTX ? cost : cost_idtx;
         cost_dct = tx_type == DCT_DCT ? cost : cost_dct;
 #endif
+        //printf("%d\t%lu\n", tx_type, cost);
         if (cost < best_cost_tx_search) {
             best_cost_tx_search = cost;
             best_tx_type = tx_type;
@@ -7315,6 +7398,10 @@ void tx_type_search(PictureControlSet *pcs_ptr,
             printf("%d\t", tested_txt_type[i]);
         printf("%d\t%d\t%d\t%d\n",best_tx_type,context_ptr->blk_geom->shape, residual_variance,best_group);   
     }
+#endif
+#if DISABLE_RDOQ_SSSE
+    context_ptr->md_staging_skip_rdoq = default_md_staging_skip_rdoq;
+    context_ptr->md_staging_spatial_sse_full_loop = default_md_staging_spatial_sse_full_loop;
 #endif
     //  Best Tx Type Pass
     candidate_buffer->candidate_ptr->transform_type[context_ptr->txb_itr] = best_tx_type;
