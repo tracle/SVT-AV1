@@ -40,6 +40,7 @@ extern "C" {
 #define UNIFIED_PART 1
 #define UNIFIED_FILTERING          1
 #define UNIFIED_TF                 1
+#define UNIFIED_NICS               1
 
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
 #if UNIFIED_FILTERING

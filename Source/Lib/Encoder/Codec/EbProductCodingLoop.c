@@ -2641,6 +2641,38 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
     if (context_ptr->combine_class12)
         context_ptr->md_stage_1_count[CAND_CLASS_3] = context_ptr->md_stage_2_count[CAND_CLASS_3] =
             0;
+#if UNIFIED_NICS
+    context_ptr->md_stage_1_count[CAND_CLASS_0] = 1;
+    context_ptr->md_stage_1_count[CAND_CLASS_1] = 1;
+    context_ptr->md_stage_1_count[CAND_CLASS_2] = 1;
+    context_ptr->md_stage_1_count[CAND_CLASS_3] = 1;
+    context_ptr->md_stage_1_count[CAND_CLASS_4] = 1;
+    context_ptr->md_stage_1_count[CAND_CLASS_5] = 1;
+    context_ptr->md_stage_1_count[CAND_CLASS_6] = 1;
+    context_ptr->md_stage_1_count[CAND_CLASS_7] = 1;
+    context_ptr->md_stage_1_count[CAND_CLASS_8] = 1;
+
+    context_ptr->md_stage_2_count[CAND_CLASS_0] = 1;
+    context_ptr->md_stage_2_count[CAND_CLASS_1] = 1;
+    context_ptr->md_stage_2_count[CAND_CLASS_2] = 1;
+    context_ptr->md_stage_2_count[CAND_CLASS_3] = 1;
+    context_ptr->md_stage_2_count[CAND_CLASS_4] = 1;
+    context_ptr->md_stage_2_count[CAND_CLASS_5] = 1;
+    context_ptr->md_stage_2_count[CAND_CLASS_6] = 1;
+    context_ptr->md_stage_2_count[CAND_CLASS_7] = 1;
+    context_ptr->md_stage_2_count[CAND_CLASS_8] = 1;
+
+    context_ptr->md_stage_3_count[CAND_CLASS_0] = 1;
+    context_ptr->md_stage_3_count[CAND_CLASS_1] = 1;
+    context_ptr->md_stage_3_count[CAND_CLASS_2] = 1;
+    context_ptr->md_stage_3_count[CAND_CLASS_3] = 1;
+    context_ptr->md_stage_3_count[CAND_CLASS_4] = 1;
+    context_ptr->md_stage_3_count[CAND_CLASS_5] = 1;
+    context_ptr->md_stage_3_count[CAND_CLASS_6] = 1;
+    context_ptr->md_stage_3_count[CAND_CLASS_7] = 1;
+    context_ptr->md_stage_3_count[CAND_CLASS_8] = 1;
+
+#endif
 }
 void sort_fast_cost_based_candidates(
     struct ModeDecisionContext *context_ptr, uint32_t input_buffer_start_idx,
