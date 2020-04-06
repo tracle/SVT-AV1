@@ -1200,6 +1200,7 @@ void cutree_mc_flow_dispenser(
                         uint32_t ref_frame_idx = 0;
                         while(ref_frame_idx < 60 && encode_context_ptr->poc_map_idx[ref_frame_idx] != (int32_t)ref_poc)
                             ref_frame_idx++;
+                        assert(ref_frame_idx != 60);
 
                         const int ref_basic_offset = input_picture_ptr->origin_y * input_picture_ptr->stride_y + input_picture_ptr->origin_x;
                         const int ref_mb_offset = mb_origin_y * input_picture_ptr->stride_y + mb_origin_x;
@@ -1529,7 +1530,7 @@ static void generate_r0beta(PictureParentControlSet *pcs_ptr)
       pcs_ptr->r0 = (double)intra_cost_base / mc_dep_cost_base;
     }
 
-    printf("genrate_r0rk ------> poc %ld\t%.0f\t%.0f \t%.3f base_rdmult=%d\n", pcs_ptr->picture_number, (double)intra_cost_base, (double)mc_dep_cost_base, pcs_ptr->r0, pcs_ptr->base_rdmult);
+    printf("genrate_r0beta ------> poc %ld\t%.0f\t%.0f \t%.5f base_rdmult=%d\n", pcs_ptr->picture_number, (double)intra_cost_base, (double)mc_dep_cost_base, pcs_ptr->r0, pcs_ptr->base_rdmult);
 
     const uint32_t sb_sz = scs_ptr->seq_header.sb_size == BLOCK_128X128 ? 128 : 64;
     const uint32_t picture_sb_width  = (uint32_t)((scs_ptr->seq_header.max_frame_width  + sb_sz - 1) / sb_sz);
@@ -1561,10 +1562,11 @@ static void generate_r0beta(PictureParentControlSet *pcs_ptr)
                 beta = (pcs_ptr->r0 / rk);
                 assert(beta > 0.0);
             }
+            //printf("generate_r0beta sbxy=%d %d, rk=%f beta=%f\n", sb_x, sb_y, rk, beta);
             pcs_ptr->cutree_beta[sb_y * picture_sb_width + sb_x] = beta;
         }
     }
-    //printf("generater0rk beta[0~4]=%f %f %f %f\n",pcs_ptr->cutree_beta[0], pcs_ptr->cutree_beta[1], pcs_ptr->cutree_beta[2], pcs_ptr->cutree_beta[3]);
+    //printf("generate_r0beta beta[0~4]=%f %f %f %f\n",pcs_ptr->cutree_beta[0], pcs_ptr->cutree_beta[1], pcs_ptr->cutree_beta[2], pcs_ptr->cutree_beta[3]);
     return;
 }
 
@@ -1615,19 +1617,19 @@ void update_mc_flow(
         inputQueueIndex = (inputQueueIndex == INITIAL_RATE_CONTROL_REORDER_QUEUE_MAX_DEPTH - 1) ? 0 : inputQueueIndex + 1;
     }
 
-    for(frame_idx = 0; frame_idx < pcs_ptr->frames_in_sw; frame_idx++) {
+    for(frame_idx = 0; frame_idx < 60; frame_idx++)
         encode_context_ptr->poc_map_idx[frame_idx] = -1;
+    for(frame_idx = 0; frame_idx < pcs_ptr->frames_in_sw; frame_idx++)
         EB_MALLOC_ARRAY(encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx], pcs_ptr->enhanced_picture_ptr->luma_size);
-    }
 
     for(frame_idx = 0; frame_idx < pcs_ptr->frames_in_sw; frame_idx++) {
-        //printf("cutree_mc_flow_dispenser frame_idx=%d, reordered poc=%d, decode_order=%d\n", frame_idx, pcs_array[frame_idx]->picture_number, pcs_array[frame_idx]->decode_order);
+        //printf("start dispenser frame_idx=%d, reordered poc=%d, decode_order=%d\n", frame_idx, pcs_array[frame_idx]->picture_number, pcs_array[frame_idx]->decode_order);
         encode_context_ptr->poc_map_idx[frame_idx] = pcs_array[frame_idx]->picture_number;
         {
             if(frame_idx == 1 && pcs_array[frame_idx]->picture_number >= 32) {
                 EbPictureBufferDesc *input_picture_ptr = pcs_array[0]->enhanced_picture_ptr;
                 uint8_t *dst_buffer = encode_context_ptr->mc_flow_rec_picture_buffer[0];
-                //printf("calling3+ copy P%d input to rec before run P%d\n", pcs_array[frame_idx]->picture_number-16, pcs_array[frame_idx]->picture_number);
+                //printf("calling3+ dispenser copy P%d input to rec before run P%d\n", pcs_array[frame_idx]->picture_number-16, pcs_array[frame_idx]->picture_number);
                 memcpy(dst_buffer, input_picture_ptr->buffer_y, input_picture_ptr->stride_y * (input_picture_ptr->origin_y * 2 + input_picture_ptr->height));
             }
             // memset all stats execpt for intra_cost and intra_mode
@@ -1646,9 +1648,11 @@ void update_mc_flow(
                     ois_mb_results_ptr->ref_frame_poc = 0;
                 }
             }
-            if(pcs_array[frame_idx]->temporal_layer_index == 0 && pcs_array[frame_idx]->picture_number>=32 &&
-              (frame_idx == 17 || frame_idx == 18 || frame_idx == 19))
+            if (pcs_array[frame_idx]->picture_number > 32 &&
+              (frame_idx == 17 || frame_idx == 18 || frame_idx == 19)) {
+                //printf("dispenser disable P%d as ref for frame_idx %d\n", pcs_array[frame_idx]->picture_number, frame_idx);
                 encode_context_ptr->poc_map_idx[frame_idx] = -1;
+            }
 
             cutree_mc_flow_dispenser(encode_context_ptr, scs_ptr, pcs_array[frame_idx], frame_idx);
 
@@ -1660,15 +1664,9 @@ void update_mc_flow(
     for(int32_t start_idx = 0; start_idx < (pcs_ptr->frames_in_sw - 1); start_idx++) {
         if (pcs_array[start_idx]->temporal_layer_index == 0 && pcs_array[start_idx]->picture_number == 0) {
             uint32_t sw_length = 17;
-            PictureParentControlSet *pcs_array_reorder[60] = {NULL, };
-            for (uint32_t index = 0; index < sw_length; index++) {
-                pcs_array_reorder[index] = pcs_array[start_idx + index];
-            }
-            //printf("calling1 start_idx=%d poc=%d decode_order=%d sw_length=%d\n", start_idx, pcs_array_reorder[0]->picture_number, pcs_array_reorder[0]->decode_order, sw_length);
-
             for(frame_idx = sw_length - 1; frame_idx >= 0; frame_idx--) {
-                //printf("calling1 before synthesizer frame_idx=%d reordered poc=%d decode_order=%d\n", frame_idx, pcs_array_reorder[frame_idx]->picture_number, pcs_array_reorder[frame_idx]->decode_order);
-                cutree_mc_flow_synthesizer(pcs_array_reorder, frame_idx, 16);
+                //printf("calling1 before synthesizer frame_idx=%d reordered poc=%d decode_order=%d\n", frame_idx, pcs_array[frame_idx]->picture_number, pcs_array[frame_idx]->decode_order);
+                cutree_mc_flow_synthesizer(pcs_array, frame_idx, 16);
             }
             generate_r0beta(pcs_array[start_idx]);
         }
@@ -1707,9 +1705,12 @@ void update_mc_flow(
                             ois_mb_results_ptr->ref_frame_poc = 0;
                         }
                     }
-                    if(frame_idx == 17 || frame_idx == 18 || frame_idx == 19)
+                    if (frame_idx == 17 || frame_idx == 18 || frame_idx == 19) {
+                        //printf("dispenser disable P%d as ref for frame_idx %d\n", pcs_array[frame_idx]->picture_number, frame_idx);
                         encode_context_ptr->poc_map_idx[frame_idx] = -1;
+                    }
 
+                    //printf("calling2 before dispenser frame_idx=%d poc=%d decode_order=%d\n", frame_idx, pcs_array[frame_idx]->picture_number, pcs_array[frame_idx]->decode_order);
                     cutree_mc_flow_dispenser(encode_context_ptr, scs_ptr, pcs_array[frame_idx], frame_idx);
 
                     if(frame_idx == 1)
