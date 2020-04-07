@@ -2652,25 +2652,25 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
     context_ptr->md_stage_1_count[CAND_CLASS_7] = 4;
     context_ptr->md_stage_1_count[CAND_CLASS_8] = 4;
 
-    context_ptr->md_stage_2_count[CAND_CLASS_0] = 2;
-    context_ptr->md_stage_2_count[CAND_CLASS_1] = 2;
-    context_ptr->md_stage_2_count[CAND_CLASS_2] = 2;
-    context_ptr->md_stage_2_count[CAND_CLASS_3] = 2;
-    context_ptr->md_stage_2_count[CAND_CLASS_4] = 2;
-    context_ptr->md_stage_2_count[CAND_CLASS_5] = 2;
-    context_ptr->md_stage_2_count[CAND_CLASS_6] = 2;
-    context_ptr->md_stage_2_count[CAND_CLASS_7] = 2;
-    context_ptr->md_stage_2_count[CAND_CLASS_8] = 2;
+    context_ptr->md_stage_2_count[CAND_CLASS_0] = 4;
+    context_ptr->md_stage_2_count[CAND_CLASS_1] = 4;
+    context_ptr->md_stage_2_count[CAND_CLASS_2] = 4;
+    context_ptr->md_stage_2_count[CAND_CLASS_3] = 4;
+    context_ptr->md_stage_2_count[CAND_CLASS_4] = 4;
+    context_ptr->md_stage_2_count[CAND_CLASS_5] = 4;
+    context_ptr->md_stage_2_count[CAND_CLASS_6] = 4;
+    context_ptr->md_stage_2_count[CAND_CLASS_7] = 4;
+    context_ptr->md_stage_2_count[CAND_CLASS_8] = 4;
 
-    context_ptr->md_stage_3_count[CAND_CLASS_0] = 1;
-    context_ptr->md_stage_3_count[CAND_CLASS_1] = 1;
-    context_ptr->md_stage_3_count[CAND_CLASS_2] = 1;
-    context_ptr->md_stage_3_count[CAND_CLASS_3] = 1;
-    context_ptr->md_stage_3_count[CAND_CLASS_4] = 1;
-    context_ptr->md_stage_3_count[CAND_CLASS_5] = 1;
-    context_ptr->md_stage_3_count[CAND_CLASS_6] = 1;
-    context_ptr->md_stage_3_count[CAND_CLASS_7] = 1;
-    context_ptr->md_stage_3_count[CAND_CLASS_8] = 1;
+    context_ptr->md_stage_3_count[CAND_CLASS_0] = 4;
+    context_ptr->md_stage_3_count[CAND_CLASS_1] = 4;
+    context_ptr->md_stage_3_count[CAND_CLASS_2] = 4;
+    context_ptr->md_stage_3_count[CAND_CLASS_3] = 4;
+    context_ptr->md_stage_3_count[CAND_CLASS_4] = 4;
+    context_ptr->md_stage_3_count[CAND_CLASS_5] = 4;
+    context_ptr->md_stage_3_count[CAND_CLASS_6] = 4;
+    context_ptr->md_stage_3_count[CAND_CLASS_7] = 4;
+    context_ptr->md_stage_3_count[CAND_CLASS_8] = 4;
 
 #endif
 }
