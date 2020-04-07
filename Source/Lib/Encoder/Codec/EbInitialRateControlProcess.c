@@ -1582,6 +1582,7 @@ void update_mc_flow(
     InitialRateControlReorderEntry   *temporaryQueueEntryPtr;
     PictureParentControlSet          *temp_pcs_ptr;
     PictureParentControlSet          *pcs_array[60] = {NULL, };
+    PictureParentControlSet          *pcs_array_org[60] = {NULL, };
 
     uint32_t                         inputQueueIndex;
     int32_t                          frame_idx, i;
@@ -1596,6 +1597,7 @@ void update_mc_flow(
         temporaryQueueEntryPtr = encode_context_ptr->initial_rate_control_reorder_queue[inputQueueIndex];
         temp_pcs_ptr = ((PictureParentControlSet*)(temporaryQueueEntryPtr->parent_pcs_wrapper_ptr)->object_ptr);
 
+        pcs_array_org[frame_idx] = temp_pcs_ptr;
         //printf("update_mc_flow curr poc=%d frame_idx=%d, inputQueueIndex=%d, temp poc=%d, decode_order=%d, frames_in_sw=%d\n", pcs_ptr->picture_number, frame_idx, inputQueueIndex, temp_pcs_ptr->picture_number, temp_pcs_ptr->decode_order, pcs_ptr->frames_in_sw);
         // sort to be decode order
         if(frame_idx == 0) {
@@ -1648,9 +1650,9 @@ void update_mc_flow(
                     ois_mb_results_ptr->ref_frame_poc = 0;
                 }
             }
-            if (pcs_array[frame_idx]->picture_number > 32 &&
-              (frame_idx == 17 || frame_idx == 18 || frame_idx == 19)) {
-                //printf("dispenser disable P%d as ref for frame_idx %d\n", pcs_array[frame_idx]->picture_number, frame_idx);
+            if(pcs_array[frame_idx]->picture_number > 32 &&
+              (frame_idx == 17 || frame_idx == 26 || frame_idx == 27)) {
+                //printf("calling3 dispenser disable P%d as ref for frame_idx %d\n", pcs_array[frame_idx]->picture_number, frame_idx);
                 encode_context_ptr->poc_map_idx[frame_idx] = -1;
             }
 
@@ -1672,14 +1674,13 @@ void update_mc_flow(
         }
 
         if (pcs_array[start_idx]->temporal_layer_index == 0 && start_idx == 1) {
-            uint32_t sw_length = (start_idx + 19) <= pcs_ptr->frames_in_sw ? 19 : (pcs_ptr->frames_in_sw - start_idx);
+            uint32_t sw_length = (start_idx + 25) <= pcs_ptr->frames_in_sw ? 25 : (pcs_ptr->frames_in_sw - start_idx);
             PictureParentControlSet *pcs_array_reorder[60] = {NULL, };
-            int32_t index_offset[3] = {4, 2, 3};
             for (uint32_t index = 0; index < sw_length; index++) {
                 if(index < 16)
                     pcs_array_reorder[index] = pcs_array[start_idx + index];
                 else
-                    pcs_array_reorder[index] = pcs_array[start_idx + index + index_offset[index-16]];
+                    pcs_array_reorder[index] = pcs_array_org[index + start_idx];
             }
             if(pcs_array_reorder[0]->picture_number == 16) {
                 // re-run P16 with input I0 as ref
@@ -1688,7 +1689,7 @@ void update_mc_flow(
                 //printf("calling2 copy I0 input to I0 rec and rerun P16 dispenser\n");
                 memcpy(dst_buffer, input_picture_ptr->buffer_y, input_picture_ptr->stride_y * (input_picture_ptr->origin_y * 2 + input_picture_ptr->height));
 
-                for(frame_idx = 1; frame_idx < 23; frame_idx++) {
+                for(frame_idx = 1; frame_idx < 29; frame_idx++) {
                     // memset all stats execpt for intra_cost and intra_mode
                     for (uint32_t mb_y = 0; mb_y < picture_height_in_mb; mb_y++) {
                         for (uint32_t mb_x = 0; mb_x < picture_width_in_mb; mb_x++) {
@@ -1705,8 +1706,8 @@ void update_mc_flow(
                             ois_mb_results_ptr->ref_frame_poc = 0;
                         }
                     }
-                    if (frame_idx == 17 || frame_idx == 18 || frame_idx == 19) {
-                        //printf("dispenser disable P%d as ref for frame_idx %d\n", pcs_array[frame_idx]->picture_number, frame_idx);
+                    if (frame_idx == 17 || frame_idx == 26 || frame_idx == 27) {
+                        //printf("calling2 dispenser disable P%d as ref for frame_idx %d\n", pcs_array[frame_idx]->picture_number, frame_idx);
                         encode_context_ptr->poc_map_idx[frame_idx] = -1;
                     }
 
