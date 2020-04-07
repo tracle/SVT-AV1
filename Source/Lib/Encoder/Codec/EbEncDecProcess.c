@@ -1592,6 +1592,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
             context_ptr->tx_weight = FC_SKIP_TX_SR_TH010;
 #endif
+#if TX_WEGHT
+        context_ptr->tx_weight = TX_WEGHT;
+#endif
     }
 
     // Set tx search reduced set falg (0: full tx set; 1: reduced tx set; 1: two

@@ -180,8 +180,17 @@ extern "C" {
 
 #define APR02_ADOPTIONS 1 // adoptions in all modes
 
-#define MULTI_PASS_PD_FOR_INCOMPLETE 1
+#define MULTI_PASS_PD_FOR_INCOMPLETE 0
 
+
+#define FIX_SKIP_DEPTH               0
+#define TXT_LEVELS                   0
+#if TXT_LEVELS
+#define TX_WEGHT                     110 // 102 // 110 // 125
+#define TXT_DISABLE_RDOQ             0
+#define TXT_DISABLE_SSSE             0
+#endif
+#define SKIP_TXT_IF_ONLY_DCT         0
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

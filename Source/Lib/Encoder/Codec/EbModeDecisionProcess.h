@@ -448,6 +448,12 @@ typedef struct ModeDecisionContext {
     EbBool md_staging_skip_full_chroma;
     EbBool md_staging_skip_rdoq;
     EbBool md_staging_spatial_sse_full_loop;
+#if TXT_DISABLE_RDOQ
+    EbBool txt_rdoq;
+#endif
+#if TXT_DISABLE_SSSE
+    EbBool txt_ssse;
+#endif
     DECLARE_ALIGNED(
         16, uint8_t,
         intrapred_buf[INTERINTRA_MODES][2 * 32 * 32]); //MAX block size for inter intra is 32x32
