@@ -186,9 +186,10 @@ extern "C" {
 #define FIX_SKIP_DEPTH               0
 #define TXT_LEVELS                   0
 #if TXT_LEVELS
-#define TX_WEGHT                     110 // 102 // 110 // 125
+#define TX_WEGHT                     0 // 102 // 110 // 125
 #define TXT_DISABLE_RDOQ             0
 #define TXT_DISABLE_SSSE             0
+#define TXT_SIZE_TH                  4
 #endif
 #define SKIP_TXT_IF_ONLY_DCT         0
 #endif

@@ -6221,12 +6221,22 @@ void tx_type_search(PictureControlSet *pcs_ptr,
     TxType best_tx_type = DCT_DCT;
 #if TXT_DISABLE_RDOQ
         uint8_t default_md_staging_skip_rdoq = context_ptr->md_staging_skip_rdoq;
+#if TXT_SIZE_TH
+        if (context_ptr->blk_geom->tx_height[context_ptr->tx_depth][context_ptr->txb_itr] <= TXT_SIZE_TH ||
+            context_ptr->blk_geom->tx_width[context_ptr->tx_depth][context_ptr->txb_itr] <= TXT_SIZE_TH)
+#else
         if (context_ptr->txt_rdoq)
+#endif
             context_ptr->md_staging_skip_rdoq = EB_TRUE;
 #endif
 #if TXT_DISABLE_SSSE
         uint8_t default_md_staging_spatial_sse_full_loop = context_ptr->md_staging_spatial_sse_full_loop;
+#if TXT_SIZE_TH
+        if (context_ptr->blk_geom->tx_height[context_ptr->tx_depth][context_ptr->txb_itr] <= TXT_SIZE_TH ||
+            context_ptr->blk_geom->tx_width[context_ptr->tx_depth][context_ptr->txb_itr] <= TXT_SIZE_TH)
+#else
         if (context_ptr->txt_ssse)
+#endif
             context_ptr->md_staging_spatial_sse_full_loop = 0;
 #endif
 #if SKIP_TXT_IF_ONLY_DCT
