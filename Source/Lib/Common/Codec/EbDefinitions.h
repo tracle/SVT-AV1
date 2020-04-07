@@ -189,9 +189,11 @@ extern "C" {
 #define TX_WEGHT                     0 // 102 // 110 // 125
 #define TXT_DISABLE_RDOQ             0
 #define TXT_DISABLE_SSSE             0
-#define TXT_SIZE_TH                  4
+#define TXT_SIZE_TH                  0
+#define TXT_NEW_REDUCED_SET          0
 #endif
 #define SKIP_TXT_IF_ONLY_DCT         0
+#define DISABLE_TXT_WEIGHT           0
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

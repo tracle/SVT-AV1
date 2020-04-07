@@ -1595,6 +1595,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if TX_WEGHT
         context_ptr->tx_weight = TX_WEGHT;
 #endif
+#if DISABLE_TXT_WEIGHT
+        context_ptr->tx_weight = MAX_MODE_COST;
+#endif
     }
 
     // Set tx search reduced set falg (0: full tx set; 1: reduced tx set; 1: two
