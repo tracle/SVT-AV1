@@ -2148,14 +2148,19 @@ void encode_pass_tx_search(PictureControlSet *pcs_ptr, EncDecContext *context_pt
         get_ext_tx_set_type(tx_size, is_inter, pcs_ptr->parent_pcs_ptr->frm_hdr.reduced_tx_set);
 
     TxType best_tx_type = DCT_DCT;
+#if !TXT_CONTROL
     if (context_ptr->md_context->tx_search_reduced_set == 2) txk_end = 2;
+#endif
     for (int32_t tx_type_index = txk_start; tx_type_index < txk_end; ++tx_type_index) {
+#if !TXT_CONTROL
         if (context_ptr->md_context->tx_search_reduced_set == 2)
             tx_type_index = (tx_type_index == 1) ? IDTX : tx_type_index;
         tx_type = (TxType)tx_type_index;
-
         if (context_ptr->md_context->tx_search_reduced_set)
             if (!allowed_tx_set_a[tx_size][tx_type]) continue;
+#else
+        tx_type = (TxType)tx_type_index;
+#endif
         const int32_t eset =
             get_ext_tx_set(tx_size, is_inter, pcs_ptr->parent_pcs_ptr->frm_hdr.reduced_tx_set);
         // eset == 0 should correspond to a set with only DCT_DCT and there
@@ -2337,8 +2342,10 @@ void encode_pass_tx_search_hbd(
 
     for (int32_t tx_type_index = txk_start; tx_type_index < txk_end; ++tx_type_index) {
         tx_type = (TxType)tx_type_index;
+#if !TXT_CONTROL
         if (context_ptr->md_context->tx_search_reduced_set)
             if (!allowed_tx_set_a[tx_size][tx_type]) continue;
+#endif
 
         const int32_t eset =
             get_ext_tx_set(tx_size, is_inter, pcs_ptr->parent_pcs_ptr->frm_hdr.reduced_tx_set);

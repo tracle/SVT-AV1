@@ -1533,7 +1533,20 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         context_ptr->tx_search_level = TX_SEARCH_ENC_DEC;
 #endif
-
+#if TXT_CONTROL
+    if (pd_pass == PD_PASS_0)
+        context_ptr->md_txt_search_level = 1;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->md_txt_search_level = 1;
+    else if (MR_MODE)
+        context_ptr->md_txt_search_level = 0;
+    else {
+        if (enc_mode <= ENC_M4)
+            context_ptr->md_txt_search_level = 1;
+        else
+            context_ptr->md_txt_search_level = 3;
+    }
+#else
     // Set tx search skip weights (MAX_MODE_COST: no skipping; 0: always skipping)
     if (pd_pass == PD_PASS_0)
         context_ptr->tx_weight = MAX_MODE_COST;
@@ -1642,7 +1655,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->tx_search_reduced_set = 0;
     else
         context_ptr->tx_search_reduced_set = 1;
-
+#endif
     // Interpolation search Level                     Settings
     // 0                                              OFF
     // 1                                              Interpolation search at
@@ -5566,7 +5579,7 @@ void *enc_dec_kernel(void *input_ptr) {
                          pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_1 ||
                          pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_2 ||
                          pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_3 ||
-                         pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_4) 
+                         pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_4)
 #if MULTI_PASS_PD_FOR_INCOMPLETE
                         ) {
 #else

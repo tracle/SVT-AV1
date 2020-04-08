@@ -194,8 +194,8 @@ extern "C" {
 #endif
 #define SKIP_TXT_IF_ONLY_DCT         0
 #define DISABLE_TXT_WEIGHT           0
-#define THREE_CLASS_TX_WEIGHT        0
-#define THREE_CLASS_TX_RDOQ          0
+#define THREE_CLASS_TX_WEIGHT        1
+#define TXT_CONTROL                  1
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

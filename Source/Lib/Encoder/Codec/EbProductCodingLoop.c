@@ -5521,7 +5521,7 @@ static void cfl_prediction(PictureControlSet *          pcs_ptr,
 uint8_t md_get_skip_tx_search_flag(ModeDecisionContext *context_ptr,
     int32_t sq_size, uint64_t ref_fast_cost, uint64_t cu_cost,
                                 uint64_t weight) {
-#if THREE_CLASS_TX_WEIGHT || THREE_CLASS_TX_RDOQ
+#if THREE_CLASS_TX_WEIGHT
     uint8_t bwidth = context_ptr->blk_geom->bwidth;
     uint8_t bheight = context_ptr->blk_geom->bwidth;
     uint64_t w = weight;
@@ -5538,15 +5538,130 @@ uint8_t md_get_skip_tx_search_flag(ModeDecisionContext *context_ptr,
     uint8_t level = cu_cost >= ((ref_fast_cost * weight) / 100) ? 1 : 0;
 #endif
     if (level) {
-#if THREE_CLASS_TX_RDOQ
-        context_ptr->txt_rdoq = c < 2 ? 0 : 1;
-        context_ptr->txt_ssse = c < 2 ? 0 : 1;
-#else
         context_ptr->txt_rdoq = 1;
         context_ptr->txt_ssse = 1;
-#endif
     }
     uint8_t tx_search_skip_flag = sq_size >= 128 ? 1 : 0;
+    return tx_search_skip_flag;
+}
+#endif
+#if TXT_CONTROL
+void init_txt_search_ctrls(ModeDecisionContext *context_ptr) {
+    TxTSearchCtrls* txt_search_ctrls = &context_ptr->txt_search_ctrls;
+    txt_search_ctrls->txt_allow_rdoq = 1;
+    txt_search_ctrls->txt_allow_ssse = 1;
+#if THREE_CLASS_TX_WEIGHT
+    txt_search_ctrls->txt_weight[0] = MAX_MODE_COST;
+    txt_search_ctrls->txt_weight[1] = MAX_MODE_COST;
+    txt_search_ctrls->txt_weight[2] = MAX_MODE_COST;
+#else
+    txt_search_ctrls->txt_weight = MAX_MODE_COST;
+#endif
+    txt_search_ctrls->txt_table_idx = 0;
+    txt_search_ctrls->txt_allow_skip = 0;
+    context_ptr->txt_rdoq = 0;
+    context_ptr->txt_ssse = 0;
+}
+void set_txt_search_ctrls(ModeDecisionContext *context_ptr) {
+    TxTSearchCtrls* txt_search_ctrls = &context_ptr->txt_search_ctrls;
+    switch (context_ptr->md_txt_search_level) {
+    case 0:
+        txt_search_ctrls->txt_allow_rdoq = 1;
+        txt_search_ctrls->txt_allow_ssse = 1;
+#if THREE_CLASS_TX_WEIGHT
+        txt_search_ctrls->txt_weight[0] = MAX_MODE_COST;
+        txt_search_ctrls->txt_weight[1] = MAX_MODE_COST;
+        txt_search_ctrls->txt_weight[2] = MAX_MODE_COST;
+#else
+        txt_search_ctrls->txt_weight = MAX_MODE_COST;
+#endif
+        txt_search_ctrls->txt_table_idx = 0;
+        txt_search_ctrls->txt_allow_skip = 0;
+        break;
+    case 1:
+        txt_search_ctrls->txt_allow_rdoq = 0;
+        txt_search_ctrls->txt_allow_ssse = 0;
+#if THREE_CLASS_TX_WEIGHT
+        txt_search_ctrls->txt_weight[0] = 125;
+        txt_search_ctrls->txt_weight[1] = 125;
+        txt_search_ctrls->txt_weight[2] = 125;
+#else
+        txt_search_ctrls->txt_weight = 125;
+#endif
+        txt_search_ctrls->txt_table_idx = 0;
+        txt_search_ctrls->txt_allow_skip = 0;
+        break;
+    case 2:
+        txt_search_ctrls->txt_allow_rdoq = 0;
+        txt_search_ctrls->txt_allow_ssse = 0;
+#if THREE_CLASS_TX_WEIGHT
+        txt_search_ctrls->txt_weight[0] = 102;
+        txt_search_ctrls->txt_weight[1] = 102;
+        txt_search_ctrls->txt_weight[2] = 102;
+#else
+        txt_search_ctrls->txt_weight = 102;
+#endif
+        txt_search_ctrls->txt_table_idx = 0;
+        txt_search_ctrls->txt_allow_skip = 0;
+        break;
+    case 3:
+        txt_search_ctrls->txt_allow_rdoq = 0;
+        txt_search_ctrls->txt_allow_ssse = 0;
+#if THREE_CLASS_TX_WEIGHT
+        txt_search_ctrls->txt_weight[0] = 0;
+        txt_search_ctrls->txt_weight[1] = 0;
+        txt_search_ctrls->txt_weight[2] = 0;
+#else
+        txt_search_ctrls->txt_weight = 0;
+#endif
+        txt_search_ctrls->txt_table_idx = 0;
+        txt_search_ctrls->txt_allow_skip = 0;
+        break;
+    case 4:
+        txt_search_ctrls->txt_allow_rdoq = 0;
+        txt_search_ctrls->txt_allow_ssse = 0;
+#if THREE_CLASS_TX_WEIGHT
+        txt_search_ctrls->txt_weight[0] = 0;
+        txt_search_ctrls->txt_weight[1] = 0;
+        txt_search_ctrls->txt_weight[2] = 0;
+#else
+        txt_search_ctrls->txt_weight = 0;
+#endif
+        txt_search_ctrls->txt_table_idx = 4;
+        txt_search_ctrls->txt_allow_skip = 0;
+        break;
+    default:
+        printf("Error: unvalid md_txt_search_level\n");
+        break;
+    };
+}
+uint8_t get_tx_search_config(ModeDecisionContext *context_ptr,
+    int32_t sq_size, uint64_t ref_fast_cost, uint64_t cu_cost) {
+    uint8_t tx_search_skip_flag = 0;
+    TxTSearchCtrls* txt_search_ctrls = &context_ptr->txt_search_ctrls;
+#if THREE_CLASS_TX_WEIGHT
+    uint8_t bwidth = context_ptr->blk_geom->bwidth;
+    uint8_t bheight = context_ptr->blk_geom->bwidth;
+    uint8_t bclass = 0;
+    if (bwidth <= 8 && bheight <= 8)
+        bclass = 0;
+    else if (bwidth <= 16 && bheight <= 16)
+        bclass = 1;
+    else
+        bclass = 2;
+    set_txt_search_ctrls(context_ptr);
+    uint8_t level = cu_cost >= ((ref_fast_cost * txt_search_ctrls->txt_weight[bclass]) / 100) ? 1 : 0;
+#else
+    set_txt_search_ctrls(context_ptr);
+    uint8_t level = cu_cost > ((ref_fast_cost * txt_search_ctrls->txt_weight) / 100) ? 1 : 0;
+#endif
+    if (level && !txt_search_ctrls->txt_allow_rdoq)
+        context_ptr->txt_rdoq = 1;
+    if (level && !txt_search_ctrls->txt_allow_ssse)
+        context_ptr->txt_ssse = 1;
+    if (level && txt_search_ctrls->txt_allow_skip)
+        tx_search_skip_flag = 1;
+    tx_search_skip_flag = sq_size >= 128 ? 1 : tx_search_skip_flag;
     return tx_search_skip_flag;
 }
 #endif
@@ -6187,6 +6302,119 @@ void tx_reset_neighbor_arrays(PictureControlSet *pcs_ptr, ModeDecisionContext *c
             NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
     }
 }
+#if TXT_CONTROL
+uint8_t allowed_txt[5][TX_SIZES_ALL][TX_TYPES] = {
+{
+{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
+},
+//txt_th2
+{
+{1,1,1,1,0,0,0,0,0,0,1,1,0,0,0,0},
+{1,1,1,1,1,1,0,0,1,1,1,1,1,1,0,1},
+{1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+{1,1,1,1,0,1,0,1,1,1,1,1,1,1,1,1},
+{1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1},
+{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+{1,1,1,1,1,1,1,1,1,1,0,1,0,1,0,1},
+{1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+{1,1,1,1,0,1,0,1,1,1,1,1,1,1,1,1},
+{1,1,1,1,0,0,0,0,0,0,0,1,0,1,0,1},
+{1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+},
+// th4
+{
+{1,1,1,1,0,0,0,0,0,0,1,1,0,0,0,0},
+{1,1,1,1,0,0,0,0,0,0,1,1,0,0,0,0},
+{1,1,1,1,0,0,0,0,0,0,1,1,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+{1,1,1,1,0,0,0,0,0,0,1,1,1,1,0,0},
+{1,1,1,1,0,0,0,0,0,0,1,1,0,1,0,0},
+{1,1,1,1,0,1,0,0,0,1,1,1,0,1,0,1},
+{1,1,1,1,0,0,0,0,0,0,0,1,0,1,0,1},
+{1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+{1,1,1,1,0,1,0,0,0,0,1,1,0,0,0,0},
+{1,1,1,1,0,0,0,0,0,0,0,1,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+},
+//th_35d
+{
+{1,1,1,1,0,0,0,0,0,0,1,1,0,0,0,0},
+{1,1,1,1,0,0,0,0,0,0,1,1,0,0,0,0},
+{1,1,1,1,0,1,0,0,0,1,1,1,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+{1,1,1,1,0,0,0,0,0,1,1,1,1,1,0,1},
+{1,1,1,1,0,0,0,0,0,0,1,1,0,1,0,0},
+{1,1,1,1,1,1,0,1,1,1,1,1,0,1,0,1},
+{1,1,1,1,1,0,0,0,0,1,0,1,0,1,0,1},
+{1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+{1,1,1,1,0,1,0,0,1,0,1,1,1,1,0,0},
+{1,1,1,1,0,0,0,0,0,0,0,1,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+},
+// th5d
+{
+{1,1,1,1,0,0,0,0,0,0,1,1,0,0,0,0},
+{1,1,1,1,0,0,0,0,0,0,0,1,0,0,0,0},
+{1,1,1,1,0,0,0,0,0,0,0,1,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+{1,1,1,1,0,0,0,0,0,0,1,1,0,1,0,0},
+{1,1,1,1,0,0,0,0,0,0,1,1,0,0,0,0},
+{1,1,1,1,0,1,0,0,0,0,1,1,0,1,0,0},
+{1,1,1,1,0,0,0,0,0,0,0,1,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+{1,1,1,1,0,0,0,0,0,0,1,1,0,0,0,0},
+{1,1,1,1,0,0,0,0,0,0,0,1,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+}
+};
+#endif
 #if TXT_NEW_REDUCED_SET // REDUCE T5d
 uint8_t txt_th2[TX_SIZES_ALL][TX_TYPES] = {
 {1,1,1,1,0,0,0,0,0,0,1,1,0,0,0,0},
@@ -6297,6 +6525,9 @@ void tx_type_search(PictureControlSet *pcs_ptr,
                         candidate_buffer->candidate_ptr->use_intrabc)
                            ? EB_TRUE
                            : EB_FALSE;
+#if TXT_CONTROL
+    TxTSearchCtrls * txt_search_ctrls = &context_ptr->txt_search_ctrls;
+#endif
     const TxSetType tx_set_type =
         get_ext_tx_set_type(tx_size, is_inter, pcs_ptr->parent_pcs_ptr->frm_hdr.reduced_tx_set);
     uint8_t txb_origin_x =
@@ -6323,9 +6554,11 @@ void tx_type_search(PictureControlSet *pcs_ptr,
                 context_ptr->blk_geom->txsize[context_ptr->tx_depth][context_ptr->txb_itr],
                 &context_ptr->luma_txb_skip_context,
                 &context_ptr->luma_dc_sign_context);
+#if !TXT_CONTROL
     if (context_ptr->tx_search_reduced_set == 2) txk_end = 2;
+#endif
     TxType best_tx_type = DCT_DCT;
-#if TXT_DISABLE_RDOQ
+#if TXT_DISABLE_RDOQ || TXT_CONTROL
         uint8_t default_md_staging_skip_rdoq = context_ptr->md_staging_skip_rdoq;
 #if TXT_SIZE_TH
         if (context_ptr->blk_geom->tx_height[context_ptr->tx_depth][context_ptr->txb_itr] <= TXT_SIZE_TH ||
@@ -6335,7 +6568,7 @@ void tx_type_search(PictureControlSet *pcs_ptr,
 #endif
             context_ptr->md_staging_skip_rdoq = EB_TRUE;
 #endif
-#if TXT_DISABLE_SSSE
+#if TXT_DISABLE_SSSE || TXT_CONTROL
         uint8_t default_md_staging_spatial_sse_full_loop = context_ptr->md_staging_spatial_sse_full_loop;
 #if TXT_SIZE_TH
         if (context_ptr->blk_geom->tx_height[context_ptr->tx_depth][context_ptr->txb_itr] <= TXT_SIZE_TH ||
@@ -6352,8 +6585,9 @@ void tx_type_search(PictureControlSet *pcs_ptr,
                 uint64_t txb_full_distortion[3][DIST_CALC_TOTAL];
                 uint64_t y_txb_coeff_bits = 0;
                 uint32_t y_count_non_zero_coeffs;
-
+#if !TXT_CONTROL
                 if (context_ptr->tx_search_reduced_set == 2) tx_type = (tx_type == 1) ? IDTX : tx_type;
+#endif
 
                 context_ptr->three_quad_energy = 0;
                 if (tx_type != DCT_DCT) {
@@ -6378,7 +6612,11 @@ void tx_type_search(PictureControlSet *pcs_ptr,
                     int32_t eset = get_ext_tx_set(
                         context_ptr->blk_geom->txsize[context_ptr->tx_depth][context_ptr->txb_itr],
                         is_inter,
+#if TXT_CONTROL
+                        pcs_ptr->parent_pcs_ptr->frm_hdr.reduced_tx_set);
+#else
                         context_ptr->tx_search_reduced_set);
+#endif
                     // eset == 0 should correspond to a set with only DCT_DCT and there
                     // is no need to send the tx_type
                     if (eset <= 0)
@@ -6391,10 +6629,16 @@ void tx_type_search(PictureControlSet *pcs_ptr,
                         32)
                         continue;
                 }
+#if TXT_CONTROL
+                if (!allowed_txt[txt_search_ctrls->txt_table_idx][context_ptr->blk_geom->txsize[context_ptr->tx_depth]
+                        [context_ptr->txb_itr]][tx_type])
+                        continue;
+#else
                 if (context_ptr->tx_search_reduced_set)
                     if (!allowed_tx_set_a[context_ptr->blk_geom->txsize[context_ptr->tx_depth]
                         [context_ptr->txb_itr]][tx_type])
                         continue;
+#endif
 #if TXT_NEW_REDUCED_SET
                 if (context_ptr->txt_rdoq || context_ptr->txt_ssse)
                     if (!txt_th5D[context_ptr->blk_geom->txsize[context_ptr->tx_depth]
@@ -6589,10 +6833,10 @@ void tx_type_search(PictureControlSet *pcs_ptr,
 #if SKIP_TXT_IF_ONLY_DCT
         }
 #endif
-#if TXT_DISABLE_RDOQ
+#if TXT_DISABLE_RDOQ || TXT_CONTROL
         context_ptr->md_staging_skip_rdoq = default_md_staging_skip_rdoq;
 #endif
-#if TXT_DISABLE_SSSE
+#if TXT_DISABLE_SSSE || TXT_CONTROL
         context_ptr->md_staging_spatial_sse_full_loop = default_md_staging_spatial_sse_full_loop;
 #endif
     //  Best Tx Type Pass
@@ -7118,6 +7362,7 @@ void update_tx_candidate_buffer(ModeDecisionCandidateBuffer *candidate_buffer,
                (context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight << 2));
     }
 }
+
 void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
                              ModeDecisionContext *context_ptr, PictureControlSet *pcs_ptr,
                              uint64_t ref_fast_cost, uint8_t start_tx_depth, uint8_t end_tx_depth,
@@ -7147,6 +7392,9 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
     context_ptr->txt_rdoq = 0;
     context_ptr->txt_ssse = 0;
 #endif
+#if TXT_CONTROL
+    init_txt_search_ctrls(context_ptr);
+#endif
     if (context_ptr->md_staging_tx_search == 0)
         tx_search_skip_flag = EB_TRUE;
     else if (context_ptr->md_staging_tx_search == 1) {
@@ -7155,6 +7403,13 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
                 context_ptr->tx_search_level == TX_SEARCH_FULL_LOOP ? EB_FALSE : EB_TRUE;
         else
             tx_search_skip_flag = context_ptr->tx_search_level == TX_SEARCH_FULL_LOOP
+#if TXT_CONTROL
+            ? get_tx_search_config(context_ptr,
+                context_ptr->blk_geom->sq_size,
+                ref_fast_cost,
+                *candidate_buffer->fast_cost_ptr)
+#else
+
 #if TXT_DISABLE_RDOQ || TXT_DISABLE_SSSE
             ? md_get_skip_tx_search_flag(context_ptr,
                 context_ptr->blk_geom->sq_size,
@@ -7164,6 +7419,7 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
                 ref_fast_cost,
                 *candidate_buffer->fast_cost_ptr,
                 context_ptr->tx_weight)
+#endif
             : EB_TRUE;
     }
     else
