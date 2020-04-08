@@ -4806,6 +4806,10 @@ static int rtc_minq_12[QINDEX_RANGE] = {
 
 static int gf_high = 2000;
 static int gf_low  = 400;
+#if CUTREE_LA && CUTREE_LA_QPS
+static int gf_high_tpl_la = 2400;
+static int gf_low_tpl_la  = 300;
+#endif
 static int kf_high = 5000;
 static int kf_low  = 400;
 
@@ -4849,6 +4853,16 @@ static int get_gf_active_quality(const RATE_CONTROL *const rc, int q, AomBitDept
     return get_active_quality(
         q, rc->gfu_boost, gf_low, gf_high, arfgf_low_motion_minq, arfgf_high_motion_minq);
 }
+#if CUTREE_LA && CUTREE_LA_QPS
+static int get_gf_active_quality_tpl_la(const RATE_CONTROL *const rc, int q, AomBitDepth bit_depth) {
+    int *arfgf_low_motion_minq;
+    int *arfgf_high_motion_minq;
+    ASSIGN_MINQ_TABLE(bit_depth, arfgf_low_motion_minq);
+    ASSIGN_MINQ_TABLE(bit_depth, arfgf_high_motion_minq);
+    return get_active_quality(
+        q, rc->gfu_boost, gf_low_tpl_la, gf_high_tpl_la, arfgf_low_motion_minq, arfgf_high_motion_minq);
+}
+#endif
 
 static int get_gf_high_motion_quality(int q, AomBitDepth bit_depth) {
     int *arfgf_high_motion_minq;
@@ -5023,7 +5037,7 @@ static int adaptive_qindex_calc_tpl_la(PictureControlSet *pcs_ptr, RATE_CONTROL 
         else {
             // base layer
             if (update_type == ARF_UPDATE) {
-                active_best_quality = get_gf_active_quality(rc, q, bit_depth);
+                active_best_quality = get_gf_active_quality_tpl_la(rc, q, bit_depth);
                 rc->arf_q           = active_best_quality;
                 const int min_boost = get_gf_high_motion_quality(q, bit_depth);
                 const int boost     = min_boost - active_best_quality;
