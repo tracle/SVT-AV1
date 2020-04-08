@@ -5521,10 +5521,30 @@ static void cfl_prediction(PictureControlSet *          pcs_ptr,
 uint8_t md_get_skip_tx_search_flag(ModeDecisionContext *context_ptr,
     int32_t sq_size, uint64_t ref_fast_cost, uint64_t cu_cost,
                                 uint64_t weight) {
+#if THREE_CLASS_TX_WEIGHT || THREE_CLASS_TX_RDOQ
+    uint8_t bwidth = context_ptr->blk_geom->bwidth;
+    uint8_t bheight = context_ptr->blk_geom->bwidth;
+    uint64_t w = weight;
+    uint8_t c = 0;
+    if (bwidth <= 8 && bheight <= 8)
+        c = 0;
+    else if (bwidth <= 16 && bheight <= 16)
+        c = 1;
+    else
+        c = 2;
+    w = c == 0 ? weight : c == 1 ? weight - 15 : weight - 22;
+    uint8_t level = cu_cost >= ((ref_fast_cost * w) / 100) ? 1 : 0;
+#else
     uint8_t level = cu_cost >= ((ref_fast_cost * weight) / 100) ? 1 : 0;
+#endif
     if (level) {
+#if THREE_CLASS_TX_RDOQ
+        context_ptr->txt_rdoq = c < 2 ? 0 : 1;
+        context_ptr->txt_ssse = c < 2 ? 0 : 1;
+#else
         context_ptr->txt_rdoq = 1;
         context_ptr->txt_ssse = 1;
+#endif
     }
     uint8_t tx_search_skip_flag = sq_size >= 128 ? 1 : 0;
     return tx_search_skip_flag;
