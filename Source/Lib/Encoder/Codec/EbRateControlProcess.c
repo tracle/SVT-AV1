@@ -5500,6 +5500,7 @@ static void sb_qp_derivation_tpl_la(
         pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? INTNL_ARF_UPDATE : LF_UPDATE;
 
     pcs_ptr->parent_pcs_ptr->average_qp = 0;
+    //if(pcs_ptr->slice_type == 2)
     if (pcs_ptr->temporal_layer_index <= 0)
         pcs_ptr->parent_pcs_ptr->frm_hdr.delta_q_params.delta_q_present = 1;
     else
@@ -5566,34 +5567,63 @@ static void sb_qp_derivation_tpl_la(
             offset = AOMMIN(offset,  pcs_ptr->parent_pcs_ptr->frm_hdr.delta_q_params.delta_q_res * 9*2 - 1);
             offset = AOMMAX(offset, -pcs_ptr->parent_pcs_ptr->frm_hdr.delta_q_params.delta_q_res * 9*2 + 1);
 
+#if 0//QP2QINDEX
+            delta_qp = offset;
+            uint16_t sb_qindex = 0;
+            if (pcs_ptr->slice_type == 2)
+                sb_qindex = CLIP3(
+                    MIN(ppcs_ptr->frm_hdr.quantization_params.base_q_idx, kf_low_motion_minq[active_worst_quality]),
+                    MAX(ppcs_ptr->frm_hdr.quantization_params.base_q_idx, kf_high_motion_minq[active_worst_quality]) + 12,
+                    ((int16_t)ppcs_ptr->frm_hdr.quantization_params.base_q_idx + (int16_t)delta_qp));
+            else
+                sb_qindex = CLIP3(
+                MIN(ppcs_ptr->frm_hdr.quantization_params.base_q_idx, arfgf_low_motion_minq[active_worst_quality]) - 4,
+                MAX(ppcs_ptr->frm_hdr.quantization_params.base_q_idx, arfgf_high_motion_minq[active_worst_quality]) + 12,
+                ((int16_t)ppcs_ptr->frm_hdr.quantization_params.base_q_idx + (int16_t)delta_qp));
+
+
+            sb_qindex = CLIP3(
+                0,
+                255,
+                sb_qindex);
+            sb_ptr->qindex = sb_qindex;
+
+#else
             delta_qp = offset>>2;
             //if(pcs_ptr->parent_pcs_ptr->picture_number == 0)
             //printf("rc qpm: poc%ld sb_addr=%d r0=%f delta_qp=%d offset=%d, beta=%f, base_rdmult=%d, base_q_idx=%d\n", pcs_ptr->parent_pcs_ptr->picture_number, sb_addr, ppcs_ptr->r0, delta_qp, offset, beta, ppcs_ptr->base_rdmult, ppcs_ptr->frm_hdr.quantization_params.base_q_idx);
-
 #if 0
             if (pcs_ptr->slice_type == 2) {
                 if (delta_qp < 0 && variance_sb < IS_COMPLEX_SB_FLAT_VARIANCE_TH)
                     delta_qp = 0;
             }
 #endif
+
             if (pcs_ptr->slice_type == 2)
 #if QP2QINDEX
                 sb_qp = CLIP3(
-#else
-                sb_ptr->qp = CLIP3(
-#endif
                     MIN(pcs_ptr->parent_pcs_ptr->picture_qp, ((kf_low_motion_minq[active_worst_quality] + 2) >> 2)),
                     MAX(pcs_ptr->parent_pcs_ptr->picture_qp, ((kf_high_motion_minq[active_worst_quality] + 2) >> 2)) + 3,
                     ((int16_t)pcs_ptr->parent_pcs_ptr->picture_qp + (int16_t)delta_qp));
+#else
+                sb_ptr->qp = CLIP3(
+                    MIN(pcs_ptr->parent_pcs_ptr->picture_qp, ((kf_low_motion_minq[active_worst_quality] + 2) >> 2)),
+                    MAX(pcs_ptr->parent_pcs_ptr->picture_qp, ((kf_high_motion_minq[active_worst_quality] + 2) >> 2)) + 3,
+                    ((int16_t)pcs_ptr->parent_pcs_ptr->picture_qp + (int16_t)delta_qp));
+#endif
             else
 #if QP2QINDEX
                 sb_qp = CLIP3(
-#else
-                sb_ptr->qp = CLIP3(
-#endif
                     MIN(pcs_ptr->parent_pcs_ptr->picture_qp, ((arfgf_low_motion_minq[active_worst_quality] + 2) >> 2)) - 1,
                     MAX(pcs_ptr->parent_pcs_ptr->picture_qp, ((arfgf_high_motion_minq[active_worst_quality] + 2) >> 2)) + 3,
                     ((int16_t)pcs_ptr->parent_pcs_ptr->picture_qp + (int16_t)delta_qp));
+#else
+                sb_ptr->qp = CLIP3(
+                    MIN(pcs_ptr->parent_pcs_ptr->picture_qp, ((arfgf_low_motion_minq[active_worst_quality] + 2) >> 2)) - 1,
+                    MAX(pcs_ptr->parent_pcs_ptr->picture_qp, ((arfgf_high_motion_minq[active_worst_quality] + 2) >> 2)) + 3,
+                    ((int16_t)pcs_ptr->parent_pcs_ptr->picture_qp + (int16_t)delta_qp));
+#endif
+ 
 
 #if QP2QINDEX
             sb_qp = CLIP3(
@@ -5616,12 +5646,12 @@ static void sb_qp_derivation_tpl_la(
 #else
             pcs_ptr->parent_pcs_ptr->average_qp += sb_ptr->qp;
 #endif
-
+#endif
             //int qp_index = quantizer_to_qindex[sb_ptr->qp];
             int qp_index = quantizer_to_qindex[(int)pcs_ptr->parent_pcs_ptr->picture_qp];
             //pcs_ptr->parent_pcs_ptr->frm_hdr.delta_q_params.delta_q_present ? (uint8_t)quantizer_to_qindex[sb_qp] : (uint8_t)pcs_ptr->parent_pcs_ptr->frm_hdr.quantization_params.base_q_idx;
 #if !QP2QINDEX
-            if(qp_index<0 || qp_index>255)
+            if (qp_index < 0 || qp_index>255)
                 printf("sb_qp_derivation_tpl_la poc%ld, sb_index%d, sb_qp=%d, update_type=%d, gfu_boost=%d, qp_index=%d\n", pcs_ptr->picture_number, sb_addr, sb_ptr->qp, update_type, rc->gfu_boost, qp_index);
 #endif
             int rdmult = av1_get_adaptive_rdmult(scs_ptr->static_config.encoder_bit_depth, qp_index, beta);

@@ -152,6 +152,9 @@ extern "C" {
 #define CUTREE_LA_QPS 0
 #define CUTREE_LA_QPM 1
 #define CUTREE_MV_CLIP 1
+#define UPDATE_SW 1
+#define CU_TREE_REENCODE 0
+
 
 #define QP2QINDEX 1
 //FOR DEBUGGING - Do not remove

@@ -15,7 +15,9 @@
 #include "EbTransforms.h"
 #include "aom_dsp_rtcd.h"
 #include "EbRateDistortionCost.h"
-
+#if CUTREE_LA
+#include "EbLog.h"
+#endif
 /**************************************
  * Context
  **************************************/
@@ -1005,7 +1007,11 @@ void cutree_mc_flow_dispenser(
     EncodeContext                   *encode_context_ptr,
     SequenceControlSet              *scs_ptr,
     PictureParentControlSet         *pcs_ptr,
-    int32_t                          frame_idx)
+    int32_t                          frame_idx
+#if CU_TREE_REENCODE
+    , int32_t reencode
+#endif
+)
 {
     uint32_t    picture_width_in_sb = (pcs_ptr->enhanced_picture_ptr->width + BLOCK_SIZE_64 - 1) / BLOCK_SIZE_64;
     uint32_t    picture_width_in_mb = (pcs_ptr->enhanced_picture_ptr->width + 16 - 1) / 16;
@@ -1045,11 +1051,61 @@ void cutree_mc_flow_dispenser(
 
     MacroblockPlane mb_plane;
     int32_t qIndex = quantizer_to_qindex[(uint8_t)scs_ptr->static_config.qp];
+
     Quants *const quants_bd = &pcs_ptr->quants_bd;
     Dequants *const deq_bd = &pcs_ptr->deq_bd;
+#if CU_TREE_REENCODE
+    if (reencode) {
+      //  qIndex = quantizer_to_qindex[(uint8_t)scs_ptr->static_config.qp]/4;
+        if (pcs_ptr->slice_type == I_SLICE) {
+            if (scs_ptr->static_config.qp == 20) {
+                qIndex = 18;
+            }
+            else if (scs_ptr->static_config.qp == 32) {
+                qIndex = 41;
+            }
+            else if (scs_ptr->static_config.qp == 43) {
+                qIndex = 75;
+            }
+            else if (scs_ptr->static_config.qp == 55) {
+                qIndex = 123;
+            }
+            else if (scs_ptr->static_config.qp == 63) {
+                qIndex = 179;
+            }
+        }
+        else {
+            if (scs_ptr->static_config.qp == 20) {
+                qIndex = 24;
+            }
+            else if (scs_ptr->static_config.qp == 32) {
+                qIndex = 55;
+            }
+            else if (scs_ptr->static_config.qp == 43) {
+                qIndex = 111;
+            }
+            else if (scs_ptr->static_config.qp == 55) {
+                qIndex = 164;
+            }
+            else if (scs_ptr->static_config.qp == 63) {
+                qIndex = 202;
+            }
+        }
+        eb_av1_set_quantizer(
+            pcs_ptr,
+            qIndex);
+    }
+    else {
+        pcs_ptr->frm_hdr.quantization_params.base_q_idx = qIndex;
+        eb_av1_set_quantizer(
+            pcs_ptr,
+            pcs_ptr->frm_hdr.quantization_params.base_q_idx);
+    }
+#else
     eb_av1_set_quantizer(
         pcs_ptr,
         pcs_ptr->frm_hdr.quantization_params.base_q_idx);
+#endif
     eb_av1_build_quantizer(
         /*pcs_ptr->hbd_mode_decision ? AOM_BITS_10 :*/ AOM_BITS_8,
         pcs_ptr->frm_hdr.quantization_params.delta_q_dc[AOM_PLANE_Y],
@@ -1138,6 +1194,18 @@ void cutree_mc_flow_dispenser(
                         struct Buf2D ref_buf = { NULL, ref_pic_ptr->buffer_y + ref_basic_offset,
                                                   ref_pic_ptr->width, ref_pic_ptr->height,
                                                   ref_pic_ptr->stride_y };
+
+#if 0
+                        if(referenceObject->ref_poc == 0){
+                        const int ref_basic_offset = input_picture_ptr->origin_y * input_picture_ptr->stride_y + input_picture_ptr->origin_x;
+                        const int ref_mb_offset = mb_origin_y * input_picture_ptr->stride_y + mb_origin_x;
+                        uint8_t *ref_mb = encode_context_ptr->mc_flow_rec_picture_buffer[ref_frame_idx] + ref_basic_offset + ref_mb_offset;
+
+                        struct Buf2D ref_buf = { NULL, encode_context_ptr->mc_flow_rec_picture_buffer[ref_frame_idx] + ref_basic_offset,
+                                                  input_picture_ptr->width, input_picture_ptr->height,
+                                                  input_picture_ptr->stride_y };
+#endif
+
                         const MeSbResults *me_results = pcs_ptr->me_results[sb_index];
                         x_curr_mv = me_results->me_mv_array[me_mb_offset][(list_index ? ((scs_ptr->mrp_mode == 0) ? 4 : 2) : 0) + ref_pic_index].x_mv << 1;
                         y_curr_mv = me_results->me_mv_array[me_mb_offset][(list_index ? ((scs_ptr->mrp_mode == 0) ? 4 : 2) : 0) + ref_pic_index].y_mv << 1;
@@ -1184,7 +1252,15 @@ void cutree_mc_flow_dispenser(
                         ois_mb_results_ptr->srcrf_rate = rate_cost << TPL_DEP_COST_SCALE_LOG2;
                     }
                     best_intra_cost = AOMMAX(best_intra_cost, 1);
-
+#if 0
+if((pcs_ptr->picture_number == 16 || pcs_ptr->picture_number == 32) && mb_origin_y == 0)
+{
+    if (mb_origin_x == 0) {
+        printf("mbline%d poc%d\n", mb_origin_y >> 4, pcs_ptr->picture_number);
+           printf("%d %d \n", best_intra_cost, best_inter_cost);
+    }
+}
+#endif
                     if (pcs_ptr->picture_number == 0)
                         best_inter_cost = 0;
                     else
@@ -1530,7 +1606,7 @@ static void generate_r0beta(PictureParentControlSet *pcs_ptr)
       pcs_ptr->r0 = (double)intra_cost_base / mc_dep_cost_base;
     }
 
-    printf("genrate_r0beta ------> poc %ld\t%.0f\t%.0f \t%.5f base_rdmult=%d\n", pcs_ptr->picture_number, (double)intra_cost_base, (double)mc_dep_cost_base, pcs_ptr->r0, pcs_ptr->base_rdmult);
+    SVT_LOG("genrate_r0beta ------> poc %ld\t%.0f\t%.0f \t%.5f base_rdmult=%d\n", pcs_ptr->picture_number, (double)intra_cost_base, (double)mc_dep_cost_base, pcs_ptr->r0, pcs_ptr->base_rdmult);
 
     const uint32_t sb_sz = scs_ptr->seq_header.sb_size == BLOCK_128X128 ? 128 : 64;
     const uint32_t picture_sb_width  = (uint32_t)((scs_ptr->seq_header.max_frame_width  + sb_sz - 1) / sb_sz);
@@ -1554,12 +1630,30 @@ static void generate_r0beta(PictureParentControlSet *pcs_ptr)
                     mc_dep_cost += (ois_mb_results_ptr->recrf_dist << RDDIV_BITS) + mc_dep_delta;
 
                 }
-            }
+            }                    
+          //  if(pcs_ptr->picture_number == 16)
+          //      printf(" ---> poc%ld sb_x=%d sb_y=%d intraC=%lld mc_dep=%lld\n", pcs_ptr->picture_number, sb_x, sb_y, intra_cost, mc_dep_cost);
             double beta = 1.0;
             double rk = -1.0;
             if (mc_dep_cost > 0 && intra_cost > 0) {
+            //if (mc_dep_cost > ((scs_ptr->seq_header.sb_size == BLOCK_128X128 ? 8 : 4)*
+            //    (scs_ptr->seq_header.sb_size == BLOCK_128X128 ? 8 : 4)<< RDDIV_BITS) 
+            //    && intra_cost > ((scs_ptr->seq_header.sb_size == BLOCK_128X128 ? 8 : 4)*
+            //    (scs_ptr->seq_header.sb_size == BLOCK_128X128 ? 8 : 4) << RDDIV_BITS) ){
                 rk = (double)intra_cost / mc_dep_cost;
                 beta = (pcs_ptr->r0 / rk);
+               // if (pcs_ptr->picture_number == 16)
+                SVT_LOG(
+                        "kelvinirc ---> poc%ld sb_x=%d sb_y=%d r0=%f rk=%f\t intraC=%lld "
+                        "mc_dep=%lld\tbeta=%f\n",
+                        pcs_ptr->picture_number,
+                        sb_x,
+                        sb_y,
+                        pcs_ptr->r0,
+                        rk,
+                        intra_cost,
+                        mc_dep_cost,
+                        beta);
                 assert(beta > 0.0);
             }
             //printf("generate_r0beta sbxy=%d %d, rk=%f beta=%f\n", sb_x, sb_y, rk, beta);
@@ -1629,10 +1723,34 @@ void update_mc_flow(
         encode_context_ptr->poc_map_idx[frame_idx] = pcs_array[frame_idx]->picture_number;
         {
             if(frame_idx == 1 && pcs_array[frame_idx]->picture_number >= 32) {
+#if CU_TREE_REENCODE
+                int32_t frame_idx_tmp = 0;
+                // memset all stats execpt for intra_cost and intra_mode
+                for (uint32_t mb_y = 0; mb_y < picture_height_in_mb; mb_y++) {
+                    for (uint32_t mb_x = 0; mb_x < picture_width_in_mb; mb_x++) {
+                        OisMbResults *ois_mb_results_ptr = pcs_array[frame_idx_tmp]->ois_mb_results[mb_y * picture_width_in_mb + mb_x];
+                        ois_mb_results_ptr->inter_cost = 0;
+                        ois_mb_results_ptr->srcrf_dist = 0;
+                        ois_mb_results_ptr->recrf_dist = 0;
+                        ois_mb_results_ptr->srcrf_rate = 0;
+                        ois_mb_results_ptr->recrf_rate = 0;
+                        ois_mb_results_ptr->mv.row = 0;
+                        ois_mb_results_ptr->mv.col = 0;
+                        ois_mb_results_ptr->mc_dep_dist = 0;
+                        ois_mb_results_ptr->mc_dep_rate = 0;
+                        ois_mb_results_ptr->ref_frame_poc = 0;
+                    }
+                }
+               // SVT_LOG("calling2 before dispenser frame_idx=%d poc=%d decode_order=%d\n", frame_idx_tmp, pcs_array[frame_idx_tmp]->picture_number, pcs_array[frame_idx_tmp]->decode_order);
+                cutree_mc_flow_dispenser(encode_context_ptr, scs_ptr, pcs_array[frame_idx_tmp], frame_idx_tmp, 1);
+#else
+
+
                 EbPictureBufferDesc *input_picture_ptr = pcs_array[0]->enhanced_picture_ptr;
                 uint8_t *dst_buffer = encode_context_ptr->mc_flow_rec_picture_buffer[0];
                 //printf("calling3+ dispenser copy P%d input to rec before run P%d\n", pcs_array[frame_idx]->picture_number-16, pcs_array[frame_idx]->picture_number);
                 memcpy(dst_buffer, input_picture_ptr->buffer_y, input_picture_ptr->stride_y * (input_picture_ptr->origin_y * 2 + input_picture_ptr->height));
+#endif
             }
             // memset all stats execpt for intra_cost and intra_mode
             for (uint32_t mb_y = 0; mb_y < picture_height_in_mb; mb_y++) {
@@ -1650,16 +1768,22 @@ void update_mc_flow(
                     ois_mb_results_ptr->ref_frame_poc = 0;
                 }
             }
+#if !UPDATE_SW
             if(pcs_array[frame_idx]->picture_number > 32 &&
               (frame_idx == 17 || frame_idx == 26 || frame_idx == 27)) {
                 //printf("calling3 dispenser disable P%d as ref for frame_idx %d\n", pcs_array[frame_idx]->picture_number, frame_idx);
                 encode_context_ptr->poc_map_idx[frame_idx] = -1;
             }
-
+#endif
+#if CU_TREE_REENCODE
+            cutree_mc_flow_dispenser(encode_context_ptr, scs_ptr, pcs_array[frame_idx], frame_idx, 0);
+#else
             cutree_mc_flow_dispenser(encode_context_ptr, scs_ptr, pcs_array[frame_idx], frame_idx);
-
+#endif
+#if !UPDATE_SW
             if(pcs_array[frame_idx]->temporal_layer_index == 0 && pcs_array[frame_idx]->picture_number>=32 && frame_idx == 1)
                 encode_context_ptr->poc_map_idx[0] = -1;
+#endif
         }
     }
 
@@ -1671,25 +1795,87 @@ void update_mc_flow(
                 cutree_mc_flow_synthesizer(pcs_array, frame_idx, 16);
             }
             generate_r0beta(pcs_array[start_idx]);
+
+#if 0 //AMIR_PRINT
+            for (frame_idx = 0; frame_idx <= sw_length - 1; frame_idx++)
+            {
+                PictureParentControlSet         *pcs_ptr_tmp = pcs_array[frame_idx];
+                Av1Common *cm = pcs_ptr_tmp->av1_cm;
+                SequenceControlSet *scs_ptr = pcs_ptr_tmp->scs_ptr;
+                //int tpl_stride = tpl_frame->stride;
+                int64_t intra_cost_base = 0;
+                int64_t mc_dep_cost_base = 0;
+                const int step = 4; //1 << cpi->tpl_stats_block_mis_log2;
+                const int mi_cols_sr = cm->mi_cols;//av1_pixels_to_mi(cm->superres_upscaled_width);
+
+                for (int row = 0; row < cm->mi_rows; row += step) {
+                    for (int col = 0; col < mi_cols_sr; col += step) {
+                        OisMbResults *ois_mb_results_ptr = pcs_ptr_tmp->ois_mb_results[((row * mi_cols_sr) >> 4) + (col >> 2)];
+                        int64_t mc_dep_delta =
+                            RDCOST(pcs_ptr_tmp->base_rdmult, ois_mb_results_ptr->mc_dep_rate, ois_mb_results_ptr->mc_dep_dist);
+                        intra_cost_base += (ois_mb_results_ptr->recrf_dist << RDDIV_BITS);
+                        mc_dep_cost_base += (ois_mb_results_ptr->recrf_dist << RDDIV_BITS) + mc_dep_delta;
+                    }
+                }
+
+                SVT_LOG("After mc_flow_synthesizer:\tframe_indx:%d\tdisplayorder:%ld\tIntra:%lld\tmc_dep:%lld\n",
+                    frame_idx, pcs_ptr_tmp->picture_number, intra_cost_base, mc_dep_cost_base);
+            }
+#endif
+
         }
 
         if (pcs_array[start_idx]->temporal_layer_index == 0 && start_idx == 1) {
+#if UPDATE_SW
+            uint32_t sw_length = (pcs_ptr->frames_in_sw - start_idx);
+#else
             uint32_t sw_length = (start_idx + 25) <= pcs_ptr->frames_in_sw ? 25 : (pcs_ptr->frames_in_sw - start_idx);
+#endif
             PictureParentControlSet *pcs_array_reorder[60] = {NULL, };
             for (uint32_t index = 0; index < sw_length; index++) {
+#if UPDATE_SW
+                pcs_array_reorder[index] = pcs_array[start_idx + index];
+#else
                 if(index < 16)
                     pcs_array_reorder[index] = pcs_array[start_idx + index];
                 else
                     pcs_array_reorder[index] = pcs_array_org[index + start_idx];
+#endif
             }
             if(pcs_array_reorder[0]->picture_number == 16) {
+#if CU_TREE_REENCODE
+                int32_t frame_idx_tmp = 0;
+                // memset all stats execpt for intra_cost and intra_mode
+                for (uint32_t mb_y = 0; mb_y < picture_height_in_mb; mb_y++) {
+                    for (uint32_t mb_x = 0; mb_x < picture_width_in_mb; mb_x++) {
+                        OisMbResults *ois_mb_results_ptr = pcs_array[frame_idx_tmp]->ois_mb_results[mb_y * picture_width_in_mb + mb_x];
+                        ois_mb_results_ptr->inter_cost = 0;
+                        ois_mb_results_ptr->srcrf_dist = 0;
+                        ois_mb_results_ptr->recrf_dist = 0;
+                        ois_mb_results_ptr->srcrf_rate = 0;
+                        ois_mb_results_ptr->recrf_rate = 0;
+                        ois_mb_results_ptr->mv.row = 0;
+                        ois_mb_results_ptr->mv.col = 0;
+                        ois_mb_results_ptr->mc_dep_dist = 0;
+                        ois_mb_results_ptr->mc_dep_rate = 0;
+                        ois_mb_results_ptr->ref_frame_poc = 0;
+                    }
+                }
+             //   SVT_LOG("calling2 before dispenser frame_idx=%d poc=%d decode_order=%d\n", frame_idx_tmp, pcs_array[frame_idx_tmp]->picture_number, pcs_array[frame_idx_tmp]->decode_order);
+                cutree_mc_flow_dispenser(encode_context_ptr, scs_ptr, pcs_array[frame_idx_tmp], frame_idx_tmp, 1);
+#else
                 // re-run P16 with input I0 as ref
                 EbPictureBufferDesc *input_picture_ptr = pcs_array[0]->enhanced_picture_ptr;
                 uint8_t *dst_buffer = encode_context_ptr->mc_flow_rec_picture_buffer[0];
                 //printf("calling2 copy I0 input to I0 rec and rerun P16 dispenser\n");
                 memcpy(dst_buffer, input_picture_ptr->buffer_y, input_picture_ptr->stride_y * (input_picture_ptr->origin_y * 2 + input_picture_ptr->height));
+#endif
+#if UPDATE_SW
+                for(frame_idx = 1; frame_idx < sw_length + 1; frame_idx++) {// amir add + 1
+#else
 
                 for(frame_idx = 1; frame_idx < 29; frame_idx++) {
+#endif
                     // memset all stats execpt for intra_cost and intra_mode
                     for (uint32_t mb_y = 0; mb_y < picture_height_in_mb; mb_y++) {
                         for (uint32_t mb_x = 0; mb_x < picture_width_in_mb; mb_x++) {
@@ -1706,16 +1892,24 @@ void update_mc_flow(
                             ois_mb_results_ptr->ref_frame_poc = 0;
                         }
                     }
+#if !UPDATE_SW
                     if (frame_idx == 17 || frame_idx == 26 || frame_idx == 27) {
                         //printf("calling2 dispenser disable P%d as ref for frame_idx %d\n", pcs_array[frame_idx]->picture_number, frame_idx);
                         encode_context_ptr->poc_map_idx[frame_idx] = -1;
-                    }
-
-                    //printf("calling2 before dispenser frame_idx=%d poc=%d decode_order=%d\n", frame_idx, pcs_array[frame_idx]->picture_number, pcs_array[frame_idx]->decode_order);
+					}
+#endif	
+               
+                //    SVT_LOG("calling2 before dispenser frame_idx=%d poc=%d decode_order=%d\n", frame_idx, pcs_array[frame_idx]->picture_number, pcs_array[frame_idx]->decode_order);
+#if CU_TREE_REENCODE
+                    cutree_mc_flow_dispenser(encode_context_ptr, scs_ptr, pcs_array[frame_idx], frame_idx,0);
+#else
                     cutree_mc_flow_dispenser(encode_context_ptr, scs_ptr, pcs_array[frame_idx], frame_idx);
-
+#endif
+#if !UPDATE_SW
+                    // after picture 16 is coded, we change picture 0, so other pictures wont use it as a reference
                     if(frame_idx == 1)
                         encode_context_ptr->poc_map_idx[0] = -1;
+#endif
                 }
             }
             //printf("calling2+ start_idx=%d start poc=%d decode_order=%d sw_length=%d\n", start_idx, pcs_array_reorder[0]->picture_number, pcs_array_reorder[0]->decode_order, sw_length);
@@ -1725,6 +1919,34 @@ void update_mc_flow(
                 cutree_mc_flow_synthesizer(pcs_array_reorder, frame_idx, sw_length);
             }
             generate_r0beta(pcs_array[start_idx]);
+           // SVT_LOG("kelvin ---> BetaGen2 start_idx=%d, reordered picture_number=%d\n", start_idx, pcs_array[start_idx]->picture_number);
+
+#if 0 //AMIR_PRINT
+            for (frame_idx = 0; frame_idx <= sw_length - 1; frame_idx++)
+            {
+                PictureParentControlSet         *pcs_ptr_tmp = pcs_array_reorder[frame_idx];
+                Av1Common *cm = pcs_ptr_tmp->av1_cm;
+                SequenceControlSet *scs_ptr = pcs_ptr_tmp->scs_ptr;
+                //int tpl_stride = tpl_frame->stride;
+                int64_t intra_cost_base = 0;
+                int64_t mc_dep_cost_base = 0;
+                const int step = 4; //1 << cpi->tpl_stats_block_mis_log2;
+                const int mi_cols_sr = cm->mi_cols;//av1_pixels_to_mi(cm->superres_upscaled_width);
+
+                for (int row = 0; row < cm->mi_rows; row += step) {
+                    for (int col = 0; col < mi_cols_sr; col += step) {
+                        OisMbResults *ois_mb_results_ptr = pcs_ptr_tmp->ois_mb_results[((row * mi_cols_sr) >> 4) + (col >> 2)];
+                        int64_t mc_dep_delta =
+                            RDCOST(pcs_ptr_tmp->base_rdmult, ois_mb_results_ptr->mc_dep_rate, ois_mb_results_ptr->mc_dep_dist);
+                        intra_cost_base += (ois_mb_results_ptr->recrf_dist << RDDIV_BITS);
+                        mc_dep_cost_base += (ois_mb_results_ptr->recrf_dist << RDDIV_BITS) + mc_dep_delta;
+                    }
+                }
+
+                SVT_LOG("After mc_flow_synthesizer2:\tframe_indx:%d\tdisplayorder:%ld\tIntra:%lld\tmc_dep:%lld\n",
+                    frame_idx, pcs_ptr_tmp->picture_number, intra_cost_base, mc_dep_cost_base);
+        }
+#endif
         }
     }
 
@@ -2026,6 +2248,7 @@ void *initial_rate_control_kernel(void *input_ptr) {
                         if (scs_ptr->static_config.look_ahead_distance != 0 &&
                             scs_ptr->static_config.enable_cutree_in_la &&
                             pcs_ptr->temporal_layer_index == 0) {
+                          //  SVT_LOG("kelvin --------> before update_mc_flow picture_number=%d\n", pcs_ptr->picture_number);
                             update_mc_flow(encode_context_ptr, scs_ptr, pcs_ptr);
                         }
 #endif
