@@ -4444,7 +4444,7 @@ EbErrorType av1_inter_prediction(
         }
     }
     //=============================================
-    
+
     //special treatment for chroma in 4XN/NX4 blocks
     //if one of the neighbour blocks of the parent square is intra the chroma prediction will follow the normal path using the luma MV of the current nsq block which is the latest sub8x8.
     //for this case: only uniPred is allowed.
@@ -6388,7 +6388,7 @@ void search_compound_diff_wedge(PictureControlSet *    picture_control_set_ptr,
         else
             ref_pic_list1 = (EbPictureBufferDesc *)EB_NULL;
 
-        // Use scaled references if resolution of the reference is different than the input
+        // Use scaled references if resolution of the reference is different from that of the input
         if(ref_pic_list0 != EB_NULL)
             use_scaled_rec_refs_if_needed(picture_control_set_ptr,
                                           picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr,

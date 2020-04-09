@@ -749,6 +749,7 @@ void *motion_estimation_kernel(void *input_ptr) {
             // ME Kernel Signal(s) derivation
             signal_derivation_me_kernel_oq(scs_ptr, pcs_ptr, context_ptr);
 
+            // Check if input picture is scaled and assign the appropriate downscaled/filter buffers
             if (input_padded_picture_ptr->width != input_picture_ptr->width){
                 uint8_t denom_idx = (uint8_t)(pcs_ptr->superres_denom - 8);
 

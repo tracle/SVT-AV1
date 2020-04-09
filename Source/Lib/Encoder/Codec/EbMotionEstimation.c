@@ -10244,7 +10244,7 @@ void hme_sb(
 
             EbPictureBufferDesc *input_picture_ptr = pcs_ptr->enhanced_picture_ptr;
 
-            // Use scaled source references if resolution of the reference is different than the input
+            // Use scaled source references if resolution of the reference is different that of the input
             use_scaled_source_refs_if_needed(pcs_ptr,
                                              input_picture_ptr,
                                              reference_object,
@@ -10955,7 +10955,7 @@ EbErrorType motion_estimate_sb(
             uint16_t ref_picture_number = (uint16_t)pcs_ptr->ref_pic_poc_array[list_index][ref_pic_index];
             UNUSED(ref_picture_number);
 
-            // Use scaled source references if resolution of the reference is different than the input
+            // Use scaled source references if resolution of the reference is different that of the input
             use_scaled_source_refs_if_needed(pcs_ptr,
                                              input_picture_ptr,
                                              reference_object,

@@ -342,7 +342,7 @@ void inter_intra_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context
     else
         ref_pic_list1 = (EbPictureBufferDesc *)EB_NULL;
 
-    // Use scaled references if resolution of the reference is different than the input
+    // Use scaled references if resolution of the reference is different from that of the input
     if(ref_pic_list0 != NULL)
         use_scaled_rec_refs_if_needed(pcs_ptr,
                                       pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr,

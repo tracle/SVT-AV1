@@ -1245,7 +1245,7 @@ EbErrorType allocate_downscaled_source_reference_pics(EbPictureBufferDesc **inpu
 
 /*
  * Allocate memory and perform scaling of the source reference picture (references to the current picture)
- * and it's decimated/filtered versions to match with the input's picture resolution
+ * and its decimated/filtered versions to match with the input picture resolution
  * This is used in the open-loop stage.
  */
 void scale_source_references(SequenceControlSet *scs_ptr,
@@ -1341,7 +1341,7 @@ void scale_source_references(SequenceControlSet *scs_ptr,
 
 /*
  * Allocate memory and perform scaling of the input reference picture (current picture)
- * and it's decimated/filtered versions to match with the input's picture resolution
+ * and its decimated/filtered versions to match with the input picture resolution
  * This is used in the open-loop stage.
  */
 void scale_input_references(PictureParentControlSet *pcs_ptr,
@@ -1394,7 +1394,7 @@ void scale_input_references(PictureParentControlSet *pcs_ptr,
 
 /*
  * Allocate memory and perform scaling of the reconstructed reference pictures
- * to match with the input's picture resolution
+ * to match with the input picture resolution
  */
 void scale_rec_references(PictureControlSet *pcs_ptr,
                           EbPictureBufferDesc *input_picture_ptr,

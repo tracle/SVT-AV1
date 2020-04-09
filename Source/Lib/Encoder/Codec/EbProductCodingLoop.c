@@ -2936,7 +2936,7 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                     hbd_mode_decision ? ref_obj->reference_picture16bit : ref_obj->reference_picture;
 
                 // -------
-                // Use scaled references if resolution of the reference is different than the input
+                // Use scaled references if resolution of the reference is different from that of the input
                 // -------
                 use_scaled_rec_refs_if_needed(pcs_ptr,
                                               input_picture_ptr,
@@ -3036,7 +3036,7 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                                                : ref_obj->reference_picture;
 
                 // -------
-                // Use scaled references if resolution of the reference is different than the input
+                // Use scaled references if resolution of the reference is different from that of the input
                 // -------
                 use_scaled_rec_refs_if_needed(pcs_ptr,
                                               input_picture_ptr,
