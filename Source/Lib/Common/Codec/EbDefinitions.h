@@ -180,7 +180,9 @@ extern "C" {
 
 #define APR02_ADOPTIONS 1 // adoptions in all modes
 
-#define MULTI_PASS_PD_FOR_INCOMPLETE 0
+#define MULTI_PASS_PD_FOR_INCOMPLETE 1
+
+#define INJECT_BACKUP_CANDIDATE 1
 
 #endif
 
