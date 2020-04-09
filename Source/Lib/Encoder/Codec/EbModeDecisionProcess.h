@@ -533,7 +533,7 @@ typedef struct ModeDecisionContext {
 #if NSQ_MD_SIGNAL
     uint8_t       md_disallow_nsq;
 #endif
-#if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2   
+#if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2
     uint64_t best_nsq_default_cost;
     uint64_t default_cost_per_shape[NUMBER_OF_SHAPES];
 #endif

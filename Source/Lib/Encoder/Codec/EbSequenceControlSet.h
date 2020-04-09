@@ -200,6 +200,13 @@ typedef struct SequenceControlSet {
     uint32_t cdef_process_init_count;
     uint32_t rest_process_init_count;
     uint32_t total_process_init_count;
+
+#if ENC_STATS
+        EbHandle                              stat_mutex;
+        uint64_t is_sb_128;
+        uint64_t is_sb_64;
+        uint64_t tx_type[TX_SIZES_ALL][TX_TYPES];
+#endif
 } SequenceControlSet;
 
 typedef struct EbSequenceControlSetInitData {

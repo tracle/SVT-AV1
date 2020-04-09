@@ -10,6 +10,33 @@
 
 static void eb_sequence_control_set_dctor(EbPtr p) {
     SequenceControlSet *obj = (SequenceControlSet *)p;
+
+
+
+#if ENC_STATS
+        //    printf("\n");
+        //for (TxType txt = 0 ; txt < TX_TYPES ; ++txt)
+        //        printf("\t:%i ",txt);
+        //for (TxSize txs = 0 ; txs < TX_SIZES_ALL ; ++txs)
+        //        printf("\n:%i ",txs);
+        //        scs_ptr->tx_type[txs][txt] += context_ptr->tx_type[txs][txt];
+        uint64_t total = 0;
+        for (TxSize txs = 0; txs < TX_SIZES_ALL; ++txs)
+            for (TxType txt = 0; txt < TX_TYPES; ++txt)
+                total+= obj->tx_type[txs][txt];
+        if (total > 0) {
+            printf("\n TXT_STATS \t");
+            for (TxSize txs = 0; txs < TX_SIZES_ALL; ++txs) {
+                for (TxType txt = 0; txt < TX_TYPES; ++txt) {
+                  // if (txt == 0) printf("\n");
+                    //printf("%5.1f,", (float)obj->tx_type[txs][txt] * 100 / (float)total);
+                    printf("%5d,", obj->tx_type[txs][txt]);
+                }
+            }
+        }
+
+#endif
+
     EB_FREE_ARRAY(obj->sb_params_array);
     EB_FREE_ARRAY(obj->sb_geom);
 }
@@ -46,6 +73,9 @@ EbErrorType eb_sequence_control_set_ctor(SequenceControlSet *scs_ptr, EbPtr obje
 
     scs_ptr->dctor = eb_sequence_control_set_dctor;
 
+#if ENC_STATS
+    EB_CREATE_MUTEX(scs_ptr->stat_mutex);
+#endif
     scs_ptr->static_config.sb_sz           = 64;
     scs_ptr->static_config.partition_depth = 4;
     scs_ptr->static_config.qp              = 32;

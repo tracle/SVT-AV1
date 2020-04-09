@@ -34,6 +34,47 @@
 extern "C" {
 #endif
 
+
+#define ENC_STATS                           1 // STATS
+
+
+    //
+#define FULL_TXT                            0
+#define FULL_TXS                            0
+#define TXT_OFF                             0
+#define TXT_OLD_REDUCE                      0
+#define TXT_AOM_REDUCE                      0
+#define TXT_C1                              0 //DCT/ADST
+#define TXT_C2                              0 //FLIP
+#define TXT_C3                              0 //IDT
+#define TXT_C4                              0 //IDT_FLIP
+#define TXT_NEW                                0
+#define TXT_NEW_TXSIZE_C                       0
+#define TXT_NEW_TXSIZE_A                       0
+    
+#define TXT_TH                                 0
+#define TXT_TH10D                       0
+#define TXT_TH8D                        0
+#define TXT_TH2D                        0
+#define TXT_TH25D                       0
+#define TXT_TH3D                        0
+#define TXT_TH35D                       0//
+#define TXT_TH4D                        0//
+#define TXT_TH45D                       0
+#define TXT_TH5D                        0//
+#define TXT_TH55D                       0
+#define TXT_TH6D                        0//
+
+#define TXT_TH10                             0
+#define TXT_TH8                              0
+#define TXT_TH6                              0
+#define TXT_TH5                              0
+#define TXT_TH4                              0
+#define TXT_TH3                               0
+#define TXT_TH2                               0
+#define TXT_THC1                              0 //TH	6.00%				TH	2.00%				TH	6.00%		TH	2.00%
+
+
 #ifndef NON_AVX512_SUPPORT
 #define NON_AVX512_SUPPORT
 #endif
