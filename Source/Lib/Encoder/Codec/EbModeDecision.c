@@ -32,6 +32,8 @@
 #include "EbRateDistortionCost.h"
 #include "aom_dsp_rtcd.h"
 #include "EbLog.h"
+#include "EbResize.h"
+
 #if INFR_OPT
 #define INCRMENT_CAND_TOTAL_COUNT(cnt)                                                     \
     MULTI_LINE_MACRO_BEGIN cnt++;                                                          \
@@ -45,11 +47,6 @@
         SVT_LOG(" ERROR: reaching limit for MODE_DECISION_CANDIDATE_MAX_COUNT %i\n", cnt); \
     MULTI_LINE_MACRO_END
 #endif
-
-void use_scaled_rec_refs_if_needed(PictureControlSet *pcs_ptr,
-                                   EbPictureBufferDesc *input_picture_ptr,
-                                   EbReferenceObject *ref_obj,
-                                   EbPictureBufferDesc **ref_pic);
 
 int8_t av1_ref_frame_type(const MvReferenceFrame *const rf);
 int    av1_filter_intra_allowed_bsize(uint8_t enable_filter_intra, BlockSize bs);

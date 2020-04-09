@@ -20,7 +20,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "EbResize.h"
-#include "EbReferenceObject.h"
 
 #define DEBUG_SCALING 0
 #define DIVIDE_AND_ROUND(x, y) (((x) + ((y) >> 1)) / (y))
@@ -732,9 +731,9 @@ static void highbd_fill_arr_to_col(uint16_t *img, int stride, int len, uint16_t 
     for (i = 0; i < len; ++i, iptr += stride) { *iptr = *aptr++; }
 }
 
-EbErrorType av1_highbd_resize_plane(const uint16_t *const input, int height, int width,
-                                    int in_stride, uint16_t *output, int height2, int width2,
-                                    int out_stride, int bd) {
+static EbErrorType av1_highbd_resize_plane(const uint16_t *const input, int height, int width,
+                                           int in_stride, uint16_t *output, int height2, int width2,
+                                           int out_stride, int bd) {
     int       i;
     uint16_t *intbuf;
     uint16_t *tmpbuf;
@@ -790,9 +789,9 @@ void save_YUV_to_file_highbd(char *filename, uint16_t *buffer_y, uint16_t *buffe
  * Resize frame according to dst resolution.
  * Supports 8-bit / 10-bit and either packed or unpacked buffers
  */
-EbErrorType av1_resize_frame(const EbPictureBufferDesc *src, EbPictureBufferDesc *dst,
-                             int bd, const int num_planes, const uint32_t ss_x,
-                             const uint32_t ss_y, uint8_t is_packed) {
+static EbErrorType av1_resize_frame(const EbPictureBufferDesc *src, EbPictureBufferDesc *dst,
+                                    int bd, const int num_planes, const uint32_t ss_x,
+                                    const uint32_t ss_y, uint8_t is_packed) {
     uint16_t *src_buffer_highbd[MAX_MB_PLANE];
     uint16_t *dst_buffer_highbd[MAX_MB_PLANE];
 
@@ -985,8 +984,8 @@ static INLINE unsigned int lcg_rand16(unsigned int *state) {
  * Given the superres configurations and the frame type, determine the denominator and
  * encoding resolution
  */
-void calc_superres_params(superres_params_type *spr_params, SequenceControlSet *scs_ptr,
-                          PictureParentControlSet *pcs_ptr) {
+static void calc_superres_params(superres_params_type *spr_params, SequenceControlSet *scs_ptr,
+                                 PictureParentControlSet *pcs_ptr) {
     spr_params->superres_denom = SCALE_NUMERATOR;
     static unsigned int seed = 34567;
     FrameHeader *frm_hdr = &pcs_ptr->frm_hdr;
@@ -1023,9 +1022,9 @@ void calc_superres_params(superres_params_type *spr_params, SequenceControlSet *
     calculate_scaled_size_helper(&spr_params->encoding_width, spr_params->superres_denom);
 }
 
-EbErrorType downscaled_source_buffer_desc_ctor(EbPictureBufferDesc **picture_ptr,
-                                               EbPictureBufferDesc * picture_ptr_for_reference,
-                                               superres_params_type  spr_params) {
+static EbErrorType downscaled_source_buffer_desc_ctor(EbPictureBufferDesc **picture_ptr,
+                                                      EbPictureBufferDesc * picture_ptr_for_reference,
+                                                      superres_params_type  spr_params) {
     EbPictureBufferDescInitData initData;
 
     initData.buffer_enable_mask = PICTURE_BUFFER_DESC_FULL_MASK;
@@ -1052,9 +1051,9 @@ EbErrorType sb_params_init_pcs(SequenceControlSet *scs_ptr, PictureParentControl
  * Modify encoder parameters and structures that depend on picture resolution
  * Performed after a source picture has been scaled
  */
-EbErrorType scale_pcs_params(SequenceControlSet *scs_ptr, PictureParentControlSet *pcs_ptr,
-                             superres_params_type spr_params, uint16_t source_width,
-                             uint16_t source_height) {
+static EbErrorType scale_pcs_params(SequenceControlSet *scs_ptr, PictureParentControlSet *pcs_ptr,
+                                    superres_params_type spr_params, uint16_t source_width,
+                                    uint16_t source_height) {
     Av1Common *cm = pcs_ptr->av1_cm;
 
     // frame sizes
@@ -1114,10 +1113,10 @@ EbErrorType scale_pcs_params(SequenceControlSet *scs_ptr, PictureParentControlSe
 /*
  * Memory allocation for donwscaled reconstructed reference pictures
  */
-EbErrorType allocate_downscaled_reference_pics(EbPictureBufferDesc **downscaled_reference_picture_ptr,
-                                               EbPictureBufferDesc **downscaled_reference_picture16bit,
-                                               EbPictureBufferDesc *picture_ptr_for_reference,
-                                               PictureParentControlSet *pcs_ptr) {
+static EbErrorType allocate_downscaled_reference_pics(EbPictureBufferDesc **downscaled_reference_picture_ptr,
+                                                      EbPictureBufferDesc **downscaled_reference_picture16bit,
+                                                      EbPictureBufferDesc *picture_ptr_for_reference,
+                                                      PictureParentControlSet *pcs_ptr) {
 
     EbPictureBufferDescInitData ref_pic_buf_desc_init_data;
 
@@ -1160,14 +1159,14 @@ EbErrorType allocate_downscaled_reference_pics(EbPictureBufferDesc **downscaled_
 /*
  * Memory allocation for donwscaled source reference pictures
  */
-EbErrorType allocate_downscaled_source_reference_pics(EbPictureBufferDesc **input_padded_picture_ptr,
-                                                      EbPictureBufferDesc **quarter_decimated_picture_ptr,
-                                                      EbPictureBufferDesc **quarter_filtered_picture_ptr,
-                                                      EbPictureBufferDesc **sixteenth_decimated_picture_ptr,
-                                                      EbPictureBufferDesc **sixteenth_filtered_picture_ptr,
-                                                      EbPictureBufferDesc *picture_ptr_for_reference,
-                                                      superres_params_type spr_params,
-                                                      uint8_t down_sampling_method_me_search){
+static EbErrorType allocate_downscaled_source_reference_pics(EbPictureBufferDesc **input_padded_picture_ptr,
+                                                             EbPictureBufferDesc **quarter_decimated_picture_ptr,
+                                                             EbPictureBufferDesc **quarter_filtered_picture_ptr,
+                                                             EbPictureBufferDesc **sixteenth_decimated_picture_ptr,
+                                                             EbPictureBufferDesc **sixteenth_filtered_picture_ptr,
+                                                             EbPictureBufferDesc *picture_ptr_for_reference,
+                                                             superres_params_type spr_params,
+                                                             uint8_t down_sampling_method_me_search){
 
     EbPictureBufferDescInitData initData;
 
@@ -1344,7 +1343,7 @@ void scale_source_references(SequenceControlSet *scs_ptr,
  * and its decimated/filtered versions to match with the input picture resolution
  * This is used in the open-loop stage.
  */
-void scale_input_references(PictureParentControlSet *pcs_ptr,
+static void scale_input_references(PictureParentControlSet *pcs_ptr,
                             superres_params_type superres_params) {
 
     uint8_t denom_idx = (uint8_t)(superres_params.superres_denom - 8);
@@ -1353,15 +1352,17 @@ void scale_input_references(PictureParentControlSet *pcs_ptr,
     EbPaReferenceObject *src_object = (EbPaReferenceObject *)pcs_ptr->pa_reference_picture_wrapper_ptr->object_ptr;
     EbPictureBufferDesc *padded_pic_ptr = src_object->input_padded_picture_ptr;
 
-    // Allocate downsampled reference picture buffer descriptors
-    allocate_downscaled_source_reference_pics(&src_object->downscaled_input_padded_picture_ptr[denom_idx],
-                                              &src_object->downscaled_quarter_decimated_picture_ptr[denom_idx],
-                                              &src_object->downscaled_quarter_filtered_picture_ptr[denom_idx],
-                                              &src_object->downscaled_sixteenth_decimated_picture_ptr[denom_idx],
-                                              &src_object->downscaled_sixteenth_filtered_picture_ptr[denom_idx],
-                                              padded_pic_ptr,
-                                              superres_params,
-                                              pcs_ptr->scs_ptr->down_sampling_method_me_search);
+    if(src_object->downscaled_input_padded_picture_ptr[denom_idx] == NULL){
+        // Allocate downsampled reference picture buffer descriptors
+        allocate_downscaled_source_reference_pics(&src_object->downscaled_input_padded_picture_ptr[denom_idx],
+                                                  &src_object->downscaled_quarter_decimated_picture_ptr[denom_idx],
+                                                  &src_object->downscaled_quarter_filtered_picture_ptr[denom_idx],
+                                                  &src_object->downscaled_sixteenth_decimated_picture_ptr[denom_idx],
+                                                  &src_object->downscaled_sixteenth_filtered_picture_ptr[denom_idx],
+                                                  padded_pic_ptr,
+                                                  superres_params,
+                                                  pcs_ptr->scs_ptr->down_sampling_method_me_search);
+    }
 
     padded_pic_ptr = src_object->downscaled_input_padded_picture_ptr[denom_idx];
     EbPictureBufferDesc *input_picture_ptr = pcs_ptr->enhanced_picture_ptr;

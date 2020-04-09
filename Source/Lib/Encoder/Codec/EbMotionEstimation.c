@@ -24,6 +24,7 @@
 #include "EbLambdaRateTables.h"
 
 #include "EbLog.h"
+#include "EbResize.h"
 
 #define AVCCODEL
 /********************************************
@@ -33,13 +34,6 @@
 #define MAX_INTRA_IN_MD 9
 #define REFERENCE_PIC_LIST_0 0
 #define REFERENCE_PIC_LIST_1 1
-
-void use_scaled_source_refs_if_needed(PictureParentControlSet *pcs_ptr,
-                                      EbPictureBufferDesc *input_picture_ptr,
-                                      EbPaReferenceObject *ref_obj,
-                                      EbPictureBufferDesc **ref_pic_ptr,
-                                      EbPictureBufferDesc **quarter_ref_pic_ptr,
-                                      EbPictureBufferDesc **sixteenth_ref_pic_ptr);
 
 /*******************************************
  * Compute8x4SAD_Default

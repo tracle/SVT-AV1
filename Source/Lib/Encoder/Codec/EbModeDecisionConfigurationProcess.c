@@ -30,6 +30,7 @@
 #include "EbLog.h"
 #include "EbCoefficients.h"
 #include "EbCommonUtils.h"
+#include "EbResize.h"
 
 
 int32_t get_qzbin_factor(int32_t q, AomBitDepth bit_depth);
@@ -105,10 +106,6 @@ static uint8_t intrabc_max_mesh_pct[MAX_MESH_SPEED + 1] = {100, 100, 100, 25, 25
 #define LOW_SB_SCORE 6000
 #define MAX_LUMINOSITY_BOOST 10
 int32_t budget_per_sb_boost[MAX_SUPPORTED_MODES] = {55, 55, 55, 55, 55, 55, 5, 5, 0, 0, 0, 0, 0};
-
-void scale_rec_references(PictureControlSet *pcs_ptr,
-                          EbPictureBufferDesc *input_picture_ptr,
-                          uint8_t hbd_mode_decision);
 
 static INLINE int32_t aom_get_qmlevel(int32_t qindex, int32_t first, int32_t last) {
     return first + (qindex * (last + 1 - first)) / QINDEX_RANGE;
@@ -974,6 +971,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     if (pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.enable_warped_motion != DEFAULT)
         enable_wm = (EbBool)pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.enable_warped_motion;
 
+    // Note: local warp should be disabled when super-res is ON
     frm_hdr->allow_warped_motion =
         enable_wm &&
         !(frm_hdr->frame_type == KEY_FRAME || frm_hdr->frame_type == INTRA_ONLY_FRAME) &&
@@ -981,13 +979,15 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
         !pcs_ptr->parent_pcs_ptr->frame_superres_enabled;
 
     frm_hdr->is_motion_mode_switchable = frm_hdr->allow_warped_motion;
+
     // OBMC Level                                   Settings
     // 0                                            OFF
     // 1                                            OBMC @(MVP, PME and ME) + 16 NICs
     // 2                                            OBMC @(MVP, PME and ME) + Opt NICs
     // 3                                            OBMC @(MVP, PME ) + Opt NICs
     // 4                                            OBMC @(MVP, PME ) + Opt2 NICs
-    if (scs_ptr->static_config.enable_obmc) {
+    // Note: OBMC is currently disabled when super-res is ON
+    if (scs_ptr->static_config.enable_obmc && !pcs_ptr->parent_pcs_ptr->frame_superres_enabled) {
         if (pcs_ptr->parent_pcs_ptr->enc_mode == ENC_M0)
             pcs_ptr->parent_pcs_ptr->pic_obmc_mode = pcs_ptr->slice_type != I_SLICE ? 2 : 0;
         else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M2)

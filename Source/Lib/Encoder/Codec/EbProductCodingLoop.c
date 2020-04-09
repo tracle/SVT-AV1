@@ -29,11 +29,7 @@
 #include "EbCodingLoop.h"
 #include "EbLog.h"
 #include "EbCommonUtils.h"
-
-void use_scaled_rec_refs_if_needed(PictureControlSet *pcs_ptr,
-                                   EbPictureBufferDesc *input_picture_ptr,
-                                   EbReferenceObject *ref_obj,
-                                   EbPictureBufferDesc **ref_pic);
+#include "EbResize.h"
 
 EbErrorType generate_md_stage_0_cand(SuperBlock *sb_ptr, ModeDecisionContext *context_ptr,
                                      uint32_t *         fast_candidate_total_count,
