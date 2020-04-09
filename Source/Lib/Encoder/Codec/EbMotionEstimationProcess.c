@@ -749,21 +749,13 @@ void *motion_estimation_kernel(void *input_ptr) {
             // ME Kernel Signal(s) derivation
             signal_derivation_me_kernel_oq(scs_ptr, pcs_ptr, context_ptr);
 
-            // Check if input picture is scaled and assign the appropriate downscaled/filter buffers
-            if (input_padded_picture_ptr->width != input_picture_ptr->width){
-                uint8_t denom_idx = (uint8_t)(pcs_ptr->superres_denom - 8);
-
-                assert(pa_ref_obj_->downscaled_input_padded_picture_ptr[denom_idx] != NULL);
-
-                input_padded_picture_ptr = pa_ref_obj_->downscaled_input_padded_picture_ptr[denom_idx];
-                quarter_picture_ptr = (scs_ptr->down_sampling_method_me_search == ME_FILTERED_DOWNSAMPLED) ?
-                                      pa_ref_obj_->downscaled_quarter_filtered_picture_ptr[denom_idx] :
-                                      pa_ref_obj_->downscaled_quarter_decimated_picture_ptr[denom_idx];
-                sixteenth_picture_ptr = (scs_ptr->down_sampling_method_me_search == ME_FILTERED_DOWNSAMPLED) ?
-                                        pa_ref_obj_->downscaled_sixteenth_filtered_picture_ptr[denom_idx] :
-                                        pa_ref_obj_->downscaled_sixteenth_decimated_picture_ptr[denom_idx];
-            }
-            assert(input_padded_picture_ptr->width == input_picture_ptr->width);
+            // Use scaled source references if resolution of the reference is different that of the input
+            use_scaled_source_refs_if_needed(pcs_ptr,
+                                             input_picture_ptr,
+                                             pa_ref_obj_,
+                                             &input_padded_picture_ptr,
+                                             &quarter_picture_ptr,
+                                             &sixteenth_picture_ptr);
 
 #if GLOBAL_WARPED_MOTION
             // Global motion estimation

@@ -1047,6 +1047,12 @@ EbErrorType sb_geom_init_pcs(SequenceControlSet *scs_ptr, PictureParentControlSe
 
 EbErrorType sb_params_init_pcs(SequenceControlSet *scs_ptr, PictureParentControlSet *pcs_ptr);
 
+static uint8_t get_denom_idx(uint8_t superres_denom){
+    uint8_t denom_idx = (uint8_t)(superres_denom - SCALE_NUMERATOR - 1);
+    assert(denom_idx >= 0);
+    return denom_idx;
+}
+
 /*
  * Modify encoder parameters and structures that depend on picture resolution
  * Performed after a source picture has been scaled
@@ -1253,7 +1259,7 @@ void scale_source_references(SequenceControlSet *scs_ptr,
 
     EbPaReferenceObject *reference_object;
 
-    uint8_t denom_idx = (uint8_t)(pcs_ptr->superres_denom - 8);
+    uint8_t denom_idx = get_denom_idx(pcs_ptr->superres_denom);
     const int32_t  num_planes = 0; // Y only
     const uint32_t ss_x       = scs_ptr->subsampling_x;
     const uint32_t ss_y       = scs_ptr->subsampling_y;
@@ -1346,7 +1352,7 @@ void scale_source_references(SequenceControlSet *scs_ptr,
 static void scale_input_references(PictureParentControlSet *pcs_ptr,
                             superres_params_type superres_params) {
 
-    uint8_t denom_idx = (uint8_t)(superres_params.superres_denom - 8);
+    uint8_t denom_idx = get_denom_idx(superres_params.superres_denom);
 
     // reference structures (padded pictures + downsampled versions)
     EbPaReferenceObject *src_object = (EbPaReferenceObject *)pcs_ptr->pa_reference_picture_wrapper_ptr->object_ptr;
@@ -1406,7 +1412,7 @@ void scale_rec_references(PictureControlSet *pcs_ptr,
     PictureParentControlSet *ppcs_ptr = pcs_ptr->parent_pcs_ptr;
     SequenceControlSet *scs_ptr = ppcs_ptr->scs_ptr;
 
-    uint8_t denom_idx = (uint8_t)(ppcs_ptr->superres_denom - 8);
+    uint8_t denom_idx = get_denom_idx(ppcs_ptr->superres_denom);
     const int32_t num_planes = av1_num_planes(&scs_ptr->seq_header.color_config);
     const uint32_t ss_x = scs_ptr->subsampling_x;
     const uint32_t ss_y = scs_ptr->subsampling_y;
@@ -1523,7 +1529,7 @@ void use_scaled_rec_refs_if_needed(PictureControlSet *pcs_ptr,
                                    EbPictureBufferDesc **ref_pic){
 
     if((*ref_pic)->width != input_picture_ptr->width){
-        uint8_t denom_idx = (uint8_t)(pcs_ptr->parent_pcs_ptr->superres_denom - 8);
+        uint8_t denom_idx = get_denom_idx(pcs_ptr->parent_pcs_ptr->superres_denom);
 
         if(pcs_ptr->hbd_mode_decision){
             assert(ref_obj->downscaled_reference_picture16bit[denom_idx] != NULL);
@@ -1550,7 +1556,7 @@ void use_scaled_source_refs_if_needed(PictureParentControlSet *pcs_ptr,
                                       EbPictureBufferDesc **sixteenth_ref_pic_ptr){
 
     if ((*ref_pic_ptr)->width != input_picture_ptr->width) {
-        uint8_t denom_idx = (uint8_t) (pcs_ptr->superres_denom - 8);
+        uint8_t denom_idx = get_denom_idx(pcs_ptr->superres_denom);
 
         assert(ref_obj->downscaled_input_padded_picture_ptr[denom_idx] != NULL);
 
