@@ -5571,66 +5571,6 @@ static INLINE TxType av1_get_tx_type(BlockSize sb_type, int32_t is_inter, Predic
     if (!av1_ext_tx_used[tx_set_type][tx_type]) return DCT_DCT;
     return tx_type;
 }
-#if INJECT_BACKUP_CANDIDATE
-void inject_zz_backup_candidate(const SequenceControlSet *  scs_ptr,
-    struct ModeDecisionContext *context_ptr, PictureControlSet *pcs_ptr,
-    uint32_t *candidate_total_cnt) {
-    ModeDecisionCandidate *cand_array = context_ptr->fast_candidate_array;
-    IntMv                  best_pred_mv[2] = { {0}, {0} };
-    uint32_t               cand_total_cnt = (*candidate_total_cnt);
-
-    MacroBlockD *xd = context_ptr->blk_ptr->av1xd;
-
-    cand_array[cand_total_cnt].type = INTER_MODE;
-    cand_array[cand_total_cnt].distortion_ready = 0;
-    cand_array[cand_total_cnt].use_intrabc = 0;
-    cand_array[cand_total_cnt].merge_flag = EB_FALSE;
-    cand_array[cand_total_cnt].prediction_direction[0] = (EbPredDirection)0;
-    cand_array[cand_total_cnt].inter_mode = NEWMV;
-    cand_array[cand_total_cnt].pred_mode = NEWMV;
-    cand_array[cand_total_cnt].motion_mode = SIMPLE_TRANSLATION;
-    cand_array[cand_total_cnt].is_compound = 0;
-    cand_array[cand_total_cnt].is_new_mv = 1;
-    cand_array[cand_total_cnt].drl_index = 0;
-
-    // zz
-    cand_array[cand_total_cnt].motion_vector_xl0 = 0;
-    cand_array[cand_total_cnt].motion_vector_yl0 = 0;
-
-    // will be needed later by the rate estimation
-    cand_array[cand_total_cnt].ref_mv_index = 0;
-    cand_array[cand_total_cnt].ref_frame_type = svt_get_ref_frame_type(REF_LIST_0, 0);
-    cand_array[cand_total_cnt].ref_frame_index_l0 = 0;
-    cand_array[cand_total_cnt].ref_frame_index_l1 = -1;
-
-    cand_array[cand_total_cnt].transform_type[0] = DCT_DCT;
-    cand_array[cand_total_cnt].transform_type_uv = DCT_DCT;
-
-    choose_best_av1_mv_pred(context_ptr,
-        cand_array[cand_total_cnt].md_rate_estimation_ptr,
-        context_ptr->blk_ptr,
-        cand_array[cand_total_cnt].ref_frame_type,
-        cand_array[cand_total_cnt].is_compound,
-        cand_array[cand_total_cnt].pred_mode,
-        cand_array[cand_total_cnt].motion_vector_xl0,
-        cand_array[cand_total_cnt].motion_vector_yl0,
-        0,
-        0,
-        &cand_array[cand_total_cnt].drl_index,
-        best_pred_mv);
-
-    cand_array[cand_total_cnt].motion_vector_pred_x[REF_LIST_0] = best_pred_mv[0].as_mv.col;
-    cand_array[cand_total_cnt].motion_vector_pred_y[REF_LIST_0] = best_pred_mv[0].as_mv.row;
-
-    cand_array[cand_total_cnt].is_interintra_used = 0;
-    cand_array[cand_total_cnt].motion_mode = SIMPLE_TRANSLATION;
-
-    INCRMENT_CAND_TOTAL_COUNT(cand_total_cnt);
-
-    // update the total number of candidates injected
-    (*candidate_total_cnt) = cand_total_cnt;
-}
-#endif
 void check_best_indepedant_cfl(PictureControlSet *pcs_ptr, EbPictureBufferDesc *input_picture_ptr,
                                ModeDecisionContext *context_ptr, uint32_t input_cb_origin_in_index,
                                uint32_t                     blk_chroma_origin_index,
