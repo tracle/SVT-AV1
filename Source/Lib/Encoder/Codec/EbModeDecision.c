@@ -6145,7 +6145,9 @@ EbErrorType generate_md_stage_0_cand(
                 pcs_ptr,
                 context_ptr,
                 &cand_total_cnt);
-
+#if SHUT_PALETTE_BC_PD_PASS_0_1
+    if(context_ptr->pd_pass == PD_PASS_2) {
+#endif
     if (frm_hdr->allow_intrabc)
         inject_intra_bc_candidates(
             pcs_ptr,
@@ -6170,7 +6172,9 @@ EbErrorType generate_md_stage_0_cand(
         assert(context_ptr->fast_candidate_array[i].palette_info.pmi.palette_size[0] < 9);
         assert(context_ptr->fast_candidate_array[i].palette_info.pmi.palette_size[1] == 0);
     }
-
+#if SHUT_PALETTE_BC_PD_PASS_0_1
+    }
+#endif
     if (slice_type != I_SLICE && context_ptr->inject_inter_candidates) {
             inject_inter_candidates(
                 pcs_ptr,

@@ -188,6 +188,9 @@ extern "C" {
 #define MAY2020        1 // BASED ON apr2020 branch 62c1da44c258c973d668744b5aabfd1214cd8b22
 
 #if MAY2020
+
+#define SHUT_PALETTE_BC_PD_PASS_0_1 0
+
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
 
