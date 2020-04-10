@@ -6185,6 +6185,17 @@ EbErrorType generate_md_stage_0_cand(
                 &cand_total_cnt);
     }
 
+#if INJECT_BACKUP_CANDIDATE
+    // For I_SLICE, DC is always injected, and therefore there is no a risk of no candidates @ md_syage_0()
+    // For non I_SLICE, there is a risk of no candidates @ md_stage_0() because of the INTER candidates pruning techniques
+    if (slice_type != I_SLICE && cand_total_cnt == 0) {
+        inject_zz_backup_candidate(scs_ptr,
+            context_ptr,
+            pcs_ptr,
+            &cand_total_cnt);
+    }
+#endif
+
     *candidate_total_count_ptr = cand_total_cnt;
     CandClass  cand_class_it;
     memset(context_ptr->md_stage_0_count, 0, CAND_CLASS_TOTAL * sizeof(uint32_t));

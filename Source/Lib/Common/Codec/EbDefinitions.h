@@ -126,7 +126,6 @@ extern "C" {
 #define SHUT_SQ_WEIGHT_INTRA_FILTER   1
 #define SHUT_SQ_WEIGHT_H4_V4_FILTER   0
 #define APR02_ADOPTIONS               1 // adoptions in all modes
-#define MULTI_PASS_PD_FOR_INCOMPLETE  0
 #define APR08_ADOPTIONS               1 // adoptions in all modes
 
 
@@ -189,7 +188,17 @@ extern "C" {
 
 #if MAY2020
 
-#define SHUT_PALETTE_BC_PD_PASS_0_1 0
+#define TEST_1 0
+#if TEST_1
+#define MULTI_PASS_PD_FOR_INCOMPLETE 1
+#define INJECT_BACKUP_CANDIDATE 1
+#endif
+
+#define TEST_3_C 0
+#if TEST_3_C
+#define SHUT_PALETTE_BC_PD_PASS_0_1 1
+#define SHUT_TXT_NSC_ONLY 1
+#endif
 
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////

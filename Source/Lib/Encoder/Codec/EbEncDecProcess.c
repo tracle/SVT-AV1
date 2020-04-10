@@ -1494,7 +1494,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     if (pd_pass == PD_PASS_0)
         context_ptr->tx_search_level = TX_SEARCH_OFF;
     else if (pd_pass == PD_PASS_1)
+#if SHUT_TXT_NSC_ONLY
+        context_ptr->tx_search_level = (pcs_ptr->parent_pcs_ptr->sc_content_detected) ? TX_SEARCH_FULL_LOOP : TX_SEARCH_OFF;
+#else
         context_ptr->tx_search_level = TX_SEARCH_FULL_LOOP;
+#endif
     else if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #if MAR2_M8_ADOPTIONS
         context_ptr->tx_search_level = TX_SEARCH_FULL_LOOP;
