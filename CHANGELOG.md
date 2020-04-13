@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.8.1] - 2019-01-28
+## [0.8.1] - 2020-01-28
 
 Encoder
 - Palette support for 10-bit
